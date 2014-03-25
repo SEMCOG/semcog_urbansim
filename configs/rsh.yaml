@@ -1,0 +1,18 @@
+---
+model: hedonicmodel
+table: dset.buildings
+internalname: buildings
+filters:
+    - buildings.residential_sqft > 0
+    - buildings.year_built > 1900
+dep_var: improvement_value
+dep_var_transform: np.log
+segment:
+    - building_type_id
+ind_vars:
+    - year_built
+    - residential_sqft
+add_constant: yes
+output_table: dset.buildings
+output_varname: residential_improvement_value
+output_transform: np.exp

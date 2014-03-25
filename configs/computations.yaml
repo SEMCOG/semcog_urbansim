@@ -1,0 +1,10 @@
+---
+model: minimodel
+table: dset.buildings
+writetotmp: buildings
+var_lib:
+    repm_id: dset.parcels.repm_id[_tbl_.parcel_id].values
+    residential_sqft: _tbl_.residential_units * _tbl_.sqft_per_unit
+ind_vars:
+    - repm_id
+    - residential_sqft
