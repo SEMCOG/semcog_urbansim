@@ -96,6 +96,8 @@ def convert_dirs(base_dir, hdf_name, complib=None, complevel=0):
             keys = ['zone_id', 'building_type_id']
         elif dirname == 'counties':
             keys = ['county_id']
+        elif dirname == 'cities':
+            keys = ['city_id']
         elif dirname == 'development_event_history':
             keys = ['building_id']
         elif dirname == 'target_vacancies':
