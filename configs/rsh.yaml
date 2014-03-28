@@ -2,24 +2,36 @@
 model: hedonicmodel
 table: dset.buildings
 internalname: buildings
-filters:
+estimate_filters:
     - buildings.residential_units > 0
-    - buildings.year_built > 1900
+    - buildings.sqft_per_unit > 0
+    - buildings.year_built > 1700
+    - buildings.stories > 0
+    - buildings.tax_exempt == 0
+    - buildings.unit_price_res > 1e5
+    - buildings.unit_price_res < 1e7
+    - buildings.building_type_id.isin({16, 17, 18, 19, 20})
+simulate_filters:
+    - buildings.residential_units > 0
+    - buildings.building_type_id.isin({16, 17, 18, 19, 20})
 merge:
     table: dset.parcels
     left_on: parcel_id
     right_index: True
-dep_var: improvement_value
+dep_var: unit_price_res
 dep_var_transform: np.log
 segment:
-    - building_type_id
+    - segmentation_id
 patsy:
     - I(year_built < 1940)
-    - I(year_built > 2005)
-    - np.log1p(sqft_per_unit)
-    - np.log(residential_units)
-    - C(floodprone)
-    - np.log1p(parcel_sqft)
+    - year_built
+    - stories
+    - sqft_per_unit
+    - np.log(popden)
+    - dist_hwy
+    - dist_road
+    - crime08
+    - np.log1p(jobs_within_30_min)
 add_constant: yes
 output_table: dset.buildings
 output_varname: residential_improvement_value

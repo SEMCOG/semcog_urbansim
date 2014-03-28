@@ -3,6 +3,8 @@ model: minimodel
 table: dset.buildings
 writetotmp: buildings
 var_lib:
-    repm_id: dset.parcels.repm_id[_tbl_.parcel_id].values
+    unit_price_res: _tbl_.improvement_value / _tbl_.residential_units
+    segmentation_id: dset.parcels.county_id[_tbl_.parcel_id].values + (_tbl_.building_type_id * 1e3)
 ind_vars:
-    - repm_id
+    - unit_price_res
+    - segmentation_id
