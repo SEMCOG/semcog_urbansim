@@ -23,7 +23,7 @@ class SemcogDataset(Dataset):
         bldg_zone_id.index = parcel_ids.index
 
         buildings = self.store.get('buildings')
-        buildings['popden'] = pop_density[bldg_zone_id]
+        buildings['popden'] = pop_density[bldg_zone_id].values
 
         # crime rate
         crimerate = self.store.get('cities').crime08
