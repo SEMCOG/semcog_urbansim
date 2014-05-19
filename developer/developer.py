@@ -41,10 +41,9 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     print "Current vacancy = %.2f" % (1 - numagents / numunits)
     print "Target vacancy = %.2f, target of new units = %d" % \
         (TARGETVACANCY, targetunits)
-
-    df = pd.read_csv(
-       os.path.join(misc.data_dir(), 'far_predictions.csv'),
-       index_col='parcel_id')
+    print os.getcwd()
+    #df = pd.read_csv(os.path.join(misc.data_dir(), 'far_predictions.csv'),index_col='parcel_id')
+    df = pd.read_csv('.//data//far_predictions.csv',index_col='parcel_id')
     # df = dset.feasibility
 
     fnames = ["type%d_profit" % i for i in btypes]
