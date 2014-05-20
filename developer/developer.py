@@ -3,25 +3,10 @@ import numpy as np
 import os
 from urbansim.utils import misc
 
-TARGETVACANCY = .2  # really should be a target per TAZ
-MAXPARCELSIZE = 200000  # really need some subdivision
-AVERESUNITSIZE = 1300  # really should be an accessibility variable
-AVENONRESUNITSIZE = 250  # really should be an accessibility variable
-
-
-def developer_run(dset, year=2010):
-    res_developer_run(dset, year)
-    nonres_developer_run(dset, year)
-
-
-def res_developer_run(dset, year=2010):
-    exec_developer(dset, year, "households", "residential_units",
-                   [1, 2, 3])
-
-
-def nonres_developer_run(dset, year=2010):
-    exec_developer(dset, year, "jobs", "non_residential_units",
-                   [4, 7, 8, 9, 10, 11, 12, 14], nonres=True)
+TARGETVACANCY = .2  #Needs to be by building type
+MAXPARCELSIZE = 200000 
+AVERESUNITSIZE = 1300  
+AVENONRESUNITSIZE = 250  
 
 
 def exec_developer(dset, year, agents, unit_fname, btypes,
@@ -41,10 +26,8 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     print "Current vacancy = %.2f" % (1 - numagents / numunits)
     print "Target vacancy = %.2f, target of new units = %d" % \
         (TARGETVACANCY, targetunits)
-    print os.getcwd()
-    #df = pd.read_csv(os.path.join(misc.data_dir(), 'far_predictions.csv'),index_col='parcel_id')
+
     df = pd.read_csv('.//data//far_predictions.csv',index_col='parcel_id')
-    # df = dset.feasibility
 
     fnames = ["type%d_profit" % i for i in btypes]
     fnames_d = dict((fnames[i], btypes[i]) for i in range(len(fnames)))
@@ -54,8 +37,7 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     df["max_profit"] = df[fnames].max(axis=1)
     df["max_btype"] = df[fnames].idxmax(axis=1).map(fnames_d)
 
-    # this is a little bit wonky too - need to take
-    # the far from the max profit above
+    # take the far from the max profit above
     df["max_feasiblefar"] = df[
         ["type%d_feasiblefar" % i for i in btypes]].max(axis=1)
 
@@ -87,7 +69,6 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     print "Units by type\n", \
         df.groupby('max_btype').netunits.sum().order(ascending=False)
 
-    # df = df.join(dset.parcels).reset_index()
     # format new buildings to concatenate with old buildings
     NOTHING = np.zeros(len(df.index))
     df['parcel_id'] = df.index
@@ -107,7 +88,6 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     df['stories'] = df.max_feasiblefar
     df['building_type_id'] = df.max_btype
     df['year_built'] = np.ones(len(df.index)) * year
-    # df['general_type'] = df.building_type_id.map(dset.BUILDING_TYPE_MAP)
     df['unit_sqft'] = AVEUNITSIZE
     df['lot_size'] = dset.parcels.parcel_sqft
     df['unit_lot_size'] = df.lot_size / df.residential_units
@@ -115,8 +95,7 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     df['improvement_value'] = 0
     df['land_area'] = df.building_sqft/df.stories
     df['tax_exempt'] = 0
-    # for f in ['x', 'y', '_node_id']:
-        # df[f] = dset.parcels[f]
+
     maxind = np.max(dset.buildings.index.values)
     df.index = df.index + maxind + 1
     df['county_id'] = dset.parcels.county_id[df.parcel_id].values.astype('int32')
@@ -126,10 +105,3 @@ def exec_developer(dset, year, agents, unit_fname, btypes,
     df.index.name = 'building_id'
     
     return df
-    
-    # dset.buildings = pd.concat([dset.buildings, df], verify_integrity=True)
-    # dset.buildings.index.name = 'building_id'
-
-    # need to remove parcels from consideration in feasibility
-    #dset.save_tmptbl("feasibility", dset.feasibility.drop(build))
-

@@ -6,8 +6,7 @@ from numpy import array as arr
 
 pd.set_option('display.precision', 3)
 
-# these are the parcel sizes we test, turns out nothing is dependent on
-# size right now
+# these are the parcel sizes we test
 parcelsizes = np.array([10000.0])
 # these ar ethe fars we test
 fars = np.array(

@@ -29,13 +29,7 @@ def get_possible_rents_by_use(dset):
     return avgrents
 
 
-# BIG QUESTION - should the above "possible rents" be greater than the
-# here computed actual rents?  probably, right?
 def current_rent_per_parcel(far_predictions, avgrents):
-    # this is bad - need the right rents for each type
-    # my thinking here is that I don't want to go around tearing down
-    # buildings to convert to other uses - have to think about
-    # this more
     return far_predictions.total_sqft * avgrents.residential * .8
 
 
@@ -50,8 +44,6 @@ def feasibility_run(dset, year=2010):
         print "Running pro forma"
         DEV = spotproforma.Developer()
 
-    # parcels = dset.fetch('parcels').join(
-        # dset.fetch('zoning_for_parcels'), how="left")
     parcels = dset.parcels
     avgrents = get_possible_rents_by_use(dset)
     # compute total_sqft on the parcel, total current rent, and current far
@@ -61,34 +53,31 @@ def feasibility_run(dset, year=2010):
     far_predictions['total_units'] = dset.buildings.groupby(
         'parcel_id').residential_units.sum().fillna(0)
     far_predictions['year_built'] = dset.buildings.groupby(
-        'parcel_id').year_built.min().fillna(1960)
+        'parcel_id').year_built.min().fillna(1950)
     far_predictions['currentrent'] = current_rent_per_parcel(
         far_predictions, avgrents)
     far_predictions['parcelsize'] = parcels.parcel_sqft
-    # some parcels have unrealisticly small sizes
-    far_predictions.parcelsize[far_predictions.parcelsize < 300] = 300
+    # filter out excessivley small parcels
+    far_predictions = far_predictions[far_predictions.parcelsize > 300]
 
     print "Get zoning:", time.ctime()
     zoning = pd.read_csv('.//data//zoning.csv').set_index('parcel_id')
 
     # only keeps those parcels with zoning
     parcels = pd.merge(parcels, zoning, left_index=True, right_index=True)
+    # account for undevelopable proportion
+    parcels.max_far = parcels.max_far*(1-parcels.pct_undev)
+    parcels.max_dua = parcels.max_dua*(1-parcels.pct_undev)
 
-    # need to map building types in zoning to allowable forms in the developer
-    # model
+    # need to map building types in zoning to forms treated by the developer model
     type_d = {
         'residential': [16,17,18,19],
         'industrial': [32,33,39],
         'retail': [22,23,24,28],
         'office': [27],
         'mixedresidential': [21],
-        #'mixedoffice': [14],
     }
 
-    # we have zoning by like 16 building types and rents/far predictions by
-    # 4 building types so we have to convert one into the other - would
-    # probably be better to have rents segmented by the same 16 building
-    # types if we had good observations for that
     for form, btypes in type_d.iteritems():
 
         btypes = type_d[form]
@@ -97,17 +86,13 @@ def feasibility_run(dset, year=2010):
             print form, btype
             # is type allowed
             tmp = parcels[parcels['type%d' % btype] == 't'][
-                ['max_far', 'max_height']]
+                ['max_far', 'max_height','max_dua']]
             # at what far
             far_predictions['type%d_zonedfar' % btype] = tmp['max_far']
             # at what height
             far_predictions['type%d_zonedheight' % btype] = tmp['max_height']
 
-            # need to use max_dua here!!
-            if btype == 1:
-                far_predictions['type%d_zonedfar' % btype] = .75
-            elif btype == 2:
-                far_predictions['type%d_zonedfar' % btype] = 1.2
+            # Incorporate dua here
 
             # do the lookup in the developer model - this is where the
             # profitability is computed
@@ -121,9 +106,9 @@ def feasibility_run(dset, year=2010):
 
             # don't redevelop historic buildings
             far_predictions['type%d_feasiblefar' % btype][
-                far_predictions.year_built < 1945] = 0.0
+                far_predictions.year_built < 1925] = 0.0
             far_predictions['type%d_profit' % btype][
-                far_predictions.year_built < 1945] = 0.0
+                far_predictions.year_built < 1925] = 0.0
 
     far_predictions = far_predictions.join(avgrents)
     print "Feasibility and zoning\n", far_predictions.describe()
