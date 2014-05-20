@@ -69,14 +69,10 @@ def feasibility_run(dset, year=2010):
     far_predictions.parcelsize[far_predictions.parcelsize < 300] = 300
 
     print "Get zoning:", time.ctime()
-    #zoning = dset.fetch('zoning').dropna(subset=['max_far'])
+    zoning = pd.read_csv('.//data//zoning.csv').set_index('parcel_id')
 
-    # only keeps those with zoning
-    #parcels = pd.merge(parcels, zoning, left_on='zoning', right_index=True)
-    for btype in [16,17,18,19,21,22,23,24,27,28,32,33,39]:
-        parcels['type%s'%btype] = 't'
-    parcels['max_far'] = 1.2
-    parcels['max_height'] = 100
+    # only keeps those parcels with zoning
+    parcels = pd.merge(parcels, zoning, left_index=True, right_index=True)
 
     # need to map building types in zoning to allowable forms in the developer
     # model
