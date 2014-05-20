@@ -57,8 +57,6 @@ def feasibility_run(dset, year=2010):
     far_predictions['currentrent'] = current_rent_per_parcel(
         far_predictions, avgrents)
     far_predictions['parcelsize'] = parcels.parcel_sqft
-    # filter out excessivley small parcels
-    far_predictions = far_predictions[far_predictions.parcelsize > 300]
 
     print "Get zoning:", time.ctime()
     zoning = pd.read_csv('.//data//zoning.csv').set_index('parcel_id')
