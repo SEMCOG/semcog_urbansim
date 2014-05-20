@@ -132,7 +132,7 @@ def feasibility_run(dset, year=2010):
     far_predictions = far_predictions.join(avgrents)
     print "Feasibility and zoning\n", far_predictions.describe()
     far_predictions['currentrent'] /= spotproforma.CAPRATE
-    fname = os.path.join(misc.data_dir(), 'far_predictions.csv')
+    fname = './/data//far_predictions.csv'
     far_predictions.to_csv(fname, index_col='parcel_id', float_format="%.2f")
     dset.save_tmptbl("feasibility", far_predictions)
 
