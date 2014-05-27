@@ -4,7 +4,6 @@ import time
 import os
 from urbansim.utils import misc, spotproforma
 
-
 def get_possible_rents_by_use(dset):
     parcels = dset.parcels
     buildings = dset.buildings
