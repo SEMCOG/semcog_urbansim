@@ -44,11 +44,11 @@ def elcm_simulate(dset):
 
 
 def households_relocation(dset):
-    return simple_relocation(dset.households, .05)
+    return simple_relocation(dset.households, .01)
 
 
 def jobs_relocation(dset):
-    return simple_relocation(dset.jobs, .08)
+    return simple_relocation(dset.jobs, .02)
 
 
 def households_transition(dset):
@@ -60,8 +60,8 @@ def households_transition(dset):
     new, added_hh_idx, new_linked = \
         model.transition(dset.households, dset.year,
                          linked_tables={'linked': (dset.persons, 'household_id')})
+    new.loc[added_hh_idx, "building_id"] = np.nan
     dset.households = new
-    print dset.households.loc[added_hh_idx].building_id.describe()
     dset.persons = new_linked['linked']
 
 
@@ -72,7 +72,7 @@ def jobs_transition(dset):
     tran = transition.TabularTotalsTransition(ct_emp, 'total_number_of_jobs')
     model = transition.TransitionModel(tran)
     new, added_jobs_idx, new_linked = model.transition(dset.jobs, dset.year)
-    print dset.jobs.loc[added_jobs_idx].building_id.describe()
+    new.loc[added_jobs_idx, "building_id"] = np.nan
     dset.jobs = new
 
 
@@ -81,9 +81,10 @@ def _run_models(dset, model_list, years):
 
         dset.year = year
 
+        t1 = time.time()
+        print "Computing variables"
         var_calc.calculate(dset)
 
-        t1 = time.time()
         for model in model_list:
             t2 = time.time()
             print "\n" + model + "\n"
