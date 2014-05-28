@@ -1,38 +1,63 @@
----
-model: hedonicmodel
-table: dset.buildings
-internalname: buildings
-estimate_filters:
-    - buildings.residential_units > 0
-    - buildings.sqft_per_unit > 0
-    - buildings.year_built > 1700
-    - buildings.stories > 0
-    - buildings.tax_exempt == 0
-    - buildings.unit_price_res > 1e5
-    - buildings.unit_price_res < 1e7
-    - buildings.building_type_id.isin({16, 17, 18, 19, 20})
-simulate_filters:
-    - buildings.residential_units > 0
-    - buildings.building_type_id.isin({16, 17, 18, 19, 20})
-merge:
-    table: dset.parcels
-    left_on: parcel_id
-    right_index: True
-dep_var: unit_price_res
-dep_var_transform: np.log
-segment:
-    - segmentation_id
-patsy:
-    - I(year_built < 1940)
-    - year_built
-    - stories
-    - sqft_per_unit
-    - np.log(popden)
-    - dist_hwy
-    - dist_road
-    - crime08
-    - np.log1p(jobs_within_30_min)
-add_constant: yes
-output_table: dset.buildings
-output_varname: residential_improvement_value
-output_transform: np.exp
+name: Residential Sales Hedonic
+
+model_type: regression
+
+fit_filters:
+- residential_units > 0
+- sqft_per_unit > 0
+- year_built > 1700
+- stories > 0
+- tax_exempt == 0
+- 1e5 < unit_price_res < 1e7
+- 16 <= building_type_id <= 20
+
+predict_filters:
+- residential_units > 0
+- 16 <= building_type_id <= 20
+
+model_expression: np.log1p(unit_price_res) ~ I(year_built < 1940) + year_built + stories
+    + np.log1p(sqft_per_unit) + np.log1p(popden) + dist_hwy + dist_road + crime08
+    + np.log1p(jobs_within_30_min)
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        I(year_built < 1940)[T.True]: 0.01650605823220181
+        Intercept: 9.772626974679508
+        crime08: 0.005990144042379245
+        dist_hwy: 4.839853020143089e-07
+        dist_road: -8.468771377460248e-06
+        np.log1p(jobs_within_30_min): 0.014079279920123589
+        np.log1p(popden): -0.053009363349137764
+        np.log1p(sqft_per_unit): 0.47244424554872405
+        stories: 0.07749177208699942
+        year_built: -0.000989662317834409
+    Std. Error:
+        I(year_built < 1940)[T.True]: 0.005167025000830701
+        Intercept: 0.11099672741630007
+        crime08: 9.445525274749247e-05
+        dist_hwy: 9.737272242783816e-08
+        dist_road: 9.265888895676751e-07
+        np.log1p(jobs_within_30_min): 0.0008051705296978263
+        np.log1p(popden): 0.001307564199527593
+        np.log1p(sqft_per_unit): 0.0026974216551248916
+        stories: 0.002557438900624366
+        year_built: 5.602688681489779e-05
+    T-Score:
+        I(year_built < 1940)[T.True]: 3.1944993936642723
+        Intercept: 88.04428024284597
+        crime08: 63.41779697940904
+        dist_hwy: 4.97044028293432
+        dist_road: -9.139729034967795
+        np.log1p(jobs_within_30_min): 17.486084501139683
+        np.log1p(popden): -40.540543529938645
+        np.log1p(sqft_per_unit): 175.14660514833366
+        stories: 30.30053702087694
+        year_built: -17.66406049124353
+
+fit_rsquared_adj: 0.1766869880897649
+
+fit_rsquared: 0.17673288209804705

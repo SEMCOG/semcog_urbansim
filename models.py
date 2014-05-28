@@ -1,68 +1,46 @@
-from urbansim.developer import sqftproforma
-from urbansim.utils import networks
+import pandas as pd
+import time
+from urbansim.models import transition
 from urbansim.models.yamlmodelrunner import *
-from dataset import *
+from variables import var_calc
 
 
 # residential sales hedonic
 def rsh_estimate(dset):
-    df = dset.merge_nodes(HomeSales(dset).build_df())
-    return hedonic_estimate(df, "rsh.yaml")
+    return hedonic_estimate(dset.buildings, "rsh.yaml")
 
 
 def rsh_simulate(dset):
-    df = dset.merge_nodes(Buildings(dset, addprices=False).build_df())
-    return hedonic_simulate(df, "rsh.yaml", dset.buildings, "residential_sales_price")
-
-
-# residential rent hedonic
-def rrh_estimate(dset):
-    df = dset.merge_nodes(Apartments(dset).build_df())
-    return hedonic_estimate(df, "rrh.yaml")
-
-
-def rrh_simulate(dset):
-    df = dset.merge_nodes(Buildings(dset, addprices=False).build_df())
-    return hedonic_simulate(df, "rrh.yaml", dset.buildings, "residential_rent")
+    return hedonic_simulate(dset.buildings, "rsh.yaml", dset.buildings, "unit_price_res")
 
 
 # non-residential hedonic
 def nrh_estimate(dset):
-    df = dset.merge_nodes(CoStar(dset).build_df())
-    return hedonic_estimate(df, "nrh.yaml")
+    return hedonic_estimate(dset.buildings, "nrh.yaml")
 
 
 def nrh_simulate(dset):
-    df = dset.merge_nodes(Buildings(dset, addprices=False).build_df())
-    return hedonic_simulate(df, "nrh.yaml", dset.buildings, "non_residential_rent")
+    return hedonic_simulate(dset.buildings, "nrh.yaml", dset.buildings, "unit_price_nonres")
 
 
 # household location choice
 def hlcm_estimate(dset):
-    households = dset.households
-    buildings = dset.buildings
-    return lcm_estimate(households, "building_id", buildings, "hlcm.yaml")
+    return lcm_estimate(dset.households, "building_id", dset.buildings, "hlcm.yaml")
 
 
 def hlcm_simulate(dset):
-    households = dset.households
-    buildings = dset.buildings
-    units = get_vacant_units(households, "building_id", buildings, "residential_units")
-    return lcm_simulate(households, units, "hlcm.yaml", dset.households, "building_id")
+    units = get_vacant_units(dset.households, "building_id", dset.buildings, "residential_units")
+    return lcm_simulate(dset.households, units, "hlcm.yaml", dset.households, "building_id")
 
 
 # employment location choice
 def elcm_estimate(dset):
-    jobs = dset.jobs_for_estimation
-    buildings = dset.buildings
-    return lcm_estimate(jobs, "building_id", buildings, "elcm.yaml")
+    return lcm_estimate(dset.jobs, "building_id", dset.buildings, "elcm.yaml")
 
 
 def elcm_simulate(dset):
-    jobs = dset.jobs
-    buildings = dset.buildings
-    units = get_vacant_units(jobs, "building_id", buildings, "job_spaces")
-    return lcm_simulate(jobs, units, "elcm.yaml", dset.jobs, "building_id")
+    units = get_vacant_units(dset.jobs, "building_id", dset.buildings, "job_spaces")
+    return lcm_simulate(dset.jobs, units, "elcm.yaml", dset.jobs, "building_id")
 
 
 def households_relocation(dset):
@@ -74,64 +52,41 @@ def jobs_relocation(dset):
 
 
 def households_transition(dset):
-    return simple_transition(dset, "households", .05)
+    ct = dset.fetch('annual_household_control_totals')
+    totals_field = ct.reset_index().groupby('year').total_number_of_households.sum()
+    ct = pd.DataFrame({'total_number_of_households': totals_field})
+    tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
+    model = transition.TransitionModel(tran)
+    new, added_hh_idx, new_linked = \
+        model.transition(dset.households, dset.year,
+                         linked_tables={'linked': (dset.persons, 'household_id')})
+    dset.households = new
+    print dset.households.loc[added_hh_idx].building_id.describe()
+    dset.persons = new_linked['linked']
 
 
 def jobs_transition(dset):
-    return simple_transition(dset, "jobs", .05)
+    ct_emp = dset.fetch('annual_employment_control_totals')
+    totals_field = ct_emp.reset_index().groupby('year').total_number_of_jobs.sum()
+    ct_emp = pd.DataFrame({'total_number_of_jobs': totals_field})
+    tran = transition.TabularTotalsTransition(ct_emp, 'total_number_of_jobs')
+    model = transition.TransitionModel(tran)
+    new, added_jobs_idx, new_linked = model.transition(dset.jobs, dset.year)
+    print dset.jobs.loc[added_jobs_idx].building_id.describe()
+    dset.jobs = new
 
 
-def build_networks():
-    if not networks.NETWORKS:
-        networks.NETWORKS = networks.Networks(
-            [os.path.join(misc.data_dir(), x) for x in ['osm_bayarea.jar']],
-            factors=[1.0],
-            maxdistances=[2000],
-            twoway=[1],
-            impedances=None)
+def _run_models(dset, model_list, years):
+    for year in years:
 
+        dset.year = year
 
-def _update_xys(dset):
-    for dfname in ["households", "jobs"]:
-        print "Adding xys to dataframe: %s" % dfname
-        df = dset.add_xy(dset.fetch(dfname))
-        dset.save_tmptbl(dfname, df)
+        var_calc.calculate(dset)
 
-
-def neighborhood_vars(dset):
-    _update_xys(dset)
-    nodes = networks.from_yaml(dset, "networks.yaml")
-    dset.save_tmptbl("nodes", nodes)
-
-
-def price_vars(dset):
-    nodes = networks.from_yaml(dset, "networks2.yaml")
-    dset.save_tmptbl("nodes_prices", nodes)
-
-
-def feasibility(dset):
-    developer = sqftproforma.SqFtProForma()
-
-    parcels = Parcels(dset)
-    df = parcels.build_df()
-
-    # add prices for each use
-    for t in developer.config.uses:
-        df[t] = parcels.price(t)
-
-    # convert from cost to yearly rent
-    df["residential"] *= developer.config.cap_rate
-
-    far_predictions = {}
-    for form in developer.config.forms:
-        print form
-        tmp = df[parcels.allowed(form)]
-        print tmp.describe()
-        far_predictions[form] = developer.lookup(form, tmp)
-
-    print far_predictions
-    far_predictions = pd.DataFrame(far_predictions)
-    print far_predictions
-
-    dset.save_tmptbl("feasibility", far_predictions)
-
+        t1 = time.time()
+        for model in model_list:
+            t2 = time.time()
+            print "\n" + model + "\n"
+            globals()[model](dset)
+            print "Model %s executed in %.3fs" % (model, time.time()-t2)
+        print "Year %d completed in %.3fs" % (year, time.time()-t1)

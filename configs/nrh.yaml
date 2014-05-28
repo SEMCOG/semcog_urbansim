@@ -1,0 +1,62 @@
+name: Non-residential Rent Hedonic
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- year_built > 1700
+- stories > 0
+- tax_exempt == 0
+- unit_price_nonres > 0
+- building_type_id > 20
+
+predict_filters:
+- non_residential_sqft > 0
+- 16 <= building_type_id > 20
+
+model_expression: np.log1p(unit_price_nonres) ~ I(year_built < 1940) + year_built
+    + stories + np.log1p(non_residential_sqft) + np.log1p(popden) + dist_hwy + dist_road
+    + crime08 + np.log1p(jobs_within_30_min)
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        I(year_built < 1940)[T.True]: -0.0025908929930859724
+        Intercept: -14.70265116787072
+        crime08: -0.016030942761175282
+        dist_hwy: -4.40182039421267e-06
+        dist_road: -0.0001185250791151723
+        np.log1p(jobs_within_30_min): 0.030749409782182564
+        np.log1p(non_residential_sqft): -0.2863832458787649
+        np.log1p(popden): 0.030826684141830693
+        stories: 0.028245772622254414
+        year_built: 0.010317801007523521
+    Std. Error:
+        I(year_built < 1940)[T.True]: 0.010693763253187518
+        Intercept: 0.3112854373122445
+        crime08: 0.00011520062991081747
+        dist_hwy: 3.3708063134177643e-07
+        dist_road: 5.598371384916816e-06
+        np.log1p(jobs_within_30_min): 0.001325797349528087
+        np.log1p(non_residential_sqft): 0.002190391815644951
+        np.log1p(popden): 0.003264432872300537
+        stories: 0.003051967138384924
+        year_built: 0.00015782934609217213
+    T-Score:
+        I(year_built < 1940)[T.True]: -0.24228075110169456
+        Intercept: -47.23205587392374
+        crime08: -139.15672834068383
+        dist_hwy: -13.058657142924146
+        dist_road: -21.171349838366147
+        np.log1p(jobs_within_30_min): 23.19314470882576
+        np.log1p(non_residential_sqft): -130.74521363404594
+        np.log1p(popden): 9.443197439715238
+        stories: 9.25493995888889
+        year_built: 65.37314677523874
+
+fit_rsquared_adj: 0.33995376506221175
+
+fit_rsquared: 0.34000540154695613

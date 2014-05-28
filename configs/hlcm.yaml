@@ -7,8 +7,7 @@ choosers_fit_filters:
 
 choosers_predict_filters: null
 
-alts_fit_filters:
-- building_id > 0
+alts_fit_filters: null
 
 alts_predict_filters:
 - residential_units > 0
@@ -17,38 +16,38 @@ alts_predict_filters:
 interaction_predict_filters:
 - income * 5 > unit_price_res
 
-choice_column: building_id
+choice_column: null
 
 sample_size: 50
 
 estimation_sample_size: 15000
 
-model_expression: sqft_per_unit + income:np.log1p(unit_price_res) + jobs_within_30_min
-    + crime08 + popden
+model_expression: np.log1p(sqft_per_unit) + np.log1p(jobs_within_30_min) + np.log1p(crime08)
+    + np.log1p(popden) + np.log1p(income * unit_price_res)
 
 fitted: true
 
 log_likelihoods:
-    convergence: -67776.52236340546
-    'null': -69077.55278983228
-    ratio: 0.01883434449951049
+    convergence: -56938.172018961275
+    'null': -58680.34508140402
+    ratio: 0.029689209564564112
 
 fit_parameters:
     Coefficient:
-        crime08: 4.003690657528944e-05
-        income:np.log1p(unit_price_res): 2.3753765870688393e-06
-        jobs_within_30_min: 1.5795565752325007e-08
-        popden: 3.959625538809333e-05
-        sqft_per_unit: -0.00012182349558280102
+        np.log1p(crime08): 0.0979446628046294
+        np.log1p(income * unit_price_res): 0.1454250110041446
+        np.log1p(jobs_within_30_min): 0.02014687080228888
+        np.log1p(popden): -0.09906791479613239
+        np.log1p(sqft_per_unit): -0.11483911713446579
     Std. Error:
-        crime08: 0.0003921535241385274
-        income:np.log1p(unit_price_res): 9.949340433657875e-09
-        jobs_within_30_min: 3.6510880106566515e-08
-        popden: 0.0017229526562558837
-        sqft_per_unit: 3.7797404253859417e-06
+        np.log1p(crime08): 0.013390348283224598
+        np.log1p(income * unit_price_res): 0.002659444672954026
+        np.log1p(jobs_within_30_min): 0.0042170739795285095
+        np.log1p(popden): 0.009837814313676694
+        np.log1p(sqft_per_unit): 0.009222362096127578
     T-Score:
-        crime08: 0.10209498094717234
-        income:np.log1p(unit_price_res): 238.74714137161473
-        jobs_within_30_min: 0.43262626664220455
-        popden: 0.02298162705999085
-        sqft_per_unit: -32.23065128086458
+        np.log1p(crime08): 7.314571714862285
+        np.log1p(income * unit_price_res): 54.68247280459915
+        np.log1p(jobs_within_30_min): 4.777452541760105
+        np.log1p(popden): -10.070114319845061
+        np.log1p(sqft_per_unit): -12.452245524244395

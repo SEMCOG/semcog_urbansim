@@ -7,8 +7,7 @@ choosers_fit_filters:
 
 choosers_predict_filters: null
 
-alts_fit_filters:
-- building_id > 0
+alts_fit_filters: null
 
 alts_predict_filters:
 - non_residential_sqft > 0
@@ -16,38 +15,38 @@ alts_predict_filters:
 
 interaction_predict_filters: null
 
-choice_column: building_id
+choice_column: null
 
 sample_size: 50
 
-estimation_sample_size: null
+estimation_sample_size: 15000
 
-model_expression: np.log1p(non_residential_sqft) + np.log1p(improvement_value) + jobs_within_30_min
-    + popden + crime08
+model_expression: np.log1p(non_residential_sqft) + np.log1p(improvement_value) + np.log1p(jobs_within_30_min)
+    + np.log1p(popden) + np.log1p(crime08)
 
 fitted: true
 
 log_likelihoods:
-    convergence: -49822.99786541631
-    'null': -187777.10426042898
-    ratio: 0.734669473886888
+    convergence: -15608.964603551569
+    'null': -58473.007862116494
+    ratio: 0.7330569236260496
 
 fit_parameters:
     Coefficient:
-        crime08: -0.010417385272686328
-        jobs_within_30_min: 1.5669608581018452e-06
-        np.log1p(improvement_value): 0.1759334180957639
-        np.log1p(non_residential_sqft): 0.644703465074082
-        popden: -0.050382148991357366
+        np.log1p(crime08): -0.13475306138495363
+        np.log1p(improvement_value): 0.1888528925701008
+        np.log1p(jobs_within_30_min): 0.20850213956232042
+        np.log1p(non_residential_sqft): 0.6408980937628257
+        np.log1p(popden): -0.20075057100340815
     Std. Error:
-        crime08: 0.00030583737379294646
-        jobs_within_30_min: 2.978236432580716e-08
-        np.log1p(improvement_value): 0.0016951959203531642
-        np.log1p(non_residential_sqft): 0.002365438211871356
-        popden: 0.0013786544766364486
+        np.log1p(crime08): 0.01904329653192544
+        np.log1p(improvement_value): 0.0035172337936297702
+        np.log1p(jobs_within_30_min): 0.006033454692955402
+        np.log1p(non_residential_sqft): 0.004205867541715652
+        np.log1p(popden): 0.013624117470395656
     T-Score:
-        crime08: -34.061845167879824
-        jobs_within_30_min: 52.6137159884259
-        np.log1p(improvement_value): 103.78353084940842
-        np.log1p(non_residential_sqft): 272.5513868164163
-        popden: -36.54443505981024
+        np.log1p(crime08): -7.076141526181915
+        np.log1p(improvement_value): 53.693585257864086
+        np.log1p(jobs_within_30_min): 34.55767055079826
+        np.log1p(non_residential_sqft): 152.3819015711064
+        np.log1p(popden): -14.734941286261398

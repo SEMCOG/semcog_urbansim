@@ -1,5 +1,6 @@
-import numpy as np, pandas as pd
-from urbansim.utils import dataset
+import numpy as np
+import pandas as pd
+
 
 def calculate(dset):
     def merge_buildings_parcels(buildings, parcels):
@@ -71,29 +72,6 @@ def calculate(dset):
         buildings['jobs_within_30_min'] = job_counts[buildings.zone_id].fillna(0).values
         return buildings
 
-    ##Table of vacant residential units
-    def residential_units_table(households, buildings):
-        buildings = buildings.query('residential_units > 0')
-        vacant_units_per_building = buildings.residential_units.subtract(
-            households.groupby('building_id').size(), fill_value=0)
-        vacant_units_per_building = vacant_units_per_building[vacant_units_per_building > 0]
-        repeated_index = vacant_units_per_building.index.repeat(
-            vacant_units_per_building.astype('int'))
-        return buildings.loc[repeated_index].reset_index()
-
-    ##Table of job spaces
-    def job_spaces_table(jobs, buildings):
-        buildings = buildings.query('job_spaces > 0')
-        vacant_units_per_building = buildings.job_spaces.subtract(
-            jobs.groupby('building_id').size(), fill_value=0)
-        vacant_units_per_building = vacant_units_per_building[vacant_units_per_building > 0]
-        repeated_index = vacant_units_per_building.index.repeat(
-            vacant_units_per_building.astype('int'))
-        return buildings.loc[repeated_index].reset_index()
-
-    #data_store = pd.HDFStore('./data/semcog_data.h5', mode='r')
-    #dset = dataset.Dataset('C://urbansim//data//semcog_data.h5')
-
     buildings = dset.fetch('buildings')
     buildings.non_residential_sqft = buildings.non_residential_sqft.astype('int64')
     parcels = dset.fetch('parcels')
@@ -108,13 +86,12 @@ def calculate(dset):
     buildings = crime_rate(buildings, dset.cities)
     buildings = jobs_within_30_min(buildings, dset.travel_data, jobs)
 
-    vacant_residential_units = residential_units_table(households, buildings)
-    buildings = pd.merge(buildings,dset.building_sqft_per_job,left_on=['zone_id','building_type_id'],right_index=True,how='left')
+    buildings = pd.merge(buildings, dset.building_sqft_per_job,
+                         left_on=['zone_id', 'building_type_id'],
+                         right_index=True, how='left')
     buildings['job_spaces'] = buildings.non_residential_sqft/buildings.building_sqft_per_job
     buildings['job_spaces'] = np.round(buildings['job_spaces'].fillna(0)).astype('int')
-    buildings.job_spaces[buildings.job_spaces<0] = 0
+    buildings.job_spaces[buildings.job_spaces < 0] = 0
 
-    vacant_job_spaces = job_spaces_table(jobs, buildings)
     buildings['building_sqft'] = buildings.non_residential_sqft + buildings.sqft_per_unit*buildings.residential_units
     dset.buildings = buildings
-    return vacant_residential_units, vacant_job_spaces
