@@ -1,0 +1,54 @@
+name: Household Location Choice Model
+
+model_type: locationchoice
+
+choosers_fit_filters:
+- building_id > 0
+
+choosers_predict_filters: null
+
+alts_fit_filters:
+- building_id > 0
+
+alts_predict_filters:
+- residential_units > 0
+- building_type_id in [16,17,18,19,20]
+
+interaction_predict_filters:
+- income * 5 > unit_price_res
+
+choice_column: building_id
+
+sample_size: 50
+
+estimation_sample_size: 15000
+
+model_expression: sqft_per_unit + income:np.log1p(unit_price_res) + jobs_within_30_min
+    + crime08 + popden
+
+fitted: true
+
+log_likelihoods:
+    convergence: -67776.52236340546
+    'null': -69077.55278983228
+    ratio: 0.01883434449951049
+
+fit_parameters:
+    Coefficient:
+        crime08: 4.003690657528944e-05
+        income:np.log1p(unit_price_res): 2.3753765870688393e-06
+        jobs_within_30_min: 1.5795565752325007e-08
+        popden: 3.959625538809333e-05
+        sqft_per_unit: -0.00012182349558280102
+    Std. Error:
+        crime08: 0.0003921535241385274
+        income:np.log1p(unit_price_res): 9.949340433657875e-09
+        jobs_within_30_min: 3.6510880106566515e-08
+        popden: 0.0017229526562558837
+        sqft_per_unit: 3.7797404253859417e-06
+    T-Score:
+        crime08: 0.10209498094717234
+        income:np.log1p(unit_price_res): 238.74714137161473
+        jobs_within_30_min: 0.43262626664220455
+        popden: 0.02298162705999085
+        sqft_per_unit: -32.23065128086458

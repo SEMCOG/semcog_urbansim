@@ -1,0 +1,53 @@
+name: Employment Location Choice Model
+
+model_type: locationchoice
+
+choosers_fit_filters:
+- home_based_status == 0
+
+choosers_predict_filters: null
+
+alts_fit_filters:
+- building_id > 0
+
+alts_predict_filters:
+- non_residential_sqft > 0
+- building_type_id not in [16,17,18,19,20]
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 50
+
+estimation_sample_size: null
+
+model_expression: np.log1p(non_residential_sqft) + np.log1p(improvement_value) + jobs_within_30_min
+    + popden + crime08
+
+fitted: true
+
+log_likelihoods:
+    convergence: -49822.99786541631
+    'null': -187777.10426042898
+    ratio: 0.734669473886888
+
+fit_parameters:
+    Coefficient:
+        crime08: -0.010417385272686328
+        jobs_within_30_min: 1.5669608581018452e-06
+        np.log1p(improvement_value): 0.1759334180957639
+        np.log1p(non_residential_sqft): 0.644703465074082
+        popden: -0.050382148991357366
+    Std. Error:
+        crime08: 0.00030583737379294646
+        jobs_within_30_min: 2.978236432580716e-08
+        np.log1p(improvement_value): 0.0016951959203531642
+        np.log1p(non_residential_sqft): 0.002365438211871356
+        popden: 0.0013786544766364486
+    T-Score:
+        crime08: -34.061845167879824
+        jobs_within_30_min: 52.6137159884259
+        np.log1p(improvement_value): 103.78353084940842
+        np.log1p(non_residential_sqft): 272.5513868164163
+        popden: -36.54443505981024

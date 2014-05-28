@@ -1,4 +1,4 @@
-from urbansim.urbansim.dataset import Dataset
+from urbansim.utils.dataset import Dataset
 
 
 class SemcogDataset(Dataset):

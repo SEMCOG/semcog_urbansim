@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd
-from urbansim.urbansim import dataset
+from urbansim.utils import dataset
 
 def calculate(dset):
     def merge_buildings_parcels(buildings, parcels):
