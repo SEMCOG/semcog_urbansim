@@ -40,6 +40,7 @@ def elcm_estimate(dset):
 
 def elcm_simulate(dset):
     units = get_vacant_units(dset.jobs, "building_id", dset.buildings, "job_spaces")
+    units = units.loc[np.random.choice(units.index, size=200000, replace=False)]
     return lcm_simulate(dset.jobs, units, "elcm.yaml", dset.jobs, "building_id")
 
 
