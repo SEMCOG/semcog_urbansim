@@ -1,10 +1,56 @@
-from urbansim.utils.dataset import Dataset
+from urbansim.utils import dataset, misc
 
 
-class SemcogDataset(Dataset):
-    def fetch_buildings(self):
+class SemcogDataset(dataset.Dataset):
+    pass
+
+'''
+This is a start at computing the variables with an API - FF
+
+class Households(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        self.dset = dset
+        self.df = dset.households
+
+    @property
+    def zone_id(self):
+        return misc.reindex(Buildings(self.dset).zone_id, self.df.building_id)
+
+
+class Zones(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        self.dset = dset
+        self.df = dset.tazs
+
+    @property
+    def popden(self):
+        Households(self.dset).
+        dset.households.groupby('')
+
+
+class Jobs(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        self.dset = dset
+        self.df = dset.jobs
+
+
+class Buildings(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        self.dset = dset
+        self.df = dset.buildings
+
+    @property
+    def zone_id(self):
+        return misc.reindex(self.dset.parcels.zone_id, self.df.parcel_id)
+
+    @property
+    def popden(self):
         # population density = zonal population / acres per zone
-        parcels = self.store.get('parcels')
+        parcels = self.dset.parcels
 
         # zone population
         bldg_pop = (self.store.get('households')
@@ -39,3 +85,4 @@ class SemcogDataset(Dataset):
         buildings['jobs_within_30_min'] = job_counts[bldg_zone_id].values
 
         return buildings
+'''

@@ -94,4 +94,4 @@ def calculate(dset):
     buildings.job_spaces[buildings.job_spaces < 0] = 0
 
     buildings['building_sqft'] = buildings.non_residential_sqft + buildings.sqft_per_unit*buildings.residential_units
-    dset.buildings = buildings
+    dset.buildings_computed = buildings

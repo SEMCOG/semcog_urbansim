@@ -7,39 +7,39 @@ from variables import var_calc
 
 # residential sales hedonic
 def rsh_estimate(dset):
-    return hedonic_estimate(dset.buildings, "rsh.yaml")
+    return hedonic_estimate(dset.buildings_computed, "rsh.yaml")
 
 
 def rsh_simulate(dset):
-    return hedonic_simulate(dset.buildings, "rsh.yaml", dset.buildings, "unit_price_res")
+    return hedonic_simulate(dset.buildings_computed, "rsh.yaml", dset.buildings, "unit_price_res")
 
 
 # non-residential hedonic
 def nrh_estimate(dset):
-    return hedonic_estimate(dset.buildings, "nrh.yaml")
+    return hedonic_estimate(dset.buildings_computed, "nrh.yaml")
 
 
 def nrh_simulate(dset):
-    return hedonic_simulate(dset.buildings, "nrh.yaml", dset.buildings, "unit_price_nonres")
+    return hedonic_simulate(dset.buildings_computed, "nrh.yaml", dset.buildings, "unit_price_nonres")
 
 
 # household location choice
 def hlcm_estimate(dset):
-    return lcm_estimate(dset.households, "building_id", dset.buildings, "hlcm.yaml")
+    return lcm_estimate(dset.households, "building_id", dset.buildings_computed, "hlcm.yaml")
 
 
 def hlcm_simulate(dset):
-    units = get_vacant_units(dset.households, "building_id", dset.buildings, "residential_units")
+    units = get_vacant_units(dset.households, "building_id", dset.buildings_computed, "residential_units")
     return lcm_simulate(dset.households, units, "hlcm.yaml", dset.households, "building_id")
 
 
 # employment location choice
 def elcm_estimate(dset):
-    return lcm_estimate(dset.jobs, "building_id", dset.buildings, "elcm.yaml")
+    return lcm_estimate(dset.jobs, "building_id", dset.buildings_computed, "elcm.yaml")
 
 
 def elcm_simulate(dset):
-    units = get_vacant_units(dset.jobs, "building_id", dset.buildings, "job_spaces")
+    units = get_vacant_units(dset.jobs, "building_id", dset.buildings_computed, "job_spaces")
     units = units.loc[np.random.choice(units.index, size=200000, replace=False)]
     return lcm_simulate(dset.jobs, units, "elcm.yaml", dset.jobs, "building_id")
 
@@ -62,8 +62,8 @@ def households_transition(dset):
         model.transition(dset.households, dset.year,
                          linked_tables={'linked': (dset.persons, 'household_id')})
     new.loc[added_hh_idx, "building_id"] = np.nan
-    dset.households = new
-    dset.persons = new_linked['linked']
+    dset.save_tmptbl("households", new)
+    dset.save_tmptbl("persons", new_linked['linked'])
 
 
 def jobs_transition(dset):
@@ -74,7 +74,7 @@ def jobs_transition(dset):
     model = transition.TransitionModel(tran)
     new, added_jobs_idx, new_linked = model.transition(dset.jobs, dset.year)
     new.loc[added_jobs_idx, "building_id"] = np.nan
-    dset.jobs = new
+    dset.save_tmptbl("jobs", new)
 
 
 def _run_models(dset, model_list, years):
@@ -83,7 +83,7 @@ def _run_models(dset, model_list, years):
         dset.year = year
 
         t1 = time.time()
-        print "Computing variables"
+
         var_calc.calculate(dset)
 
         for model in model_list:
