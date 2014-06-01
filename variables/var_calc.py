@@ -8,10 +8,10 @@ def calculate(dset):
 
     def unit_price_res_column(buildings):
         """
-        Calculate residential unit price as improvement_value per residential unit.
+        Calculate residential unit price as improvement_value per sqft.
         
         """
-        buildings['unit_price_res'] = buildings.improvement_value / buildings.residential_units
+        buildings['unit_price_res'] = buildings.improvement_value / (buildings.sqft_per_unit*buildings.residential_units)
         buildings['unit_price_res'][buildings['residential_units'] == 0] = 0
         return buildings
 
