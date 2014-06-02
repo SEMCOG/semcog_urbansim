@@ -3,48 +3,78 @@ import numpy as np
 import time
 from urbansim.models import transition
 import urbansim.models.yamlmodelrunner as ymr
-from variables import var_calc
 from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc
 
 
+def buildings_df(dset, addprices=False):
+    buildings = dset.view("buildings")
+    if addprices:
+        flds = buildings.flds + ["unit_price_res", "unit_price_nonres"]
+    else:
+        flds = buildings.flds
+    return buildings.build_df(flds=flds).fillna(0)
+
+
+def households_df(dset):
+    return dset.view("households").build_df()
+
+
+def jobs_df(dset):
+    return dset.view("jobs").build_df()
+
+
+def clear_cache(dset):
+    dset.clear_views()
+
+
+def cache_variables(dset):
+    buildings_df(dset)
+    households_df(dset)
+    jobs_df(dset)
+
+
 # residential sales hedonic
 def rsh_estimate(dset):
-    return ymr.hedonic_estimate(dset.buildings_computed, "rsh.yaml")
+    return ymr.hedonic_estimate(buildings_df(dset), "rsh.yaml")
 
 
 def rsh_simulate(dset):
-    return ymr.hedonic_simulate(dset.buildings_computed, "rsh.yaml", dset.buildings, "unit_price_res")
+    return ymr.hedonic_simulate(buildings_df(dset), "rsh.yaml", dset.buildings, "unit_price_res")
 
 
 # non-residential hedonic
 def nrh_estimate(dset):
-    return ymr.hedonic_estimate(dset.buildings_computed, "nrh.yaml")
+    return ymr.hedonic_estimate(buildings_df(dset), "nrh.yaml")
 
 
 def nrh_simulate(dset):
-    return ymr.hedonic_simulate(dset.buildings_computed, "nrh.yaml", dset.buildings, "unit_price_nonres")
+    return ymr.hedonic_simulate(buildings_df(dset), "nrh.yaml", dset.buildings, "unit_price_nonres")
 
 
 # household location choice
 def hlcm_estimate(dset):
-    return ymr.lcm_estimate(dset.households, "building_id", dset.buildings_computed, "hlcm.yaml")
+    return ymr.lcm_estimate(households_df(dset), "building_id", buildings_df(dset, addprices=True),
+                            "hlcm.yaml")
 
 
 def hlcm_simulate(dset):
-    units = ymr.get_vacant_units(dset.households, "building_id", dset.buildings_computed, "residential_units")
-    return ymr.lcm_simulate(dset.households, units, "hlcm.yaml", dset.households, "building_id")
+    units = ymr.get_vacant_units(households_df(dset), "building_id", buildings_df(dset, addprices=True),
+                                 "residential_units")
+    return ymr.lcm_simulate(households_df(dset), units, "hlcm.yaml", dset.households, "building_id")
 
 
 # employment location choice
 def elcm_estimate(dset):
-    return ymr.lcm_estimate(dset.jobs, "building_id", dset.buildings_computed, "elcm.yaml")
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset, addprices=True),
+                            "elcm.yaml")
 
 
 def elcm_simulate(dset):
-    units = ymr.get_vacant_units(dset.jobs, "building_id", dset.buildings_computed, "job_spaces")
+    units = ymr.get_vacant_units(jobs_df(dset), "building_id", buildings_df(dset, addprices=True),
+                                 "job_spaces")
     units = units.loc[np.random.choice(units.index, size=200000, replace=False)]
-    return ymr.lcm_simulate(dset.jobs, units, "elcm.yaml", dset.jobs, "building_id")
+    return ymr.lcm_simulate(jobs_df(dset), units, "elcm.yaml", dset.jobs, "building_id")
 
 
 def households_relocation(dset):
@@ -83,7 +113,7 @@ def jobs_transition(dset):
 def feasibility(dset):
     pf = sqftproforma.SqFtProForma()
 
-    buildings = dset.buildings_computed
+    buildings = dset.view("buildings")
     average_residential_rent = buildings.query("residential_units > 0")\
         .groupby('zone_id').unit_price_res.quantile() * pf.config.cap_rate
     average_non_residential_rent = buildings.query("non_residential_sqft > 0")\
@@ -123,14 +153,14 @@ def residential_developer(dset):
                                    res_target_vacancy)
 
     min_new_unit_size = 650
-    ave_unit_size = dset.buildings_computed.groupby('zone_id').sqft_per_unit.quantile()
+    ave_unit_size = dset.view("buildings").groupby('zone_id').sqft_per_unit.quantile()
     ave_unit_size[ave_unit_size < min_new_unit_size] = min_new_unit_size
     ave_unit_size = misc.reindex(ave_unit_size, dset.parcels.index)
 
     new_buildings = dev.pick_build(res_target_units,
                                    dset.parcels.parcel_sqft,
                                    ave_unit_size,
-                                   dset.buildings_computed.groupby('parcel_id').residential_units.sum())
+                                   dset.view("buildings").groupby('parcel_id').residential_units.sum())
     print new_buildings.head()
     print new_buildings.columns
     print new_buildings.describe()
@@ -158,9 +188,6 @@ def _run_models(dset, model_list, years):
         dset.year = year
 
         t1 = time.time()
-
-        var_calc.calculate(dset)
-
         for model in model_list:
             t2 = time.time()
             print "\n" + model + "\n"

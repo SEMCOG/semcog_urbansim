@@ -21,32 +21,29 @@ sample_size: 50
 
 estimation_sample_size: 15000
 
-model_expression: np.log1p(non_residential_sqft) + np.log1p(improvement_value) + np.log1p(jobs_within_30_min)
-    + np.log1p(popden) + np.log1p(crime08)
+model_expression: np.log1p(non_residential_sqft) + np.log1p(jobs_within_30_min) +
+    np.log1p(popden) + np.log1p(crime08)
 
 fitted: true
 
 log_likelihoods:
-    convergence: -15608.964603551569
-    'null': -58473.007862116494
-    ratio: 0.7330569236260496
+    convergence: -16269.273134132694
+    'null': -58371.295263975444
+    ratio: 0.72127955940403
 
 fit_parameters:
     Coefficient:
-        np.log1p(crime08): -0.13475306138495363
-        np.log1p(improvement_value): 0.1888528925701008
-        np.log1p(jobs_within_30_min): 0.20850213956232042
-        np.log1p(non_residential_sqft): 0.6408980937628257
-        np.log1p(popden): -0.20075057100340815
+        np.log1p(crime08): -0.3667185003575095
+        np.log1p(jobs_within_30_min): 0.26686415731672425
+        np.log1p(non_residential_sqft): 0.7244368876193996
+        np.log1p(popden): -0.14267708874316998
     Std. Error:
-        np.log1p(crime08): 0.01904329653192544
-        np.log1p(improvement_value): 0.0035172337936297702
-        np.log1p(jobs_within_30_min): 0.006033454692955402
-        np.log1p(non_residential_sqft): 0.004205867541715652
-        np.log1p(popden): 0.013624117470395656
+        np.log1p(crime08): 0.018523066086951086
+        np.log1p(jobs_within_30_min): 0.005194106106911606
+        np.log1p(non_residential_sqft): 0.004216950745270757
+        np.log1p(popden): 0.012791516577661333
     T-Score:
-        np.log1p(crime08): -7.076141526181915
-        np.log1p(improvement_value): 53.693585257864086
-        np.log1p(jobs_within_30_min): 34.55767055079826
-        np.log1p(non_residential_sqft): 152.3819015711064
-        np.log1p(popden): -14.734941286261398
+        np.log1p(crime08): -19.79793726568039
+        np.log1p(jobs_within_30_min): 51.378264483588026
+        np.log1p(non_residential_sqft): 171.79164078021162
+        np.log1p(popden): -11.154040091879049
