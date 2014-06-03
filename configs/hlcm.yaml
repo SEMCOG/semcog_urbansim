@@ -1,0 +1,53 @@
+name: Household Location Choice Model
+
+model_type: locationchoice
+
+choosers_fit_filters:
+- building_id > 0
+
+choosers_predict_filters: null
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 50
+
+estimation_sample_size: 15000
+
+model_expression: np.log1p(sqft_per_unit) + np.log1p(jobs_within_30_min) + np.log1p(crime08)
+    + np.log1p(popden) + np.log1p(income * unit_price_res) + np.log1p(residential_units)
+
+fitted: true
+
+log_likelihoods:
+    convergence: -53303.23147512025
+    'null': -58680.34508140402
+    ratio: 0.09163398065952744
+
+fit_parameters:
+    Coefficient:
+        np.log1p(crime08): -0.03641462346698062
+        np.log1p(income * unit_price_res): 0.17870254574470365
+        np.log1p(jobs_within_30_min): -0.003609974557195787
+        np.log1p(popden): 0.04729917322043877
+        np.log1p(residential_units): 1.151755967300769
+        np.log1p(sqft_per_unit): 0.08095188933906113
+    Std. Error:
+        np.log1p(crime08): 0.014504462282160445
+        np.log1p(income * unit_price_res): 0.0038809881488822656
+        np.log1p(jobs_within_30_min): 0.0049561977340198795
+        np.log1p(popden): 0.013439390254841055
+        np.log1p(residential_units): 0.0121419167749701
+        np.log1p(sqft_per_unit): 0.009512330997340232
+    T-Score:
+        np.log1p(crime08): -2.5105807274060936
+        np.log1p(income * unit_price_res): 46.04563036250715
+        np.log1p(jobs_within_30_min): -0.7283758136638758
+        np.log1p(popden): 3.519443391667338
+        np.log1p(residential_units): 94.85783741122745
+        np.log1p(sqft_per_unit): 8.510205265323115

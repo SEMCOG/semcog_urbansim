@@ -1,41 +1,135 @@
-from urbansim.urbansim.dataset import Dataset
+import pandas as pd
+import numpy as np
+from urbansim.utils import dataset, misc
+from urbansim.utils.dataset import variable
 
 
-class SemcogDataset(Dataset):
-    def fetch_buildings(self):
-        # population density = zonal population / acres per zone
-        parcels = self.store.get('parcels')
+class SemcogDataset(dataset.Dataset):
+    def __init__(self, filename):
+        super(SemcogDataset, self).__init__(filename)
 
-        # zone population
-        bldg_pop = (self.store.get('households')
-                    .groupby('building_id')
-                    .persons.sum())
-        parcel_ids = self.store.get('buildings').parcel_id
-        parcel_pop = bldg_pop.groupby(parcel_ids).sum()
-        zone_pop = parcel_pop.groupby(parcels.zone_id).sum()
+    def clear_views(self):
+        self.views = {
+            "parcels": Parcels(self),
+            "households": Households(self),
+            "jobs": Jobs(self),
+            "buildings": Buildings(self),
+            "zones": Zones(self),
+            "cities": self.cities
+        }
 
-        # zone acreage
-        zone_acres = parcels.groupby('zone_id').parcel_sqft.sum() / 43560.0
 
-        pop_density = zone_pop / zone_acres
+class Parcels(dataset.CustomDataFrame):
 
-        bldg_zone_id = parcels.zone_id[parcel_ids]
-        bldg_zone_id.index = parcel_ids.index
+    def __init__(self, dset):
+        super(Parcels, self).__init__(dset, "parcels")
+        self.flds = ["acres"]
 
-        buildings = self.store.get('buildings')
-        buildings['popden'] = pop_density[bldg_zone_id].values
+    @variable
+    def acres(self):
+        return "parcels.parcel_sqft / 43560"
 
-        # crime rate
-        crimerate = self.store.get('cities').crime08
-        parcel_cr = crimerate[parcels.city_id]
-        parcel_cr.index = parcels.index
-        buildings['crime08'] = parcel_cr[parcel_ids].values
 
-        # jobs within thirty minutes
-        travel_data = self.fetch('travel_data').reset_index(level='to_zone_id')
-        travel_data = travel_data[
-            travel_data.am_single_vehicle_to_work_travel_time < 30]
-        job_counts = travel_data.to_zone_id.groupby(level=0).count()
-        buildings['jobs_within_30_min'] = job_counts[bldg_zone_id].values
+class Households(dataset.CustomDataFrame):
 
-        return buildings
+    def __init__(self, dset):
+        super(Households, self).__init__(dset, "households")
+        self.flds = ["zone_id", "building_id", "income"]
+
+    @variable
+    def zone_id(self):
+        return "reindex(buildings.zone_id, households.building_id)"
+
+
+class Jobs(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        super(Jobs, self).__init__(dset, "jobs")
+        self.flds = ["zone_id", "building_id", "home_based_status"]
+
+    @variable
+    def zone_id(self):
+        return "reindex(buildings.zone_id, jobs.building_id)"
+
+
+class Zones(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        super(Zones, self).__init__(dset, "zones")
+
+    @variable
+    def popden(self):
+        return "households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()"
+
+    @property
+    def jobs_within_30_min(self):
+        return misc.compute_range(self.dset.travel_data,
+                                  self.dset.jobs.groupby('zone_id').size(),
+                                  "am_single_vehicle_to_work_travel_time",
+                                  30, agg=np.sum)
+
+
+class Buildings(dataset.CustomDataFrame):
+
+    def __init__(self, dset):
+        self.flds = ["crime08", "popden", "unit_price_res_est", "sqft_per_unit",
+                     "unit_price_nonres_est", "building_sqft", "job_spaces",
+                     "jobs_within_30_min", "non_residential_sqft",
+                     "residential_units", "year_built", "stories",
+                     "tax_exempt", "building_type_id", "dist_hwy", "dist_road"]
+        super(Buildings, self).__init__(dset, "buildings")
+
+    @variable
+    def dist_hwy(self):
+        return "reindex(parcels.dist_hwy, buildings.parcel_id)"
+
+    @variable
+    def dist_road(self):
+        return "reindex(parcels.dist_road, buildings.parcel_id)"
+
+    @variable
+    def zone_id(self):
+        return "reindex(parcels.zone_id, buildings.parcel_id)"
+
+    @variable
+    def city_id(self):
+        return "reindex(parcels.city_id, buildings.parcel_id)"
+
+    @variable
+    def crime08(self):
+        return 'reindex(cities.crime08, buildings.city_id)'
+
+    @variable
+    def popden(self):
+        return "reindex(zones.popden, buildings.zone_id)"
+
+    @variable
+    def building_sqft(self):
+        return "buildings.non_residential_sqft + buildings.sqft_per_unit*buildings.residential_units"
+
+    @variable
+    def unit_price_nonres_est(self):
+        return "buildings.improvement_value / buildings.non_residential_sqft"
+
+    @variable
+    def unit_price_res_est(self):
+        return "buildings.improvement_value / (buildings.sqft_per_unit * buildings.residential_units)"
+
+    @property
+    def building_sqft_per_job(self):
+        return pd.merge(self.build_df(flds=['zone_id', 'building_type_id']),
+                        self.dset.building_sqft_per_job,
+                        left_on=['zone_id', 'building_type_id'],
+                        right_index=True, how='left').building_sqft_per_job
+
+    @property
+    def job_spaces(self):
+        job_spaces = self.non_residential_sqft / self.building_sqft_per_job
+        job_spaces[np.isinf(job_spaces)] = np.nan
+        job_spaces[job_spaces < 0] = 0
+        job_spaces = job_spaces.fillna(0).round().astype('int')
+        return job_spaces
+
+    @variable
+    def jobs_within_30_min(self):
+        return "reindex(zones.jobs_within_30_min, buildings.zone_id)"
