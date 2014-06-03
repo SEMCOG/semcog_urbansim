@@ -4,7 +4,7 @@ import time
 from urbansim.models import transition
 import urbansim.models.yamlmodelrunner as ymr
 from urbansim.developer import sqftproforma, developer
-from urbansim.utils import misc
+from urbansim.utils import misc, networks
 
 
 def buildings_df(dset, addprices=False):
@@ -180,6 +180,16 @@ def residential_developer(dset):
 'tax_exempt', \
 'year_built'
     """
+
+
+def build_networks():
+    if not networks.NETWORKS:
+        networks.NETWORKS = networks.Networks(
+            [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.jar']],
+            factors=[1.0],
+            maxdistances=[2000],
+            twoway=[1],
+            impedances=None)
 
 
 def _run_models(dset, model_list, years):
