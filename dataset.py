@@ -23,33 +23,59 @@ class Parcels(dataset.CustomDataFrame):
 
     def __init__(self, dset):
         super(Parcels, self).__init__(dset, "parcels")
-        self.flds = ["acres"]
+        self.flds = ["acres", "x", "y"]
 
     @variable
     def acres(self):
         return "parcels.parcel_sqft / 43560"
+
+    @variable
+    def x(self):
+        return "parcels.centroid_x"
+
+    @variable
+    def y(self):
+        return "parcels.centroid_y"
 
 
 class Households(dataset.CustomDataFrame):
 
     def __init__(self, dset):
         super(Households, self).__init__(dset, "households")
-        self.flds = ["zone_id", "building_id", "income"]
+        self.flds = ["zone_id", "building_id", "income", "x", "y",
+                     "persons"]
 
     @variable
     def zone_id(self):
         return "reindex(buildings.zone_id, households.building_id)"
+
+    @variable
+    def x(self):
+        return "reindex(buildings.x, households.building_id)"
+
+    @variable
+    def y(self):
+        return "reindex(buildings.y, households.building_id)"
 
 
 class Jobs(dataset.CustomDataFrame):
 
     def __init__(self, dset):
         super(Jobs, self).__init__(dset, "jobs")
-        self.flds = ["zone_id", "building_id", "home_based_status"]
+        self.flds = ["zone_id", "building_id", "home_based_status",
+                     "x", "y"]
 
     @variable
     def zone_id(self):
         return "reindex(buildings.zone_id, jobs.building_id)"
+
+    @variable
+    def x(self):
+        return "reindex(buildings.x, jobs.building_id)"
+
+    @variable
+    def y(self):
+        return "reindex(buildings.y, jobs.building_id)"
 
 
 class Zones(dataset.CustomDataFrame):
@@ -76,8 +102,17 @@ class Buildings(dataset.CustomDataFrame):
                      "unit_price_nonres_est", "building_sqft", "job_spaces",
                      "jobs_within_30_min", "non_residential_sqft",
                      "residential_units", "year_built", "stories",
-                     "tax_exempt", "building_type_id", "dist_hwy", "dist_road"]
+                     "tax_exempt", "building_type_id", "dist_hwy", "dist_road",
+                     "x", "y", "land_area"]
         super(Buildings, self).__init__(dset, "buildings")
+
+    @variable
+    def x(self):
+        return "reindex(parcels.x, buildings.parcel_id)"
+
+    @variable
+    def y(self):
+        return "reindex(parcels.y, buildings.parcel_id)"
 
     @variable
     def dist_hwy(self):

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import time
+import os
 from urbansim.models import transition
 import urbansim.models.yamlmodelrunner as ymr
 from urbansim.developer import sqftproforma, developer
@@ -185,11 +186,16 @@ def residential_developer(dset):
 def build_networks():
     if not networks.NETWORKS:
         networks.NETWORKS = networks.Networks(
-            [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.jar']],
+            [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.pkl']],
             factors=[1.0],
             maxdistances=[2000],
             twoway=[1],
             impedances=None)
+
+
+def neighborhood_vars(dset):
+    nodes = networks.from_yaml(dset, "networks.yaml")
+    dset.save_tmptbl("nodes", nodes)
 
 
 def _run_models(dset, model_list, years):

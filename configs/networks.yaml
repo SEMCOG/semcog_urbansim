@@ -1,0 +1,75 @@
+name: Neighborhood Accessibility Variables
+
+model_type: networks
+
+variable_definitions:
+    
+  - name: sum_residential_units
+    dataframe: buildings
+    varname: residential_units
+    radius: 500
+    apply: np.log1p
+
+  - name: sum_nonresidential_units
+    dataframe: buildings
+    varname: job_spaces
+    radius: 500
+    apply: np.log1p
+
+  - name: ave_unit_sqft
+    dataframe: buildings
+    varname: sqft_per_unit
+    radius: 500
+    apply: np.log1p
+    decay: flat
+    aggregation: average
+
+  - name: ave_lot_sqft
+    dataframe: buildings
+    varname: land_area
+    radius: 500
+    apply: np.log1p
+    decay: flat
+    aggregation: average
+
+  - name: population
+    dataframe: households
+    varname: persons
+    radius: 500
+    apply: np.log1p
+
+  - name: poor
+    dataframe: households
+    filters:
+    - income < 40000
+    varname: persons
+    radius: 500
+    apply: np.log1p
+
+  - name: sfdu
+    dataframe: buildings
+    filters:
+    - building_type_id == 17
+    radius: 500
+    apply: np.log1p
+
+  - name: hhsize
+    dataframe: households
+    varname: persons
+    radius: 500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
+
+  - name: jobs
+    dataframe: jobs
+    radius: 500
+    apply: np.log1p
+
+  - name: ave_income
+    dataframe: households
+    varname: income
+    radius: 500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
