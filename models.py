@@ -183,7 +183,7 @@ def residential_developer(dset):
     """
 
 
-def build_networks():
+def build_networks(dset):
     if not networks.NETWORKS:
         networks.NETWORKS = networks.Networks(
             [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.pkl']],
@@ -191,6 +191,11 @@ def build_networks():
             maxdistances=[2000],
             twoway=[1],
             impedances=None)
+    parcels = dset.parcels
+    parcels['x'] = parcels.centroid_x
+    parcels['y'] = parcels.centroid_y
+    parcels = networks.NETWORKS.addnodeid(parcels)
+    dset.save_tmptbl("parcels", parcels)
 
 
 def neighborhood_vars(dset):
