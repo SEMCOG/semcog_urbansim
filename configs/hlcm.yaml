@@ -1,53 +1,53 @@
 name: Household Location Choice Model
-
+
 model_type: locationchoice
-
+
 choosers_fit_filters:
 - building_id > 0
-
+
 choosers_predict_filters: null
-
+
 alts_fit_filters: null
-
+
 alts_predict_filters: null
-
+
 interaction_predict_filters: null
-
+
 choice_column: null
-
+
 sample_size: 50
-
+
 estimation_sample_size: 15000
-
+
 model_expression: np.log1p(sqft_per_unit) + np.log1p(jobs_within_30_min) + np.log1p(crime08)
     + np.log1p(popden) + np.log1p(income * unit_price_res) + np.log1p(residential_units)
-
+
 fitted: true
-
+
 log_likelihoods:
-    convergence: -53303.23147512025
+    convergence: -53198.678458686525
     'null': -58680.34508140402
-    ratio: 0.09163398065952744
-
+    ratio: 0.09341571892791489
+
 fit_parameters:
     Coefficient:
-        np.log1p(crime08): -0.03641462346698062
-        np.log1p(income * unit_price_res): 0.17870254574470365
-        np.log1p(jobs_within_30_min): -0.003609974557195787
-        np.log1p(popden): 0.04729917322043877
-        np.log1p(residential_units): 1.151755967300769
-        np.log1p(sqft_per_unit): 0.08095188933906113
+        np.log1p(crime08): -0.05571845967902053
+        np.log1p(income * unit_price_res): 0.1774807182818724
+        np.log1p(jobs_within_30_min): 0.005355425168663362
+        np.log1p(popden): 0.04411015203844275
+        np.log1p(residential_units): 1.170212434988674
+        np.log1p(sqft_per_unit): 0.09144714728583801
     Std. Error:
-        np.log1p(crime08): 0.014504462282160445
-        np.log1p(income * unit_price_res): 0.0038809881488822656
-        np.log1p(jobs_within_30_min): 0.0049561977340198795
-        np.log1p(popden): 0.013439390254841055
-        np.log1p(residential_units): 0.0121419167749701
-        np.log1p(sqft_per_unit): 0.009512330997340232
+        np.log1p(crime08): 0.01450372805842205
+        np.log1p(income * unit_price_res): 0.003922568589015353
+        np.log1p(jobs_within_30_min): 0.004956178604686354
+        np.log1p(popden): 0.01330242867964727
+        np.log1p(residential_units): 0.012224780623389279
+        np.log1p(sqft_per_unit): 0.00978757279739319
     T-Score:
-        np.log1p(crime08): -2.5105807274060936
-        np.log1p(income * unit_price_res): 46.04563036250715
-        np.log1p(jobs_within_30_min): -0.7283758136638758
-        np.log1p(popden): 3.519443391667338
-        np.log1p(residential_units): 94.85783741122745
-        np.log1p(sqft_per_unit): 8.510205265323115
+        np.log1p(crime08): -3.841664670944091
+        np.log1p(income * unit_price_res): 45.24604586364257
+        np.log1p(jobs_within_30_min): 1.0805553221184356
+        np.log1p(popden): 3.315947268030185
+        np.log1p(residential_units): 95.72461633787884
+        np.log1p(sqft_per_unit): 9.343189489246399

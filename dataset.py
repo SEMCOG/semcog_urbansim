@@ -63,12 +63,19 @@ class Jobs(dataset.CustomDataFrame):
     def __init__(self, dset):
         super(Jobs, self).__init__(dset, "jobs")
         self.flds = ["zone_id", "building_id", "home_based_status",
-                     "x", "y"]
+                     "x", "y", "large_area_id", "sector_id", "parcel_id"]
 
     @variable
     def zone_id(self):
         return "reindex(buildings.zone_id, jobs.building_id)"
+        
+    @variable
+    def parcel_id(self):
+        return "reindex(buildings.parcel_id, jobs.building_id)"
 
+    @variable
+    def large_area_id(self):
+        return "reindex(buildings.large_area_id, jobs.building_id)"
     @variable
     def x(self):
         return "reindex(buildings.x, jobs.building_id)"
@@ -103,7 +110,7 @@ class Buildings(dataset.CustomDataFrame):
                      "jobs_within_30_min", "non_residential_sqft",
                      "residential_units", "year_built", "stories",
                      "tax_exempt", "building_type_id", "dist_hwy", "dist_road",
-                     "x", "y", "land_area", "zone_id"]
+                     "x", "y", "land_area", "zone_id", "large_area_id","parcel_id"]
         super(Buildings, self).__init__(dset, "buildings")
 
     @variable
@@ -129,6 +136,10 @@ class Buildings(dataset.CustomDataFrame):
     @variable
     def city_id(self):
         return "reindex(parcels.city_id, buildings.parcel_id)"
+        
+    @variable
+    def large_area_id(self):
+        return "reindex(parcels.large_area_id, buildings.parcel_id)"
 
     @variable
     def crime08(self):

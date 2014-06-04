@@ -99,7 +99,6 @@ def households_transition(dset):
     dset.save_tmptbl("households", new)
     dset.save_tmptbl("persons", new_linked['linked'])
 
-
 def jobs_transition(dset):
     ct_emp = dset.fetch('annual_employment_control_totals')
     totals_field = ct_emp.reset_index().groupby('year').total_number_of_jobs.sum()
@@ -109,7 +108,76 @@ def jobs_transition(dset):
     new, added_jobs_idx, new_linked = model.transition(dset.jobs, dset.year)
     new.loc[added_jobs_idx, "building_id"] = np.nan
     dset.save_tmptbl("jobs", new)
-
+    
+def government_jobs_scaling_model(dset):
+    sectors_to_place = [18,19,20]
+    for sector in sectors_to_place:
+        jobs_to_place = dset.jobs.index.values[dset.jobs.building_id.isnull().values*np.in1d(dset.jobs.sector_id,[sector,])]
+        counts_by_bid = dset.jobs[dset.jobs.sector_id==sector].groupby('building_id').size()
+        prop_by_bid = counts_by_bid/counts_by_bid.sum()
+        def random_choice(chooser_ids, alternative_ids, probabilities):
+            choices = pd.Series([np.nan] * len(chooser_ids), index=chooser_ids)
+            chosen = np.random.choice(
+                alternative_ids, size=len(chooser_ids), replace=True, p=probabilities)
+            choices[chooser_ids] = chosen
+            return choices
+        choices = random_choice(jobs_to_place,prop_by_bid.index.values,prop_by_bid.values)
+        print len(choices)
+        dset.jobs.loc[choices.index,'building_id'] = choices.values
+        
+def refiner(dset):
+    refinements = pd.read_csv("data/refinements.csv")
+    refinements = refinements[refinements.year==dset.year]
+    if len(refinements)>0:
+        def relocate_agents(agents,agent_type,location_type,location_id,number_of_agents):
+            if location_type=='zone':
+                new_building_id = dset.buildings[dset.view("buildings").zone_id==location_id].index.values[0]
+                agent_pool = agents[dset.view(agent_type).zone_id!=location_id]
+            if location_type=='parcel':
+                new_building_id = dset.buildings[dset.view("buildings").parcel_id==location_id].index.values[0]
+                agent_pool = agents[dset.view(agent_type).parcel_id!=location_id]
+            shuffled_ids = agent_pool.index.values
+            np.random.shuffle(shuffled_ids)
+            agents_to_relocate = shuffled_ids[:number_of_agents]
+            if agent_type=='households':
+                idx_agents_to_relocate = np.in1d(dset.households.index.values,agents_to_relocate)
+                dset.households.building_id[idx_agents_to_relocate] = new_building_id
+            if agent_type=='jobs':
+                idx_agents_to_relocate = np.in1d(dset.jobs.index.values,agents_to_relocate)
+                dset.jobs.building_id[idx_agents_to_relocate] = new_building_id
+        def unplace_agents(agents,agent_type,location_type,location_id,number_of_agents):
+            if location_type=='zone':
+                agent_pool = agents[dset.view(agent_type).zone_id==location_id]
+            if location_type=='parcel':
+                agent_pool = agents[dset.view(agent_type).parcel_id==location_id]
+            if len(agent_pool) >= number_of_agents:
+                shuffled_ids = agent_pool.index.values
+                np.random.shuffle(shuffled_ids)
+                agents_to_relocate = shuffled_ids[:number_of_agents]
+                if agent_type=='households':
+                    idx_agents_to_relocate = np.in1d(dset.households.index.values,agents_to_relocate)
+                    dset.households.building_id[idx_agents_to_relocate] = -1
+                if agent_type=='jobs':
+                    idx_agents_to_relocate = np.in1d(dset.jobs.index.values,agents_to_relocate)
+                    dset.jobs.building_id[idx_agents_to_relocate] = -1
+        for idx in refinements.index.values:
+            record = refinements[refinements.index.values==idx]
+            action = record.action.values[0]
+            agent_dataset = record.agent_dataset.values[0]
+            filter_expression = record.filter_expression.values[0]
+            amount = record.amount.values[0]
+            location_id = record.location_id.values[0]
+            location_type = record.location_type.values[0]
+            if action=='add':
+                if agent_dataset == 'job':
+                    relocate_agents(dset.jobs,'jobs',location_type,location_id,amount)
+                if agent_dataset == 'household':
+                    relocate_agents(dset.households,'households',location_type,location_id,amount)
+            if action in ['delete','subtract']:
+                if agent_dataset == 'job':
+                    unplace_agents(dset.jobs,'jobs',location_type,location_id,amount)
+                if agent_dataset == 'household':
+                    unplace_agents(dset.households,'households',location_type,location_id,amount)
 
 def feasibility(dset):
     pf = sqftproforma.SqFtProForma()
