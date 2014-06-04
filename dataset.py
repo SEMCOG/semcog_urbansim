@@ -103,7 +103,7 @@ class Buildings(dataset.CustomDataFrame):
                      "jobs_within_30_min", "non_residential_sqft",
                      "residential_units", "year_built", "stories",
                      "tax_exempt", "building_type_id", "dist_hwy", "dist_road",
-                     "x", "y", "land_area"]
+                     "x", "y", "land_area", "zone_id"]
         super(Buildings, self).__init__(dset, "buildings")
 
     @variable
