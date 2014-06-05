@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from urbansim.utils import dataset, misc, networks
@@ -17,6 +18,14 @@ class SemcogDataset(dataset.Dataset):
             "zones": Zones(self),
             "cities": self.cities
         }
+
+    @staticmethod
+    def fetch_nodes():
+        # default will fetch off disk unless networks have already been run
+        print "WARNING: fetching precomputed nodes off of disk"
+        df = pd.read_csv(os.path.join(misc.data_dir(), 'nodes.csv'), index_col='node_id')
+        df = df.replace([np.inf, -np.inf], np.nan).fillna(0)
+        return df
 
     def merge_nodes(self, df):
         return pd.merge(df, self.nodes, left_on="_node_id", right_index=True)
@@ -79,6 +88,7 @@ class Jobs(dataset.CustomDataFrame):
     @variable
     def large_area_id(self):
         return "reindex(buildings.large_area_id, jobs.building_id)"
+
     @variable
     def x(self):
         return "reindex(buildings.x, jobs.building_id)"
@@ -103,7 +113,7 @@ class Zones(dataset.CustomDataFrame):
                                   self.dset.jobs.groupby('zone_id').size(),
                                   "am_single_vehicle_to_work_travel_time",
                                   30, agg=np.sum)
-    
+
 
 class Buildings(dataset.CustomDataFrame):
 
