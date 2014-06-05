@@ -1,7 +1,7 @@
 name: Residential Sales Hedonic
-
+
 model_type: regression
-
+
 fit_filters:
 - residential_units > 0
 - sqft_per_unit > 0
@@ -10,54 +10,67 @@ fit_filters:
 - tax_exempt == 0
 - 1e1 < unit_price_res_est < 1e4
 - 16 <= building_type_id <= 20
-
+
 predict_filters:
 - residential_units > 0
 - 16 <= building_type_id <= 20
-
+
 model_expression: np.log1p(unit_price_res_est) ~ I(year_built < 1940) + year_built
     + stories + np.log1p(sqft_per_unit) + np.log1p(popden) + dist_hwy + dist_road
-    + crime08 + np.log1p(jobs_within_30_min)
-
+    + crime08 + np.log1p(jobs_within_30_min) + sum_residential_units + poor + jobs
+    + ave_income
+
 ytransform: np.exp
-
+
 fitted: true
-
+
 fit_parameters:
     Coefficient:
-        I(year_built < 1940)[T.True]: -0.04135804681358893
-        Intercept: -4.290027869345709
-        crime08: -0.0033141459785986094
-        dist_hwy: -6.896207950187926e-07
-        dist_road: -1.0338566246822958e-06
-        np.log1p(jobs_within_30_min): 0.013717110920662898
-        np.log1p(popden): 0.016219049171521782
-        np.log1p(sqft_per_unit): -0.06450544942901322
-        stories: 0.0660920210231617
-        year_built: 0.004138102528838215
+        I(year_built < 1940)[T.True]: -0.034689766995875476
+        Intercept: -5.0047974155631465
+        ave_income: 0.12779306040762423
+        crime08: -0.0023897592322465206
+        dist_hwy: -8.663193038377658e-07
+        dist_road: -1.170803382807168e-06
+        jobs: 0.00440226839062254
+        np.log1p(jobs_within_30_min): 0.011411067815770365
+        np.log1p(popden): 0.054231638682171984
+        np.log1p(sqft_per_unit): -0.10574300404562945
+        poor: -0.06481085612314252
+        stories: 0.06500448727181526
+        sum_residential_units: 0.019496333906856726
+        year_built: 0.004016327373972307
     Std. Error:
-        I(year_built < 1940)[T.True]: 0.0012171877614038224
-        Intercept: 0.03709214160187355
-        crime08: 1.6336285332086413e-05
-        dist_hwy: 3.754075870431168e-08
-        dist_road: 3.922403981203343e-07
-        np.log1p(jobs_within_30_min): 0.00018861011154913663
-        np.log1p(popden): 0.0005436815826595058
-        np.log1p(sqft_per_unit): 0.0007996786936782709
-        stories: 0.000928665278384443
-        year_built: 1.9410984285462216e-05
+        I(year_built < 1940)[T.True]: 0.0012025028587552148
+        Intercept: 0.03716103459252936
+        ave_income: 0.0006684068246252465
+        crime08: 1.6843286341886652e-05
+        dist_hwy: 3.714000090677402e-08
+        dist_road: 3.941026273003502e-07
+        jobs: 0.00020432225372346569
+        np.log1p(jobs_within_30_min): 0.00018683272237116433
+        np.log1p(popden): 0.0007073166080132178
+        np.log1p(sqft_per_unit): 0.000836225785260204
+        poor: 0.0013619377684000059
+        stories: 0.0009243881995727476
+        sum_residential_units: 0.0013743744578442504
+        year_built: 1.9271288909358025e-05
     T-Score:
-        I(year_built < 1940)[T.True]: -33.9783623570856
-        Intercept: -115.6586728097958
-        crime08: -202.8702309752898
-        dist_hwy: -18.36992162173822
-        dist_road: -2.6357729332232678
-        np.log1p(jobs_within_30_min): 72.72733581459826
-        np.log1p(popden): 29.83189000477761
-        np.log1p(sqft_per_unit): -80.66420918670273
-        stories: 71.16882967578911
-        year_built: 213.18354947808757
-
-fit_rsquared_adj: 0.1437783809219938
-
-fit_rsquared: 0.14378371899529263
+        I(year_built < 1940)[T.True]: -28.847970500282223
+        Intercept: -134.67863503911386
+        ave_income: 191.19053800695937
+        crime08: -141.88200471920723
+        dist_hwy: -23.32577497809798
+        dist_road: -2.970808367422745
+        jobs: 21.545711788108353
+        np.log1p(jobs_within_30_min): 61.076387856196774
+        np.log1p(popden): 76.67236718009956
+        np.log1p(sqft_per_unit): -126.45269484571796
+        poor: -47.5872375573238
+        stories: 70.32163251527913
+        sum_residential_units: 14.185605528086821
+        year_built: 208.40989893633954
+
+fit_rsquared_adj: 0.16705525138715127
+
+fit_rsquared: 0.16706275232178724

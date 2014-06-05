@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from urbansim.utils import dataset, misc
+from urbansim.utils import dataset, misc, networks
 from urbansim.utils.dataset import variable
 
 
@@ -17,6 +17,9 @@ class SemcogDataset(dataset.Dataset):
             "zones": Zones(self),
             "cities": self.cities
         }
+
+    def merge_nodes(self, df):
+        return pd.merge(df, self.nodes, left_on="_node_id", right_index=True)
 
 
 class Parcels(dataset.CustomDataFrame):
@@ -100,7 +103,7 @@ class Zones(dataset.CustomDataFrame):
                                   self.dset.jobs.groupby('zone_id').size(),
                                   "am_single_vehicle_to_work_travel_time",
                                   30, agg=np.sum)
-
+    
 
 class Buildings(dataset.CustomDataFrame):
 
@@ -110,8 +113,13 @@ class Buildings(dataset.CustomDataFrame):
                      "jobs_within_30_min", "non_residential_sqft",
                      "residential_units", "year_built", "stories",
                      "tax_exempt", "building_type_id", "dist_hwy", "dist_road",
-                     "x", "y", "land_area", "zone_id", "large_area_id","parcel_id"]
+                     "x", "y", "land_area", "zone_id", "large_area_id", "parcel_id",
+                     "_node_id"]
         super(Buildings, self).__init__(dset, "buildings")
+
+    @variable
+    def _node_id(self):
+        return "reindex(parcels._node_id, buildings.parcel_id)"
 
     @variable
     def x(self):
