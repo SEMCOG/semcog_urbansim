@@ -197,3 +197,5 @@ class Buildings(dataset.CustomDataFrame):
     @variable
     def jobs_within_30_min(self):
         return "reindex(zones.jobs_within_30_min, buildings.zone_id)"
+
+LocalDataset = SemcogDataset
