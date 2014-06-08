@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from urbansim.utils import dataset, misc, networks
+from urbansim.utils import dataset, misc
 from urbansim.utils.dataset import variable
 
 
@@ -55,7 +55,11 @@ class Households(dataset.CustomDataFrame):
     def __init__(self, dset):
         super(Households, self).__init__(dset, "households")
         self.flds = ["zone_id", "building_id", "income", "x", "y",
-                     "persons"]
+                     "persons", "income_quartile"]
+
+    @property
+    def income_quartile(self):
+        return pd.Series(pd.qcut(self.df.income, 4).labels, index=self.df.index)
 
     @variable
     def zone_id(self):
@@ -197,3 +201,5 @@ class Buildings(dataset.CustomDataFrame):
     @variable
     def jobs_within_30_min(self):
         return "reindex(zones.jobs_within_30_min, buildings.zone_id)"
+
+LocalDataset = SemcogDataset
