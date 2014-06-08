@@ -232,7 +232,7 @@ d3.json(SHAPE_JSON, function(error, zones) {
 
 <select style="position:absolute; right: 10px; top: 10px; width: 150px;" ng-options="name for name in df_names" ng-model="df_name"></select>
 
-<select style="position:absolute; right: 10px; top: 35px; width: 150px;" ng-options="name for name in schema[df_name]" ng-model="field_name"></select>
+<select ng-show="aggregation != 'size'" style="position:absolute; right: 10px; top: 35px; width: 150px;" ng-options="name for name in schema[df_name]" ng-model="field_name"></select>
 
 <select style="position:absolute; right: 10px; top: 60px; width: 150px;" ng-options="name for name in colors" ng-model="color"></select>
 
