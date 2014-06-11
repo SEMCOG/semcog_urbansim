@@ -189,7 +189,16 @@ def refiner(dset):
                     unplace_agents(dset.jobs, 'jobs', location_type, location_id, amount)
                 if agent_dataset == 'household':
                     unplace_agents(dset.households, 'households', location_type, location_id, amount)
-
+                    
+def aging_model(dset):
+    print dset.persons.age.describe()
+    dset.persons.age = dset.persons.age + 1
+    print dset.persons.age.describe()
+    
+def income_inflation_model(dset):
+    print dset.households.income.describe()
+    dset.households.income = dset.households.income*1.01
+    print dset.households.income.describe()
 
 def feasibility(dset):
     pf = sqftproforma.SqFtProForma()
