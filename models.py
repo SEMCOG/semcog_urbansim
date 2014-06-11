@@ -115,22 +115,24 @@ def jobs_transition(dset):
 
 
 def government_jobs_scaling_model(dset):
-    sectors_to_place = [18, 19, 20]
-    for sector in sectors_to_place:
-        jobs_to_place = dset.jobs.index.values[dset.jobs.building_id.isnull().values *
-                                               np.in1d(dset.jobs.sector_id, [sector, ])]
-        counts_by_bid = dset.jobs[dset.jobs.sector_id == sector].groupby('building_id').size()
-        prop_by_bid = counts_by_bid/counts_by_bid.sum()
-
-        def random_choice(chooser_ids, alternative_ids, probabilities):
-            choices = pd.Series([np.nan] * len(chooser_ids), index=chooser_ids)
-            chosen = np.random.choice(
-                alternative_ids, size=len(chooser_ids), replace=True, p=probabilities)
-            choices[chooser_ids] = chosen
-            return choices
-        choices = random_choice(jobs_to_place, prop_by_bid.index.values, prop_by_bid.values)
-        print len(choices)
-        dset.jobs.loc[choices.index, 'building_id'] = choices.values
+    government_sectors = [18, 19, 20]
+    def random_choice(chooser_ids, alternative_ids, probabilities):
+        choices = pd.Series([np.nan] * len(chooser_ids), index=chooser_ids)
+        chosen = np.random.choice(
+            alternative_ids, size=len(chooser_ids), replace=True, p=probabilities)
+        choices[chooser_ids] = chosen
+        return choices
+    jobs_to_place = dset.jobs[dset.jobs.building_id.isnull().values]
+    segments = jobs_to_place.groupby(['large_area_id','sector_id'])
+    for name,segment in segments:
+        large_area_id = int(name[0])
+        sector = int(name[1])
+        if sector in government_sectors:
+            jobs_to_place = segment.index.values
+            counts_by_bid = dset.jobs[(dset.jobs.sector_id == sector).values*(dset.jobs.large_area_id==large_area_id)].groupby(['building_id']).size()
+            prop_by_bid = counts_by_bid/counts_by_bid.sum()
+            choices = random_choice(jobs_to_place, prop_by_bid.index.values, prop_by_bid.values)
+            dset.jobs.loc[choices.index, 'building_id'] = choices.values
         
 
 def refiner(dset):
