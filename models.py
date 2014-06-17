@@ -136,7 +136,9 @@ def government_jobs_scaling_model(dset):
         
 
 def refiner(dset):
-    refinements = pd.read_csv("data/refinements.csv")
+    refinements1 = pd.read_csv("data/refinements.csv")
+    refinements2 = pd.read_csv("data/employment_events.csv")
+    refinements = pd.concat([refinements1,refinements2])
     refinements = refinements[refinements.year == dset.year]
     if len(refinements) > 0:
         def relocate_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
