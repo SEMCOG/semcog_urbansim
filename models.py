@@ -139,13 +139,16 @@ def refiner(dset):
     refinements = pd.read_csv("data/refinements.csv")
     refinements = refinements[refinements.year == dset.year]
     if len(refinements) > 0:
-        def relocate_agents(agents, agent_type, location_type, location_id, number_of_agents):
+        def relocate_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
+            agents = dset.view(agent_type).query(filter_expression)
             if location_type == 'zone':
                 new_building_id = dset.buildings[dset.view("buildings").zone_id == location_id].index.values[0]
-                agent_pool = agents[dset.view(agent_type).zone_id != location_id]
+                agents['zone_id'] = dset.view(agent_type).zone_id
+                agent_pool = agents[agents.zone_id != location_id]
             if location_type == 'parcel':
                 new_building_id = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values[0]
-                agent_pool = agents[dset.view(agent_type).parcel_id != location_id]
+                agents['parcel_id'] = dset.view(agent_type).parcel_id
+                agent_pool = agents[agents.parcel_id != location_id]
             shuffled_ids = agent_pool.index.values
             np.random.shuffle(shuffled_ids)
             agents_to_relocate = shuffled_ids[:number_of_agents]
@@ -156,11 +159,14 @@ def refiner(dset):
                 idx_agents_to_relocate = np.in1d(dset.jobs.index.values, agents_to_relocate)
                 dset.jobs.building_id[idx_agents_to_relocate] = new_building_id
 
-        def unplace_agents(agents, agent_type, location_type, location_id, number_of_agents):
+        def unplace_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
+            agents = dset.view(agent_type).query(filter_expression)
             if location_type == 'zone':
-                agent_pool = agents[dset.view(agent_type).zone_id == location_id]
+                agents['zone_id'] = dset.view(agent_type).zone_id
+                agent_pool = agents[agents.zone_id == location_id]
             if location_type == 'parcel':
-                agent_pool = agents[dset.view(agent_type).parcel_id == location_id]
+                agents['parcel_id'] = dset.view(agent_type).parcel_id
+                agent_pool = agents[agents.parcel_id == location_id]
             if len(agent_pool) >= number_of_agents:
                 shuffled_ids = agent_pool.index.values
                 np.random.shuffle(shuffled_ids)
@@ -181,14 +187,14 @@ def refiner(dset):
             location_type = record.location_type.values[0]
             if action == 'add':
                 if agent_dataset == 'job':
-                    relocate_agents(dset.jobs, 'jobs', location_type, location_id, amount)
+                    relocate_agents(dset.jobs, 'jobs', filter_expression, location_type, location_id, amount)
                 if agent_dataset == 'household':
-                    relocate_agents(dset.households, 'households', location_type, location_id, amount)
+                    relocate_agents(dset.households, 'households', filter_expression, location_type, location_id, amount)
             if action in ['delete', 'subtract']:
                 if agent_dataset == 'job':
-                    unplace_agents(dset.jobs, 'jobs', location_type, location_id, amount)
+                    unplace_agents(dset.jobs, 'jobs', filter_expression, location_type, location_id, amount)
                 if agent_dataset == 'household':
-                    unplace_agents(dset.households, 'households', location_type, location_id, amount)
+                    unplace_agents(dset.households, 'households', filter_expression, location_type, location_id, amount)
                     
 def aging_model(dset):
     print dset.persons.age.describe()
