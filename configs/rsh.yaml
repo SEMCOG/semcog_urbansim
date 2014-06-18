@@ -1,5 +1,7 @@
 model_type: segmented_regression
 
+name: rsh
+
 segmentation_col: building_type_id
 
 fit_filters:
@@ -14,6 +16,8 @@ fit_filters:
 predict_filters:
 - residential_units > 0
 - 16 <= building_type_id <= 20
+
+min_segment_size: 100
 
 default_config:
     model_expression: np.log1p(unit_price_res_est) ~ I(year_built < 1940) + year_built

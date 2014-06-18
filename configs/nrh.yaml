@@ -1,5 +1,7 @@
 model_type: segmented_regression
 
+name: nrh
+
 segmentation_col: building_type_id
 
 fit_filters:
@@ -13,6 +15,8 @@ fit_filters:
 predict_filters:
 - non_residential_sqft > 0
 - 16 <= building_type_id > 20
+
+min_segment_size: 100
 
 default_config:
     model_expression: np.log1p(unit_price_nonres_est) ~ I(year_built < 1940) + year_built

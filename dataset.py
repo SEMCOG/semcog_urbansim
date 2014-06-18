@@ -55,7 +55,7 @@ class Households(dataset.CustomDataFrame):
     def __init__(self, dset):
         super(Households, self).__init__(dset, "households")
         self.flds = ["zone_id", "building_id", "income", "x", "y",
-                     "persons", "income_quartile"]
+                     "persons", "income_quartile", "large_area"]
 
     @property
     def income_quartile(self):
@@ -72,6 +72,10 @@ class Households(dataset.CustomDataFrame):
     @variable
     def y(self):
         return "reindex(buildings.y, households.building_id)"
+        
+    @variable
+    def large_area(self):
+        return "reindex(buildings.large_area_id, households.building_id)"
 
 
 class Jobs(dataset.CustomDataFrame):
@@ -79,7 +83,7 @@ class Jobs(dataset.CustomDataFrame):
     def __init__(self, dset):
         super(Jobs, self).__init__(dset, "jobs")
         self.flds = ["zone_id", "building_id", "home_based_status",
-                     "x", "y", "large_area_id", "sector_id", "parcel_id"]
+                     "x", "y", "large_area", "sector_id", "parcel_id"]
 
     @variable
     def zone_id(self):
@@ -90,7 +94,7 @@ class Jobs(dataset.CustomDataFrame):
         return "reindex(buildings.parcel_id, jobs.building_id)"
 
     @variable
-    def large_area_id(self):
+    def large_area(self):
         return "reindex(buildings.large_area_id, jobs.building_id)"
 
     @variable

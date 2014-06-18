@@ -148,7 +148,13 @@ def refiner(dset):
                 agents['zone_id'] = dset.view(agent_type).zone_id
                 agent_pool = agents[agents.zone_id != location_id]
             if location_type == 'parcel':
-                new_building_id = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values[0]
+                # buildings_ids = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values
+                # if len(building_ids)> 0
+                try:
+                    new_building_id = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values[0]
+                except:
+                    print 'No building in %s %s.' % (location_type,location_id)
+                    return
                 agents['parcel_id'] = dset.view(agent_type).parcel_id
                 agent_pool = agents[agents.parcel_id != location_id]
             shuffled_ids = agent_pool.index.values
