@@ -1,0 +1,47 @@
+name: Neighborhood Price Variables
+
+model_type: networks
+
+node_col: _node_id0
+
+variable_definitions:
+
+-   aggregation: average
+    dataframe: buildings
+    decay: flat
+    name: residential
+    radius: 2000
+    varname: sqft_price_res
+
+-   aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    name: retail
+    radius: 2000
+    varname: sqft_price_nonres
+
+-   aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    name: office
+    radius: 2000
+    varname: sqft_price_nonres
+
+-   aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    name: industrial
+    radius: 2000
+    varname: sqft_price_nonres

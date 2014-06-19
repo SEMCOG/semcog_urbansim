@@ -2,6 +2,8 @@ name: Neighborhood Accessibility Variables
 
 model_type: networks
 
+node_col: _node_id0
+
 variable_definitions:
     
   - name: sum_residential_units
@@ -42,6 +44,8 @@ variable_definitions:
     dataframe: households
     filters:
     - income < 40000
+    add_fields:
+    - income
     varname: persons
     radius: 500
     apply: np.log1p
@@ -50,6 +54,8 @@ variable_definitions:
     dataframe: buildings
     filters:
     - building_type_id == 17
+    add_fields:
+    - building_type_id
     radius: 500
     apply: np.log1p
 

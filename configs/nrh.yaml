@@ -9,7 +9,7 @@ fit_filters:
 - year_built > 1700
 - stories > 0
 - tax_exempt == 0
-- unit_price_nonres_est > 0
+- sqft_price_nonres > 0
 - 16 <= building_type_id > 20
 
 predict_filters:
@@ -19,7 +19,7 @@ predict_filters:
 min_segment_size: 100
 
 default_config:
-    model_expression: np.log1p(unit_price_nonres_est) ~ I(year_built < 1940) + year_built
+    model_expression: np.log1p(sqft_price_nonres) ~ I(year_built < 1940) + year_built
         + stories + np.log1p(non_residential_sqft) + np.log1p(popden) + dist_hwy +
         dist_road + crime08 + np.log1p(jobs_within_30_min)
     ytransform: np.exp

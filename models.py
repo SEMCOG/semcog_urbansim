@@ -8,13 +8,8 @@ from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc, networks
 
 
-def buildings_df(dset, addprices=False, addnodes=True):
-    buildings = dset.view("buildings")
-    if addprices:
-        flds = buildings.flds + ["unit_price_res", "unit_price_nonres"]
-    else:
-        flds = buildings.flds
-    buildings = buildings.build_df(flds=flds).fillna(0)
+def buildings_df(dset, addnodes=True):
+    buildings = dset.view("buildings").build_df().fillna(0)
     if addnodes:
         buildings = dset.merge_nodes(buildings)
     return buildings
@@ -44,7 +39,7 @@ def rsh_estimate(dset):
 
 
 def rsh_simulate(dset):
-    return ymr.hedonic_simulate(buildings_df(dset), "rsh.yaml", dset.buildings, "unit_price_res")
+    return ymr.hedonic_simulate(buildings_df(dset), "rsh.yaml", dset.buildings, "sqft_price_res")
 
 
 # non-residential hedonic
@@ -53,29 +48,29 @@ def nrh_estimate(dset):
 
 
 def nrh_simulate(dset):
-    return ymr.hedonic_simulate(buildings_df(dset), "nrh.yaml", dset.buildings, "unit_price_nonres")
+    return ymr.hedonic_simulate(buildings_df(dset), "nrh.yaml", dset.buildings, "sqft_price_nonres")
 
 
 # household location choice
 def hlcm_estimate(dset):
-    return ymr.lcm_estimate(households_df(dset), "building_id", buildings_df(dset, addprices=True),
+    return ymr.lcm_estimate(households_df(dset), "building_id", buildings_df(dset),
                             "hlcm.yaml")
 
 
 def hlcm_simulate(dset):
-    units = ymr.get_vacant_units(households_df(dset), "building_id", buildings_df(dset, addprices=True),
+    units = ymr.get_vacant_units(households_df(dset), "building_id", buildings_df(dset),
                                  "residential_units")
     return ymr.lcm_simulate(households_df(dset), units, "hlcm.yaml", dset.households, "building_id")
 
 
 # employment location choice
 def elcm_estimate(dset):
-    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset, addprices=True),
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
                             "elcm.yaml")
 
 
 def elcm_simulate(dset):
-    units = ymr.get_vacant_units(jobs_df(dset), "building_id", buildings_df(dset, addprices=True),
+    units = ymr.get_vacant_units(jobs_df(dset), "building_id", buildings_df(dset),
                                  "job_spaces")
     units = units.loc[np.random.choice(units.index, size=200000, replace=False)]
     return ymr.lcm_simulate(jobs_df(dset), units, "elcm.yaml", dset.jobs, "building_id")
@@ -226,33 +221,29 @@ def scheduled_development_events(dset):
         merge = Developer(pd.DataFrame({})).merge
         all_buildings = merge(dset.buildings,sched_dev[dset.buildings.columns])
 
+def price_vars(dset):
+    nodes = networks.from_yaml(dset, "networks2.yaml")
+    dset.save_tmptbl("nodes_prices", nodes)
+
+
 def feasibility(dset):
     pf = sqftproforma.SqFtProForma()
 
-    buildings = dset.view("buildings")
-    average_residential_rent = buildings.query("residential_units > 0")\
-        .groupby('zone_id').unit_price_res.quantile() * pf.config.cap_rate
-    average_non_residential_rent = buildings.query("non_residential_sqft > 0")\
-        .groupby('zone_id').unit_price_nonres.quantile() * pf.config.cap_rate
+    parcels = dset.view("parcels")
+    df = parcels.build_df()
 
-    parcels = dset.parcels
-    df = pd.DataFrame(index=parcels.index)
-    df["residential"] = misc.reindex(average_residential_rent, parcels.zone_id)
-    df["retail"] = df["office"] = df["industrial"] = \
-        misc.reindex(average_non_residential_rent, parcels.zone_id)
+    # add prices for each use
+    for use in pf.config.uses:
+        df[use] = parcels.price(use)
 
-    df['total_sqft'] = buildings.groupby('parcel_id').building_sqft.sum()
-    df['land_cost'] = (df.total_sqft * df.residential).fillna(0) / pf.config.cap_rate
-    df['parcel_size'] = parcels.parcel_sqft
-    df["max_far"] = 1.8
-    df["max_height"] = 20
-    df = df.query("total_sqft < 1500")
-    print df.describe()
+    # convert from cost to yearly rent
+    df[pf.config.uses] *= pf.config.cap_rate
+    print df[pf.config.uses].describe()
 
     d = {}
     for form in pf.config.forms:
         print "Computing feasibility for form %s" % form
-        d[form] = pf.lookup(form, df)
+        d[form] = pf.lookup(form, df[parcels.allowed(form)])
 
     far_predictions = pd.concat(d.values(), keys=d.keys(), axis=1)
 
@@ -260,56 +251,107 @@ def feasibility(dset):
 
 
 def residential_developer(dset):
+    residential_target_vacancy = .20
     dev = developer.Developer(dset.feasibility)
 
-    res_target_vacancy = .1
-    res_target_units = \
-        dev.compute_units_to_build(len(dset.households.index),
-                                   dset.buildings_computed.residential_units.sum(),
-                                   res_target_vacancy)
+    target_units = dev.compute_units_to_build(len(dset.households),
+                                              dset.buildings.residential_units.sum(),
+                                              residential_target_vacancy)
 
-    min_new_unit_size = 650
-    ave_unit_size = dset.view("buildings").groupby('zone_id').sqft_per_unit.quantile()
-    ave_unit_size[ave_unit_size < min_new_unit_size] = min_new_unit_size
-    ave_unit_size = misc.reindex(ave_unit_size, dset.parcels.index)
+    parcels = dset.view("parcels")
+    new_buildings = dev.pick("residential",
+                             target_units,
+                             parcels.parcel_size,
+                             parcels.ave_unit_sqft,
+                             parcels.total_units,
+                             max_parcel_size=200000,
+                             drop_after_build=True)
 
-    new_buildings = dev.pick_build(res_target_units,
-                                   dset.parcels.parcel_sqft,
-                                   ave_unit_size,
-                                   dset.view("buildings").groupby('parcel_id').residential_units.sum())
-    print new_buildings.head()
-    print new_buildings.columns
-    print new_buildings.describe()
-    """
+    new_buildings["year_built"] = dset.year
+    new_buildings["form"] = "residential"
+    new_buildings["building_type_id"] = new_buildings["form"].apply(dset.random_type)
+    new_buildings["stories"] = new_buildings.stories.apply(np.ceil)
+    new_buildings['building_id_old'] = 0
+    new_buildings['improvement_value'] = 0
+    new_buildings['land_area'] = 0
+    new_buildings['sqft_per_unit'] = 1500
+    new_buildings['tax_exempt'] = 0
+    for col in ["sqft_price_res",  "sqft_price_nonres"]:
+        new_buildings[col] = np.nan
+
+    #print "NEW BUILDINGS"
+    #print new_buildings[dset.buildings.columns].describe()
+
+    print "Adding {} buildings with {:,} residential units".format(len(new_buildings),
+                                                                   new_buildings.residential_units.sum())
+
+    all_buildings = dev.merge(dset.buildings, new_buildings[dset.buildings.columns])
+    dset.save_tmptbl("buildings", all_buildings)
 
 
+def non_residential_developer(dset):
+    non_residential_target_vacancy = .6
+    dev = developer.Developer(dset.feasibility)
 
-    'building_id_old',
-'building_type_id', \
-'improvement_value', \
-'land_area', \
-'non_residential_sqft', \
-'parcel_id', \
-'residential_units', \
-'sqft_per_unit', \
-'stories', \
-'tax_exempt', \
-'year_built'
-    """
+    target_units = dev.compute_units_to_build(len(dset.jobs),
+                                              dset.view("buildings").non_residential_units.sum(),
+                                              non_residential_target_vacancy)
 
+    parcels = dset.view("parcels")
+    new_buildings = dev.pick(["office", "retail", "industrial"],
+                             target_units,
+                             parcels.parcel_size,
+                             # This is hard-coding 500 as the average sqft per job
+                             # which isn't right but it doesn't affect outcomes much
+                             # developer will build enough units assuming 500 sqft
+                             # per job but then it just returns the result as square
+                             # footage and the actual building_sqft_per_job will be
+                             # used to compute non_residential_units.  In other words,
+                             # we can over- or under- build the number of units here
+                             # but we should still get roughly the right amount of
+                             # development out of this and the final numbers are precise.
+                             # just move this up and down if dev is over- or under-
+                             # buildings things
+                             pd.Series(500, index=parcels.index),
+                             dset.view("parcels").total_nonres_units,
+                             max_parcel_size=200000,
+                             drop_after_build=True,
+                             residential=False)
+
+    new_buildings["year_built"] = dset.year
+    new_buildings["building_type_id"] = new_buildings["form"].apply(dset.random_type)
+    new_buildings["residential_units"] = 0
+    new_buildings["stories"] = new_buildings.stories.apply(np.ceil)
+    new_buildings['building_id_old'] = 0
+    new_buildings['improvement_value'] = 0
+    new_buildings['land_area'] = 0
+    new_buildings['sqft_per_unit'] = 1500
+    new_buildings['tax_exempt'] = 0
+    for col in ["sqft_price_res",  "sqft_price_nonres"]:
+        new_buildings[col] = np.nan
+
+    #print "NEW BUILDINGS"
+    #print new_buildings[dset.buildings.columns].describe()
+
+    print "Adding {} buildings with {:,} non-residential sqft".format(len(new_buildings),
+                                                                      new_buildings.non_residential_sqft.sum())
+
+    all_buildings = dev.merge(dset.buildings, new_buildings[dset.buildings.columns])
+    dset.save_tmptbl("buildings", all_buildings)
 
 def build_networks(dset):
-    if not networks.NETWORKS:
-        networks.NETWORKS = networks.Networks(
+    if dset.NETWORKS is None:
+        dset.NETWORKS = networks.Networks(
             [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.pkl']],
             factors=[1.0],
             maxdistances=[2000],
             twoway=[1],
             impedances=None)
+
     parcels = dset.parcels
     parcels['x'] = parcels.centroid_x
     parcels['y'] = parcels.centroid_y
-    parcels = networks.NETWORKS.addnodeid(parcels)
+    parcels = dset.NETWORKS.addnodeid(parcels)
     dset.save_tmptbl("parcels", parcels)
 
 
@@ -319,11 +361,13 @@ def neighborhood_vars(dset):
 
 
 def _run_models(dset, model_list, years):
+
     for year in years:
 
         dset.year = year
 
         t1 = time.time()
+
         for model in model_list:
             t2 = time.time()
             print "\n" + model + "\n"
