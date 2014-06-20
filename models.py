@@ -139,14 +139,14 @@ def refiner(dset):
         def relocate_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
             agents = dset.view(agent_type).query(filter_expression)
             if location_type == 'zone':
-                new_building_id = dset.buildings[dset.view("buildings").zone_id == location_id].index.values[0]
+                new_building_id = dset.view("buildings").zone_id[dset.view("buildings").zone_id == location_id].index.values[0]
                 agents['zone_id'] = dset.view(agent_type).zone_id
                 agent_pool = agents[agents.zone_id != location_id]
             if location_type == 'parcel':
                 # buildings_ids = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values
                 # if len(building_ids)> 0
                 try:
-                    new_building_id = dset.buildings[dset.view("buildings").parcel_id == location_id].index.values[0]
+                    new_building_id = dset.view("buildings").parcel_id[dset.view("buildings").parcel_id == location_id].index.values[0]
                 except:
                     print 'No building in %s %s.' % (location_type,location_id)
                     return
@@ -212,6 +212,9 @@ def income_inflation_model(dset):
 def scheduled_development_events(dset):
     sched_dev = pd.read_csv("data/scheduled_development_events.csv")
     sched_dev[sched_dev.year_built==dset.year]
+    sched_dev['building_sqft'] = 0
+    sched_dev["sqft_price_res"] = 0
+    sched_dev["sqft_price_nonres"] = 0
     if len(sched_dev) > 0:
         max_bid = dset.buildings.index.values.max()
         idx = np.arange(max_bid + 1,max_bid+len(sched_dev)+1)
@@ -231,7 +234,7 @@ def feasibility(dset):
 
     parcels = dset.view("parcels")
     df = parcels.build_df()
-
+    df = df.ix[np.random.choice(df.index, 500000,replace=False)]
     # add prices for each use
     for use in pf.config.uses:
         df[use] = parcels.price(use)
@@ -276,6 +279,7 @@ def residential_developer(dset):
     new_buildings['land_area'] = 0
     new_buildings['sqft_per_unit'] = 1500
     new_buildings['tax_exempt'] = 0
+    new_buildings['building_sqft'] = 0
     for col in ["sqft_price_res",  "sqft_price_nonres"]:
         new_buildings[col] = np.nan
 
@@ -327,6 +331,7 @@ def non_residential_developer(dset):
     new_buildings['land_area'] = 0
     new_buildings['sqft_per_unit'] = 1500
     new_buildings['tax_exempt'] = 0
+    new_buildings['building_sqft'] = 0
     for col in ["sqft_price_res",  "sqft_price_nonres"]:
         new_buildings[col] = np.nan
 
