@@ -345,8 +345,8 @@ def non_residential_developer(dset):
     dset.save_tmptbl("buildings", all_buildings)
 
 def build_networks(dset):
-    if dset.NETWORKS is None:
-        dset.NETWORKS = networks.Networks(
+    if networks.NETWORKS is None:
+        networks.NETWORKS = networks.Networks(
             [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.pkl']],
             factors=[1.0],
             maxdistances=[2000],
@@ -356,7 +356,7 @@ def build_networks(dset):
     parcels = dset.parcels
     parcels['x'] = parcels.centroid_x
     parcels['y'] = parcels.centroid_y
-    parcels = dset.NETWORKS.addnodeid(parcels)
+    parcels = networks.NETWORKS.addnodeid(parcels)
     dset.save_tmptbl("parcels", parcels)
 
 
