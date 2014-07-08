@@ -10,6 +10,7 @@ from urbansim.utils import misc, networks
 
 def buildings_df(dset, addnodes=True):
     buildings = dset.view("buildings").build_df().fillna(0)
+    #buildings.job_spaces = np.round(buildings.job_spaces*1.05)
     if addnodes:
         buildings = dset.merge_nodes(buildings)
     return buildings
@@ -67,45 +68,126 @@ def hlcm_simulate(dset):
 def elcm_estimate(dset):
     return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
                             "elcm.yaml")
-
+                            
+def elcm_estimate3(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm3.yaml")
+                            
+def elcm_estimate5(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm5.yaml")
+                            
+def elcm_estimate93(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm93.yaml")
+                            
+def elcm_estimate99(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm99.yaml")
+                            
+def elcm_estimate115(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm115.yaml")
+                            
+def elcm_estimate125(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm125.yaml")
+                            
+def elcm_estimate147(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm147.yaml")
+                            
+def elcm_estimate161(dset):
+    return ymr.lcm_estimate(jobs_df(dset), "building_id", buildings_df(dset),
+                            "elcm161.yaml")
 
 def elcm_simulate(dset):
-    units = ymr.get_vacant_units(jobs_df(dset), "building_id", buildings_df(dset),
-                                 "job_spaces")
-    units = units.loc[np.random.choice(units.index, size=200000, replace=False)]
-    return ymr.lcm_simulate(jobs_df(dset), units, "elcm.yaml", dset.jobs, "building_id")
-
+    jobs = jobs_df(dset)
+    jobs3 = jobs[jobs.lid==3]
+    jobs5 = jobs[jobs.lid==5]
+    jobs93 = jobs[jobs.lid==93]
+    jobs99 = jobs[jobs.lid==99]
+    jobs115 = jobs[jobs.lid==115]
+    jobs125 = jobs[jobs.lid==125]
+    jobs147 = jobs[jobs.lid==147]
+    jobs161 = jobs[jobs.lid==161]
+    
+    buildings = buildings_df(dset)
+    buildings3 = buildings[buildings.large_area_id==3]
+    buildings5 = buildings[buildings.large_area_id==5]
+    buildings93 = buildings[buildings.large_area_id==93]
+    buildings99 = buildings[buildings.large_area_id==99]
+    buildings115 = buildings[buildings.large_area_id==115]
+    buildings125 = buildings[buildings.large_area_id==125]
+    buildings147 = buildings[buildings.large_area_id==147]
+    buildings161 = buildings[buildings.large_area_id==161]
+    
+    # units = ymr.get_vacant_units(jobs_df(dset), "building_id", buildings_df(dset),
+                                 # "job_spaces")
+    units3 = ymr.get_vacant_units(jobs3, "building_id", buildings3, "job_spaces")
+    units5 = ymr.get_vacant_units(jobs5, "building_id", buildings5, "job_spaces")
+    units93 = ymr.get_vacant_units(jobs93, "building_id", buildings93, "job_spaces")
+    units99 = ymr.get_vacant_units(jobs99, "building_id", buildings99, "job_spaces")
+    units115 = ymr.get_vacant_units(jobs115, "building_id", buildings115, "job_spaces")
+    units125 = ymr.get_vacant_units(jobs125, "building_id", buildings125, "job_spaces")
+    units147 = ymr.get_vacant_units(jobs147, "building_id", buildings147, "job_spaces")
+    units161 = ymr.get_vacant_units(jobs161, "building_id", buildings161, "job_spaces")
+    
+    #units = units.loc[np.random.choice(units.index, size=1500000, replace=False)]
+    print 'ELCM for large area 3'
+    ymr.lcm_simulate(jobs3, units3, "elcm3.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 5'
+    ymr.lcm_simulate(jobs5, units5, "elcm5.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 93'
+    ymr.lcm_simulate(jobs93, units93, "elcm93.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 99'
+    ymr.lcm_simulate(jobs99, units99, "elcm99.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 115'
+    ymr.lcm_simulate(jobs115, units115, "elcm115.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 125'
+    ymr.lcm_simulate(jobs125, units125, "elcm125.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 147'
+    ymr.lcm_simulate(jobs147, units147, "elcm147.yaml", dset.jobs, "building_id")
+    print 'ELCM for large area 161'
+    ymr.lcm_simulate(jobs161, units161, "elcm161.yaml", dset.jobs, "building_id")
+    return None
 
 def households_relocation(dset):
     return ymr.simple_relocation(dset.households, .01)
 
-
 def jobs_relocation(dset):
-    return ymr.simple_relocation(dset.jobs, .02)
-
-
+    def simple_relocation(choosers, relocation_rate, fieldname='building_id'):
+        print "Running relocation\n"
+        _print_number_unplaced(choosers, fieldname)
+        chooser_ids = np.random.choice(choosers[choosers.home_based_status==0].index, size=int(relocation_rate *
+                                       len(choosers)), replace=False)
+        choosers[fieldname].loc[chooser_ids] = np.nan
+        _print_number_unplaced(choosers, fieldname)
+    return simple_relocation(dset.jobs, .001)
+    
 def households_transition(dset):
     ct = dset.fetch('annual_household_control_totals')
-    totals_field = ct.reset_index().groupby('year').total_number_of_households.sum()
-    ct = pd.DataFrame({'total_number_of_households': totals_field})
+    ct = ct.reset_index().groupby(['year','large_area_id','race_id']).total_number_of_households.sum().reset_index().set_index('year')
     tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = \
         model.transition(dset.households, dset.year,
                          linked_tables={'linked': (dset.persons, 'household_id')})
     new.loc[added_hh_idx, "building_id"] = np.nan
+    new.building_id[new.building_id==-1] = np.nan
     dset.save_tmptbl("households", new)
     dset.save_tmptbl("persons", new_linked['linked'])
-
-
+    
 def jobs_transition(dset):
+    # dset = dataset.SemcogDataset("data/semcog_data.h5")
     ct_emp = dset.fetch('annual_employment_control_totals')
-    totals_field = ct_emp.reset_index().groupby('year').total_number_of_jobs.sum()
-    ct_emp = pd.DataFrame({'total_number_of_jobs': totals_field})
+    ct_emp = ct_emp.reset_index().set_index('year')
+    #ct_emp = ct_emp.reset_index().groupby(['year','large_area_id','home_based_status']).total_number_of_jobs.sum().reset_index().set_index('year')
     tran = transition.TabularTotalsTransition(ct_emp, 'total_number_of_jobs')
     model = transition.TransitionModel(tran)
     new, added_jobs_idx, new_linked = model.transition(dset.jobs, dset.year)
     new.loc[added_jobs_idx, "building_id"] = np.nan
+    new.building_id[new.building_id==-1] = np.nan
     dset.save_tmptbl("jobs", new)
 
 
@@ -379,3 +461,12 @@ def _run_models(dset, model_list, years):
             globals()[model](dset)
             print "Model %s executed in %.3fs" % (model, time.time()-t2)
         print "Year %d completed in %.3fs" % (year, time.time()-t1)
+        
+def _print_number_unplaced(df, fieldname="building_id"):
+    """
+    Just an internal function to use to compute and print info on the number
+    of unplaced agents.
+    """
+    counts = df[fieldname].isnull().value_counts()
+    count = 0 if True not in counts else counts[True]
+    print "Total currently unplaced: %d" % count

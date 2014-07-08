@@ -1,0 +1,435 @@
+name: elcm147
+
+model_type: segmented_locationchoice
+
+segmentation_col: sector_id
+
+choosers_fit_filters:
+- home_based_status == 0
+- lid == 147
+
+choosers_predict_filters:
+- lid == 147
+
+alts_fit_filters: null
+
+alts_predict_filters:
+- non_residential_sqft > 0
+- building_type_id not in [16,17,18,19,20]
+- large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 200
+
+estimation_sample_size: 5000
+
+default_config:
+    model_expression: np.log1p(non_residential_sqft) + np.log1p(jobs_within_30_min)
+        + np.log1p(popden)
+
+models:
+    !!python/long '1':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.533562199114196
+                np.log1p(non_residential_sqft): 1.0972437686149283
+                np.log1p(popden): -3.0
+            Std. Error:
+                np.log1p(jobs_within_30_min): 1.2554962137760064
+                np.log1p(non_residential_sqft): 1.6974858897627447
+                np.log1p(popden): 5.167684709606859
+            T-Score:
+                np.log1p(jobs_within_30_min): -0.4249811295802036
+                np.log1p(non_residential_sqft): 0.64639345471572
+                np.log1p(popden): -0.5805307731764136
+        fitted: true
+        log_likelihoods:
+            convergence: -5.410915036215112
+            'null': -21.193269466192145
+            ratio: 0.7446871024385033
+        name: !!python/long '1'
+    !!python/long '2':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.269931393334424
+                np.log1p(non_residential_sqft): 0.5444478452137944
+                np.log1p(popden): -0.9310307939632232
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.013505422550992843
+                np.log1p(non_residential_sqft): 0.01694372872932417
+                np.log1p(popden): 0.06649904016246284
+            T-Score:
+                np.log1p(jobs_within_30_min): -19.986889881840845
+                np.log1p(non_residential_sqft): 32.13270549306715
+                np.log1p(popden): -14.0006651477771
+        fitted: true
+        log_likelihoods:
+            convergence: -1465.7728056341234
+            'null': -2839.8981084697257
+            ratio: 0.48386429736243153
+        name: !!python/long '2'
+    !!python/long '3':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.2979809595419108
+                np.log1p(non_residential_sqft): 0.6805203480924359
+                np.log1p(popden): -0.7187462522008862
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.004117802617722646
+                np.log1p(non_residential_sqft): 0.004419766730118421
+                np.log1p(popden): 0.02092547922085695
+            T-Score:
+                np.log1p(jobs_within_30_min): -72.36407064763813
+                np.log1p(non_residential_sqft): 153.97200568415573
+                np.log1p(popden): -34.34789925788145
+        fitted: true
+        log_likelihoods:
+            convergence: -11045.290725380913
+            'null': -25580.276245696565
+            ratio: 0.5682106549870003
+        name: !!python/long '3'
+    !!python/long '4':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.28827731018195457
+                np.log1p(non_residential_sqft): 0.6709775229052899
+                np.log1p(popden): -0.5534175336270603
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.009988494946763207
+                np.log1p(non_residential_sqft): 0.012379011046995918
+                np.log1p(popden): 0.051787351980067495
+            T-Score:
+                np.log1p(jobs_within_30_min): -28.860935678339754
+                np.log1p(non_residential_sqft): 54.20283739613591
+                np.log1p(popden): -10.686345458251386
+        fitted: true
+        log_likelihoods:
+            convergence: -2427.7885371847974
+            'null': -5335.4055881138165
+            ratio: 0.5449664515489863
+        name: !!python/long '4'
+    !!python/long '5':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.32359640349683483
+                np.log1p(non_residential_sqft): 0.8210576690940823
+                np.log1p(popden): -0.6629101772815825
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.004568663041510317
+                np.log1p(non_residential_sqft): 0.005306432006401851
+                np.log1p(popden): 0.02145194023837175
+            T-Score:
+                np.log1p(jobs_within_30_min): -70.82956229353692
+                np.log1p(non_residential_sqft): 154.72876465834892
+                np.log1p(popden): -30.902108150376748
+        fitted: true
+        log_likelihoods:
+            convergence: -9733.194726093274
+            'null': -26491.58683274297
+            ratio: 0.6325929893311156
+        name: !!python/long '5'
+    !!python/long '6':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.2854724317886573
+                np.log1p(non_residential_sqft): 0.6503722433638124
+                np.log1p(popden): -0.44828175889323385
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.011649017053380646
+                np.log1p(non_residential_sqft): 0.014160775581902865
+                np.log1p(popden): 0.040717314499437676
+            T-Score:
+                np.log1p(jobs_within_30_min): -24.506139057098444
+                np.log1p(non_residential_sqft): 45.92772758823836
+                np.log1p(popden): -11.009610147531337
+        fitted: true
+        log_likelihoods:
+            convergence: -2060.3429778901973
+            'null': -4318.128653736608
+            ratio: 0.5228620675515724
+        name: !!python/long '6'
+    !!python/long '7':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.35274606177983786
+                np.log1p(non_residential_sqft): 0.8631144778252201
+                np.log1p(popden): -1.2243925630589674
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.01020151250772445
+                np.log1p(non_residential_sqft): 0.01220545715821804
+                np.log1p(popden): 0.07821511308346756
+            T-Score:
+                np.log1p(jobs_within_30_min): -34.577819858843796
+                np.log1p(non_residential_sqft): 70.71545675321777
+                np.log1p(popden): -15.654168546075644
+        fitted: true
+        log_likelihoods:
+            convergence: -1577.3507416809139
+            'null': -6410.964013523053
+            ratio: 0.75396044364721
+        name: !!python/long '7'
+    !!python/long '8':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.39858815383379625
+                np.log1p(non_residential_sqft): 1.2635731332360947
+                np.log1p(popden): -1.0099383154131283
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.01591680942528181
+                np.log1p(non_residential_sqft): 0.01808059017665504
+                np.log1p(popden): 0.05974216027781127
+            T-Score:
+                np.log1p(jobs_within_30_min): -25.04196307085829
+                np.log1p(non_residential_sqft): 69.88561329527681
+                np.log1p(popden): -16.904951389717784
+        fitted: true
+        log_likelihoods:
+            convergence: -818.446106032004
+            'null': -3634.64571345192
+            ratio: 0.7748209397678257
+        name: !!python/long '8'
+    !!python/long '9':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.263558793880533
+                np.log1p(non_residential_sqft): 0.5567482988120823
+                np.log1p(popden): -0.09466373945452165
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.008915742535394634
+                np.log1p(non_residential_sqft): 0.011895331696328075
+                np.log1p(popden): 0.03973458658534249
+            T-Score:
+                np.log1p(jobs_within_30_min): -29.5610593098926
+                np.log1p(non_residential_sqft): 46.80393225049309
+                np.log1p(popden): -2.3824015194219164
+        fitted: true
+        log_likelihoods:
+            convergence: -3817.5466767148923
+            'null': -6983.182289110233
+            ratio: 0.45332278055119946
+        name: !!python/long '9'
+    !!python/long '10':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.30052308554986246
+                np.log1p(non_residential_sqft): 0.59990928201198
+                np.log1p(popden): -0.4672513606040919
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.010619264165098289
+                np.log1p(non_residential_sqft): 0.012543440329625026
+                np.log1p(popden): 0.04025843679263495
+            T-Score:
+                np.log1p(jobs_within_30_min): -28.299803157508222
+                np.log1p(non_residential_sqft): 47.82653452698441
+                np.log1p(popden): -11.60629666300339
+        fitted: true
+        log_likelihoods:
+            convergence: -2277.8516703535824
+            'null': -4556.552935231266
+            ratio: 0.5000932277684664
+        name: !!python/long '10'
+    !!python/long '11':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.28944382339537367
+                np.log1p(non_residential_sqft): 0.9163743728154679
+                np.log1p(popden): -1.4103874865182646
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.1745691060321203
+                np.log1p(non_residential_sqft): 0.24557494953394643
+                np.log1p(popden): 1.1544942139809113
+            T-Score:
+                np.log1p(jobs_within_30_min): -1.6580472339826078
+                np.log1p(non_residential_sqft): 3.731546619696221
+                np.log1p(popden): -1.2216496795206842
+        fitted: true
+        log_likelihoods:
+            convergence: -26.651803520671184
+            'null': -68.87812576512447
+            ratio: 0.6130585258438321
+        name: !!python/long '11'
+    !!python/long '12':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.3046794459280065
+                np.log1p(non_residential_sqft): 0.7339576068208452
+                np.log1p(popden): -0.5924187813407947
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.008445680953445283
+                np.log1p(non_residential_sqft): 0.010380123123626636
+                np.log1p(popden): 0.04396842413987783
+            T-Score:
+                np.log1p(jobs_within_30_min): -36.075178260637145
+                np.log1p(non_residential_sqft): 70.707986608584
+                np.log1p(popden): -13.473732409788404
+        fitted: true
+        log_likelihoods:
+            convergence: -2534.1299879551602
+            'null': -6257.312809893162
+            ratio: 0.5950130567312284
+        name: !!python/long '12'
+    !!python/long '13':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.3354459555184531
+                np.log1p(non_residential_sqft): 0.9181847140468767
+                np.log1p(popden): -0.7023091216243305
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.01646964497580319
+                np.log1p(non_residential_sqft): 0.018767138150312026
+                np.log1p(popden): 0.058093137714025626
+            T-Score:
+                np.log1p(jobs_within_30_min): -20.367528019655694
+                np.log1p(non_residential_sqft): 48.92513214816457
+                np.log1p(popden): -12.089364583500016
+        fitted: true
+        log_likelihoods:
+            convergence: -1105.3839332244206
+            'null': -3136.6038809964116
+            ratio: 0.6475857407683654
+        name: !!python/long '13'
+    !!python/long '14':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.25211863112104516
+                np.log1p(non_residential_sqft): 0.5105028761951481
+                np.log1p(popden): -0.12942851370436026
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.0037908779905507835
+                np.log1p(non_residential_sqft): 0.0042576460551724885
+                np.log1p(popden): 0.017683051895781374
+            T-Score:
+                np.log1p(jobs_within_30_min): -66.50665934105001
+                np.log1p(non_residential_sqft): 119.90261040486286
+                np.log1p(popden): -7.319353834800308
+        fitted: true
+        log_likelihoods:
+            convergence: -13355.47544754117
+            'null': -23021.18895765346
+            ratio: 0.41986161218223683
+        name: !!python/long '14'
+    !!python/long '15':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.4529285147098135
+                np.log1p(non_residential_sqft): 1.838151741245211
+                np.log1p(popden): -0.47881530293699565
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.011706760956483951
+                np.log1p(non_residential_sqft): 0.012950181364480031
+                np.log1p(popden): 0.05375449394281744
+            T-Score:
+                np.log1p(jobs_within_30_min): -38.6894817783866
+                np.log1p(non_residential_sqft): 141.94023153119105
+                np.log1p(popden): -8.90744694660034
+        fitted: true
+        log_likelihoods:
+            convergence: -933.632938287188
+            'null': -13833.906644057717
+            ratio: 0.9325112593059007
+        name: !!python/long '15'
+    !!python/long '16':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.2688745738764188
+                np.log1p(non_residential_sqft): 0.5871194472512572
+                np.log1p(popden): -0.3246865119849358
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.0047048506019115735
+                np.log1p(non_residential_sqft): 0.005878319590412927
+                np.log1p(popden): 0.021219186638268814
+            T-Score:
+                np.log1p(jobs_within_30_min): -57.148376564215546
+                np.log1p(non_residential_sqft): 99.8787898855997
+                np.log1p(popden): -15.301553142445314
+        fitted: true
+        log_likelihoods:
+            convergence: -11001.524458769129
+            'null': -21315.130765624723
+            ratio: 0.48386314962179466
+        name: !!python/long '16'
+    !!python/long '17':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.29649510464714085
+                np.log1p(non_residential_sqft): 0.6463299103022178
+                np.log1p(popden): -0.25491041211449034
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.009089804120760017
+                np.log1p(non_residential_sqft): 0.01133790762699496
+                np.log1p(popden): 0.037837242229895894
+            T-Score:
+                np.log1p(jobs_within_30_min): -32.618426173780996
+                np.log1p(non_residential_sqft): 57.0061012636353
+                np.log1p(popden): -6.737024082402099
+        fitted: true
+        log_likelihoods:
+            convergence: -2856.337102231718
+            'null': -6045.3801152312435
+            ratio: 0.5275173690012941
+        name: !!python/long '17'
+    !!python/long '18':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.32488244231354696
+                np.log1p(non_residential_sqft): 0.8513423921893898
+                np.log1p(popden): -0.4239724660592966
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.004532316919436233
+                np.log1p(non_residential_sqft): 0.005484071346253282
+                np.log1p(popden): 0.02742287068743635
+            T-Score:
+                np.log1p(jobs_within_30_min): -71.68131622048145
+                np.log1p(non_residential_sqft): 155.23911678702484
+                np.log1p(popden): -15.460542803548918
+        fitted: true
+        log_likelihoods:
+            convergence: -6692.621574958433
+            'null': -21230.35768775994
+            ratio: 0.6847617137031579
+        name: !!python/long '18'
+    !!python/long '19':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.44862116291166243
+                np.log1p(non_residential_sqft): 1.6668116251792087
+                np.log1p(popden): -2.1579103772703796
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.05404220251716725
+                np.log1p(non_residential_sqft): 0.06163204561828859
+                np.log1p(popden): 0.37498562967356813
+            T-Score:
+                np.log1p(jobs_within_30_min): -8.301311604928607
+                np.log1p(non_residential_sqft): 27.044561128190132
+                np.log1p(popden): -5.754648195849212
+        fitted: true
+        log_likelihoods:
+            convergence: -92.1405699337685
+            'null': -842.4324612811397
+            ratio: 0.8906255703945162
+        name: !!python/long '19'
+    !!python/long '20':
+        fit_parameters:
+            Coefficient:
+                np.log1p(jobs_within_30_min): -0.3651274858712835
+                np.log1p(non_residential_sqft): 0.9917893479602976
+                np.log1p(popden): -0.9778239088422085
+            Std. Error:
+                np.log1p(jobs_within_30_min): 0.006918276831806205
+                np.log1p(non_residential_sqft): 0.007830172909068536
+                np.log1p(popden): 0.02578410851894708
+            T-Score:
+                np.log1p(jobs_within_30_min): -52.77722975649661
+                np.log1p(non_residential_sqft): 126.66250917800987
+                np.log1p(popden): -37.92351044922374
+        fitted: true
+        log_likelihoods:
+            convergence: -4748.941125745132
+            'null': -16615.523261495873
+            ratio: 0.7141864838677616
+        name: !!python/long '20'
+
+fitted: true
