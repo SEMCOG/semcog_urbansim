@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import os
-from urbansim.models import transition
+from urbansim.models import transition, relocation
 import urbansim.models.yamlmodelrunner as ymr
 from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc, networks
@@ -150,20 +150,34 @@ def elcm_simulate(dset):
     ymr.lcm_simulate(jobs147, units147, "elcm147.yaml", dset.jobs, "building_id")
     print 'ELCM for large area 161'
     ymr.lcm_simulate(jobs161, units161, "elcm161.yaml", dset.jobs, "building_id")
-    return None
 
 def households_relocation(dset):
-    return ymr.simple_relocation(dset.households, .01)
+    #return ymr.simple_relocation(dset.households, .01)
+    relocation_rates = dset.fetch('annual_relocation_rates_for_households')
+    relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
+    relocation_rates.probability_of_relocating = relocation_rates.probability_of_relocating*.05
+    reloc = relocation.RelocationModel(relocation_rates, 'probability_of_relocating')
+    idx_reloc = reloc.find_movers(dset.households)
+    #dset.households.loc[idx_reloc, "building_id"] = np.nan
+    dset.households['building_id'].loc[idx_reloc] = np.nan
+    _print_number_unplaced(dset.households, 'building_id')
 
 def jobs_relocation(dset):
-    def simple_relocation(choosers, relocation_rate, fieldname='building_id'):
-        print "Running relocation\n"
-        _print_number_unplaced(choosers, fieldname)
-        chooser_ids = np.random.choice(choosers[choosers.home_based_status==0].index, size=int(relocation_rate *
-                                       len(choosers)), replace=False)
-        choosers[fieldname].loc[chooser_ids] = np.nan
-        _print_number_unplaced(choosers, fieldname)
-    return simple_relocation(dset.jobs, .001)
+    # def simple_relocation(choosers, relocation_rate, fieldname='building_id'):
+        # print "Running relocation\n"
+        # _print_number_unplaced(choosers, fieldname)
+        # chooser_ids = np.random.choice(choosers[choosers.home_based_status==0].index, size=int(relocation_rate *
+                                       # len(choosers)), replace=False)
+        # choosers[fieldname].loc[chooser_ids] = np.nan
+        # _print_number_unplaced(choosers, fieldname)
+    # return simple_relocation(dset.jobs, .001)
+    relocation_rates = dset.fetch('annual_relocation_rates_for_jobs')
+    relocation_rates.job_relocation_probability = relocation_rates.job_relocation_probability*.05
+    reloc = relocation.RelocationModel(relocation_rates, 'job_relocation_probability')
+    idx_reloc = reloc.find_movers(dset.jobs)
+    #dset.jobs.loc[idx_reloc, "building_id"] = np.nan
+    dset.jobs['building_id'].loc[idx_reloc] = np.nan
+    _print_number_unplaced(dset.jobs, 'building_id')
     
 def households_transition(dset):
     ct = dset.fetch('annual_household_control_totals')
@@ -179,7 +193,6 @@ def households_transition(dset):
     dset.save_tmptbl("persons", new_linked['linked'])
     
 def jobs_transition(dset):
-    # dset = dataset.SemcogDataset("data/semcog_data.h5")
     ct_emp = dset.fetch('annual_employment_control_totals')
     ct_emp = ct_emp.reset_index().set_index('year')
     #ct_emp = ct_emp.reset_index().groupby(['year','large_area_id','home_based_status']).total_number_of_jobs.sum().reset_index().set_index('year')
