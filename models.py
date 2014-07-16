@@ -493,7 +493,7 @@ def travel_model(dset):
         zonal_indicators['Agegrp3'] = merged_persons[(merged_persons.age>=18)*(merged_persons.age<=34)].groupby('zone_id').size()
         zonal_indicators['Agegrp4'] = merged_persons[(merged_persons.age>=35)*(merged_persons.age<=64)].groupby('zone_id').size()
         zonal_indicators['Agegrp5'] = merged_persons[merged_persons.age>=65].groupby('zone_id').size()
-        enroll_ratios = pd.read_csv("data/enroll_ratio_by_taz.csv")
+        enroll_ratios = pd.read_csv("data/schdic_taz10.csv")
         school_age_by_district = pd.DataFrame({'children':merged_persons[(merged_persons.age>=5)*(merged_persons.age<=17)].groupby('school_district_id').size()})
         enroll_ratios = pd.merge(enroll_ratios,school_age_by_district,left_on='school_district_id',right_index=True)
         enroll_ratios['enrolled'] = enroll_ratios.enroll_ratio*enroll_ratios.children
