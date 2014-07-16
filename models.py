@@ -458,7 +458,93 @@ def build_networks(dset):
 def neighborhood_vars(dset):
     nodes = networks.from_yaml(dset, "networks.yaml")
     dset.save_tmptbl("nodes", nodes)
+    
+def travel_model(dset):
+    if dset.year in [2013, 2020]:
+        datatable = 'TAZ Data Table'
+        joinfield = 'ZoneID'
+        
+        input_dir = 'c://semcog_urbansim//runs//'  ##Where TM expects input
+        input_file = input_dir + 'tm_input.csv'
+        output_dir = 'c://semcog_urbansim//data//'  ##Where TM outputs
+        output_file = 'tm_output.txt'
+        
+        def delete_dcc_file(dcc_file):
+            if os.path.exists(dcc_file):
+                os.remove(dcc_file)
+                
+        delete_dcc_file(os.path.splitext(input_file)[0] + '.dcc' )
+        
+        bp = pd.merge(dset.buildings,dset.parcels,left_on='parcel_id',right_index=True)
+        merged_hh = pd.merge(dset.households,bp,left_on='building_id',right_index=True)
+        if 'zone_id' in dset.jobs.columns:
+            del dset.jobs['zone_id']
+        merged_jobs = pd.merge(dset.jobs,bp,left_on='building_id',right_index=True)
 
+        zonal_indicators = pd.DataFrame(index=np.unique(dset.parcels.zone_id.values))
+        merged_persons = pd.merge(dset.persons, merged_hh, left_on='household_id', right_index=True)
+        zonal_indicators['acrestotal'] = dset.parcels.groupby('zone_id').parcel_sqft.sum()/43560.0
+        zonal_indicators['households'] = merged_hh.groupby('zone_id').size()
+        zonal_indicators['hhPop'] = merged_hh.groupby('zone_id').persons.sum()
+        zonal_indicators['EmpPrinc'] = merged_jobs.groupby('zone_id').size()
+        zonal_indicators['workers'] = merged_hh.groupby('zone_id').workers.sum()
+        zonal_indicators['Agegrp1'] = merged_persons[merged_persons.age<=4].groupby('zone_id').size()
+        zonal_indicators['Agegrp2'] = merged_persons[(merged_persons.age>=5)*(merged_persons.age<=17)].groupby('zone_id').size()
+        zonal_indicators['Agegrp3'] = merged_persons[(merged_persons.age>=18)*(merged_persons.age<=34)].groupby('zone_id').size()
+        zonal_indicators['Agegrp4'] = merged_persons[(merged_persons.age>=35)*(merged_persons.age<=64)].groupby('zone_id').size()
+        zonal_indicators['Agegrp5'] = merged_persons[merged_persons.age>=65].groupby('zone_id').size()
+        enroll_ratios = pd.read_csv("data/enroll_ratio_by_taz.csv")
+        school_age_by_district = pd.DataFrame({'children':merged_persons[(merged_persons.age>=5)*(merged_persons.age<=17)].groupby('school_district_id').size()})
+        enroll_ratios = pd.merge(enroll_ratios,school_age_by_district,left_on='school_district_id',right_index=True)
+        enroll_ratios['enrolled'] = enroll_ratios.enroll_ratio*enroll_ratios.children
+        enrolled = enroll_ratios.groupby('zone_id').enrolled.sum()
+        zonal_indicators['k12enroll'] = np.round(enrolled)
+        # zonal_indicators['PopDens'] = zonal_indicators.HHPop/(dset.parcels.groupby('zone_id').parcel_sqft.sum()/43560)
+        # zonal_indicators['EmpBasic'] = merged_jobs[merged_jobs.sector_id.isin([1,3])].groupby('zone_id').size()
+        # zonal_indicators['EmpNonBas'] = merged_jobs[~merged_jobs.sector_id.isin([1,3])].groupby('zone_id').size()
+        zonal_indicators['sector1'] = merged_jobs[merged_jobs.sector_id==1].groupby('zone_id').size()
+        zonal_indicators['sector2'] = merged_jobs[merged_jobs.sector_id==2].groupby('zone_id').size()
+        zonal_indicators['sector3'] = merged_jobs[merged_jobs.sector_id==3].groupby('zone_id').size()
+        zonal_indicators['sector4'] = merged_jobs[merged_jobs.sector_id==4].groupby('zone_id').size()
+        zonal_indicators['sector5'] = merged_jobs[merged_jobs.sector_id==5].groupby('zone_id').size()
+        zonal_indicators['sector6'] = merged_jobs[merged_jobs.sector_id==6].groupby('zone_id').size()
+        zonal_indicators['sector7'] = merged_jobs[merged_jobs.sector_id==7].groupby('zone_id').size()
+        zonal_indicators['sector8'] = merged_jobs[merged_jobs.sector_id==8].groupby('zone_id').size()
+        zonal_indicators['sector9'] = merged_jobs[merged_jobs.sector_id==9].groupby('zone_id').size()
+        zonal_indicators['sector10'] = merged_jobs[merged_jobs.sector_id==10].groupby('zone_id').size()
+        zonal_indicators['sector11'] = merged_jobs[merged_jobs.sector_id==11].groupby('zone_id').size()
+        zonal_indicators['sector12'] = merged_jobs[merged_jobs.sector_id==12].groupby('zone_id').size()
+        zonal_indicators['sector13'] = merged_jobs[merged_jobs.sector_id==13].groupby('zone_id').size()
+        zonal_indicators['sector14'] = merged_jobs[merged_jobs.sector_id==14].groupby('zone_id').size()
+        zonal_indicators['sector15'] = merged_jobs[merged_jobs.sector_id==15].groupby('zone_id').size()
+        zonal_indicators['sector16'] = merged_jobs[merged_jobs.sector_id==16].groupby('zone_id').size()
+        zonal_indicators['sector17'] = merged_jobs[merged_jobs.sector_id==17].groupby('zone_id').size()
+        zonal_indicators['sector18'] = merged_jobs[merged_jobs.sector_id==18].groupby('zone_id').size()
+        zonal_indicators['sector19'] = merged_jobs[merged_jobs.sector_id==19].groupby('zone_id').size()
+        zonal_indicators['sector20'] = merged_jobs[merged_jobs.sector_id==20].groupby('zone_id').size()
+        zonal_indicators.index.name = 'zone_id'
+        zonal_indicators.fillna(0).to_csv(input_file)
+        
+        ########Uncomment if you have Transcad########
+        # import run_transcad_macro
+        
+        ####Export data to TM
+        # transcad_file_location = run_transcad_macro.run_get_file_location_macro()
+        # datatable = transcad_file_location[datatable] #replace internal matrix name with absolute file name
+
+        # macro_args = [["InputFile", input_file],
+                      # ["DataTable", datatable],
+                      # ["JoinField", joinfield]
+                  # ]
+        
+        # macroname, ui_db_file = 'SEMCOGImportTabFile', 'D:\\semcog_e5_35\\semcog_e5_ui'
+        # run_transcad_macro(macroname, ui_db_file, macro_args)
+        
+        ####Run TM
+        # run_transcad_macro.run(input_dir, dset.year)
+        
+        ####Import data from TM
+        # run_transcad_macro.get_travel_data_from_travel_model(output_dir, dset.year, output_file)
 
 def _run_models(dset, model_list, years):
 
