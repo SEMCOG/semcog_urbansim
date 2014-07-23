@@ -181,7 +181,7 @@ def jobs_relocation(dset):
     
 def households_transition(dset):
     ct = dset.fetch('annual_household_control_totals')
-    ct = ct.reset_index().groupby(['year','large_area_id','race_id']).total_number_of_households.sum().reset_index().set_index('year')
+    #ct = ct.reset_index().groupby(['year','large_area_id','race_id']).total_number_of_households.sum().reset_index().set_index('year')
     tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = \
