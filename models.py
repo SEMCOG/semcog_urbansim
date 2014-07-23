@@ -464,9 +464,9 @@ def travel_model(dset):
         datatable = 'TAZ Data Table'
         joinfield = 'ZoneID'
         
-        input_dir = 'c://semcog_urbansim//runs//'  ##Where TM expects input
+        input_dir = './/runs//'  ##Where TM expects input
         input_file = input_dir + 'tm_input.csv'
-        output_dir = 'c://semcog_urbansim//data//'  ##Where TM outputs
+        output_dir = './/data//'  ##Where TM outputs
         output_file = 'tm_output.txt'
         
         def delete_dcc_file(dcc_file):
