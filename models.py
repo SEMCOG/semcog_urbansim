@@ -629,7 +629,7 @@ def travel_model(year, buildings, parcels, households, persons, jobs):
         ####    TRANSCAD INTERACTIONS #########################################
         #######################################################################
         if sim.get_injectable("transcad_available") == True:
-            transcad.transcad_interaction(merged)
+            transcad.transcad_interaction(merged, taz_table)
         
         
 def _print_number_unplaced(df, fieldname="building_id"):

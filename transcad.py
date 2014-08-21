@@ -5,7 +5,7 @@ import urbansim.sim.simulation as sim
 import numpy as np, pandas as pd
 import csv
 
-def transcad_interaction(zonal_indicators):
+def transcad_interaction(zonal_indicators, taz_table):
     datatable = 'TAZ Data Table'
     joinfield = 'ID'
     input_file = 'D:\\semcog_e6\\tm_input.tab' #Should be full path
