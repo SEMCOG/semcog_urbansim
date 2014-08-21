@@ -260,9 +260,7 @@ def run_feasibility(parcels, parcel_price_callback,
         d[form] = pf.lookup(form, df[parcel_use_allowed_callback(form)])
 
     far_predictions = pd.concat(d.values(), keys=d.keys(), axis=1)
-    import time
-    seconds = time.time()
-    far_predictions.to_csv('c://users//janowicz//desktop//feasibility%s.csv'%seconds)
+    
     sim.add_table("feasibility", far_predictions)
 
 
