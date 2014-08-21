@@ -64,6 +64,7 @@ def to_frame(tables, cfg, additional_columns=[]):
                               tables=tables, columns=columns)
     else:
         df = tables[0].to_frame(columns)
+
     df = deal_with_nas(df)
     return df
 
@@ -191,6 +192,28 @@ def simple_transition(tbl, rate):
 def _print_number_unplaced(df, fieldname):
     print "Total currently unplaced: %d" % \
           df[fieldname].value_counts().get(-1, 0)
+          
+def run_scheduled_development_events(scheduled_development_events, buildings, year):
+
+    #Use only scheduled development events for the current simulation year
+    sched_dev = scheduled_development_events[scheduled_development_events.year_built==year]
+    number_of_events = len(sched_dev)
+    print 'Inserting %s scheduled development events into the building table' % number_of_events
+    
+    if number_of_events > 0:
+        max_building_id = buildings.index.values.max()
+        new_building_ids = np.arange(max_building_id + 1, max_building_id + number_of_events + 1)
+        sched_dev['building_id'] = new_building_ids
+        sched_dev = sched_dev.set_index('building_id')
+        print buildings.local_columns ##Make sure that this is only the primary attributes, otherwise there will be nan's post-merge...
+        buildings = buildings.to_frame(buildings.local_columns)
+        
+        #Using the Developer model's merge function to merge in new buildings
+        from urbansim.developer.developer import Developer
+        merge = Developer(pd.DataFrame({})).merge
+        all_buildings = merge(buildings,sched_dev[buildings.columns])
+        
+        sim.add_table("buildings", all_buildings)
 
 
 def run_feasibility(parcels, parcel_price_callback,
@@ -231,14 +254,15 @@ def run_feasibility(parcels, parcel_price_callback,
 
     print "Describe of the yearly rent by use"
     print df[pf.config.uses].describe()
-    # import pdb; pdb.set_trace()
     d = {}
     for form in pf.config.forms:
         print "Computing feasibility for form %s" % form
         d[form] = pf.lookup(form, df[parcel_use_allowed_callback(form)])
 
     far_predictions = pd.concat(d.values(), keys=d.keys(), axis=1)
-
+    import time
+    seconds = time.time()
+    far_predictions.to_csv('c://users//janowicz//desktop//feasibility%s.csv'%seconds)
     sim.add_table("feasibility", far_predictions)
 
 

@@ -8,6 +8,11 @@ import urbansim.sim.simulation as sim
 import warnings
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
+@sim.table_source('scheduled_development_events')
+def scheduled_development_events(store):
+    df = pd.read_csv("data/scheduled_development_events.csv")
+    return df
+
 @sim.table_source('jobs')
 def jobs(store):
     df = store['jobs']
@@ -18,7 +23,7 @@ def buildings(store):
     buildings = store['buildings']
     buildings['sqft_price_nonres'] = buildings.improvement_value*1.0 / buildings.non_residential_sqft
     buildings.sqft_price_nonres[buildings.sqft_price_nonres==np.inf] = 0
-    buildings['sqft_price_res'] = buildings.improvement_value*1.0 / (buildings.sqft_per_unit * buildings.residential_units)
+    buildings['sqft_price_res'] = buildings.improvement_value*1.25 / (buildings.sqft_per_unit * buildings.residential_units)
     buildings.sqft_price_res[buildings.sqft_price_res==np.inf] = 0
     return buildings
 
