@@ -290,10 +290,14 @@ def price_vars():
     
 @sim.model('feasibility')
 def feasibility(parcels):
+    pfc = sqftproforma.SqFtProFormaConfig()
+    pfc.costs = {btype:list(np.array(pfc.costs[btype])*.8) for btype in pfc.costs} #Adjust cost downwards based on RS Means location factor
+    pfc.parking_cost_d = {ptype:pfc.parking_cost_d[ptype]*.8 for ptype in pfc.parking_cost_d} #Adjust price downwards based on RS Means location factor
+    
     utils.run_feasibility(parcels,
                           variables.parcel_average_price,
                           variables.parcel_is_allowed,
-                          residential_to_yearly=True)
+                          residential_to_yearly=True, config=pfc)
             
 def random_type(form):
     form_to_btype = sim.get_injectable("form_to_btype")
