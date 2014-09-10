@@ -372,7 +372,7 @@ def neighborhood_vars():
     sim.add_table("nodes", nodes)
     
 @sim.model('gq_model') #group quarters
-def gq_model(year):
+def gq_model(year, tazcounts2015gq, tazcounts2020gq, tazcounts2025gq, tazcounts2030gq, tazcounts2035gq, tazcounts2040gq):
     # Configuration
     max_iterations = 500
     convergence_criteria = .000001
@@ -442,9 +442,10 @@ def gq_model(year):
                                 tazcounts.loc[rounded.index, col] = rounded[col].values
                             break
             tazcounts.to_csv('gq/tazcounts%s.csv'%year)
-    
+            sim.add_table('tazcounts%sgq'%year,tazcounts.copy())
+            
 @sim.model('travel_model')
-def travel_model(year, buildings, parcels, households, persons, jobs):
+def travel_model(year, travel_data, buildings, parcels, households, persons, jobs):
     if year in [2015, 2020, 2025, 2030, 2035, 2040]:
         datatable = 'TAZ Data Table'
         joinfield = 'ZoneID'
@@ -460,7 +461,7 @@ def travel_model(year, buildings, parcels, households, persons, jobs):
                 
         delete_dcc_file(os.path.splitext(input_file)[0] + '.dcc' )
         
-        parcels = parcels.to_frame(['zone_id','parcel_sqft'])
+        parcels = parcels.to_frame()#(['zone_id','parcel_sqft'])
         hh = households.to_frame()
         persons = persons.to_frame()
         jobs = jobs.to_frame()
@@ -612,8 +613,14 @@ def travel_model(year, buildings, parcels, households, persons, jobs):
             zonal_indicators['GrPop'] = gq['GrPop']
             zonal_indicators['Population'] = zonal_indicators['GrPop'] + zonal_indicators['HHPop']
             
+        ##Update parcel land_use_type_id
+        buildings = buildings.to_frame(['parcel_id','building_type_id','year_built'])
+        new_construction = buildings[buildings.year_built==year].groupby('parcel_id').building_type_id.median()
+        if len(new_construction) > 0:
+            parcels.loc[new_construction.index, 'land_use_type_id'] = new_construction.values
+            sim.add_table("parcels", parcels)
+        
         emp_btypes = sim.get_injectable('emp_btypes')
-        buildings = buildings.to_frame(['parcel_id','building_type_id'])
         emp_parcels = buildings[np.in1d(buildings.building_type_id,emp_btypes)].groupby('parcel_id').size().index.values
         parcels['emp'] = 0
         parcels.emp[np.in1d(parcels.index.values,emp_parcels)] = 1

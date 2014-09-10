@@ -53,7 +53,7 @@ def large_area_id(buildings, parcels):
         
 @sim.column('buildings', 'crime08', cache=True)
 def crime08(buildings, cities):
-    return misc.reindex(cities.crime08, buildings.city_id)
+    return misc.reindex(cities.crime08, buildings.city_id).fillna(0)
         
 @sim.column('buildings', 'popden', cache=True)
 def popden(buildings, zones):

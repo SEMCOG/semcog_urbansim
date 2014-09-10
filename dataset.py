@@ -90,6 +90,11 @@ def nodes():
 @sim.table("nodes_prices")
 def nodes_prices():
     return pd.DataFrame()
+    
+# GQ placeholders
+for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq', 'tazcounts2030gq']:
+    empty_df = pd.DataFrame()
+    sim.add_table(gq_tbl,empty_df)
 
 # this specifies the relationships between tables
 sim.broadcast('nodes', 'buildings', cast_index=True, onto_on='_node_id')
