@@ -3,9 +3,9 @@ import os
 import pandas as pd
 from urbansim.utils import misc
 
+sim.add_injectable("transcad_available", False)
 
 sim.add_injectable("emp_btypes", [1,3,4,5,6,7,8,10,21,22,23,24,25,26,27,28,29,31,32,33,35,38,39])
-
 
 # maps building type ids to general building types; reduces dimensionality
 sim.add_injectable("building_type_map", {

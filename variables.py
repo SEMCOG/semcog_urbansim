@@ -13,7 +13,7 @@ def school_district_id(buildings, parcels):
 
 @sim.column('buildings', 'general_type', cache=True)
 def general_type(buildings, building_type_map):
-    return buildings.building_type_id.map(building_type_map)
+    return buildings.building_type_id.map(building_type_map).fillna(0)
 
 @sim.column('buildings', '_node_id', cache=True)
 def _node_id(buildings, parcels):
@@ -53,11 +53,11 @@ def large_area_id(buildings, parcels):
         
 @sim.column('buildings', 'crime08', cache=True)
 def crime08(buildings, cities):
-    return misc.reindex(cities.crime08, buildings.city_id)
+    return misc.reindex(cities.crime08, buildings.city_id).fillna(0)
         
 @sim.column('buildings', 'popden', cache=True)
 def popden(buildings, zones):
-    return misc.reindex(zones.popden, buildings.zone_id)
+    return misc.reindex(zones.popden, buildings.zone_id).fillna(0)
         
 @sim.column('buildings', 'building_sqft', cache=True)
 def building_sqft(buildings):
@@ -67,10 +67,11 @@ def building_sqft(buildings):
 def building_sqft_per_job(buildings, building_sqft_per_job):
     b = pd.DataFrame({'zone_id':buildings.zone_id, 'building_type_id':buildings.building_type_id})
     bsqft_job = building_sqft_per_job.to_frame()
+    
     return pd.merge(b,
                     bsqft_job,
                     left_on=['zone_id', 'building_type_id'],
-                    right_index=True, how='left').building_sqft_per_job
+                    right_index=True, how='left').building_sqft_per_job.fillna(0)
         
 @sim.column('buildings', 'job_spaces', cache=True)
 def job_spaces(buildings):
@@ -90,7 +91,7 @@ def non_residential_units(buildings):
         
 @sim.column('buildings', 'jobs_within_30_min', cache=True)
 def jobs_within_30_min(buildings, zones):
-    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id)
+    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
     
 @sim.column('buildings', 'vacant_residential_units')
 def vacant_residential_units(buildings, households):
