@@ -19,9 +19,9 @@ def general_type(buildings, building_type_map):
 def _node_id(buildings, parcels):
     return misc.reindex(parcels._node_id, buildings.parcel_id)
 
-@sim.column('buildings', '_node_id0', cache=True)
-def _node_id0(buildings, parcels):
-    return misc.reindex(parcels._node_id0, buildings.parcel_id)
+@sim.column('buildings', '_node_id', cache=True)
+def _node_id(buildings, parcels):
+    return misc.reindex(parcels._node_id, buildings.parcel_id)
         
 @sim.column('buildings', 'x', cache=True)
 def x(buildings, parcels):
@@ -140,10 +140,6 @@ def lid(households):
 @sim.column('households', '_node_id', cache=True)
 def _node_id(households, buildings):
     return misc.reindex(buildings._node_id, households.building_id)
-
-@sim.column('households', '_node_id0', cache=True)
-def _node_id0(households, buildings):
-    return misc.reindex(buildings._node_id0, households.building_id)
     
 #####################
 # PERSONS VARIABLES
@@ -189,10 +185,6 @@ def lid(jobs):
 @sim.column('jobs', '_node_id', cache=True)
 def _node_id(jobs, buildings):
     return misc.reindex(buildings._node_id, jobs.building_id)
-
-@sim.column('jobs', '_node_id0', cache=True)
-def _node_id0(jobs, buildings):
-    return misc.reindex(buildings._node_id0, jobs.building_id)
 
 
 #####################

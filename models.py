@@ -8,6 +8,7 @@ from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc, networks
 import urbansim.sim.simulation as sim
 import dataset, variables, utils, transcad
+import pandana as pdna
 
 @sim.model('diagnostic')
 def diagnostic(parcels,buildings,jobs,households,nodes,year):
@@ -284,8 +285,10 @@ def scheduled_development_events(buildings, year):
         sim.add_table("buildings", all_buildings)
     
 @sim.model('price_vars')
-def price_vars():
-    nodes = networks.from_yaml("networks2.yaml")
+def price_vars(net):
+    nodes = networks.from_yaml(net, "networks2.yaml")
+    print nodes.describe()
+    print pd.Series(nodes.index).describe()
     sim.add_table("nodes_prices", nodes)
     
 @sim.model('feasibility')
@@ -353,22 +356,36 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, year):
             
 @sim.model('build_networks')
 def build_networks(parcels):
-    if networks.NETWORKS is None:
-        networks.NETWORKS = networks.Networks(
-            [os.path.join(misc.data_dir(), x) for x in ['osm_semcog.pkl']],
-            factors=[1.0],
-            maxdistances=[2000],
-            twoway=[1],
-            impedances=None)
+    st = pd.HDFStore(os.path.join(misc.data_dir(), "osm_semcog.h5"), "r")
+    nodes, edges = st.nodes, st.edges
+    net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
+                       edges[["weight"]])
+    net.precompute(2000)
+    sim.add_injectable("net", net)
+    
     p = parcels.to_frame()
     p['x'] = p.centroid_x
     p['y'] = p.centroid_y
-    parcels = networks.NETWORKS.addnodeid(p)
-    sim.add_table("parcels", parcels)
+    p['_node_id'] = net.get_node_ids(p['x'], p['y'])
+    sim.add_table("parcels", p)
+    
     
 @sim.model('neighborhood_vars')
-def neighborhood_vars():
-    nodes = networks.from_yaml("networks.yaml")
+def neighborhood_vars(net, jobs, households, buildings):
+    b = buildings.to_frame(['large_area_id'])
+    j = jobs.to_frame(jobs.local_columns)
+    h = households.to_frame(households.local_columns)
+    idx_invalid_building_id = np.in1d(j.building_id,b.index.values)==False
+    if idx_invalid_building_id.sum() > 0:
+        j.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,j[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
+        sim.add_table("jobs", j)
+    idx_invalid_building_id = np.in1d(h.building_id,b.index.values)==False
+    if idx_invalid_building_id.sum() > 0:
+        h.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,h[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
+        sim.add_table("households", h)
+    nodes = networks.from_yaml(net, "networks.yaml")
+    print nodes.describe()
+    print pd.Series(nodes.index).describe()
     sim.add_table("nodes", nodes)
     
 @sim.model('gq_model') #group quarters

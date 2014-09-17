@@ -14,9 +14,12 @@ def scheduled_development_events(store):
     return df
 
 @sim.table_source('jobs')
-def jobs(store):
-    df = store['jobs']
-    return df
+def jobs(store, buildings):
+    j = store['jobs']
+    b = buildings.to_frame(['large_area_id'])
+    idx_invalid_building_id = np.in1d(j.building_id,b.index.values)==False
+    j.building_id[idx_invalid_building_id] = np.random.choice(b[b.large_area_id==161].index.values,idx_invalid_building_id.sum())
+    return j
 
 @sim.table_source('buildings')
 def buildings(store):
@@ -30,6 +33,9 @@ def buildings(store):
 @sim.table_source('households')
 def households(store):
     df = store['households']
+    df.building_id[df.building_id==-1] = np.random.choice(store.buildings.index.values,(df.building_id==-1).sum())
+    idx_invalid_building_id = np.in1d(df.building_id,store.buildings.index.values)==False
+    df.building_id[idx_invalid_building_id] = np.random.choice(store.buildings.index.values,idx_invalid_building_id.sum())
     return df
     
 @sim.table_source('persons')
