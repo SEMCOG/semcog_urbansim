@@ -281,3 +281,71 @@ def jobs_within_30_min(jobs, travel_data):
                                   j.groupby('zone_id').size(),
                                   "am_single_vehicle_to_work_travel_time",
                                   30, agg=np.sum)
+                                  
+@sim.column('zones', 'population', cache=True)
+def population(zones, households):
+    return households.persons.groupby(households.zone_id).sum()
+    
+@sim.column('zones', 'employment', cache=True)
+def employment(zones, jobs):
+    j = pd.DataFrame({'zone_id':jobs.zone_id})
+    return j.groupby('zone_id').size()
+
+def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
+    td = travel_data.to_frame()
+    zones = zones.to_frame(['population', 'employment'])
+
+    td = td.reset_index()
+    zones = zones.reset_index()
+    unique_zone_ids = np.unique(zones.zone_id.values)
+
+    zones.index = zones.index.values+1
+    zone_id_xref = dict(zip(zones.zone_id, zones.index.values))
+    apply_xref = lambda x: zone_id_xref[x]
+
+    td =  td[td.from_zone_id.isin(unique_zone_ids)]
+    td =  td[td.to_zone_id.isin(unique_zone_ids)]
+
+    td['from_zone_id2'] = td.from_zone_id.apply(apply_xref)
+    td['to_zone_id2'] = td.to_zone_id.apply(apply_xref)
+
+    rows = td['from_zone_id2']
+    cols = td['to_zone_id2']
+
+    logsums = 0*np.ones((rows.max()+1, cols.max()+1), dtype=td[name_attribute].dtype)
+    logsums.put(indices=rows * logsums.shape[1] + cols, values = td[name_attribute])
+
+    population = zones[spatial_var].values
+    population = population[np.newaxis, :]
+
+    zone_ids = zones.index.values 
+    zone_matrix = population * np.exp(logsums[zone_ids,:][:,zone_ids])
+    zone_matrix[np.isnan(zone_matrix)] = 0
+    results = pd.Series(zone_matrix.sum(axis=1), index = zones.index.values)
+    zones['logsum_var'] = results
+    zones = zones.reset_index().set_index('zone_id')
+    return zones.logsum_var
+ 
+@sim.column('zones', 'logsum_pop_more_worker_than_car', cache=True)
+def logsum_pop_more_worker_than_car(zones, travel_data):
+    name_attribute = 'logsum0'
+    spatial_var = 'population'
+    return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
+    
+@sim.column('zones', 'logsum_pop_less_worker_than_car', cache=True)
+def logsum_pop_less_worker_than_car(zones, travel_data):
+    name_attribute = 'logsum1'
+    spatial_var = 'population'
+    return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
+    
+@sim.column('zones', 'logsum_work_more_worker_than_car', cache=True)
+def logsum_work_more_worker_than_car(zones, travel_data):
+    name_attribute = 'logsum0'
+    spatial_var = 'employment'
+    return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
+    
+@sim.column('zones', 'logsum_work_less_worker_than_car', cache=True)
+def logsum_work_less_worker_than_car(zones, travel_data):
+    name_attribute = 'logsum1'
+    spatial_var = 'employment'
+    return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
