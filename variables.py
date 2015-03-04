@@ -277,8 +277,9 @@ def popden(zones, parcels, households):
 def jobs_within_30_min(jobs, travel_data):
     j = pd.DataFrame({'zone_id':jobs.zone_id})
     td = travel_data.to_frame()
+    zone_ids = np.unique(td.reset_index().to_zone_id)
     return misc.compute_range(td,
-                                  j.groupby('zone_id').size(),
+                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
                                   "am_single_vehicle_to_work_travel_time",
                                   30, agg=np.sum)
                                   
@@ -287,9 +288,11 @@ def population(zones, households):
     return households.persons.groupby(households.zone_id).sum()
     
 @sim.column('zones', 'employment', cache=True)
-def employment(zones, jobs):
+def employment(zones, jobs, travel_data):
+    td = travel_data.to_frame()
+    zone_ids = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({'zone_id':jobs.zone_id})
-    return j.groupby('zone_id').size()
+    return j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0)
 
 def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
     td = travel_data.to_frame()
