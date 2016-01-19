@@ -4,6 +4,7 @@ import win32pdhutil, win32api, win32process
 import urbansim.sim.simulation as sim
 import numpy as np, pandas as pd
 import csv
+import orca
 
 def transcad_interaction(zonal_indicators, taz_table):
     datatable = 'TAZ Data Table'
@@ -121,4 +122,4 @@ def transcad_interaction(zonal_indicators, taz_table):
     df3 = df3.rename(columns={'highway_travel_time': 'am_single_vehicle_to_work_travel_time'})
     
     #Update simulation travel data
-    sim.add_table("travel_data", df3)
+    orca.add_table("travel_data", df3)

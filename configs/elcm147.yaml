@@ -1,6 +1,6 @@
 name: elcm147
 
-model_type: segmented_locationchoice
+model_type: segmented_discretechoice
 
 segmentation_col: sector_id
 
@@ -25,7 +25,8 @@ choice_column: null
 sample_size: 200
 
 estimation_sample_size: 5000
-
+
+prediction_sample_size: null
 default_config:
     model_expression: np.log1p(non_residential_sqft) + np.log1p(jobs_within_30_min)
         + np.log1p(popden)
@@ -433,3 +434,9 @@ models:
         name: !!python/long '20'
 
 fitted: true
+
+choice_mode: aggregate
+
+remove_alts: true
+
+probability_mode: single_chooser

@@ -1,9 +1,9 @@
 name: nrh
-
+
 model_type: segmented_regression
-
+
 segmentation_col: building_type_id
-
+
 fit_filters:
 - non_residential_sqft > 0
 - year_built > 1700
@@ -11,539 +11,526 @@ fit_filters:
 - tax_exempt == 0
 - sqft_price_nonres > 0
 - 16 <= building_type_id > 20
-
+
 predict_filters:
 - non_residential_sqft > 0
 - 16 <= building_type_id > 20
-
+
+min_segment_size: 10
+
 default_config:
     model_expression: np.log1p(sqft_price_nonres) ~ I(year_built < 1940) + year_built
         + stories + np.log1p(non_residential_sqft) + np.log1p(popden) + dist_hwy +
         dist_road + crime08 + np.log1p(jobs_within_30_min)
     ytransform: np.exp
-
+
 models:
     21:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.04999426836224586
-                Intercept: 4.431386058955207
-                crime08: -0.013882758756818693
-                dist_hwy: 9.073022723403758e-06
-                dist_road: -0.00020805180589302295
-                np.log1p(jobs_within_30_min): 0.0203439739447826
-                np.log1p(non_residential_sqft): -0.7899356739313632
-                np.log1p(popden): -0.10825959072303759
-                stories: 0.0889183915795192
-                year_built: 0.0023050209676073858
+                I(year_built < 1940)[T.True]: 0.050020154044836146
+                Intercept: 4.42815797899591
+                crime08: -0.013881468164694696
+                dist_hwy: 9.076448334166217e-06
+                dist_road: -0.00020799509304479652
+                np.log1p(jobs_within_30_min): 0.020453431462802568
+                np.log1p(non_residential_sqft): -0.789942882801115
+                np.log1p(popden): -0.10825263966185181
+                stories: 0.08888934563172127
+                year_built: 0.0023059631243560713
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.05531812145514376
-                Intercept: 1.510820692064285
-                crime08: 0.0006538596649257698
-                dist_hwy: 1.79441231756883e-06
-                dist_road: 3.275225984920318e-05
-                np.log1p(jobs_within_30_min): 0.0060330790109960385
-                np.log1p(non_residential_sqft): 0.009336639896194416
-                np.log1p(popden): 0.018475805489443393
-                stories: 0.021695266008000584
-                year_built: 0.0007669133217077724
+                I(year_built < 1940)[T.True]: 0.05531755154673367
+                Intercept: 1.510831540177077
+                crime08: 0.0006538600372433801
+                dist_hwy: 1.7941564944231925e-06
+                dist_road: 3.275233306368764e-05
+                np.log1p(jobs_within_30_min): 0.006032586579396776
+                np.log1p(non_residential_sqft): 0.009336483393368865
+                np.log1p(popden): 0.018474522453335664
+                stories: 0.02169520496459838
+                year_built: 0.0007669063841380809
             T-Score:
-                I(year_built < 1940)[T.True]: 0.9037593296219414
-                Intercept: 2.93309860146306
-                crime08: -21.232015830789546
-                dist_hwy: 5.05626417884625
-                dist_road: -6.3522885703437835
-                np.log1p(jobs_within_30_min): 3.3720715256178764
-                np.log1p(non_residential_sqft): -84.60599131100027
-                np.log1p(popden): -5.859532932672103
-                stories: 4.098515848882824
-                year_built: 3.005582120381656
-        fit_rsquared: 0.5838352163591469
-        fit_rsquared_adj: 0.5832090908070293
+                I(year_built < 1940)[T.True]: 0.9042365875969375
+                Intercept: 2.930940916468362
+                crime08: -21.230029936097363
+                dist_hwy: 5.058894451168946
+                dist_road: -6.350542803785777
+                np.log1p(jobs_within_30_min): 3.3904911589097813
+                np.log1p(non_residential_sqft): -84.60818163744213
+                np.log1p(popden): -5.859563619859969
+                stories: 4.097188562024114
+                year_built: 3.006837825385588
+        fit_rsquared: 0.5838441341564251
+        fit_rsquared_adj: 0.5832180220212543
         fitted: true
         name: 21
-        ytransform: np.exp
     24:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.3726694730693325
-                Intercept: -24.406890114030393
-                crime08: -0.011395418026246744
-                dist_hwy: -5.6629742535381034e-06
-                dist_road: -3.458205107085043e-05
-                np.log1p(jobs_within_30_min): 0.036751924725644695
-                np.log1p(non_residential_sqft): -0.26895047780781467
-                np.log1p(popden): 0.029998986434327468
-                stories: -0.11891013760321971
-                year_built: 0.015358784418214354
+                I(year_built < 1940)[T.True]: 0.3726331766518478
+                Intercept: -24.406447977620754
+                crime08: -0.0113959349412663
+                dist_hwy: -5.667620682960756e-06
+                dist_road: -3.459141132140671e-05
+                np.log1p(jobs_within_30_min): 0.03669032949123805
+                np.log1p(non_residential_sqft): -0.26893047503284173
+                np.log1p(popden): 0.030088221462312225
+                stories: -0.11891511216517324
+                year_built: 0.015358802012386869
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.040583792195012444
-                Intercept: 1.0544727983826483
-                crime08: 0.000394487952484721
-                dist_hwy: 9.61340561378956e-07
-                dist_road: 1.1898236358023052e-05
-                np.log1p(jobs_within_30_min): 0.004704449835401878
-                np.log1p(non_residential_sqft): 0.009811309078165518
-                np.log1p(popden): 0.01187316080154052
-                stories: 0.023474436059406887
-                year_built: 0.0005336604610051428
+                I(year_built < 1940)[T.True]: 0.04058436218567045
+                Intercept: 1.054492603380535
+                crime08: 0.00039449437662891464
+                dist_hwy: 9.613078438278612e-07
+                dist_road: 1.1898420033556534e-05
+                np.log1p(jobs_within_30_min): 0.004704706935830218
+                np.log1p(non_residential_sqft): 0.009811378657039321
+                np.log1p(popden): 0.011872233112096777
+                stories: 0.02347487526187919
+                year_built: 0.0005336689771956352
             T-Score:
-                I(year_built < 1940)[T.True]: 9.18271686585099
-                Intercept: -23.146059482488038
-                crime08: -28.88660592667428
-                dist_hwy: -5.890705626125958
-                dist_road: -2.9064854681199495
-                np.log1p(jobs_within_30_min): 7.812162104286772
-                np.log1p(non_residential_sqft): -27.412292861749496
-                np.log1p(popden): 2.5266217594252707
-                stories: -5.065516262128434
-                year_built: 28.780068115382345
-        fit_rsquared: 0.3381105291424813
-        fit_rsquared_adj: 0.33718509722734724
+                I(year_built < 1940)[T.True]: 9.18169355346965
+                Intercept: -23.145205475484204
+                crime08: -28.88744584561216
+                dist_hwy: -5.895739558716886
+                dist_road: -2.907227280920512
+                np.log1p(jobs_within_30_min): 7.798642931786244
+                np.log1p(non_residential_sqft): -27.410059730993414
+                np.log1p(popden): 2.534335468165204
+                stories: -5.0656333990527855
+                year_built: 28.779641816722197
+        fit_rsquared: 0.33808924562887077
+        fit_rsquared_adj: 0.3371637839558336
         fitted: true
         name: 24
-        ytransform: np.exp
     25:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: -0.06757837553386413
-                Intercept: -13.805244542572773
-                crime08: -0.002843063563646138
-                dist_hwy: -1.7183372279834223e-05
-                dist_road: 0.00045247985322334006
-                np.log1p(jobs_within_30_min): 0.04399688359538853
-                np.log1p(non_residential_sqft): -0.15806305896503844
-                np.log1p(popden): -0.09099158480700315
-                stories: 0.020672237457197797
-                year_built: 0.009083089835928993
+                I(year_built < 1940)[T.True]: -0.06769767878171928
+                Intercept: -13.806065986334508
+                crime08: -0.002842431471742993
+                dist_hwy: -1.717469239731591e-05
+                dist_road: 0.00045249523653137714
+                np.log1p(jobs_within_30_min): 0.04408524724634773
+                np.log1p(non_residential_sqft): -0.15804617175355695
+                np.log1p(popden): -0.09096627779930416
+                stories: 0.02067007122636521
+                year_built: 0.009082792434477058
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.13805787774216075
-                Intercept: 3.4377343772219455
-                crime08: 0.0012830882927765493
-                dist_hwy: 3.450649694544413e-06
-                dist_road: 9.093902485359106e-05
-                np.log1p(jobs_within_30_min): 0.016362530828294416
-                np.log1p(non_residential_sqft): 0.024750350386638822
-                np.log1p(popden): 0.0321655161972993
-                stories: 0.013316464927752254
-                year_built: 0.0017738032449180702
+                I(year_built < 1940)[T.True]: 0.1380543394913108
+                Intercept: 3.4376770801103187
+                crime08: 0.001283055686934386
+                dist_hwy: 3.4509488826498313e-06
+                dist_road: 9.09374227688917e-05
+                np.log1p(jobs_within_30_min): 0.01636193976365876
+                np.log1p(non_residential_sqft): 0.02474719654308569
+                np.log1p(popden): 0.032162210782256465
+                stories: 0.013316230508977909
+                year_built: 0.001773774452569847
             T-Score:
-                I(year_built < 1940)[T.True]: -0.48949307811376513
-                Intercept: -4.015797332698193
-                crime08: -2.215797291310224
-                dist_hwy: -4.979749844500785
-                dist_road: 4.975640039595962
-                np.log1p(jobs_within_30_min): 2.688880104006175
-                np.log1p(non_residential_sqft): -6.38629580979051
-                np.log1p(popden): -2.8288551083362696
-                stories: 1.5523817746942512
-                year_built: 5.120686221514117
-        fit_rsquared: 0.22908253041769222
-        fit_rsquared_adj: 0.22091987485740905
+                I(year_built < 1940)[T.True]: -0.49036979953810295
+                Intercept: -4.016103218715196
+                crime08: -2.2153609548580344
+                dist_hwy: -4.976802897215975
+                dist_road: 4.9758968613103125
+                np.log1p(jobs_within_30_min): 2.6943777989126176
+                np.log1p(non_residential_sqft): -6.386427306155399
+                np.log1p(popden): -2.828358983627122
+                stories: 1.5522464268269676
+                year_built: 5.120601675888327
+        fit_rsquared: 0.22910706394182134
+        fit_rsquared_adj: 0.2209446681482642
         fitted: true
         name: 25
-        ytransform: np.exp
     26:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.2898831897294185
-                Intercept: -18.08237503608686
-                crime08: -0.012456031515259165
-                dist_hwy: 2.289571508967703e-06
-                dist_road: 1.1772844769801917e-05
-                np.log1p(jobs_within_30_min): 0.004013906840773498
-                np.log1p(non_residential_sqft): -0.2587636694339467
-                np.log1p(popden): -0.01623831166715504
-                stories: -0.135940488741951
-                year_built: 0.012275485493801029
+                I(year_built < 1940)[T.True]: 0.28987945095875384
+                Intercept: -18.083275442509006
+                crime08: -0.012455828316334037
+                dist_hwy: 2.291697786506271e-06
+                dist_road: 1.1784432279209669e-05
+                np.log1p(jobs_within_30_min): 0.0040486279898838936
+                np.log1p(non_residential_sqft): -0.25876401447244013
+                np.log1p(popden): -0.016236038107432762
+                stories: -0.13594683830631935
+                year_built: 0.012275710290923674
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.08149125993023895
-                Intercept: 1.969161021978204
-                crime08: 0.0006427439001814783
-                dist_hwy: 2.0107935141533814e-06
-                dist_road: 7.824303721946854e-05
-                np.log1p(jobs_within_30_min): 0.008838751764899164
-                np.log1p(non_residential_sqft): 0.014449800224740433
-                np.log1p(popden): 0.02537838368832571
-                stories: 0.030014858255748508
-                year_built: 0.0009964919744723036
+                I(year_built < 1940)[T.True]: 0.08149130762385252
+                Intercept: 1.9691865543476397
+                crime08: 0.0006427061816136632
+                dist_hwy: 2.010768312329395e-06
+                dist_road: 7.824281699617487e-05
+                np.log1p(jobs_within_30_min): 0.008839094877008947
+                np.log1p(non_residential_sqft): 0.014449706415725879
+                np.log1p(popden): 0.025374900414552967
+                stories: 0.030015051709842772
+                year_built: 0.000996494486151009
             T-Score:
-                I(year_built < 1940)[T.True]: 3.557230431552717
-                Intercept: -9.182781313597932
-                crime08: -19.37946281830479
-                dist_hwy: 1.1386407867600952
-                dist_road: 0.15046507891532335
-                np.log1p(jobs_within_30_min): 0.4541259837971352
-                np.log1p(non_residential_sqft): -17.90776795591269
-                np.log1p(popden): -0.6398481426784013
-                stories: -4.529106470656592
-                year_built: 12.31869980719269
-        fit_rsquared: 0.2910375005045047
-        fit_rsquared_adj: 0.2892621353137814
+                I(year_built < 1940)[T.True]: 3.5571824702676147
+                Intercept: -9.183119498040504
+                crime08: -19.380283981493356
+                dist_hwy: 1.1397125031532997
+                dist_road: 0.15061359919832368
+                np.log1p(jobs_within_30_min): 0.4580364897332005
+                np.log1p(non_residential_sqft): -17.907908093608224
+                np.log1p(popden): -0.639846377411637
+                stories: -4.529288825504125
+                year_built: 12.318894345656629
+        fit_rsquared: 0.2910381311533069
+        fit_rsquared_adj: 0.2892627675418378
         fitted: true
         name: 26
-        ytransform: np.exp
     27:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.3026307856285483
-                Intercept: -7.02041058483265
-                crime08: -0.00831131553156704
-                dist_hwy: -4.052164155824392e-07
-                dist_road: -6.607486447232134e-05
-                np.log1p(jobs_within_30_min): 0.058707205657222386
-                np.log1p(non_residential_sqft): -0.14255150407123984
-                np.log1p(popden): 0.06670591619966511
-                stories: 0.010942000888631474
-                year_built: 0.0055279641181428096
+                I(year_built < 1940)[T.True]: 0.3025695203371738
+                Intercept: -7.021781358215447
+                crime08: -0.008311347965519127
+                dist_hwy: -4.027593769925871e-07
+                dist_road: -6.610213441845615e-05
+                np.log1p(jobs_within_30_min): 0.05877262953033475
+                np.log1p(non_residential_sqft): -0.14252963123697304
+                np.log1p(popden): 0.06675747931414783
+                stories: 0.010936086455663243
+                year_built: 0.005528080591226177
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.028794651032172002
-                Intercept: 0.6935722108737225
-                crime08: 0.0003351506233538008
-                dist_hwy: 7.563097590560433e-07
-                dist_road: 1.199348888293407e-05
-                np.log1p(jobs_within_30_min): 0.004752682377559972
-                np.log1p(non_residential_sqft): 0.005507616915166108
-                np.log1p(popden): 0.007237102200078513
-                stories: 0.003660173508322803
-                year_built: 0.00035153979413571476
+                I(year_built < 1940)[T.True]: 0.028794154424171797
+                Intercept: 0.6935727713675274
+                crime08: 0.0003351487443404557
+                dist_hwy: 7.563062914118056e-07
+                dist_road: 1.1993284163887406e-05
+                np.log1p(jobs_within_30_min): 0.00475409663824008
+                np.log1p(non_residential_sqft): 0.005507196189756923
+                np.log1p(popden): 0.007236315579138966
+                stories: 0.0036601530122771743
+                year_built: 0.0003515373469124831
             T-Score:
-                I(year_built < 1940)[T.True]: 10.50996538525234
-                Intercept: -10.122104771165413
-                crime08: -24.79874704810924
-                dist_hwy: -0.5357810219032388
-                dist_road: -5.509227975050816
-                np.log1p(jobs_within_30_min): 12.35243615992758
-                np.log1p(non_residential_sqft): -25.88261062215518
-                np.log1p(popden): 9.217213513848323
-                stories: 2.9894760081047123
-                year_built: 15.725002433177437
-        fit_rsquared: 0.09411351888814767
-        fit_rsquared_adj: 0.0936856084105322
+                I(year_built < 1940)[T.True]: 10.508018949956597
+                Intercept: -10.124072985694783
+                crime08: -24.79898285722405
+                dist_hwy: -0.532534743616573
+                dist_road: -5.511595782704305
+                np.log1p(jobs_within_30_min): 12.362523104303534
+                np.log1p(non_residential_sqft): -25.880616256611702
+                np.log1p(popden): 9.225341070889442
+                stories: 2.9878768507711446
+                year_built: 15.72544322752262
+        fit_rsquared: 0.0941254457935421
+        fit_rsquared_adj: 0.09369754094979788
         fitted: true
         name: 27
-        ytransform: np.exp
     28:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.024230167574004202
-                Intercept: -18.217335616648352
-                crime08: -0.015268419574580248
-                dist_hwy: -3.480901720422879e-06
-                dist_road: -0.000262568484705246
-                np.log1p(jobs_within_30_min): 0.030685212783332114
-                np.log1p(non_residential_sqft): -0.22864828293998155
-                np.log1p(popden): 0.11480929570860876
-                stories: -0.11513805072169245
-                year_built: 0.011894988012259237
+                I(year_built < 1940)[T.True]: 0.024221025252861107
+                Intercept: -18.218217442073325
+                crime08: -0.015268677034963717
+                dist_hwy: -3.483478631380979e-06
+                dist_road: -0.00026257029778894764
+                np.log1p(jobs_within_30_min): 0.030674769973649298
+                np.log1p(non_residential_sqft): -0.2286384211328641
+                np.log1p(popden): 0.11488224793747277
+                stories: -0.1151512601824552
+                year_built: 0.011895390714221164
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.01520347650747195
-                Intercept: 0.45297820849986997
-                crime08: 0.00016373293318696283
-                dist_hwy: 4.815062242129945e-07
-                dist_road: 1.237882351053174e-05
-                np.log1p(jobs_within_30_min): 0.00191356943612092
-                np.log1p(non_residential_sqft): 0.003402160793648364
-                np.log1p(popden): 0.005586926329879168
-                stories: 0.008031648026560123
-                year_built: 0.00023020940458684354
+                I(year_built < 1940)[T.True]: 0.015203513144180622
+                Intercept: 0.452982397619747
+                crime08: 0.00016373316706409376
+                dist_hwy: 4.814827085080529e-07
+                dist_road: 1.2378849050934988e-05
+                np.log1p(jobs_within_30_min): 0.001913641856601617
+                np.log1p(non_residential_sqft): 0.003402135525349036
+                np.log1p(popden): 0.005586275325113181
+                stories: 0.008031682956830924
+                year_built: 0.00023020999580244673
             T-Score:
-                I(year_built < 1940)[T.True]: 1.5937254589169763
-                Intercept: -40.21680353449846
-                crime08: -93.2519761137217
-                dist_hwy: -7.229193612423795
-                dist_road: -21.211101723993092
-                np.log1p(jobs_within_30_min): 16.035588886461024
-                np.log1p(non_residential_sqft): -67.20678322049169
-                np.log1p(popden): 20.549634795540936
-                stories: -14.335544877083585
-                year_built: 51.67029571883544
-        fit_rsquared: 0.3461831067762835
-        fit_rsquared_adj: 0.346053157744902
+                I(year_built < 1940)[T.True]: 1.5931202889203326
+                Intercept: -40.21837832508115
+                crime08: -93.25341535100677
+                dist_hwy: -7.23489871977971
+                dist_road: -21.21120442688615
+                np.log1p(jobs_within_30_min): 16.029524995927797
+                np.log1p(non_residential_sqft): -67.20438366705199
+                np.log1p(popden): 20.565088766931694
+                stories: -14.33712720003712
+                year_built: 51.67191230231861
+        fit_rsquared: 0.34618068271949765
+        fit_rsquared_adj: 0.34605073320632407
         fitted: true
         name: 28
-        ytransform: np.exp
     29:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: -1.6251572046565443e-10
-                Intercept: 102.07208299901959
-                crime08: 0.012436183031972137
-                dist_hwy: 0.0008587845092187993
-                dist_road: -0.002105765640631885
-                np.log1p(jobs_within_30_min): 0.9392591831097258
-                np.log1p(non_residential_sqft): -0.3684348439759926
-                np.log1p(popden): -1.9679445147548376
-                stories: -0.3283576093270686
-                year_built: -0.052522602861142326
+                I(year_built < 1940)[T.True]: -2.816817704135387e-09
+                Intercept: 102.08236501321136
+                crime08: 0.012516879434326611
+                dist_hwy: 0.0008584073386585492
+                dist_road: -0.0021029351096927534
+                np.log1p(jobs_within_30_min): 0.9371916790265413
+                np.log1p(non_residential_sqft): -0.36847996090757507
+                np.log1p(popden): -1.9647046575989917
+                stories: -0.3282399065953523
+                year_built: -0.05251831296955076
             Std. Error:
-                I(year_built < 1940)[T.True]: 8.758199776428386e-13
-                Intercept: 0.548031182493529
-                crime08: 0.00023790121524402199
-                dist_hwy: 1.4703410568352738e-06
-                dist_road: 8.15361630408264e-06
-                np.log1p(jobs_within_30_min): 0.003463010461813553
-                np.log1p(non_residential_sqft): 0.002152153171148599
-                np.log1p(popden): 0.00528750527534264
-                stories: 0.0013231228200613026
-                year_built: 0.00028376707530025007
+                I(year_built < 1940)[T.True]: 1.512579122319661e-11
+                Intercept: 0.5479990451391988
+                crime08: 0.0002377040911821005
+                dist_hwy: 1.4692585811709711e-06
+                dist_road: 8.15008619417042e-06
+                np.log1p(jobs_within_30_min): 0.0034551943313239145
+                np.log1p(non_residential_sqft): 0.0021519389647843357
+                np.log1p(popden): 0.0052782632696353315
+                stories: 0.001322999570283623
+                year_built: 0.00028374343948978304
             T-Score:
-                I(year_built < 1940)[T.True]: -185.55836200841804
-                Intercept: 186.25232698364718
-                crime08: 52.274567068587665
-                dist_hwy: 584.0716378193412
-                dist_road: -258.2615568477874
-                np.log1p(jobs_within_30_min): 271.22620432912083
-                np.log1p(non_residential_sqft): -171.19359760967188
-                np.log1p(popden): -372.1877165649374
-                stories: -248.1686539968037
-                year_built: -185.0905458484529
-        fit_rsquared: 0.9999988745142245
-        fit_rsquared_adj: 0.9999984693393453
+                I(year_built < 1940)[T.True]: -186.22613935167715
+                Intercept: 186.282012566794
+                crime08: 52.65740009808107
+                dist_hwy: 584.2452442744386
+                dist_road: -258.0261189380963
+                np.log1p(jobs_within_30_min): 271.2413801244693
+                np.log1p(non_residential_sqft): -171.23160411963804
+                np.log1p(popden): -372.2255895990445
+                stories: -248.102806658497
+                year_built: -185.09084496891714
+        fit_rsquared: 0.9999831366978962
+        fit_rsquared_adj: 0.999977740441223
         fitted: true
         name: 29
-        ytransform: np.exp
     30:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.2247185200445293
-                Intercept: -9.384247519861724
-                crime08: -0.046399049033164455
-                dist_hwy: 9.063863623701578e-06
-                dist_road: -9.772263806497172e-05
-                np.log1p(jobs_within_30_min): 0.2198285298572921
-                np.log1p(non_residential_sqft): -0.48499812633398454
-                np.log1p(popden): 0.22897993649674844
-                stories: -0.25597750694149446
-                year_built: 0.00749434352335999
+                I(year_built < 1940)[T.True]: 0.22647127041801002
+                Intercept: -9.341342980256677
+                crime08: -0.04633819682697973
+                dist_hwy: 8.87054319588112e-06
+                dist_road: -9.708535701187854e-05
+                np.log1p(jobs_within_30_min): 0.22210157973003242
+                np.log1p(non_residential_sqft): -0.4856598832700031
+                np.log1p(popden): 0.22877958956136651
+                stories: -0.25974782975737415
+                year_built: 0.007464173829838836
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.365082549757228
-                Intercept: 9.113708321206055
-                crime08: 0.012854480408126366
-                dist_hwy: 4.879684441169003e-06
-                dist_road: 4.735527384935848e-05
-                np.log1p(jobs_within_30_min): 0.07571004154787589
-                np.log1p(non_residential_sqft): 0.06137146054440568
-                np.log1p(popden): 0.1573193968892903
-                stories: 0.1916586170217009
-                year_built: 0.0046592333535406955
+                I(year_built < 1940)[T.True]: 0.3649252233815558
+                Intercept: 9.112916786236871
+                crime08: 0.01285595352493317
+                dist_hwy: 4.872351379190921e-06
+                dist_road: 4.739904961427377e-05
+                np.log1p(jobs_within_30_min): 0.07630051863939658
+                np.log1p(non_residential_sqft): 0.061395794863505694
+                np.log1p(popden): 0.157288938655181
+                stories: 0.19210013839604573
+                year_built: 0.004659623353050096
             T-Score:
-                I(year_built < 1940)[T.True]: 0.6155279681101227
-                Intercept: -1.0296848647247323
-                crime08: -3.6095623907001197
-                dist_hwy: 1.8574692140400353
-                dist_road: -2.0636062284390224
-                np.log1p(jobs_within_30_min): 2.903558436410072
-                np.log1p(non_residential_sqft): -7.902665539189202
-                np.log1p(popden): 1.4555098800555883
-                stories: -1.3355909111694724
-                year_built: 1.6084928473618534
-        fit_rsquared: 0.5498463919365294
-        fit_rsquared_adj: 0.5152191913162625
+                I(year_built < 1940)[T.True]: 0.6205963740171994
+                Intercept: -1.025066199920183
+                crime08: -3.604415396890649
+                dist_hwy: 1.8205877420429637
+                dist_road: -2.0482553511503787
+                np.log1p(jobs_within_30_min): 2.9108790305830734
+                np.log1p(non_residential_sqft): -7.910311843827669
+                np.log1p(popden): 1.454517981476828
+                stories: -1.3521480615587151
+                year_built: 1.6018835138151106
+        fit_rsquared: 0.5500063989570766
+        fit_rsquared_adj: 0.5153915065691594
         fitted: true
         name: 30
-        ytransform: np.exp
     33:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: -0.08802003799660463
-                Intercept: -12.95418136836037
-                crime08: -0.014705402432192176
-                dist_hwy: -8.222131813362651e-06
-                dist_road: 2.802069619802949e-05
-                np.log1p(jobs_within_30_min): 0.0228245403417354
-                np.log1p(non_residential_sqft): -0.1749037788179494
-                np.log1p(popden): -0.09126862458845382
-                stories: -0.039526967823459824
-                year_built: 0.008909491042061013
+                I(year_built < 1940)[T.True]: -0.08806671076508626
+                Intercept: -12.952297102576473
+                crime08: -0.014705545641331193
+                dist_hwy: -8.225033553071305e-06
+                dist_road: 2.7993052203290723e-05
+                np.log1p(jobs_within_30_min): 0.02279752061707937
+                np.log1p(non_residential_sqft): -0.17489967143474827
+                np.log1p(popden): -0.09124967694500007
+                stories: -0.039527266038400344
+                year_built: 0.00890868409431226
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.018340178238469895
-                Intercept: 0.6050626670246662
-                crime08: 0.00019960799497689187
-                dist_hwy: 6.725291071024021e-07
-                dist_road: 9.388418571829499e-06
-                np.log1p(jobs_within_30_min): 0.0020300479367562755
-                np.log1p(non_residential_sqft): 0.003914292676883285
-                np.log1p(popden): 0.005553452831848916
-                stories: 0.008200731772884258
-                year_built: 0.00030558675518223944
+                I(year_built < 1940)[T.True]: 0.018340159794675064
+                Intercept: 0.6050586203602846
+                crime08: 0.00019961059955641758
+                dist_hwy: 6.725191198981334e-07
+                dist_road: 9.388455290386864e-06
+                np.log1p(jobs_within_30_min): 0.002030294555670862
+                np.log1p(non_residential_sqft): 0.003914313947754399
+                np.log1p(popden): 0.005553484094080505
+                stories: 0.008200804820030095
+                year_built: 0.00030558576011724495
             T-Score:
-                I(year_built < 1940)[T.True]: -4.799301121947442
-                Intercept: -21.409652378754803
-                crime08: -73.6714099748088
-                dist_hwy: -12.225689158329194
-                dist_road: 2.98460235700475
-                np.log1p(jobs_within_30_min): 11.243350429549823
-                np.log1p(non_residential_sqft): -44.6833676620254
-                np.log1p(popden): -16.434572751753738
-                stories: -4.819931796105788
-                year_built: 29.15535732806141
-        fit_rsquared: 0.434894950260474
-        fit_rsquared_adj: 0.43467340800984644
+                I(year_built < 1940)[T.True]: -4.801850788162479
+                Intercept: -21.406681380498267
+                crime08: -73.67116613050824
+                dist_hwy: -12.230185447095025
+                dist_road: 2.981646217344582
+                np.log1p(jobs_within_30_min): 11.228676426976122
+                np.log1p(non_residential_sqft): -44.68207552311597
+                np.log1p(popden): -16.431068388628987
+                stories: -4.819925227565078
+                year_built: 29.152811606451294
+        fit_rsquared: 0.4348869301195336
+        fit_rsquared_adj: 0.4346653847247117
         fitted: true
         name: 33
-        ytransform: np.exp
     37:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 3.2133830930359553e-09
-                Intercept: 63.65014951905789
-                crime08: 0.005112511106327917
-                dist_hwy: 7.5076947587411665e-06
-                dist_road: 2.6226563417199115e-05
-                np.log1p(jobs_within_30_min): -0.1303719558563996
-                np.log1p(non_residential_sqft): -0.021843326074776737
-                np.log1p(popden): 0.12073594283956382
-                stories: -0.16283722178271232
-                year_built: -0.02972005780613273
+                I(year_built < 1940)[T.True]: 3.972637854933624e-09
+                Intercept: 63.661694902122456
+                crime08: 0.005122827513625942
+                dist_hwy: 7.497932401480365e-06
+                dist_road: 2.631634328576224e-05
+                np.log1p(jobs_within_30_min): -0.13055979878169222
+                np.log1p(non_residential_sqft): -0.021878385023913274
+                np.log1p(popden): 0.12065148582058725
+                stories: -0.16255702926992432
+                year_built: -0.029724791367380442
             Std. Error:
-                I(year_built < 1940)[T.True]: 1.069971233942768e-09
-                Intercept: 21.19367926313739
-                crime08: 0.007208957746596239
-                dist_hwy: 1.0269161450388204e-05
-                dist_road: 0.00010890732339608483
-                np.log1p(jobs_within_30_min): 0.11103086711456268
-                np.log1p(non_residential_sqft): 0.05710172302787921
-                np.log1p(popden): 0.13522221516075905
-                stories: 0.25083884353916147
-                year_built: 0.010682702173062298
+                I(year_built < 1940)[T.True]: 1.3225952575839383e-09
+                Intercept: 21.194766238567027
+                crime08: 0.0072101742282951265
+                dist_hwy: 1.0271321624555434e-05
+                dist_road: 0.00010889975945493571
+                np.log1p(jobs_within_30_min): 0.1111209521697836
+                np.log1p(non_residential_sqft): 0.05710223791191976
+                np.log1p(popden): 0.13518155686103073
+                stories: 0.2508773024034095
+                year_built: 0.010682962820389266
             T-Score:
-                I(year_built < 1940)[T.True]: 3.003242508861539
-                Intercept: 3.003260959495878
-                crime08: 0.7091886630549091
-                dist_hwy: 0.7310913159766667
-                dist_road: 0.24081542544036066
-                np.log1p(jobs_within_30_min): -1.1741956020381306
-                np.log1p(non_residential_sqft): -0.3825335719573996
-                np.log1p(popden): 0.8928706181600914
-                stories: -0.6491706766192686
-                year_built: -2.7820730489964784
-        fit_rsquared: 0.970656713814735
-        fit_rsquared_adj: 0.9659408285349602
+                I(year_built < 1940)[T.True]: 3.003668606971019
+                Intercept: 3.0036516650172125
+                crime08: 0.7104998230864186
+                dist_hwy: 0.7299871112550127
+                dist_road: 0.241656578650684
+                np.log1p(jobs_within_30_min): -1.1749341256742263
+                np.log1p(non_residential_sqft): -0.3831440907388025
+                np.log1p(popden): 0.8925143978377119
+                stories: -0.6479543095872954
+                year_built: -2.7824482652554368
+        fit_rsquared: 0.17638980383629665
+        fit_rsquared_adj: 0.0587312043843391
         fitted: true
         name: 37
-        ytransform: np.exp
     38:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.3552404186084968
-                Intercept: -6.132479916691998
-                crime08: -0.00881397311438012
-                dist_hwy: -5.062400883866558e-06
-                dist_road: 0.0001317247018289865
-                np.log1p(jobs_within_30_min): 0.12323051984430974
-                np.log1p(non_residential_sqft): -0.2258961852015981
-                np.log1p(popden): 0.05012538241031125
-                stories: -0.18682057830688167
-                year_built: 0.00500127693678268
+                I(year_built < 1940)[T.True]: 0.35609079472414545
+                Intercept: -6.156341438476569
+                crime08: -0.008820049670431459
+                dist_hwy: -5.110261078220306e-06
+                dist_road: 0.000132009124566033
+                np.log1p(jobs_within_30_min): 0.12346257366546087
+                np.log1p(non_residential_sqft): -0.22592525737351343
+                np.log1p(popden): 0.05051583893476498
+                stories: -0.18693161350839393
+                year_built: 0.005011878677986872
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.12926912574488406
-                Intercept: 3.872128697994766
-                crime08: 0.0014467139585155322
-                dist_hwy: 3.7846490839208286e-06
-                dist_road: 3.781414359553611e-05
-                np.log1p(jobs_within_30_min): 0.02554428596768484
-                np.log1p(non_residential_sqft): 0.0210958107591523
-                np.log1p(popden): 0.03785785907137493
-                stories: 0.049854162838127276
-                year_built: 0.001941350964065374
+                I(year_built < 1940)[T.True]: 0.12928058890795757
+                Intercept: 3.8727174324324305
+                crime08: 0.0014467790383515956
+                dist_hwy: 3.7787655548851515e-06
+                dist_road: 3.7820654428791276e-05
+                np.log1p(jobs_within_30_min): 0.025556194032437026
+                np.log1p(non_residential_sqft): 0.02109529404279906
+                np.log1p(popden): 0.03784564176479958
+                stories: 0.049852809389363206
+                year_built: 0.0019414894935368293
             T-Score:
-                I(year_built < 1940)[T.True]: 2.7480685473929243
-                Intercept: -1.5837489905404707
-                crime08: -6.092408981402311
-                dist_hwy: -1.3376143392987974
-                dist_road: 3.483477061861487
-                np.log1p(jobs_within_30_min): 4.824191210519811
-                np.log1p(non_residential_sqft): -10.708106352518085
-                np.log1p(popden): 1.3240416558106964
-                stories: -3.747341599406133
-                year_built: 2.5761838170206635
-        fit_rsquared: 0.16962664837203933
-        fit_rsquared_adj: 0.1643113139732827
+                I(year_built < 1940)[T.True]: 2.754402634858566
+                Intercept: -1.5896696688789422
+                crime08: -6.096334987325144
+                dist_hwy: -1.3523625649688191
+                dist_road: 3.4903976824245535
+                np.log1p(jobs_within_30_min): 4.831023489208011
+                np.log1p(non_residential_sqft): -10.709746776468076
+                np.log1p(popden): 1.334786162399022
+                stories: -3.7496705962628942
+                year_built: 2.5814606232334985
+        fit_rsquared: 0.16966499981507066
+        fit_rsquared_adj: 0.1643499109091926
         fitted: true
         name: 38
-        ytransform: np.exp
     39:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: -0.18902017544778604
-                Intercept: -15.147428179073522
-                crime08: -0.012687391149861404
-                dist_hwy: -9.467548167787298e-06
-                dist_road: -9.408690272035979e-05
-                np.log1p(jobs_within_30_min): 0.011452354437254704
-                np.log1p(non_residential_sqft): -0.07048741460090928
-                np.log1p(popden): -0.07454997252184517
-                stories: -0.09309125596543523
-                year_built: 0.009616937777723876
+                I(year_built < 1940)[T.True]: -0.1890259469945977
+                Intercept: -15.147599098643706
+                crime08: -0.012687022374990265
+                dist_hwy: -9.46631573642139e-06
+                dist_road: -9.409151843900161e-05
+                np.log1p(jobs_within_30_min): 0.011465329104439712
+                np.log1p(non_residential_sqft): -0.0704885373934451
+                np.log1p(popden): -0.07454056316411477
+                stories: -0.09309467702735294
+                year_built: 0.009616924173169065
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.03078724203215761
-                Intercept: 1.0112573051634246
-                crime08: 0.00035529751672939855
-                dist_hwy: 1.1788227330708126e-06
-                dist_road: 1.4178929543288386e-05
-                np.log1p(jobs_within_30_min): 0.0031597734787239735
-                np.log1p(non_residential_sqft): 0.0069499292815031035
-                np.log1p(popden): 0.010007254262952167
-                stories: 0.013128576571098158
-                year_built: 0.000509115859158429
+                I(year_built < 1940)[T.True]: 0.030787206443601868
+                Intercept: 1.0112550934066942
+                crime08: 0.00035530277772795934
+                dist_hwy: 1.178840021750188e-06
+                dist_road: 1.4178916447584443e-05
+                np.log1p(jobs_within_30_min): 0.003159859073800979
+                np.log1p(non_residential_sqft): 0.006949890699809445
+                np.log1p(popden): 0.010007014109420986
+                stories: 0.013128569338352112
+                year_built: 0.0005091148051070665
             T-Score:
-                I(year_built < 1940)[T.True]: -6.139561811036936
-                Intercept: -14.978807175712433
-                crime08: -35.70920299880499
-                dist_hwy: -8.031358661640754
-                dist_road: -6.635684480489991
-                np.log1p(jobs_within_30_min): 3.6244226095218584
-                np.log1p(non_residential_sqft): -10.142177243228659
-                np.log1p(popden): -7.449593121445555
-                stories: -7.090734891273021
-                year_built: 18.889487735897134
-        fit_rsquared: 0.46938139523003
-        fit_rsquared_adj: 0.4687866054127514
+                I(year_built < 1940)[T.True]: -6.139756373832374
+                Intercept: -14.97900895372977
+                crime08: -35.70763633236832
+                dist_hwy: -8.030195413934996
+                dist_road: -6.636016143182174
+                np.log1p(jobs_within_30_min): 3.6284305206839886
+                np.log1p(non_residential_sqft): -10.14239510203776
+                np.log1p(popden): -7.44883162440427
+                stories: -7.090999379147744
+                year_built: 18.889500121974713
+        fit_rsquared: 0.46938323846384533
+        fit_rsquared_adj: 0.468788450712715
         fitted: true
         name: 39
-        ytransform: np.exp
     40:
         fit_parameters:
             Coefficient:
-                I(year_built < 1940)[T.True]: 0.08061449953066681
-                Intercept: -4.743388085805652
-                crime08: -0.023118206854997485
-                dist_hwy: 1.4101741354897442e-06
-                dist_road: 0.00026554318449653266
-                np.log1p(jobs_within_30_min): 0.365369444765172
-                np.log1p(non_residential_sqft): -0.37267157444136256
-                np.log1p(popden): -0.3447882855344621
-                stories: 0.23464677524719518
-                year_built: 0.0036846992570509544
+                I(year_built < 1940)[T.True]: 0.0804601464063392
+                Intercept: -4.774137463692509
+                crime08: -0.023114412246600824
+                dist_hwy: 1.5100222529480782e-06
+                dist_road: 0.0002661851786558204
+                np.log1p(jobs_within_30_min): 0.36646249608216447
+                np.log1p(non_residential_sqft): -0.3726867774842502
+                np.log1p(popden): -0.3446986196511907
+                stories: 0.23479406112464735
+                year_built: 0.003692244083656968
             Std. Error:
-                I(year_built < 1940)[T.True]: 0.16572278292394782
-                Intercept: 4.383648586370428
-                crime08: 0.0016430547532221883
-                dist_hwy: 6.211793136335969e-06
-                dist_road: 0.00012822234909493448
-                np.log1p(jobs_within_30_min): 0.053488100718467074
-                np.log1p(non_residential_sqft): 0.015801053699181257
-                np.log1p(popden): 0.04605146463533111
-                stories: 0.02891657459275491
-                year_built: 0.0022488843493096394
+                I(year_built < 1940)[T.True]: 0.16570526425851553
+                Intercept: 4.38303387879518
+                crime08: 0.0016423028590096503
+                dist_hwy: 6.214476117120189e-06
+                dist_road: 0.00012821222685641253
+                np.log1p(jobs_within_30_min): 0.05352770089091115
+                np.log1p(non_residential_sqft): 0.015799572398410313
+                np.log1p(popden): 0.046039619768773105
+                stories: 0.028913949125843445
+                year_built: 0.002248302516119357
             T-Score:
-                I(year_built < 1940)[T.True]: 0.48644186459059024
-                Intercept: -1.0820639456715853
-                crime08: -14.070259563572339
-                dist_hwy: 0.22701563051752502
-                dist_road: 2.0709586618158684
-                np.log1p(jobs_within_30_min): 6.830854710812832
-                np.log1p(non_residential_sqft): -23.585235613791554
-                np.log1p(popden): -7.487021059259369
-                stories: 8.114611725345444
-                year_built: 1.6384565343175963
-        fit_rsquared: 0.5132909987222667
-        fit_rsquared_adj: 0.5093447095227175
+                I(year_built < 1940)[T.True]: 0.4855618001418104
+                Intercept: -1.0892312484257678
+                crime08: -14.0743907981378
+                dist_hwy: 0.2429846417444803
+                dist_road: 2.076129439307895
+                np.log1p(jobs_within_30_min): 6.846221488739277
+                np.log1p(non_residential_sqft): -23.588409109207817
+                np.log1p(popden): -7.486999705522904
+                stories: 8.120442493093659
+                year_built: 1.6422363348282423
+        fit_rsquared: 0.5133797390480634
+        fit_rsquared_adj: 0.5094341693646693
         fitted: true
         name: 40
-        ytransform: np.exp
-
+
 fitted: true
-
-min_segment_size: 10
