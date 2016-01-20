@@ -1,6 +1,5 @@
 import pandas as pd, numpy as np
 from urbansim.utils import misc
-#import urbansim.sim.simulation as sim
 import dataset
 
 ###

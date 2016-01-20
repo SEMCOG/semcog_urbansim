@@ -1,8 +1,8 @@
-#import urbansim.sim.simulation as sim
 import os
 import pandas as pd
 from urbansim.utils import misc
 import orca
+import verify_data_structure
 
 orca.add_injectable("transcad_available", False)
 
@@ -40,5 +40,20 @@ orca.add_injectable("form_to_btype", {
     'mixedoffice': [21],
 })
 
-orca.add_injectable("store", pd.HDFStore(os.path.join(misc.data_dir(),
-                                                     "semcog_data_fix.h5"), mode="r"))
+
+def verify():
+    with open(r"configs/data_structure.yaml", "r") as out:
+        structure = out.read()
+
+    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_data_fix.h5"), mode="r")
+
+    new = verify_data_structure.yaml_from_store(hdf_store)
+
+    if structure != new:
+        with open("mismatched_data_description.yaml", "w") as out:
+            out.write(new)
+        assert structure == new
+
+    return hdf_store
+
+orca.add_injectable("store", verify())

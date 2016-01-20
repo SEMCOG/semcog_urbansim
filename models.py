@@ -6,7 +6,6 @@ import random
 from urbansim.models import transition, relocation
 from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc, networks
-#import urbansim.sim.simulation as sim
 #import dataset, variables, utils, transcad
 import dataset, variables, utils
 import pandana as pdna
