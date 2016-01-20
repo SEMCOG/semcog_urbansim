@@ -11,59 +11,59 @@ import utils
 # BUILDINGS VARIABLES
 #####################
 
-@orca.column('buildings', 'school_district_id', cache=True)
+@orca.column('buildings', 'school_district_id', cache=True, cache_scope='iteration')
 def school_district_id(buildings, parcels):
     return misc.reindex(parcels.school_district_id, buildings.parcel_id)
 
-@orca.column('buildings', 'general_type', cache=True)
+@orca.column('buildings', 'general_type', cache=True, cache_scope='iteration')
 def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
 
-@orca.column('buildings', '_node_id', cache=True)
+@orca.column('buildings', '_node_id', cache=True, cache_scope='iteration')
 def _node_id(buildings, parcels):
     return misc.reindex(parcels._node_id, buildings.parcel_id)
 
-@orca.column('buildings', 'x', cache=True)
+@orca.column('buildings', 'x', cache=True, cache_scope='iteration')
 def x(buildings, parcels):
     return misc.reindex(parcels.x, buildings.parcel_id)
 
-@orca.column('buildings', 'y', cache=True)
+@orca.column('buildings', 'y', cache=True, cache_scope='iteration')
 def y(buildings, parcels):
     return misc.reindex(parcels.y, buildings.parcel_id)
 
-@orca.column('buildings', 'dist_hwy', cache=True)
+@orca.column('buildings', 'dist_hwy', cache=True, cache_scope='iteration')
 def dist_hwy(buildings, parcels):
     return misc.reindex(parcels.dist_hwy, buildings.parcel_id)
 
-@orca.column('buildings', 'dist_road', cache=True)
+@orca.column('buildings', 'dist_road', cache=True, cache_scope='iteration')
 def dist_road(buildings, parcels):
     return misc.reindex(parcels.dist_road, buildings.parcel_id)
 
-@orca.column('buildings', 'zone_id', cache=True)
+@orca.column('buildings', 'zone_id', cache=True, cache_scope='iteration')
 def zone_id(buildings, parcels):
     return misc.reindex(parcels.zone_id, buildings.parcel_id)
 
-@orca.column('buildings', 'city_id', cache=True)
+@orca.column('buildings', 'city_id', cache=True, cache_scope='iteration')
 def city_id(buildings, parcels):
     return misc.reindex(parcels.city_id, buildings.parcel_id)
 
-@orca.column('buildings', 'large_area_id', cache=True)
+@orca.column('buildings', 'large_area_id', cache=True, cache_scope='iteration')
 def large_area_id(buildings, parcels):
     return misc.reindex(parcels.large_area_id, buildings.parcel_id)
 
-@orca.column('buildings', 'crime08', cache=True)
+@orca.column('buildings', 'crime08', cache=True, cache_scope='iteration')
 def crime08(buildings, cities):
     return misc.reindex(cities.crime08, buildings.city_id).fillna(0)
 
-@orca.column('buildings', 'popden', cache=True)
+@orca.column('buildings', 'popden', cache=True, cache_scope='iteration')
 def popden(buildings, zones):
     return misc.reindex(zones.popden, buildings.zone_id).fillna(0)
 
-@orca.column('buildings', 'building_sqft', cache=True)
+@orca.column('buildings', 'building_sqft', cache=True, cache_scope='iteration')
 def building_sqft(buildings):
     return buildings.non_residential_sqft + buildings.sqft_per_unit*buildings.residential_units
 
-@orca.column('buildings', 'building_sqft_per_job', cache=True)
+@orca.column('buildings', 'building_sqft_per_job', cache=True, cache_scope='iteration')
 def building_sqft_per_job(buildings, building_sqft_per_job):
     b = pd.DataFrame({'zone_id':buildings.zone_id, 'building_type_id':buildings.building_type_id})
     bsqft_job = building_sqft_per_job.to_frame()
@@ -72,7 +72,7 @@ def building_sqft_per_job(buildings, building_sqft_per_job):
                     left_on=['zone_id', 'building_type_id'],
                     right_index=True, how='left').building_sqft_per_job.fillna(0)
 
-@orca.column('buildings', 'job_spaces', cache=True)
+@orca.column('buildings', 'job_spaces', cache=True, cache_scope='iteration')
 def job_spaces(buildings):
     job_spaces = buildings.non_residential_sqft / buildings.building_sqft_per_job
     job_spaces[np.isinf(job_spaces)] = np.nan
@@ -80,7 +80,7 @@ def job_spaces(buildings):
     job_spaces = job_spaces.fillna(0).round().astype('int')
     return job_spaces
 
-@orca.column('buildings', 'non_residential_units', cache=True)
+@orca.column('buildings', 'non_residential_units', cache=True, cache_scope='iteration')
 def non_residential_units(buildings):
     job_spaces = buildings.non_residential_sqft / buildings.building_sqft_per_job
     job_spaces[np.isinf(job_spaces)] = np.nan
@@ -88,7 +88,7 @@ def non_residential_units(buildings):
     job_spaces = job_spaces.fillna(0).round().astype('int')
     return job_spaces
 
-@orca.column('buildings', 'jobs_within_30_min', cache=True)
+@orca.column('buildings', 'jobs_within_30_min', cache=True, cache_scope='iteration')
 def jobs_within_30_min(buildings, zones):
     return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
 
@@ -107,36 +107,36 @@ def vacant_job_spaces(buildings, jobs):
 # HOUSEHOLDS VARIABLES
 #####################
 
-@orca.column('households', 'school_district_id', cache=True)
+@orca.column('households', 'school_district_id', cache=True, cache_scope='iteration')
 def school_district_id(households, buildings):
     return misc.reindex(buildings.school_district_id, households.building_id)
 
-@orca.column('households', 'income_quartile', cache=True)
+@orca.column('households', 'income_quartile', cache=True, cache_scope='iteration')
 def income_quartile(households):
     return pd.Series(pd.qcut(households.income, 4,labels=False),
                      index=households.index)
 
-@orca.column('households', 'zone_id', cache=True)
+@orca.column('households', 'zone_id', cache=True, cache_scope='iteration')
 def zone_id(households, buildings):
     return misc.reindex(buildings.zone_id, households.building_id)
 
-@orca.column('households', 'x', cache=True)
+@orca.column('households', 'x', cache=True, cache_scope='iteration')
 def x(households, buildings):
     return misc.reindex(buildings.x, households.building_id)
 
-@orca.column('households', 'y', cache=True)
+@orca.column('households', 'y', cache=True, cache_scope='iteration')
 def y(households, buildings):
     return misc.reindex(buildings.y, households.building_id)
 
-@orca.column('households', 'large_area', cache=True)
+@orca.column('households', 'large_area', cache=True, cache_scope='iteration')
 def large_area(households, buildings):
     return misc.reindex(buildings.large_area_id, households.building_id)
 
-@orca.column('households', 'lid', cache=True)
+@orca.column('households', 'lid', cache=True, cache_scope='iteration')
 def lid(households):
     return households.large_area_id
 
-@orca.column('households', '_node_id', cache=True)
+@orca.column('households', '_node_id', cache=True, cache_scope='iteration')
 def _node_id(households, buildings):
     return misc.reindex(buildings._node_id, households.building_id)
 
@@ -144,11 +144,11 @@ def _node_id(households, buildings):
 # PERSONS VARIABLES
 #####################
 
-@orca.column('persons', 'zone_id', cache=True)
+@orca.column('persons', 'zone_id', cache=True, cache_scope='iteration')
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
-@orca.column('persons', 'school_district_id', cache=True)
+@orca.column('persons', 'school_district_id', cache=True, cache_scope='iteration')
 def school_district_id(persons, households):
     return misc.reindex(households.school_district_id, persons.household_id)
 
@@ -157,31 +157,31 @@ def school_district_id(persons, households):
 # JOBS VARIABLES
 #####################
 
-@orca.column('jobs', 'zone_id', cache=True)
+@orca.column('jobs', 'zone_id', cache=True, cache_scope='iteration')
 def zone_id(jobs, buildings):
     return misc.reindex(buildings.zone_id, jobs.building_id)
 
-@orca.column('jobs', 'parcel_id', cache=True)
+@orca.column('jobs', 'parcel_id', cache=True, cache_scope='iteration')
 def parcel_id(jobs, buildings):
     return misc.reindex(buildings.parcel_id, jobs.building_id)
 
-@orca.column('jobs', 'x', cache=True)
+@orca.column('jobs', 'x', cache=True, cache_scope='iteration')
 def x(jobs, buildings):
     return misc.reindex(buildings.x, jobs.building_id)
 
-@orca.column('jobs', 'y', cache=True)
+@orca.column('jobs', 'y', cache=True, cache_scope='iteration')
 def y(jobs, buildings):
     return misc.reindex(buildings.y, jobs.building_id)
 
-@orca.column('jobs', 'large_area', cache=True)
+@orca.column('jobs', 'large_area', cache=True, cache_scope='iteration')
 def large_area(jobs, buildings):
     return misc.reindex(buildings.large_area_id, jobs.building_id)
 
-@orca.column('jobs', 'lid', cache=True)
+@orca.column('jobs', 'lid', cache=True, cache_scope='iteration')
 def lid(jobs):
     return jobs.large_area_id
 
-@orca.column('jobs', '_node_id', cache=True)
+@orca.column('jobs', '_node_id', cache=True, cache_scope='iteration')
 def _node_id(jobs, buildings):
     return misc.reindex(buildings._node_id, jobs.building_id)
 
@@ -190,19 +190,19 @@ def _node_id(jobs, buildings):
 # PARCELS VARIABLES
 #####################
 
-@orca.column('parcels', 'acres', cache=True)
+@orca.column('parcels', 'acres', cache=True, cache_scope='iteration')
 def acres(parcels):
     return parcels.parcel_sqft / 43560
 
-@orca.column('parcels', 'x', cache=True)
+@orca.column('parcels', 'x', cache=True, cache_scope='iteration')
 def x(parcels):
     return parcels.centroid_x
 
-@orca.column('parcels', 'y', cache=True)
+@orca.column('parcels', 'y', cache=True, cache_scope='iteration')
 def y(parcels):
     return parcels.centroid_y
 
-@orca.column('parcels', 'allowed', cache=True)
+@orca.column('parcels', 'allowed', cache=True, cache_scope='iteration')
 def allowed(parcels):
     df = pd.DataFrame(index=parcels.index)
     df['allowed'] = True
@@ -219,19 +219,19 @@ def parcel_is_allowed(form):
     df['allowed'] = True
     return df.allowed
 
-@orca.column('parcels', 'max_far', cache=True)
+@orca.column('parcels', 'max_far', cache=True, cache_scope='iteration')
 def max_far(parcels):
     df = pd.DataFrame(index=parcels.index)
     df['max_far'] = 2.0
     return df.max_far
 
-@orca.column('parcels', 'max_height', cache=True)
+@orca.column('parcels', 'max_height', cache=True, cache_scope='iteration')
 def max_height(parcels):
     df = pd.DataFrame(index=parcels.index)
     df['max_height'] = 100
     return df.max_height
 
-@orca.column('parcels', 'parcel_size', cache=True)
+@orca.column('parcels', 'parcel_size', cache=True, cache_scope='iteration')
 def parcel_size(parcels):
     return parcels.parcel_sqft
 
@@ -242,17 +242,17 @@ def ave_unit_size(parcels, nodes):
         return pd.Series(index=parcels.index)
     return misc.reindex(nodes.ave_unit_sqft, parcels._node_id)
 
-@orca.column('parcels', 'total_units', cache=True)
+@orca.column('parcels', 'total_units', cache=True, cache_scope='iteration')
 def total_units(parcels, buildings):
     return buildings.residential_units.groupby(buildings.parcel_id).sum().\
         reindex(parcels.index).fillna(0)
 
-@orca.column('parcels', 'total_job_spaces', cache=True)
+@orca.column('parcels', 'total_job_spaces', cache=True, cache_scope='iteration')
 def total_job_spaces(parcels, buildings):
     return buildings.job_spaces.groupby(buildings.parcel_id).sum().\
         reindex(parcels.index).fillna(0)
 
-@orca.column('parcels', 'total_sqft', cache=True)
+@orca.column('parcels', 'total_sqft', cache=True, cache_scope='iteration')
 def total_sqft(parcels, buildings):
     return buildings.building_sqft.groupby(buildings.parcel_id).sum().\
         reindex(parcels.index).fillna(0)
@@ -268,11 +268,11 @@ def land_cost(parcels, nodes_prices):
 # ZONES VARIABLES
 #####################
 
-@orca.column('zones', 'popden', cache=True)
+@orca.column('zones', 'popden', cache=True, cache_scope='iteration')
 def popden(zones, parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
-@orca.column('zones', 'jobs_within_30_min', cache=True)
+@orca.column('zones', 'jobs_within_30_min', cache=True, cache_scope='iteration')
 def jobs_within_30_min(jobs, travel_data):
     j = pd.DataFrame({'zone_id':jobs.zone_id})
     td = travel_data.to_frame()
@@ -282,11 +282,11 @@ def jobs_within_30_min(jobs, travel_data):
                                   "am_single_vehicle_to_work_travel_time",
                                   30, agg=np.sum)
 
-@orca.column('zones', 'population', cache=True)
+@orca.column('zones', 'population', cache=True, cache_scope='iteration')
 def population(zones, households):
     return households.persons.groupby(households.zone_id).sum()
 
-@orca.column('zones', 'employment', cache=True)
+@orca.column('zones', 'employment', cache=True, cache_scope='iteration')
 def employment(zones, jobs, travel_data):
     td = travel_data.to_frame()
     zone_ids = np.unique(td.reset_index().to_zone_id)
@@ -328,25 +328,25 @@ def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
     zones = zones.reset_index().set_index('zone_id')
     return zones.logsum_var
 
-@orca.column('zones', 'logsum_pop_more_worker_than_car', cache=True)
+@orca.column('zones', 'logsum_pop_more_worker_than_car', cache=True, cache_scope='iteration')
 def logsum_pop_more_worker_than_car(zones, travel_data):
     name_attribute = 'logsum0'
     spatial_var = 'population'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
-@orca.column('zones', 'logsum_pop_less_worker_than_car', cache=True)
+@orca.column('zones', 'logsum_pop_less_worker_than_car', cache=True, cache_scope='iteration')
 def logsum_pop_less_worker_than_car(zones, travel_data):
     name_attribute = 'logsum1'
     spatial_var = 'population'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
-@orca.column('zones', 'logsum_work_more_worker_than_car', cache=True)
+@orca.column('zones', 'logsum_work_more_worker_than_car', cache=True, cache_scope='iteration')
 def logsum_work_more_worker_than_car(zones, travel_data):
     name_attribute = 'logsum0'
     spatial_var = 'employment'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
-@orca.column('zones', 'logsum_work_less_worker_than_car', cache=True)
+@orca.column('zones', 'logsum_work_less_worker_than_car', cache=True, cache_scope='iteration')
 def logsum_work_less_worker_than_car(zones, travel_data):
     name_attribute = 'logsum1'
     spatial_var = 'employment'

@@ -21,10 +21,6 @@ def diagnostic(parcels,buildings,jobs,households,nodes,iter_var):
     households = households.to_frame()
     nodes = nodes.to_frame()
     import pdb; pdb.set_trace()
-
-@orca.step("clear_cache")
-def clear_cache():
-    orca.clear_cache()
     
 @orca.step('rsh_estimate')
 def rsh_estimate(buildings, nodes):
