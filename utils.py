@@ -260,7 +260,7 @@ def run_feasibility(parcels, parcel_price_callback,
     -------
     Adds a table called feasibility to the sim object (returns nothing)
     """
-    pf = sqftproforma.SqFtProForma()
+    pf = sqftproforma.SqFtProForma(config)
 
     df = parcels.to_frame()
 

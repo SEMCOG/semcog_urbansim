@@ -1,7 +1,6 @@
 import os
 import win32com.client as w32c
 import win32pdhutil, win32api, win32process
-import urbansim.sim.simulation as sim
 import numpy as np, pandas as pd
 import csv
 import orca

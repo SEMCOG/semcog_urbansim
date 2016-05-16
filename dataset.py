@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import assumptions
 from urbansim.utils import misc
-#import urbansim.sim.simulation as sim
 
 import warnings
 
@@ -14,7 +13,7 @@ import utils
 
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
-@orca.table('scheduled_development_events')
+@orca.table()
 def scheduled_development_events(store):
     df = pd.read_csv("data/scheduled_development_events.csv")
     return df
@@ -24,7 +23,7 @@ def jobs(store):
     df = store['jobs']
     return df
 
-@orca.table('buildings')
+@orca.table()
 def buildings(store):
     buildings = store['buildings']
     buildings['sqft_price_nonres'] = buildings.improvement_value*1.0 / buildings.non_residential_sqft
@@ -34,7 +33,7 @@ def buildings(store):
     buildings.fillna(0, inplace=True)
     return buildings
 
-@orca.table('households')
+@orca.table()
 def households(store):
     df = store['households']
     df.building_id[df.building_id==-1] = np.random.choice(store.buildings.index.values,(df.building_id==-1).sum())
@@ -42,71 +41,71 @@ def households(store):
     df.building_id[idx_invalid_building_id] = np.random.choice(store.buildings.index.values,idx_invalid_building_id.sum())
     return df
     
-@orca.table('persons')
+@orca.table()
 def persons(store):
     df = store['persons']
     return df
 
-@orca.table('parcels')
+@orca.table()
 def parcels(store):
     df = store['parcels']
     return df
 
-@orca.table('zones')
+@orca.table()
 def zones(store):
     df = store['zones']
     return df
     
-@orca.table('cities')
+@orca.table()
 def cities(store):
     df = store['cities']
     return df
     
-@orca.table('building_sqft_per_job')
+@orca.table()
 def building_sqft_per_job(store):
     df = store['building_sqft_per_job']
     return df
     
-@orca.table('annual_relocation_rates_for_households')
+@orca.table()
 def annual_relocation_rates_for_households(store):
     df = store['annual_relocation_rates_for_households']
     return df
     
-@orca.table('annual_relocation_rates_for_jobs')
+@orca.table()
 def annual_relocation_rates_for_jobs(store):
     df = store['annual_relocation_rates_for_jobs']
     return df
     
-@orca.table('annual_household_control_totals')
+@orca.table()
 def annual_household_control_totals(store):
     df = store['annual_household_control_totals']
     return df
 
-@orca.table('annual_employment_control_totals')
+@orca.table()
 def annual_employment_control_totals(store):
     df = store['annual_employment_control_totals']
     return df
     
-@orca.table('travel_data')
+@orca.table()
 def travel_data(store):
     df = store['travel_data']
     return df
 
 #???sim.table to orca.table, correct?
 # these are dummy returns that last until accessibility runs
-@orca.table("nodes")
+@orca.table()
 def nodes():
     return pd.DataFrame()
 
 #???sim.table to orca.table, correct?
-@orca.table("nodes_prices")
+@orca.table()
 def nodes_prices():
     return pd.DataFrame()
     
 # GQ placeholders
 for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq', 'tazcounts2030gq']:
     empty_df = pd.DataFrame()
-    orca.add_table(gq_tbl,empty_df)
+    orca.add_table(gq_tbl, empty_df)
 
 # this specifies the relationships between tables
 orca.broadcast('nodes', 'buildings', cast_index=True, onto_on='_node_id')

@@ -1,0 +1,492 @@
+name: annual_employment_control_totals
+indexs:
+- sector_id
+- year
+- home_based_status
+columns:
+  large_area_id: int32
+  total_number_of_jobs: int32
+---
+name: annual_household_control_totals
+indexs:
+- year
+columns:
+  age_of_head_max: int32
+  age_of_head_min: int32
+  children_max: int32
+  children_min: int32
+  income_max: int32
+  income_min: int32
+  large_area_id: int32
+  persons_max: int32
+  persons_min: int32
+  race_id: int32
+  total_number_of_households: int32
+---
+name: annual_relocation_rates_for_households
+indexs:
+- None
+columns:
+  age_max: int32
+  age_min: int32
+  income_max: int32
+  income_min: int32
+  probability_of_relocating: float32
+---
+name: annual_relocation_rates_for_jobs
+indexs:
+- None
+columns:
+  job_relocation_probability: float32
+  sector_id: int32
+---
+name: building_sqft_per_job
+indexs:
+- zone_id
+- building_type_id
+columns:
+  building_sqft_per_job: int64
+---
+name: building_types
+indexs:
+- building_type_id
+columns:
+  building_type_description: object
+  building_type_name: object
+  generic_building_type_description: object
+  generic_building_type_id: int32
+  generic_building_type_name: object
+  is_residential: int32
+  unit_name: object
+---
+name: buildings
+indexs:
+- building_id
+columns:
+  building_id_old: int32
+  building_type_id: int32
+  improvement_value: int32
+  land_area: int32
+  non_residential_sqft: int32
+  parcel_id: int32
+  residential_units: int32
+  sqft_per_unit: int32
+  stories: int32
+  tax_exempt: int32
+  year_built: int32
+---
+name: cities
+indexs:
+- city_id
+columns:
+  city_code: object
+  city_name: object
+  crime08: int32
+  crm_both: int32
+  crm_prprty: int32
+  crm_vlnt: int32
+  is_det: int32
+  liv_index: float32
+  price_adj: int32
+---
+name: counties
+indexs:
+- county_id
+columns:
+  county_name: object
+---
+name: demolition_cost_per_sqft
+indexs:
+- None
+columns:
+  building_type_id: int32
+  building_type_name: object
+  demolition_cost_per_sqft: int32
+---
+name: development_constraints
+indexs:
+- None
+columns:
+  constraint_id: int32
+  constraint_type: object
+  generic_land_use_type_id: int32
+  maximum: float32
+  minimum: float32
+  plan_type_id: int32
+---
+name: development_project_proposals
+indexs:
+- None
+columns:
+  is_redevelopment: int32
+  parcel_id: int32
+  proposal_id: int32
+  start_year: int32
+  status_id: int32
+  template_id: int32
+---
+name: development_template_components
+indexs:
+- None
+columns:
+  building_sqft_per_unit: int32
+  building_type: object
+  building_type_id: int32
+  component_id: int32
+  construction_cost_per_unit: int32
+  description: object
+  percent_building_sqft: int32
+  template_id: int32
+---
+name: development_templates
+indexs:
+- None
+columns:
+  characteristics: object
+  density: float32
+  density_type: object
+  development_type: object
+  is_active: int32
+  land_sqft_max: int32
+  land_sqft_min: int32
+  land_use_type_id: int32
+  percent_land_overhead: int32
+  sample_size: int32
+  template_id: int32
+---
+name: employment_adhoc_sector_group_definitions
+indexs:
+- None
+columns:
+  group_id: int32
+  sector_id: int32
+---
+name: employment_adhoc_sector_groups
+indexs:
+- None
+columns:
+  group_id: int32
+  name: object
+---
+name: employment_events
+indexs:
+- None
+columns:
+  action: object
+  agent_dataset: object
+  agent_expression: object
+  amount: int32
+  location_capacity_attribute: object
+  location_expression: object
+  refinement_id: int32
+  transaction_id: int32
+  year: int32
+---
+name: employment_sectors
+indexs:
+- None
+columns:
+  name: object
+  sector_id: int32
+---
+name: generic_land_use_types
+indexs:
+- generic_land_use_type_id
+columns:
+  generic_description: object
+---
+name: home_based_employment_location_choice_model_coefficients
+indexs:
+- None
+columns:
+  coefficient_name: object
+  estimate: float32
+  standard_error: float32
+  sub_model_id: int32
+  t_statistic: float32
+---
+name: home_based_employment_location_choice_model_specification
+indexs:
+- None
+columns:
+  coefficient_name: object
+  equation_id: int32
+  fixed_value: int32
+  sub_model_id: int32
+  variable_name: object
+---
+name: home_based_status
+indexs:
+- None
+columns:
+  home_based_status: int32
+  name: object
+---
+name: household_location_choice_model_coefficients
+indexs:
+- None
+columns:
+  coefficient_name: object
+  estimate: float32
+  standard_error: float32
+  sub_model_id: int32
+  t_statistic: float32
+---
+name: household_location_choice_model_specification
+indexs:
+- None
+columns:
+  coefficient_name: object
+  equation_id: int32
+  fixed_value: float32
+  sub_model_id: int32
+  variable_name: object
+---
+name: households
+indexs:
+- household_id
+columns:
+  age_of_head: int32
+  building_id: int32
+  cars: int32
+  cars_old: int32
+  children: int32
+  income: int32
+  large_area_id: int32
+  persons: int32
+  race_id: int32
+  refinement_id: int32
+  transaction_id: int32
+  workers: int32
+  workers_old: int32
+  zone_id_000: int32
+---
+name: job_building_types
+indexs:
+- None
+columns:
+  home_based: int32
+  id: int32
+  name: object
+---
+name: jobs
+indexs:
+- job_id
+columns:
+  building_id: int32
+  home_based_status: int32
+  large_area_id: int32
+  refinement_id: int32
+  sector_id: int32
+  sqft: int32
+  transaction_id: int32
+  zone_id: int32
+---
+name: jobs_for_estimation
+indexs:
+- None
+columns:
+  building_id: int32
+  home_based_status: int32
+  job_id: int32
+  large_area_id: int32
+  sector_id: int32
+  sqft: int32
+  zone_id: int32
+---
+name: land_use_types
+indexs:
+- land_use_type_id
+columns:
+  description: object
+  emp_land1: int32
+  emp_land2: int32
+  generic_land_use_type_description: object
+  generic_land_use_type_id: int32
+  land_use_name: object
+  unit_name: object
+---
+name: large_areas
+indexs:
+- large_area_id
+columns:
+  alt_large_id: int32
+  large_area_group_id: int32
+  large_area_name: object
+---
+name: non_home_based_employment_location_choice_model_coefficients
+indexs:
+- None
+columns:
+  coefficient_name: object
+  estimate: float32
+  standard_error: float32
+  sub_model_id: int32
+  t_statistic: float32
+---
+name: non_home_based_employment_location_choice_model_specification
+indexs:
+- None
+columns:
+  coefficient_name: object
+  equation_id: int32
+  fixed_value: int32
+  sub_model_id: int32
+  variable_name: object
+---
+name: parcels
+indexs:
+- parcel_id
+columns:
+  agri_land: int32
+  centroid_x: float32
+  centroid_y: float32
+  city_id: int32
+  county_id: int32
+  dist_hwy: int32
+  dist_road: int32
+  floodprone: int32
+  land_use_type_id: int32
+  land_value: int32
+  large_area_id: int32
+  parcel_sqft: int32
+  plan_id: int32
+  plan_type_id: int32
+  plannew: int32
+  pptytax: float32
+  repm_id: int32
+  school_district_id: int32
+  sewer2010: int32
+  sewer2015: int32
+  sewer2025: int32
+  zone_id: int32
+---
+name: persons
+indexs:
+- person_id
+columns:
+  age: int32
+  earning: int32
+  edu: int32
+  employment_status: int32
+  household_id: int32
+  job_id: int32
+  large_area_id: int32
+  member_id: int32
+  race_id: int32
+  refinement_id: int32
+  relate: int32
+  sex: int32
+  transaction_id: int32
+  work_at_home: int32
+---
+name: plans
+indexs:
+- plan_id
+columns:
+  constraint_type: object
+  generic_land_use_type_id: int32
+  maximum: float32
+  minimum: float32
+---
+name: real_estate_price_model_coefficients
+indexs:
+- None
+columns:
+  coefficient_name: object
+  estimate: float32
+  standard_error: float32
+  sub_model_id: int32
+  t_statistics: float32
+---
+name: real_estate_price_model_specification
+indexs:
+- None
+columns:
+  coefficient_name: object
+  equation_id: int32
+  sub_model_id: int32
+  variable_name: object
+---
+name: refinements
+indexs:
+- refinement_id
+columns:
+  action: object
+  agent_dataset: object
+  agent_expression: object
+  amount: int32
+  location_capacity_attribute: object
+  location_expression: object
+  transaction_id: int32
+  year: int32
+---
+name: school_districts
+indexs:
+- school_district_id
+columns:
+  district_name: object
+  isd_code: int32
+  isd_name: object
+  meap10: float32
+  proficient10: float32
+  public: int32
+---
+name: target_vacancies
+indexs:
+- building_type_id
+- year
+columns:
+  large_area_id: int32
+  target_vacancy_rate: float32
+---
+name: travel_data
+indexs:
+- from_zone_id
+- to_zone_id
+columns:
+  am_single_vehicle_to_work_travel_time: float32
+  am_total_transit_time_walk: float32
+  logsum0: float32
+  logsum1: float32
+  logsum2: float32
+---
+name: urbansim_constants
+indexs:
+- None
+columns:
+  absolute_min_year: int32
+  cell_size: float32
+  developer_model_estimation_threshold_count: int32
+  hlc_estimation_sample_fraction: float32
+  logit_choice_set_size_for_estimation: int32
+  low_income_fraction: float32
+  max_persons_per_household_for_control_totals: int32
+  mid_income_fraction: float32
+  near_arterial_threshold: float32
+  near_highway_threshold: float32
+  number_of_developer_model_history_years: int32
+  origin_latitude: float32
+  origin_longitude: float32
+  percent_coverage_threshold: int32
+  property_value_to_annual_cost_ratio: float32
+  recent_years: int32
+  units: object
+  walking_distance_circle_radius: float32
+  young_age: int32
+---
+name: velocity_functions
+indexs:
+- velocity_function_id
+columns:
+  annual_construction_schedule: object
+  building_type_id: int32
+  maximum_units: int32
+  minimum_units: int32
+---
+name: zones
+indexs:
+- zone_id
+columns:
+  taz: object
+  tazce10: object

@@ -6,7 +6,6 @@ import random
 from urbansim.models import transition, relocation
 from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc, networks
-#import urbansim.sim.simulation as sim
 #import dataset, variables, utils, transcad
 import dataset, variables, utils
 import pandana as pdna
@@ -14,7 +13,7 @@ import pandana as pdna
 import orca
 
 
-@orca.step('diagnostic')
+@orca.step()
 def diagnostic(parcels,buildings,jobs,households,nodes,iter_var):
     parcels = parcels.to_frame()
     buildings = buildings.to_frame()
@@ -22,41 +21,37 @@ def diagnostic(parcels,buildings,jobs,households,nodes,iter_var):
     households = households.to_frame()
     nodes = nodes.to_frame()
     import pdb; pdb.set_trace()
-
-@orca.step("clear_cache")
-def clear_cache():
-    orca.clear_cache()
     
-@orca.step('rsh_estimate')
+@orca.step()
 def rsh_estimate(buildings, nodes):
     return utils.hedonic_estimate("rsh.yaml", buildings, nodes)
     
-@orca.step('rsh_simulate')
+@orca.step()
 def rsh_simulate(buildings, nodes):
     return utils.hedonic_simulate("rsh.yaml", buildings, nodes,
                                   "sqft_price_res")
                                   
-@orca.step('nrh_estimate')
+@orca.step()
 def nrh_estimate(buildings, nodes):
     return utils.hedonic_estimate("nrh.yaml", buildings, nodes)
 
-@orca.step('nrh_simulate')
+@orca.step()
 def nrh_simulate(buildings, nodes):
     return utils.hedonic_simulate("nrh.yaml", buildings, nodes,
                                   "sqft_price_nonres")
 
-@orca.step('hlcm_estimate')
+@orca.step()
 def hlcm_estimate(households, buildings, nodes):
     return utils.lcm_estimate("hlcm.yaml", households, "building_id",
                               buildings, nodes)
 
-@orca.step('hlcm_simulate')
+@orca.step()
 def hlcm_simulate(households, buildings, nodes):
     return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes,
                               "building_id", "residential_units",
                               "vacant_residential_units")
                             
-@orca.step('elcm_estimate')
+@orca.step()
 def elcm_estimate(jobs, buildings, nodes):
     return utils.lcm_estimate("elcm3.yaml", jobs, "building_id",
                               buildings, nodes)
@@ -75,7 +70,7 @@ def elcm_estimate(jobs, buildings, nodes):
     return utils.lcm_estimate("elcm161.yaml", jobs, "building_id",
                               buildings, nodes)
                             
-@orca.step('elcm_simulate')
+@orca.step()
 def elcm_simulate(jobs, buildings, nodes):
     jobs_df = jobs.to_frame()
     jobs3 = jobs_df[jobs_df.lid==3]
@@ -121,7 +116,7 @@ def elcm_simulate(jobs, buildings, nodes):
     for csegment in control_segments:
         register_broadcast_simulate_segment(csegment[0],csegment[1],csegment[2],csegment[3],csegment[4])
 
-@orca.step('households_relocation')
+@orca.step()
 def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = annual_relocation_rates_for_households.to_frame()
     relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
@@ -133,7 +128,7 @@ def households_relocation(households, annual_relocation_rates_for_households):
                                     pd.Series(-1, index=idx_reloc))
     _print_number_unplaced(households, 'building_id')
 
-@orca.step('jobs_relocation')
+@orca.step()
 def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     relocation_rates = annual_relocation_rates_for_jobs.to_frame()
     relocation_rates.job_relocation_probability = relocation_rates.job_relocation_probability*.05
@@ -144,7 +139,7 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     orca.add_table("jobs", j)
     _print_number_unplaced(jobs, 'building_id')
 
-@orca.step('households_transition')
+@orca.step()
 def households_transition(households, persons, annual_household_control_totals, iter_var):
     ct = annual_household_control_totals.to_frame()
     for col in ct.columns:
@@ -166,7 +161,7 @@ def households_transition(households, persons, annual_household_control_totals, 
     orca.add_table("households", new)
     orca.add_table("persons", new_linked['linked'])
 
-@orca.step('jobs_transition')
+@orca.step()
 def jobs_transition(jobs, annual_employment_control_totals, iter_var):
     ct_emp = annual_employment_control_totals.to_frame()
     ct_emp = ct_emp.reset_index().set_index('year')
@@ -177,7 +172,7 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
     new.loc[added_jobs_idx, "building_id"] = -1
     orca.add_table("jobs", new)
 
-@orca.step('government_jobs_scaling_model')
+@orca.step()
 def government_jobs_scaling_model(jobs):
     jobs = jobs.to_frame(jobs.local_columns)
     government_sectors = [18, 19, 20]
@@ -201,7 +196,7 @@ def government_jobs_scaling_model(jobs):
                 jobs.loc[choices.index, 'building_id'] = choices.values
         orca.add_table("jobs", jobs)
         
-@orca.step('refiner')
+@orca.step()
 def refiner(jobs, households, buildings, iter_var):
     jobs = jobs.to_frame()
     households = households.to_frame()
@@ -270,7 +265,7 @@ def refiner(jobs, households, buildings, iter_var):
         orca.add_table('jobs',jobs)
         orca.add_table('households',households)
 
-@orca.step('scheduled_development_events')
+@orca.step()
 def scheduled_development_events(buildings, iter_var):
     sched_dev = pd.read_csv("data/scheduled_development_events.csv")
     sched_dev[sched_dev.year_built==iter_var]
@@ -288,14 +283,14 @@ def scheduled_development_events(buildings, iter_var):
         all_buildings = merge(b,sched_dev[b.columns])
         orca.add_table("buildings", all_buildings)
     
-@orca.step('price_vars')
+@orca.step()
 def price_vars(net):
     nodes = networks.from_yaml(net, "networks2.yaml")
     print nodes.describe()
     print pd.Series(nodes.index).describe()
     orca.add_table("nodes_prices", nodes)
     
-@orca.step('feasibility')
+@orca.step()
 def feasibility(parcels):
     pfc = sqftproforma.SqFtProFormaConfig()
     pfc.costs = {btype:list(np.array(pfc.costs[btype])*.8) for btype in pfc.costs} #Adjust cost downwards based on RS Means location factor
@@ -324,7 +319,7 @@ def add_extra_columns_nonres(df):
     df = df.fillna(0)
     return df
 
-@orca.step('residential_developer')
+@orca.step()
 def residential_developer(feasibility, households, buildings, parcels, iter_var):
     utils.run_developer("residential",
                         households,
@@ -341,7 +336,7 @@ def residential_developer(feasibility, households, buildings, parcels, iter_var)
                         bldg_sqft_per_job=400.0)
 
 
-@orca.step('non_residential_developer')
+@orca.step()
 def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
     utils.run_developer(["office", "retail", "industrial"],
                         jobs,
@@ -358,7 +353,7 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
                         residential=False,
                         bldg_sqft_per_job=400.0)
             
-@orca.step('build_networks')
+@orca.step()
 def build_networks(parcels):
 ##  'mgf14_walk': {'cost1': 'meters',
 ##                  'edges': 'edges_mgf14_walk',
@@ -377,7 +372,7 @@ def build_networks(parcels):
     orca.add_table("parcels", p)
     
     
-@orca.step('neighborhood_vars')
+@orca.step()
 def neighborhood_vars(net, jobs, households, buildings):
     b = buildings.to_frame(['large_area_id'])
     j = jobs.to_frame(jobs.local_columns)
@@ -468,7 +463,7 @@ def gq_model(iter_var, tazcounts2015gq, tazcounts2020gq, tazcounts2025gq, tazcou
             tazcounts.to_csv('gq/tazcounts%s.csv'%year)
             orca.add_table('tazcounts%sgq'%year,tazcounts.copy())
             
-@orca.step('travel_model')
+@orca.step()
 def travel_model(iter_var, travel_data, buildings, parcels, households, persons, jobs):
     if iter_var in [2015, 2020, 2025, 2030, 2035, 2040]:
         datatable = 'TAZ Data Table'
