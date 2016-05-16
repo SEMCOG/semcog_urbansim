@@ -12,9 +12,9 @@ import utils
 # BUILDINGS VARIABLES
 #####################
 
-@orca.column('buildings', 'school_district_id', cache=True)
-def school_district_id(buildings, parcels):
-    return misc.reindex(parcels.school_district_id, buildings.parcel_id)
+##@orca.column('buildings', 'school_district_id', cache=True)
+##def school_district_id(buildings, parcels):
+##    return misc.reindex(parcels.school_district_id, buildings.parcel_id)
 
 @orca.column('buildings', 'general_type', cache=True)
 def general_type(buildings, building_type_map):
@@ -32,13 +32,13 @@ def x(buildings, parcels):
 def y(buildings, parcels):
     return misc.reindex(parcels.y, buildings.parcel_id)
 
-@orca.column('buildings', 'dist_hwy', cache=True)
-def dist_hwy(buildings, parcels):
-    return misc.reindex(parcels.dist_hwy, buildings.parcel_id)
-
-@orca.column('buildings', 'dist_road', cache=True)
-def dist_road(buildings, parcels):
-    return misc.reindex(parcels.dist_road, buildings.parcel_id)
+##@orca.column('buildings', 'dist_hwy', cache=True)
+##def dist_hwy(buildings, parcels):
+##    return misc.reindex(parcels.dist_hwy, buildings.parcel_id)
+##
+##@orca.column('buildings', 'dist_road', cache=True)
+##def dist_road(buildings, parcels):
+##    return misc.reindex(parcels.dist_road, buildings.parcel_id)
 
 @orca.column('buildings', 'zone_id', cache=True)
 def zone_id(buildings, parcels):
@@ -89,9 +89,9 @@ def non_residential_units(buildings):
     job_spaces = job_spaces.fillna(0).round().astype('int')
     return job_spaces
 
-@orca.column('buildings', 'jobs_within_30_min', cache=True)
-def jobs_within_30_min(buildings, zones):
-    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
+##@orca.column('buildings', 'jobs_within_30_min', cache=True)
+##def jobs_within_30_min(buildings, zones):
+##    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
 
 @orca.column('buildings', 'vacant_residential_units')
 def vacant_residential_units(buildings, households):
@@ -107,10 +107,10 @@ def vacant_job_spaces(buildings, jobs):
 #####################
 # HOUSEHOLDS VARIABLES
 #####################
-
-@orca.column('households', 'school_district_id', cache=True)
-def school_district_id(households, buildings):
-    return misc.reindex(buildings.school_district_id, households.building_id)
+##
+##@orca.column('households', 'school_district_id', cache=True)
+##def school_district_id(households, buildings):
+##    return misc.reindex(buildings.school_district_id, households.building_id)
 
 @orca.column('households', 'income_quartile', cache=True)
 def income_quartile(households):
@@ -149,9 +149,9 @@ def _node_id(households, buildings):
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
-@orca.column('persons', 'school_district_id', cache=True)
-def school_district_id(persons, households):
-    return misc.reindex(households.school_district_id, persons.household_id)
+##@orca.column('persons', 'school_district_id', cache=True)
+##def school_district_id(persons, households):
+##    return misc.reindex(households.school_district_id, persons.household_id)
 
 
 #####################
@@ -273,15 +273,15 @@ def land_cost(parcels, nodes_prices):
 def popden(zones, parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
-@orca.column('zones', 'jobs_within_30_min', cache=True)
-def jobs_within_30_min(jobs, travel_data):
-    j = pd.DataFrame({'zone_id':jobs.zone_id})
-    td = travel_data.to_frame()
-    zone_ids = np.unique(td.reset_index().to_zone_id)
-    return misc.compute_range(td,
-                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
-                                  "am_single_vehicle_to_work_travel_time",
-                                  30, agg=np.sum)
+##@orca.column('zones', 'jobs_within_30_min', cache=True)
+##def jobs_within_30_min(jobs, travel_data):
+##    j = pd.DataFrame({'zone_id':jobs.zone_id})
+##    td = travel_data.to_frame()
+##    zone_ids = np.unique(td.reset_index().to_zone_id)
+##    return misc.compute_range(td,
+##                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
+##                                  "am_single_vehicle_to_work_travel_time",
+##                                  30, agg=np.sum)
 
 @orca.column('zones', 'population', cache=True)
 def population(zones, households):
