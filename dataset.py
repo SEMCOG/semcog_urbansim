@@ -92,7 +92,7 @@ def travel_data(store):
     df = store['travel_data']
     return df
 
-#???sim.table to orca.table, correct?    
+#???sim.table to orca.table, correct?
 # these are dummy returns that last until accessibility runs
 @orca.table("nodes")
 def nodes():

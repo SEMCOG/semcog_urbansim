@@ -367,7 +367,7 @@ def build_networks(parcels):
     nodes, edges = st.nodes_mgf14_walk, st.edges_mgf14_walk
     net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
                        edges[["feet"]])
-    net.precompute(2000) 
+    net.precompute(2000)
     orca.add_injectable("net", net)
     
     p = parcels.to_frame()
