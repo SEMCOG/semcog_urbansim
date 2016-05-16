@@ -235,7 +235,7 @@ def max_height(parcels):
 def parcel_size(parcels):
     return parcels.parcel_sqft
 
-@orca.column('parcels', 'ave_unit_size')
+@orca.column('parcels')
 def ave_unit_size(parcels, nodes):
     if len(nodes) == 0:
         # if nodes isn't generated yet
