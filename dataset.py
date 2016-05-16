@@ -20,12 +20,9 @@ def scheduled_development_events(store):
     return df
 
 @orca.table('jobs')
-def jobs(store, buildings):
-    j = store['jobs']
-    b = buildings.to_frame(['large_area_id'])
-    idx_invalid_building_id = np.in1d(j.building_id,b.index.values)==False
-    j.building_id[idx_invalid_building_id] = np.random.choice(b[b.large_area_id==161].index.values,idx_invalid_building_id.sum())
-    return j
+def jobs(store):
+    df = store['jobs']
+    return df
 
 @orca.table('buildings')
 def buildings(store):

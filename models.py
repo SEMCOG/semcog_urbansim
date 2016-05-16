@@ -360,11 +360,14 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
             
 @orca.step('build_networks')
 def build_networks(parcels):
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "osm_semcog.h5"), "r")
-    nodes, edges = st.nodes, st.edges
+##  'mgf14_walk': {'cost1': 'meters',
+##                  'edges': 'edges_mgf14_walk',
+##                  'nodes': 'nodes_mgf14_walk'}
+    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
+    nodes, edges = st.nodes_mgf14_walk, st.edges_mgf14_walk
     net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
-                       edges[["weight"]])
-    net.precompute(2000)
+                       edges[["feet"]])
+    net.precompute(2000) 
     orca.add_injectable("net", net)
     
     p = parcels.to_frame()
