@@ -91,6 +91,13 @@ def travel_data(store):
     df = store['travel_data']
     return df
 
+
+@orca.table()
+def zoning(store):
+    df = store['zoning']
+    return df
+
+
 #???sim.table to orca.table, correct?
 # these are dummy returns that last until accessibility runs
 @orca.table()

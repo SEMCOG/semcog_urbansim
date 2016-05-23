@@ -208,27 +208,33 @@ def allowed(parcels):
     df['allowed'] = True
     return df.allowed
 
+
 def parcel_average_price(use):
     return misc.reindex(orca.get_table('nodes_prices')[use],
                         orca.get_table('parcels')._node_id)
 
+
 def parcel_is_allowed(form):
-    #form_to_btype = orca.get_injectable("form_to_btype")
-    parcels = orca.get_table('parcels')
-    df = pd.DataFrame(index=parcels.index)
-    df['allowed'] = True
-    return df.allowed
+    form_to_btype = orca.get_injectable("form_to_btype")
+    zoning = orca.get_table('zoning')
+    allowed = [(zoning['type%d' % typ] > 0)
+               for typ in form_to_btype[form]]
+
+    s = pd.concat(allowed, axis=1).max(axis=1).\
+        reindex(orca.get_table('parcels').index).fillna(False)
+
+    return s.astype("bool")
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def max_far(parcels):
     df = pd.DataFrame(index=parcels.index)
-    df['max_far'] = 2.0
+    df['max_far'] = orca.get_table('zoning').max_far
     return df.max_far
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def max_height(parcels):
     df = pd.DataFrame(index=parcels.index)
-    df['max_height'] = 100
+    df['max_height'] = orca.get_table('zoning').max_height
     return df.max_height
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -263,6 +269,15 @@ def land_cost(parcels, nodes_prices):
         return pd.Series(index=parcels.index)
     return (parcels.total_sqft * parcel_average_price("residential")).\
         reindex(parcels.index).fillna(0)
+
+
+#####################
+# ZONING VARIABLES
+#####################
+##@orca.column('zoning', cache=True, cache_scope='iteration')
+##def ave_unit_size(zoning, parcels):
+##    return misc.reindex(parcels.ave_unit_size, zoning.parcel_id)
+
 
 #####################
 # ZONES VARIABLES

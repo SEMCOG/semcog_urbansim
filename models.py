@@ -285,7 +285,7 @@ def scheduled_development_events(buildings, iter_var):
     
 @orca.step()
 def price_vars(net):
-    nodes = networks.from_yaml(net, "networks2.yaml")
+    nodes = networks.from_yaml(net, "networks.yaml")
     print nodes.describe()
     print pd.Series(nodes.index).describe()
     orca.add_table("nodes_prices", nodes)
@@ -293,8 +293,10 @@ def price_vars(net):
 @orca.step()
 def feasibility(parcels):
     pfc = sqftproforma.SqFtProFormaConfig()
-    pfc.costs = {btype:list(np.array(pfc.costs[btype])*.8) for btype in pfc.costs} #Adjust cost downwards based on RS Means location factor
-    pfc.parking_cost_d = {ptype:pfc.parking_cost_d[ptype]*.8 for ptype in pfc.parking_cost_d} #Adjust price downwards based on RS Means location factor
+    # Adjust cost downwards based on RS Means test factor
+    pfc.costs = {btype: list(np.array(pfc.costs[btype])*.5) for btype in pfc.costs}
+    # Adjust price downwards based on RS Means test factor
+    pfc.parking_cost_d = {ptype: pfc.parking_cost_d[ptype]*.5 for ptype in pfc.parking_cost_d}
     
     utils.run_feasibility(parcels,
                           variables.parcel_average_price,
@@ -358,8 +360,9 @@ def build_networks(parcels):
 ##  'mgf14_walk': {'cost1': 'meters',
 ##                  'edges': 'edges_mgf14_walk',
 ##                  'nodes': 'nodes_mgf14_walk'}
+    network='mgf14_walk'
     st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
-    nodes, edges = st.nodes_mgf14_walk, st.edges_mgf14_walk
+    nodes, edges = st['nodes_'+network], st['edges_'+network]
     net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
                        edges[["feet"]])
     net.precompute(2000)
