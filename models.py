@@ -301,7 +301,7 @@ def feasibility(parcels):
     utils.run_feasibility(parcels,
                           variables.parcel_average_price,
                           variables.parcel_is_allowed,
-                          residential_to_yearly=True, config=pfc)
+                          to_yearly=True, config=pfc)
             
 def random_type(form):
     form_to_btype = orca.get_injectable("form_to_btype")

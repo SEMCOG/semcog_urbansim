@@ -237,7 +237,7 @@ def _print_number_unplaced(df, fieldname):
 
 
 def run_feasibility(parcels, parcel_price_callback,
-                    parcel_use_allowed_callback, residential_to_yearly=True, config=None):
+                    parcel_use_allowed_callback, to_yearly=True, config=None):
     """
     Execute development feasibility on all parcels
 
@@ -252,8 +252,8 @@ def run_feasibility(parcels, parcel_price_callback,
         A callback which takes each form of the pro forma and returns a series
         with index as parcel_id and value and boolean whether the form
         is allowed on the parcel
-    residential_to_yearly : boolean (default true)
-        Whether to use the cap rate to convert the residential price from total
+    to_yearly : boolean (default true)
+        Whether to use the cap rate to convert the price from total
         sales price per sqft to rent per sqft
 
     Returns
@@ -269,8 +269,9 @@ def run_feasibility(parcels, parcel_price_callback,
         df[use] = parcel_price_callback(use)
 
     # convert from cost to yearly rent
-    if residential_to_yearly:
-        df["residential"] *= pf.config.cap_rate
+    if to_yearly:
+        for use in config.uses:
+            df[use] *= pf.config.cap_rate
 
     print "Describe of the yearly rent by use"
     print df[pf.config.uses].describe()
