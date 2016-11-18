@@ -133,6 +133,10 @@ def large_area(households, buildings):
     return misc.reindex(buildings.large_area_id, households.building_id)
 
 @orca.column('households', cache=True, cache_scope='iteration')
+def large_area_id(households, buildings):
+    return misc.reindex(buildings.large_area_id, households.building_id)
+
+@orca.column('households', cache=True, cache_scope='iteration')
 def lid(households):
     return households.large_area_id
 
@@ -216,6 +220,11 @@ def parcel_average_price(use):
 
 def parcel_is_allowed(form):
     form_to_btype = orca.get_injectable("form_to_btype")
+    buildings = orca.get_table("buildings").to_frame(["parcel_id", "building_type_id", "residential_units"])
+    lone_house = buildings[
+                     (buildings.building_type_id == 81) &
+                     (buildings.residential_units == 1)].groupby(by="parcel_id").building_type_id.count() == 1
+    orca.add_injectable("lone_house", lone_house)
     zoning = orca.get_table('zoning')
     allowed = [(zoning['type%d' % typ] > 0)
                for typ in form_to_btype[form]]
@@ -223,7 +232,9 @@ def parcel_is_allowed(form):
     s = pd.concat(allowed, axis=1).max(axis=1).\
         reindex(orca.get_table('parcels').index).fillna(False)
 
-    return s.astype("bool")
+    return s.astype("bool") & (~lone_house).reindex(zoning.index, fill_value=True)
+    # return s.astype("bool")
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def max_far(parcels):
@@ -231,11 +242,27 @@ def max_far(parcels):
     df['max_far'] = orca.get_table('zoning').max_far
     return df.max_far
 
+
+@orca.column('parcels', cache=True, cache_scope='iteration')
+def max_dua(parcels):
+    df = pd.DataFrame(index=parcels.index)
+    df['max_dua'] = orca.get_table('zoning').max_dua
+    return df.max_dua
+
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def max_height(parcels):
     df = pd.DataFrame(index=parcels.index)
     df['max_height'] = orca.get_table('zoning').max_height
     return df.max_height
+
+
+@orca.column('parcels', cache=True, cache_scope='iteration')
+def pct_undev(parcels):
+    df = pd.DataFrame(index=parcels.index)
+    df['pct_undev'] = orca.get_table('zoning').pct_undev
+    return df.pct_undev
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def parcel_size(parcels):
@@ -269,6 +296,16 @@ def land_cost(parcels, nodes_prices):
         return pd.Series(index=parcels.index)
     return (parcels.total_sqft * parcel_average_price("residential")).\
         reindex(parcels.index).fillna(0)
+
+@orca.column('parcels', cache=True, cache_scope='iteration')
+def parcel_far(parcels):
+    return (parcels.total_sqft/parcels.parcel_sqft).fillna(0)
+
+
+
+
+
+
 
 
 #####################

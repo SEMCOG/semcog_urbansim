@@ -346,7 +346,9 @@ def run_developer(forms, agents, buildings, supply_fname, parcel_size,
         compute_units_to_build(len(agents),
                                buildings[supply_fname].sum(),
                                target_vacancy)
-
+    print 'TODO: remove before result! target units', target_units
+    target_units = 110000
+    
     print "{:,} feasible buildings before running developer".format(
           len(dev.feasibility))
 
@@ -385,6 +387,8 @@ def run_developer(forms, agents, buildings, supply_fname, parcel_size,
         format(len(new_buildings),
                int(new_buildings[supply_fname].sum()),
                supply_fname)
+    if 'residential' in forms:
+        orca.add_injectable('resi_buildings', new_buildings)
 
     print "{:,} feasible buildings after running developer".format(
           len(dev.feasibility))

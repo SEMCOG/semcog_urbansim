@@ -97,6 +97,21 @@ def zoning(store):
     df = store['zoning']
     return df
 
+@orca.table()
+def large_areas(store):
+    df = store['large_areas']
+    return df
+
+@orca.table()
+def building_types(store):
+    df = store['building_types']
+    return df
+
+@orca.table()
+def land_use_types(store):
+    df = store['land_use_types']
+    return df
+
 
 #???sim.table to orca.table, correct?
 # these are dummy returns that last until accessibility runs

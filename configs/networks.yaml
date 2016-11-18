@@ -20,9 +20,10 @@ variable_definitions:
 
   - name: ave_unit_sqft
     dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
     varname: sqft_per_unit
     radius: 500
-    apply: np.log1p
     decay: flat
     aggregation: average
 
@@ -82,10 +83,16 @@ variable_definitions:
 
   - aggregation: average
     dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Residential"
+    - sqft_price_res < 500
     decay: flat
     name: residential
     radius: 2000
     varname: sqft_price_res
+
 
   - aggregation: average
     dataframe: buildings
@@ -131,3 +138,35 @@ variable_definitions:
     radius: 2000
     varname: sqft_price_nonres
 
+  - name: max_industrial_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 5
+    aggregation: max
+
+  - name: max_office_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 3
+    aggregation: max
+
+  - name: max_retail_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 2
+    aggregation: max
+
+
+  - name: max_medical_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 8
+    aggregation: max

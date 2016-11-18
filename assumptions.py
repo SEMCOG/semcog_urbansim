@@ -42,6 +42,18 @@ orca.add_injectable("building_type_map", {
     99: "Others",
 })
 
+
+###
+
+##current building types
+##
+
+###
+
+
+
+
+
 # this maps building "forms" from the developer model
 # to building types so that when the developer builds a
 # "form" this can be converted for storing as a type
@@ -52,12 +64,13 @@ orca.add_injectable("building_type_map", {
 # keys: from proforma forms
 # valus: biling typs aplyed to parcelses
 orca.add_injectable("form_to_btype", {
-    'residential': [81, 82, 83, 84],
+    'residential': [81, 82, 83],
     'industrial': [31, 32],
     'retail': [21, 22, 25, 26, 62],
     'office': [23, 24],
-    'mixedresidential': [21, 22, 81, 83, 84],
-    'mixedoffice': [21, 22, 81, 83, 84],
+    'medical': [51, 52, 53],
+    'mixedresidential': [21, 22, 81, 83],
+    'mixedoffice': [21, 22, 81, 83],
 })
 
 
@@ -65,7 +78,7 @@ def verify():
     with open(r"configs/data_structure.yaml", "r") as out:
         structure = out.read()
 
-    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "alderaan_semcog_data_fix.h5"), mode="r")
+    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "alderaan_semcog_data_11-14-16.h5"), mode="r")
 
     new = verify_data_structure.yaml_from_store(hdf_store)
 
