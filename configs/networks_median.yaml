@@ -1,0 +1,245 @@
+name: Neighborhood Accessibility Variables
+
+model_type: networks
+
+node_col: _node_id
+
+variable_definitions:
+
+  - name: sum_residential_units
+    dataframe: buildings
+    varname: residential_units
+    radius: 500
+    apply: np.log1p
+
+  - name: sum_nonresidential_units
+    dataframe: buildings
+    varname: job_spaces
+    radius: 500
+    apply: np.log1p
+
+  - name: ave_unit_sqft
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 500
+    decay: flat
+    aggregation: average
+
+  - name: ave_unit_sqft1k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 1000
+    decay: flat
+    aggregation: average
+
+
+  - name: med_unit_sqft1k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 1000
+    decay: flat
+    aggregation: median
+
+  - name: med_unit_sqft1k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 1000
+    decay: flat
+    aggregation: 75pct
+
+  - name: ave_unit_sqft1k5
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 1500
+    decay: flat
+    aggregation: average
+
+  - name: ave_unit_sqft2k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 2000
+    decay: flat
+    aggregation: average
+
+
+  - name: ave_unit_sqft2k5
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 2500
+    decay: flat
+    aggregation: average
+
+
+  - name: ave_unit_sqft3k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 3000
+    decay: flat
+    aggregation: average
+
+
+  - name: ave_unit_sqft3k5
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 3500
+    decay: flat
+    aggregation: average
+
+  - name: ave_unit_sqft4k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 4000
+    decay: flat
+    aggregation: average
+
+  - name: ave_unit_sqft4k5
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 4500
+    decay: flat
+    aggregation: average
+
+
+  - name: ave_unit_sqft5k
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 5000
+    decay: flat
+    aggregation: average
+
+
+  - name: ave_lot_sqft
+    dataframe: buildings
+    varname: land_area
+    radius: 500
+    apply: np.log1p
+    decay: flat
+    aggregation: average
+
+  - name: population
+    dataframe: households
+    varname: persons
+    radius: 500
+    apply: np.log1p
+
+  - name: poor
+    dataframe: households
+    filters:
+    - income < 40000
+    add_fields:
+    - income
+    varname: persons
+    radius: 500
+    apply: np.log1p
+
+  - name: sfdu
+    dataframe: buildings
+    filters:
+    - building_type_id == 17
+    add_fields:
+    - building_type_id
+    radius: 500
+    apply: np.log1p
+
+  - name: hhsize
+    dataframe: households
+    varname: persons
+    radius: 500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
+
+  - name: jobs
+    dataframe: jobs
+    radius: 500
+    apply: np.log1p
+
+  - name: ave_income
+    dataframe: households
+    varname: income
+    radius: 500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
+
+  - aggregation: average
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Residential"
+    - sqft_price_res < 500
+    decay: flat
+    name: residential
+    radius: 2000
+    varname: sqft_price_res
+
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    name: retail
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    name: office
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    name: industrial
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Medical"
+    name: medical
+    radius: 2000
+    varname: sqft_price_nonres
+

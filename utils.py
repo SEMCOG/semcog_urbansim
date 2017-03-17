@@ -347,7 +347,7 @@ def run_developer(forms, agents, buildings, supply_fname, parcel_size,
                                buildings[supply_fname].sum(),
                                target_vacancy)
     print 'TODO: remove before result! target units', target_units
-    target_units = 110000
+    target_units = 350000
     
     print "{:,} feasible buildings before running developer".format(
           len(dev.feasibility))
@@ -392,6 +392,8 @@ def run_developer(forms, agents, buildings, supply_fname, parcel_size,
 
     print "{:,} feasible buildings after running developer".format(
           len(dev.feasibility))
+
+    new_buildings['owner_units'] = 0
 
     all_buildings = dev.merge(buildings.to_frame(buildings.local_columns),
                               new_buildings[buildings.local_columns])

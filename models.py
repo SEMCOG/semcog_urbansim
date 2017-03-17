@@ -284,8 +284,8 @@ def scheduled_development_events(buildings, iter_var):
         orca.add_table("buildings", all_buildings)
     
 @orca.step()
-def price_vars(net):
-    nodes = networks.from_yaml(net, "networks.yaml")
+def price_vars(net_walk):
+    nodes = networks.from_yaml(net_walk, "networks_walk.yaml")
     #nodes.residential=nodes.residential*1.2
     print nodes.describe()
     print pd.Series(nodes.index).describe()
@@ -433,32 +433,124 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
                         residential=False,
                         bldg_sqft_per_job=400.0)
             
+##@orca.step()
+##def build_networks(parcels):
+####  'mgf14_walk': {'cost1': 'meters',
+####                  'edges': 'edges_mgf14_walk',
+####                  'nodes': 'nodes_mgf14_walk'}
+##    network='mgf14_walk'
+##    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
+##    nodes, edges = st['nodes_'+network], st['edges_'+network]
+##    net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
+##                       edges[["feet"]])
+##    net.precompute(2000)
+##    orca.add_injectable("net", net)
+##    
+##    p = parcels.to_frame()
+##    p['x'] = p.centroid_x
+##    p['y'] = p.centroid_y
+##    p['_node_id'] = net.get_node_ids(p['x'], p['y'])
+##    orca.add_table("parcels", p)
+
+
+
 @orca.step()
 def build_networks(parcels):
-##  'mgf14_walk': {'cost1': 'meters',
-##                  'edges': 'edges_mgf14_walk',
-##                  'nodes': 'nodes_mgf14_walk'}
-    network='mgf14_walk'
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
-    nodes, edges = st['nodes_'+network], st['edges_'+network]
-    net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
-                       edges[["feet"]])
-    net.precompute(2000)
-    orca.add_injectable("net", net)
+
+    pdna.network.reserve_num_graphs(2)
+
+    #networks in semcog_networks.h5
+    dic_net = {'mgf14_drive':
+                       {'cost1': 'feet',
+                      'cost2': 'minutes',
+                      'edges': 'edges_mgf14_drive_full',
+                      'local_edges': 'edges_mgf14_drive_local',
+                      'local_nodes': 'nodes_mgf14_drive_local',
+                      'nodes': 'nodes_mgf14_drive_full'
+                        },
+             'mgf14_ext_drive':
+                   {'cost1': 'feet',
+                      'cost2': 'minutes',
+                      'edges': 'edges_mgf14_ext_drive_full',
+                      'local_edges': 'edges_mgf14_ext_drive_local',
+                      'local_nodes': 'nodes_mgf14_ext_drive_local',
+                      'nodes': 'nodes_mgf14_ext_drive_full'
+                    },
+             'mgf14_ext_walk':
+                   {'cost1': 'feet',
+                      'cost2': 'meters',
+                      'edges': 'edges_mgf14_ext_walk',
+                      'nodes': 'nodes_mgf14_ext_walk'
+                    },
+             'mgf14_walk':
+                   {'cost1': 'meters',
+                      'edges': 'edges_mgf14_walk',
+                      'nodes': 'nodes_mgf14_walk'
+                    },
+             'tdm':
+                   {'cost1': 'peak_mins',
+                      'cost2': 'nonpk_mins',
+                      'edges': 'edges_tdm_full',
+                      'local_edges': 'edges_tdm_local',
+                      'local_nodes': 'nodes_tdm_local',
+                      'nodes': 'nodes_tdm_full'
+                    },
+             'tdm_ext':
+                   {'cost1': 'peak_mins',
+                      'cost2': 'nonpk_mins',
+                      'edges': 'edges_tdm_ext_full',
+                      'local_edges': 'edges_tdm_ext_local',
+                      'local_nodes': 'nodes_tdm_ext_local',
+                      'nodes': 'nodes_tdm_ext_full'
+                    }
+               }
+
     
+    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
+
+    lstnet=[
+            {
+            'name':'mgf14_ext_walk',
+            'cost':'cost1',
+            'prev':10560, #2 miles
+            'net':'net_walk'
+            },
+            {
+            'name':'tdm_ext',
+            'cost':'cost1',
+            'prev':60,# 60 minutes
+            'net':'net_drv'
+            },
+            ]
+
+    for n in lstnet:
+        nodes, edges = st[dic_net[n['name']]['nodes']], st[dic_net[n['name']]['edges']]
+        net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
+                           edges[[dic_net[n['name']][n['cost']]]])
+        net.precompute(n['prev'])
+        net.init_pois(num_categories=10, max_dist=n['prev'], max_pois=3)
+                       
+        orca.add_injectable(n['net'], net)
+
+
+    #spatially join node ids to parcels    
     p = parcels.to_frame()
-    p['x'] = p.centroid_x
-    p['y'] = p.centroid_y
-    p['_node_id'] = net.get_node_ids(p['x'], p['y'])
+    p['nodeid_walk'] = orca.get_injectable('net_walk').get_node_ids(p['centroid_x'], p['centroid_y'])
+    p['nodeid_drv'] = orca.get_injectable('net_drv').get_node_ids(p['centroid_x'], p['centroid_y'])
     orca.add_table("parcels", p)
+
     
     
 @orca.step()
-def neighborhood_vars(net, jobs, households, buildings):
+def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(['large_area_id'])
-    j = jobs.to_frame(jobs.local_columns)
+    j = jobs.to_frame()
+    #j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
     idx_invalid_building_id = np.in1d(j.building_id,b.index.values)==False
+    #print j.large_area_id.head()
+    #print b.large_area_id.head()
+    
     if idx_invalid_building_id.sum() > 0:
         j.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,j[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
         orca.add_table("jobs", j)
@@ -466,10 +558,17 @@ def neighborhood_vars(net, jobs, households, buildings):
     if idx_invalid_building_id.sum() > 0:
         h.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,h[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
         orca.add_table("households", h)
-    nodes = networks.from_yaml(net, "networks.yaml")
+
+    nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
     print nodes.describe()
     print pd.Series(nodes.index).describe()
-    orca.add_table("nodes", nodes)
+    orca.add_table("nodes_walk", nodes)
+
+    nodes = networks.from_yaml(orca.get_injectable('net_drv'), "networks_drv.yaml")
+    print nodes.describe()
+    print pd.Series(nodes.index).describe()
+    orca.add_table("nodes_drv", nodes)
+
     
 @orca.step('gq_model') #group quarters
 def gq_model(iter_var, tazcounts2015gq, tazcounts2020gq, tazcounts2025gq, tazcounts2030gq, tazcounts2035gq, tazcounts2040gq):

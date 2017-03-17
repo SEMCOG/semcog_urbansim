@@ -1,0 +1,57 @@
+name: Neighborhood Accessibility Variables
+
+model_type: networks
+
+node_col: nodeid_drv
+
+variable_definitions:
+
+
+  - name: drv_30min_jobs
+    dataframe: jobs
+    radius: 30
+    apply: np.log1p
+
+  - name: drv_45min_jobs
+    dataframe: jobs
+    radius: 45
+    apply: np.log1p
+
+  - name: drv_60min_jobs
+    dataframe: jobs
+    radius: 60
+    apply: np.log1p
+
+  - name: drv_10min_pop
+    dataframe: households
+    varname: persons 
+    radius: 10
+    apply: np.log1p
+
+  - name: drv_20min_pop
+    dataframe: households
+    varname: persons 
+    radius: 20
+    apply: np.log1p
+
+  - name: drv_10min_retail_jobs
+    dataframe: jobs
+    filters:
+    - sector_id== 5
+    aggregation: count
+    radius: 10
+    decay: flat
+    apply: np.log1p
+
+  - name: elem_school_perf
+    dataframe: schools
+    varname: totalachievementindex    
+    filters:
+    - is_grade_school == True
+    aggregation: average
+    radius: 30
+    decay: exponential
+
+
+
+

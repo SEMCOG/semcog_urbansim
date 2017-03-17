@@ -1,0 +1,324 @@
+name: Neighborhood Accessibility Variables
+
+model_type: networks
+
+node_col: nodeid_walk
+
+variable_definitions:
+
+  - name: sum_residential_units
+    dataframe: buildings
+    varname: residential_units
+    radius: 500
+    apply: np.log1p
+
+  - name: sum_nonresidential_units
+    dataframe: buildings
+    varname: job_spaces
+    radius: 500
+    apply: np.log1p
+
+  - name: ave_unit_sqft
+    dataframe: buildings
+    filters:
+    - sqft_per_unit > 0
+    varname: sqft_per_unit
+    radius: 500
+    decay: flat
+    aggregation: average
+
+  - name: ave_lot_sqft
+    dataframe: buildings
+    varname: land_area
+    radius: 500
+    apply: np.log1p
+    decay: flat
+    aggregation: average
+
+  - name: population
+    dataframe: households
+    varname: persons
+    radius: 1500
+
+  - name: households
+    dataframe: households
+    radius: 1500
+    aggregation: count
+
+  - name: midinc_hhs
+    dataframe: households
+    filters:
+    - (income_quartile == 2) | (income_quartile == 3)
+    add_fields:
+    - income_quartile
+    varname: income_quartile
+    radius: 1500
+    aggregation: count
+
+  - name: lowinc_hhs
+    dataframe: households
+    filters:
+    - income_quartile == 1
+    add_fields:
+    - income_quartile
+    varname: income_quartile
+    radius: 1500
+    aggregation: count
+
+  - name: highinc_hhs
+    dataframe: households
+    filters:
+    - income_quartile == 4
+    add_fields:
+    - income_quartile
+    varname: income_quartile
+    radius: 1500
+    aggregation: count
+
+  - name: race_1_hhs
+    dataframe: households
+    filters:
+    - race_id == 1
+    varname: race_id
+    radius: 1500
+    aggregation: count
+
+  - name: race_2_hhs
+    dataframe: households
+    filters:
+    - race_id == 2
+    varname: race_id
+    radius: 1500
+    aggregation: count
+
+  - name: race_3_hhs
+    dataframe: households
+    filters:
+    - race_id == 3
+    varname: race_id
+    radius: 1500
+    aggregation: count
+
+  - name: race_4_hhs
+    dataframe: households
+    filters:
+    - race_id == 4
+    varname: race_id
+    radius: 1500
+    aggregation: count
+
+  - name: hhs_with_children
+    dataframe: households
+    filters:
+    - children > 0
+    varname: children
+    radius: 1500
+    aggregation: count
+
+  - name: sfdu
+    dataframe: buildings
+    filters:
+    - building_type_id == 17
+    add_fields:
+    - building_type_id
+    radius: 500
+    apply: np.log1p
+
+  - name: hhsize
+    dataframe: households
+    varname: persons
+    radius: 500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
+
+  - name: ave_income
+    dataframe: households
+    varname: income
+    filters:
+    - income >= 0
+    radius: 1500
+    aggregation: average
+    decay: flat
+    apply: np.log1p
+
+  - aggregation: average
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Residential"
+    - sqft_price_res < 500
+    decay: flat
+    name: residential
+    radius: 2000
+    varname: sqft_price_res
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    name: retail
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    name: office
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    name: industrial
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Medical"
+    name: medical
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - name: max_industrial_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 5
+    aggregation: max
+
+  - name: max_office_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 3
+    aggregation: max
+
+  - name: max_retail_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 2
+    aggregation: max
+
+
+  - name: max_medical_far
+    dataframe: parcels
+    varname: parcel_far
+    radius: 5000
+    filters:
+    - land_use_type_id == 8
+    aggregation: max
+
+  - name: jobs
+    dataframe: jobs
+    aggregation: count
+    radius: 1500
+
+  - name: retail_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 5
+    aggregation: count
+    radius: 1500
+
+  - name: node_r1500_sqft
+    dataframe: parcels
+    varname: parcel_sqft
+    radius: 1500
+    aggregation: sum
+ 
+  - aggregation: average
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Residential"
+    - sqft_price_res < 500
+    decay: flat
+    name: residential
+    radius: 2000
+    varname: sqft_price_res
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - (general_type =="Retail") | (general_type =="Office") | (general_type =="Industrial")|(general_type =="Medical")
+    name: ave_nonres_sqft_price
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    name: retail
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    name: office
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    name: industrial
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: average
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Medical"
+    name: medical
+    radius: 2000
+    varname: sqft_price_nonres
+
+  - aggregation: count
+    name: quarter_mile_to_transit
+    dataframe: transit_stops
+    radius: 1320
+ 
+
