@@ -539,34 +539,37 @@ def build_networks(parcels):
     p['nodeid_drv'] = orca.get_injectable('net_drv').get_node_ids(p['centroid_x'], p['centroid_y'])
     orca.add_table("parcels", p)
 
-    
-    
+
 @orca.step()
 def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(['large_area_id'])
     j = jobs.to_frame()
-    #j = jobs.to_frame(jobs.local_columns)
+    # j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
-    idx_invalid_building_id = np.in1d(j.building_id,b.index.values)==False
-    #print j.large_area_id.head()
-    #print b.large_area_id.head()
-    
+    idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
+    # print j.large_area_id.head()
+    # print b.large_area_id.head()
+
     if idx_invalid_building_id.sum() > 0:
-        j.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,j[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
+        j.building_id[idx_invalid_building_id] = np.random.choice(
+            b[np.in1d(b.large_area_id, j[idx_invalid_building_id].large_area_id)].index.values,
+            idx_invalid_building_id.sum())
         orca.add_table("jobs", j)
-    idx_invalid_building_id = np.in1d(h.building_id,b.index.values)==False
+    idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
-        h.building_id[idx_invalid_building_id] = np.random.choice(b[np.in1d(b.large_area_id,h[idx_invalid_building_id].large_area_id)].index.values,idx_invalid_building_id.sum())
+        h.building_id[idx_invalid_building_id] = np.random.choice(
+            b[np.in1d(b.large_area_id, h[idx_invalid_building_id].large_area_id)].index.values,
+            idx_invalid_building_id.sum())
         orca.add_table("households", h)
 
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
-    print nodes.describe()
-    print pd.Series(nodes.index).describe()
+    # print nodes.describe()
+    # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_walk", nodes)
 
     nodes = networks.from_yaml(orca.get_injectable('net_drv'), "networks_drv.yaml")
-    print nodes.describe()
-    print pd.Series(nodes.index).describe()
+    # print nodes.describe()
+    # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_drv", nodes)
 
     
