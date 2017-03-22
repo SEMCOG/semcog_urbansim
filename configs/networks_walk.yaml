@@ -320,5 +320,41 @@ variable_definitions:
     name: quarter_mile_to_transit
     dataframe: transit_stops
     radius: 1320
+
+  - name: walk_15min_retail_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 5
+    aggregation: count
+    radius: 15
+    decay: flat
+    apply: np.log1p
+
+  - name: walk_15min_shopping_jobs
+    dataframe: jobs
+    filters:
+    - (sector_id == 16) | (sector_id == 5)
+    aggregation: count
+    radius: 15
+    decay: flat
+    apply: np.log1p
+
+  - name: walk_30min_retail_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 5
+    aggregation: count
+    radius: 30
+    decay: flat
+    apply: np.log1p
+
+  - name: walk_30min_shopping_jobs
+    dataframe: jobs
+    filters:
+    - (sector_id == 16) | (sector_id == 5)
+    aggregation: count
+    radius: 30
+    decay: flat
+    apply: np.log1p
  
 

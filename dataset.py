@@ -29,16 +29,18 @@ def buildings(store):
     buildings['sqft_price_nonres'] = buildings.improvement_value*1.0 / 0.7 / buildings.non_residential_sqft
     buildings.sqft_price_nonres[buildings.sqft_price_nonres==np.inf] = 0
     buildings['sqft_price_res'] = buildings.improvement_value*1.25 / 0.7 / (buildings.sqft_per_unit * buildings.residential_units)
-    buildings.sqft_price_res[buildings.sqft_price_res==np.inf] = 0
+    buildings.loc[buildings.sqft_price_res == np.inf, 'sqft_price_res'] = 0
     buildings.fillna(0, inplace=True)
     return buildings
 
 @orca.table()
 def households(store):
     df = store['households']
-    df.building_id[df.building_id==-1] = np.random.choice(store.buildings.index.values,(df.building_id==-1).sum())
-    idx_invalid_building_id = np.in1d(df.building_id,store.buildings.index.values)==False
-    df.building_id[idx_invalid_building_id] = np.random.choice(store.buildings.index.values,idx_invalid_building_id.sum())
+    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(store.buildings.index.values,
+                                                                   (df.building_id == -1).sum())
+    idx_invalid_building_id = np.in1d(df.building_id, store.buildings.index.values) == False
+    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(store.buildings.index.values,
+                                                                      idx_invalid_building_id.sum())
     return df
     
 @orca.table()
@@ -194,12 +196,12 @@ for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcoun
     orca.add_table(gq_tbl, empty_df)
 
 # this specifies the relationships between tables
-#orca.broadcast('nodes_walk', 'buildings', cast_index=True, onto_on='nodeid_walk')
-#orca.broadcast('nodes_walk', 'parcels', cast_index=True, onto_on='nodeid_walk')
-#orca.broadcast('nodes_drv', 'buildings', cast_index=True, onto_on='nodeid_drv')
-#orca.broadcast('nodes_drv', 'parcels', cast_index=True, onto_on='nodeid_drv')
-#orca.broadcast('transit_to_jobs_am', 'parcels', cast_index=True, onto_on='nodeid_walk')
-#orca.broadcast('transit_to_jobs_midday', 'parcels', cast_index=True, onto_on='nodeid_walk')
+orca.broadcast('nodes_walk', 'buildings', cast_index=True, onto_on='nodeid_walk')
+orca.broadcast('nodes_walk', 'parcels', cast_index=True, onto_on='nodeid_walk')
+orca.broadcast('nodes_drv', 'buildings', cast_index=True, onto_on='nodeid_drv')
+orca.broadcast('nodes_drv', 'parcels', cast_index=True, onto_on='nodeid_drv')
+# orca.broadcast('transit_to_jobs_am', 'parcels', cast_index=True, onto_on='nodeid_walk')
+# orca.broadcast('transit_to_jobs_midday', 'parcels', cast_index=True, onto_on='nodeid_walk')
 orca.broadcast('parcels', 'buildings', cast_index=True, onto_on='parcel_id')
 orca.broadcast('buildings', 'households', cast_index=True, onto_on='building_id')
 orca.broadcast('buildings', 'jobs', cast_index=True, onto_on='building_id')

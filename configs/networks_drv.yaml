@@ -34,12 +34,39 @@ variable_definitions:
     radius: 20
     apply: np.log1p
 
-  - name: drv_10min_retail_jobs
+  - name: drv_15min_retail_jobs
     dataframe: jobs
     filters:
-    - sector_id== 5
+    - sector_id == 5
     aggregation: count
-    radius: 10
+    radius: 15
+    decay: flat
+    apply: np.log1p
+
+  - name: drv_15min_shopping_jobs
+    dataframe: jobs
+    filters:
+    - (sector_id == 16) | (sector_id == 5)
+    aggregation: count
+    radius: 15
+    decay: flat
+    apply: np.log1p
+
+  - name: drv_30min_retail_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 5
+    aggregation: count
+    radius: 30
+    decay: flat
+    apply: np.log1p
+
+  - name: drv_30min_shopping_jobs
+    dataframe: jobs
+    filters:
+    - (sector_id == 16) | (sector_id == 5)
+    aggregation: count
+    radius: 30
     decay: flat
     apply: np.log1p
 
