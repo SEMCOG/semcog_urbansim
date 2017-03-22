@@ -1,11 +1,6 @@
-import pandas as pd, numpy as np
-from urbansim.utils import misc
-import dataset
-
-###
 import orca
-import utils
-import pandana as pdna
+import pandas as pd
+from urbansim.utils import misc
 
 
 #####################
@@ -34,7 +29,10 @@ def allowed(parcels):
     return df.allowed
 
 
-def parcel_average_price(use):
+def parcel_average_price(use, parcels):
+    if len(orca.get_table('nodes_walk')) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_walk')[use],
                         orca.get_table('parcels').nodeid_walk)
 
@@ -50,8 +48,7 @@ def parcel_is_allowed(form):
     allowed = [(zoning['type%d' % typ] > 0)
                for typ in form_to_btype[form]]
 
-    s = pd.concat(allowed, axis=1).max(axis=1). \
-        reindex(orca.get_table('parcels').index).fillna(False)
+    s = pd.concat(allowed, axis=1).max(axis=1).reindex(orca.get_table('parcels').index).fillna(False)
 
     return s.astype("bool") & (~lone_house).reindex(zoning.index, fill_value=True)
     # return s.astype("bool")
@@ -120,7 +117,7 @@ def total_sqft(parcels, buildings):
 def land_cost(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         return pd.Series(index=parcels.index)
-    return (parcels.total_sqft * parcel_average_price("residential")). \
+    return (parcels.total_sqft * parcel_average_price("residential", parcels)). \
         reindex(parcels.index).fillna(0)
 
 
@@ -129,17 +126,9 @@ def parcel_far(parcels):
     return (parcels.total_sqft / parcels.parcel_sqft).fillna(0)
 
 
-def parcel_average_price(use):
-    if len(orca.get_table('nodes_walk')) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk')[use],
-                        orca.get_table('parcels').nodeid_walk)
-
-
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def school_district_achievement(parcels, schools):
-    return misc.reindex(parcels['school_id'], schools.to_frame(['dcode', 'totalachievementindex']). \
+    return misc.reindex(parcels['school_id'], schools.to_frame(['dcode', 'totalachievementindex']).
                         groupby('dcode').totalachievementindex.mean())
 
 

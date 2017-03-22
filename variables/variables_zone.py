@@ -1,11 +1,6 @@
-import pandas as pd, numpy as np
-from urbansim.utils import misc
-import dataset
-
-###
+import numpy as np
 import orca
-import utils
-import pandana as pdna
+import pandas as pd
 
 
 #####################
@@ -13,7 +8,7 @@ import pandana as pdna
 #####################
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def popden(zones, parcels, households):
+def popden(parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
 
@@ -28,18 +23,18 @@ def popden(zones, parcels, households):
 ##                                  30, agg=np.sum)
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def households(zones, households):
+def households(households):
     print type(households)
     return households.zone_id.groupby(households.zone_id).size()
 
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def population(zones, households):
+def population(households):
     return households.persons.groupby(households.zone_id).sum()
 
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def employment(zones, jobs, travel_data):
+def employment(jobs, travel_data):
     td = travel_data.to_frame()
     zone_ids = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({'zone_id': jobs.zone_id})
@@ -47,7 +42,7 @@ def employment(zones, jobs, travel_data):
 
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def retail_jobs(zones, jobs, travel_data):
+def retail_jobs(jobs, travel_data):
     td = travel_data.to_frame()
     zone_ids = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({'zone_id': jobs.zone_id})
@@ -55,7 +50,7 @@ def retail_jobs(zones, jobs, travel_data):
 
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def empden(zones, parcels, households):
+def empden(zones, parcels,):
     return zones.employment / parcels.acres.groupby(parcels.zone_id).sum()
 
 

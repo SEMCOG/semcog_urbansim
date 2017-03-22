@@ -1,11 +1,4 @@
-import pandas as pd, numpy as np
-from urbansim.utils import misc
-import dataset
-
-###
 import orca
-import utils
-import pandana as pdna
 
 
 #####################
@@ -27,7 +20,7 @@ def nodeid_drv(schools):
 
 
 @orca.column('schools', cache=True, cache_scope='iteration')
-def nodeid_walk(schools, parcels):
+def nodeid_walk(schools):
     return orca.get_injectable('net_walk').get_node_ids(schools['point_x'], schools['point_y'])
 
 
@@ -45,42 +38,42 @@ def get_nearest(net, dfpoi, cats, searchdis, numpoi, maxdis):
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_hospital(nodes_drv, poi):
+def drv_nearest_hospital(poi):
     cats = ['Hospitals']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_grocery(nodes_drv, poi):
+def drv_nearest_grocery(poi):
     cats = ['GroceryStores']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_healthcenter(nodes_drv, poi):
+def drv_nearest_healthcenter(poi):
     cats = ['HealthCenters']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_library(nodes_drv, poi):
+def drv_nearest_library(poi):
     cats = ['Libraries']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_park(nodes_drv, poi):
+def drv_nearest_park(poi):
     cats = ['Park_Entrance_points']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
 
 
 @orca.column('nodes_drv', cache=True, cache_scope='iteration')
-def drv_nearest_urgentcare(nodes_drv, poi):
+def drv_nearest_urgentcare(poi):
     cats = ['UrgentCare']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_drv'), t, cats, 15, 1, 16)
@@ -92,7 +85,7 @@ def drv_nearest_urgentcare(nodes_drv, poi):
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_hospital(nodes_walk, poi):
+def walk_nearest_hospital(poi):
     cats = ['Hospitals']
     t = poi.to_frame()[poi.category.isin(cats)]
     print 't', t
@@ -100,35 +93,35 @@ def walk_nearest_hospital(nodes_walk, poi):
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_grocery(nodes_walk, poi):
+def walk_nearest_grocery(poi):
     cats = ['GroceryStores']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_healthcenter(nodes_walk, poi):
+def walk_nearest_healthcenter(poi):
     cats = ['HealthCenters']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_library(nodes_walk, poi):
+def walk_nearest_library(poi):
     cats = ['Libraries']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_park(nodes_walk, poi):
+def walk_nearest_park(poi):
     cats = ['Park_Entrance_points']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
-def walk_nearest_urgentcare(nodes_walk, poi):
+def walk_nearest_urgentcare(poi):
     cats = ['UrgentCare']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
