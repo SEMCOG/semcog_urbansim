@@ -120,9 +120,63 @@ def parcel_sqft(buildings, parcels):
 def school_district_achievement(buildings, parcels):
     return misc.reindex(parcels.school_district_achievement, buildings.parcel_id)
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def crime_ucr_rate(buildings, parcels):
+    return misc.reindex(parcels.crime_ucr_rate, buildings.parcel_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def crime_other_rate(buildings, parcels):
+    return misc.reindex(parcels.crime_other_rate, buildings.parcel_id).fillna(0)
+
+### accessibilities auto
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_hospital(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_hospital, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_healthcenter(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_healthcenter, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_grocery(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_grocery, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_urgentcare(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_urgentcare, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_library(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_library, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def drv_nearest_park(buildings, parcels):
+    return misc.reindex(parcels.drv_nearest_park, buildings.parcel_id)
 
 
+### accessibilities walk
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_hospital(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_hospital, buildings.parcel_id)
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_grocery(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_grocery, buildings.parcel_id)
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_healthcenter(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_healthcenter, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_urgentcare(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_urgentcare, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_library(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_library, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def walk_nearest_park(buildings, parcels):
+    return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
 
 
