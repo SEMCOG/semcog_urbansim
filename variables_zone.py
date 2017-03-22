@@ -92,26 +92,26 @@ def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
     return zones.logsum_var
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def logsum_pop_more_worker_than_car(zones, travel_data):
-    name_attribute = 'logsum0'
+def logsum_pop_high_income(zones, travel_data):
+    name_attribute = 'am_work_highinc_logsum'
     spatial_var = 'population'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def logsum_pop_less_worker_than_car(zones, travel_data):
-    name_attribute = 'logsum1'
+def logsum_pop_low_income(zones, travel_data):
+    name_attribute = 'am_work_lowinc_logsum'
     spatial_var = 'population'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def logsum_work_more_worker_than_car(zones, travel_data):
-    name_attribute = 'logsum0'
+def logsum_job_high_income(zones, travel_data):
+    name_attribute = 'am_work_highinc_logsum'
     spatial_var = 'employment'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
 @orca.column('zones', cache=True, cache_scope='iteration')
-def logsum_work_less_worker_than_car(zones, travel_data):
-    name_attribute = 'logsum1'
+def logsum_job_low_income(zones, travel_data):
+    name_attribute = 'am_work_lowinc_logsum'
     spatial_var = 'employment'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
