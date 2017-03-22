@@ -69,52 +69,33 @@ def elcm_estimate(jobs, buildings, nodes):
                               buildings, nodes)
     return utils.lcm_estimate("elcm161.yaml", jobs, "building_id",
                               buildings, nodes)
-                            
+
+
 @orca.step()
 def elcm_simulate(jobs, buildings, nodes):
     jobs_df = jobs.to_frame()
-    jobs3 = jobs_df[jobs_df.lid==3]
-    jobs5 = jobs_df[jobs_df.lid==5]
-    jobs93 = jobs_df[jobs_df.lid==93]
-    jobs99 = jobs_df[jobs_df.lid==99]
-    jobs115 = jobs_df[jobs_df.lid==115]
-    jobs125 = jobs_df[jobs_df.lid==125]
-    jobs147 = jobs_df[jobs_df.lid==147]
-    jobs161 = jobs_df[jobs_df.lid==161]
-
     buildings = buildings.to_frame()
-    buildings3 = buildings[buildings.large_area_id==3]
-    buildings5 = buildings[buildings.large_area_id==5]
-    buildings93 = buildings[buildings.large_area_id==93]
-    buildings99 = buildings[buildings.large_area_id==99]
-    buildings115 = buildings[buildings.large_area_id==115]
-    buildings125 = buildings[buildings.large_area_id==125]
-    buildings147 = buildings[buildings.large_area_id==147]
-    buildings161 = buildings[buildings.large_area_id==161]
-    
+
     def register_broadcast_simulate_segment(jobs_df_name, jobs_df, buildings_df_name, buildings_df, yaml_name):
-        orca.add_table(jobs_df_name,jobs_df)
-        orca.add_table(buildings_df_name,buildings_df)
+        orca.add_table(jobs_df_name, jobs_df)
+        orca.add_table(buildings_df_name, buildings_df)
         orca.broadcast('nodes', buildings_df_name, cast_index=True, onto_on='_node_id')
         orca.broadcast('parcels', buildings_df_name, cast_index=True, onto_on='parcel_id')
         orca.broadcast(buildings_df_name, jobs_df_name, cast_index=True, onto_on='building_id')
         jobs_df = orca.get_table(jobs_df_name)
         buildings_df = orca.get_table(buildings_df_name)
         utils.lcm_simulate(yaml_name, jobs_df, buildings_df, nodes,
-                                  "building_id", "job_spaces",
-                                  "vacant_job_spaces")
+                           "building_id", "job_spaces",
+                           "vacant_job_spaces")
         jobs.update_col_from_series('building_id',
                                     pd.Series(jobs_df.building_id.values, index=jobs_df.index.values))
-    control_segments = (['jobs3',jobs3,'buildings3',buildings3,'elcm3.yaml'],
-                        ['jobs5',jobs5,'buildings5',buildings5,'elcm5.yaml'],
-                        ['jobs93',jobs93,'buildings93',buildings93,'elcm93.yaml'],
-                        ['jobs99',jobs99,'buildings99',buildings99,'elcm99.yaml'],
-                        ['jobs115',jobs115,'buildings115',buildings115,'elcm115.yaml'],
-                        ['jobs125',jobs125,'buildings125',buildings125,'elcm125.yaml'],
-                        ['jobs147',jobs147,'buildings147',buildings147,'elcm147.yaml'],
-                        ['jobs161',jobs161,'buildings161',buildings161,'elcm161.yaml'],)
-    for csegment in control_segments:
-        register_broadcast_simulate_segment(csegment[0],csegment[1],csegment[2],csegment[3],csegment[4])
+
+    for large_area_id in [3, 5, 93, 99, 115, 125, 147, 161]:
+        str_id = str(large_area_id)
+        register_broadcast_simulate_segment('jobs' + str_id, jobs_df[jobs_df.lid == large_area_id],
+                                            'buildings' + str_id, buildings[buildings.large_area_id == large_area_id],
+                                            'elcm' + str_id + '.yaml')
+
 
 @orca.step()
 def households_relocation(households, annual_relocation_rates_for_households):
