@@ -18,36 +18,44 @@ import pandana as pdna
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def income_quartile(households):
-    return pd.Series(pd.qcut(households.income, 4,labels=False),
+    return pd.Series(pd.qcut(households.income, 4, labels=False),
                      index=households.index) + 1
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def zone_id(households, buildings):
     return misc.reindex(buildings.zone_id, households.building_id)
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def x(households, buildings):
     return misc.reindex(buildings.x, households.building_id)
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def y(households, buildings):
     return misc.reindex(buildings.y, households.building_id)
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def large_area(households, buildings):
     return misc.reindex(buildings.large_area_id, households.building_id)
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def large_area_id(households, buildings):
     return misc.reindex(buildings.large_area_id, households.building_id)
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def lid(households):
     return households.large_area_id
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def nodeid_walk(households, buildings):
     return misc.reindex(buildings.nodeid_walk, households.building_id)
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def nodeid_drv(households, buildings):
@@ -65,13 +73,3 @@ def zone_id(persons, households):
 ##@orca.column('persons', 'school_district_id', cache=True)
 ##def school_district_id(persons, households):
 ##    return misc.reindex(households.school_district_id, persons.household_id)
-
-
-
-
-
-
-
-
-
-

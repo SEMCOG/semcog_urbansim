@@ -16,13 +16,16 @@ import pandana as pdna
 def acres(parcels):
     return parcels.parcel_sqft / 43560
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def x(parcels):
     return parcels.centroid_x
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def y(parcels):
     return parcels.centroid_y
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def allowed(parcels):
@@ -47,7 +50,7 @@ def parcel_is_allowed(form):
     allowed = [(zoning['type%d' % typ] > 0)
                for typ in form_to_btype[form]]
 
-    s = pd.concat(allowed, axis=1).max(axis=1).\
+    s = pd.concat(allowed, axis=1).max(axis=1). \
         reindex(orca.get_table('parcels').index).fillna(False)
 
     return s.astype("bool") & (~lone_house).reindex(zoning.index, fill_value=True)
@@ -86,6 +89,7 @@ def pct_undev(parcels):
 def parcel_size(parcels):
     return parcels.parcel_sqft
 
+
 @orca.column('parcels')
 def ave_unit_size(parcels, nodes_walk):
     if len(nodes_walk) == 0:
@@ -93,43 +97,49 @@ def ave_unit_size(parcels, nodes_walk):
         return pd.Series(index=parcels.index)
     return misc.reindex(nodes_walk.ave_unit_sqft, parcels.nodeid_walk)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def total_units(parcels, buildings):
-    return buildings.residential_units.groupby(buildings.parcel_id).sum().\
+    return buildings.residential_units.groupby(buildings.parcel_id).sum(). \
         reindex(parcels.index).fillna(0)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def total_job_spaces(parcels, buildings):
-    return buildings.job_spaces.groupby(buildings.parcel_id).sum().\
+    return buildings.job_spaces.groupby(buildings.parcel_id).sum(). \
         reindex(parcels.index).fillna(0)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def total_sqft(parcels, buildings):
-    return buildings.building_sqft.groupby(buildings.parcel_id).sum().\
+    return buildings.building_sqft.groupby(buildings.parcel_id).sum(). \
         reindex(parcels.index).fillna(0)
+
 
 @orca.column('parcels')
 def land_cost(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         return pd.Series(index=parcels.index)
-    return (parcels.total_sqft * parcel_average_price("residential")).\
+    return (parcels.total_sqft * parcel_average_price("residential")). \
         reindex(parcels.index).fillna(0)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def parcel_far(parcels):
-    return (parcels.total_sqft/parcels.parcel_sqft).fillna(0)
+    return (parcels.total_sqft / parcels.parcel_sqft).fillna(0)
 
 
 def parcel_average_price(use):
     if len(orca.get_table('nodes_walk')) == 0:
         # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)    
+        return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_walk')[use],
                         orca.get_table('parcels').nodeid_walk)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def school_district_achievement(parcels, schools):
-    return misc.reindex(parcels['school_id'], schools.to_frame(['dcode', 'totalachievementindex']).\
+    return misc.reindex(parcels['school_id'], schools.to_frame(['dcode', 'totalachievementindex']). \
                         groupby('dcode').totalachievementindex.mean())
 
 
@@ -141,6 +151,7 @@ def drv_nearest_hospital(parcels, nodes_drv):
     return misc.reindex(orca.get_table('nodes_drv').drv_nearest_hospital,
                         parcels.nodeid_drv)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def drv_nearest_healthcenter(parcels, nodes_drv):
     if len(nodes_drv) == 0:
@@ -148,6 +159,7 @@ def drv_nearest_healthcenter(parcels, nodes_drv):
         return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_drv').drv_nearest_healthcenter,
                         parcels.nodeid_drv)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def drv_nearest_grocery(parcels, nodes_drv):
@@ -157,6 +169,7 @@ def drv_nearest_grocery(parcels, nodes_drv):
     return misc.reindex(orca.get_table('nodes_drv').drv_nearest_grocery,
                         parcels.nodeid_drv)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def drv_nearest_urgentcare(parcels, nodes_drv):
     if len(nodes_drv) == 0:
@@ -165,6 +178,7 @@ def drv_nearest_urgentcare(parcels, nodes_drv):
     return misc.reindex(orca.get_table('nodes_drv').drv_nearest_urgentcare,
                         parcels.nodeid_drv)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def drv_nearest_library(parcels, nodes_drv):
     if len(nodes_drv) == 0:
@@ -172,6 +186,7 @@ def drv_nearest_library(parcels, nodes_drv):
         return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_drv').drv_nearest_library,
                         parcels.nodeid_drv)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def drv_nearest_park(parcels, nodes_drv):
@@ -182,14 +197,14 @@ def drv_nearest_park(parcels, nodes_drv):
                         parcels.nodeid_drv)
 
 
-
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def walk_nearest_hospital(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_walk').walk_nearest_hospital,
-                        parcels.nodeid_walk)  
+                        parcels.nodeid_walk)
+
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def walk_nearest_grocery(parcels, nodes_walk):
@@ -197,7 +212,7 @@ def walk_nearest_grocery(parcels, nodes_walk):
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_walk').walk_nearest_grocery,
-                        parcels.nodeid_walk)  
+                        parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -226,13 +241,14 @@ def walk_nearest_library(parcels, nodes_walk):
     return misc.reindex(orca.get_table('nodes_walk').walk_nearest_library,
                         parcels.nodeid_walk)
 
+
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def walk_nearest_park(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
     return misc.reindex(orca.get_table('nodes_walk').walk_nearest_park,
-                        parcels.nodeid_walk)  
+                        parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='forever')
@@ -243,11 +259,3 @@ def crime_ucr_rate(crime_rates):
 @orca.column('parcels', cache=True, cache_scope='forever')
 def crime_other_rate(crime_rates):
     return crime_rates['other_crime_rate']
-
-
-
-
-
-
-
-
