@@ -45,7 +45,7 @@ def employment(jobs, travel_data):
 def retail_jobs(jobs, travel_data):
     td = travel_data.to_frame()
     zone_ids = np.unique(td.reset_index().to_zone_id)
-    j = pd.DataFrame({'zone_id': jobs.zone_id})
+    j = pd.DataFrame({'zone_id': jobs.zone_id, 'sector_id': jobs.sector_id})
     return j.loc[j.sector_id == 5, :].groupby('zone_id').size().reindex(index=zone_ids).fillna(0)
 
 

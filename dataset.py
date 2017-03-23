@@ -28,6 +28,7 @@ def buildings(store):
     buildings = store['buildings']
     buildings['sqft_price_nonres'] = buildings.improvement_value*1.0 / 0.7 / buildings.non_residential_sqft
     buildings.sqft_price_nonres[buildings.sqft_price_nonres==np.inf] = 0
+    buildings.loc[buildings.sqft_price_nonres==np.inf,'sqft_price_nonres'] = 0
     buildings['sqft_price_res'] = buildings.improvement_value*1.25 / 0.7 / (buildings.sqft_per_unit * buildings.residential_units)
     buildings.loc[buildings.sqft_price_res == np.inf, 'sqft_price_res'] = 0
     buildings.fillna(0, inplace=True)
