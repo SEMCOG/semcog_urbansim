@@ -35,135 +35,17 @@ def households(store):
     return df
 
 
-@orca.table()
-def jobs(store):
-    return store['jobs']
-
-
-@orca.table()
-def persons(store):
-    return store['persons']
-
-
-@orca.table()
-def parcels(store):
-    return store['parcels']
-
-
-@orca.table()
-def zones(store):
-    return store['zones']
-
-
-@orca.table()
-def cities(store):
-    return store['cities']
-
-
-@orca.table()
-def counties(store):
-    return store['counties']
-
-
-@orca.table()
-def employment_sectors(store):
-    return store['employment_sectors']
-
-
-@orca.table()
-def home_based_status(store):
-    return store['home_based_status']
-
-
-@orca.table()
-def target_vacancies(store):
-    return store['target_vacancies']
-
-
-@orca.table()
-def building_sqft_per_job(store):
-    return store['building_sqft_per_job']
-
-
-@orca.table()
-def annual_relocation_rates_for_households(store):
-    return store['annual_relocation_rates_for_households']
-
-
-@orca.table()
-def annual_relocation_rates_for_jobs(store):
-    return store['annual_relocation_rates_for_jobs']
-
-
-@orca.table()
-def annual_household_control_totals(store):
-    return store['annual_household_control_totals']
-
-
-@orca.table()
-def annual_employment_control_totals(store):
-    return store['annual_employment_control_totals']
-
-
-@orca.table()
-def travel_data(store):
-    return store['travel_data']
-
-
-@orca.table()
-def zoning(store):
-    return store['zoning']
-
-
-@orca.table()
-def large_areas(store):
-    return store['large_areas']
-
-
-@orca.table()
-def building_types(store):
-    return store['building_types']
-
-
-@orca.table()
-def land_use_types(store):
-    return store['land_use_types']
-
-
-@orca.table()
-def access_drive_minutes(store):
-    return store['access_drive_minutes']
-
-
-@orca.table()
-def access_walk_feet(store):
-    return store['access_walk_feet']
-
-
-@orca.table()
-def transit_stops(store):
-    return store['transit_stops']
-
-
-@orca.table()
-def crime_rates(store):
-    return store['crime_rates']
-
-
-@orca.table()
-def schools(store):
-    return store['schools']
-
-
-@orca.table()
-def poi(store):
-    return store['poi']
-
+for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'employment_sectors', 'home_based_status',
+             'target_vacancies', 'building_sqft_per_job', 'annual_relocation_rates_for_households',
+             'annual_relocation_rates_for_jobs', 'annual_household_control_totals', 'annual_employment_control_totals',
+             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types', 'access_drive_minutes',
+             'access_walk_feet', 'transit_stops', 'crime_rates', 'schools', 'poi', ]:
+    orca.add_table(name, lambda store: store[name])
 
 # these are dummy returns that last until accessibility runs
-for gq_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
+for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
     empty_df = pd.DataFrame()
-    orca.add_table(gq_tbl, empty_df)
+    orca.add_table(node_tbl, empty_df)
 
 # GQ placeholders
 for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq',
