@@ -4,6 +4,8 @@ import numpy as np
 import orca
 import pandas as pd
 
+import assumptions
+
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 
@@ -40,7 +42,8 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'emplo
              'annual_relocation_rates_for_jobs', 'annual_household_control_totals', 'annual_employment_control_totals',
              'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types', 'access_drive_minutes',
              'access_walk_feet', 'transit_stops', 'crime_rates', 'schools', 'poi', ]:
-    orca.add_table(name, lambda store: store[name])
+    store = orca.get_injectable("store")
+    orca.add_table(name, store[name])
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
