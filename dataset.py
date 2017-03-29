@@ -18,7 +18,6 @@ def scheduled_development_events():
 def buildings(store):
     df = store['buildings']
     df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
-    df.sqft_price_nonres[df.sqft_price_nonres == np.inf] = 0
     df.loc[df.sqft_price_nonres == np.inf, 'sqft_price_nonres'] = 0
     df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit * df.residential_units)
     df.loc[df.sqft_price_res == np.inf, 'sqft_price_res'] = 0
@@ -31,7 +30,7 @@ def households(store):
     df = store['households']
     df.loc[df.building_id == -1, 'building_id'] = np.random.choice(store.buildings.index.values,
                                                                    (df.building_id == -1).sum())
-    idx_invalid_building_id = np.in1d(df.building_id, store.buildings.index.values) is False
+    idx_invalid_building_id = np.in1d(df.building_id, store.buildings.index.values) == False
     df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(store.buildings.index.values,
                                                                       idx_invalid_building_id.sum())
     return df
