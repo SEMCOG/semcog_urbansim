@@ -399,3 +399,198 @@ def run_developer(forms, agents, buildings, supply_fname, parcel_size,
                               new_buildings[buildings.local_columns])
 
     orca.add_table("buildings", all_buildings)
+
+
+def random_choices(model, choosers, alternatives):
+    """
+    Simulate choices using random choice, weighted by probability
+    but not capacity constrained.
+    Parameters
+    ----------
+    model : SimulationChoiceModel
+        Fitted model object.
+    choosers : pandas.DataFrame
+        DataFrame of choosers.
+    alternatives : pandas.DataFrame
+        DataFrame of alternatives.
+    Returns
+    -------
+    choices : pandas.Series
+        Mapping of chooser ID to alternative ID.
+    """
+    probabilities = model.calculate_probabilities(choosers, alternatives)
+    choices = np.random.choice(
+        probabilities.index, size=len(choosers), replace=True, p=probabilities.values)
+    return pd.Series(choices, index=choosers.index)
+
+
+def unit_choices(model, choosers, alternatives):
+    """
+    Simulate choices using unit choice.  Alternatives table is expanded
+    to be of length alternatives.vacant_variables, then choices are simulated
+    from among the universe of vacant units, respecting alternative capacity.
+    Parameters
+    ----------
+    model : SimulationChoiceModel
+        Fitted model object.
+    choosers : pandas.DataFrame
+        DataFrame of choosers.
+    alternatives : pandas.DataFrame
+        DataFrame of alternatives.
+    Returns
+    -------
+    choices : pandas.Series
+        Mapping of chooser ID to alternative ID.
+    """
+    supply_variable, vacant_variable = model.supply_variable, model.vacant_variable
+    
+    available_units = alternatives[supply_variable]
+    vacant_units = alternatives[vacant_variable]
+    vacant_units = vacant_units[vacant_units.index.values >= 0]  ## must have positive index 
+
+    print "There are %d total available units" % available_units.sum()
+    print "    and %d total choosers" % len(choosers)
+    print "    but there are %d overfull alternatives" % \
+          len(vacant_units[vacant_units < 0])
+
+    vacant_units = vacant_units[vacant_units > 0]
+
+    indexes = np.repeat(vacant_units.index.values,
+                        vacant_units.values.astype('int'))
+    isin = pd.Series(indexes).isin(alternatives.index)
+    missing = len(isin[isin == False])
+    indexes = indexes[isin.values]
+    units = alternatives.loc[indexes].reset_index()
+
+    print "    for a total of %d temporarily empty units" % vacant_units.sum()
+    print "    in %d alternatives total in the region" % len(vacant_units)
+
+    if missing > 0:
+        print "WARNING: %d indexes aren't found in the locations df -" % \
+            missing
+        print "    this is usually because of a few records that don't join "
+        print "    correctly between the locations df and the aggregations tables"
+
+    print "There are %d total movers for this LCM" % len(choosers)
+    
+    if len(choosers) > vacant_units.sum():
+        print "WARNING: Not enough locations for movers"
+        print "    reducing locations to size of movers for performance gain"
+        choosers = choosers.head(vacant_units.sum())
+        
+    choices = model.predict(choosers, units, debug=True)
+        
+    return pd.Series(units.loc[choices.values][model.choice_column].values,
+                              index=choices.index)
+
+class SimulationChoiceModel(MNLDiscreteChoiceModel):
+    """
+    A discrete choice model with parameters needed for simulation.
+    Initialize with MNLDiscreteChoiceModel's init parameters or with from_yaml, 
+    then add simulation parameters with set_simulation_params().
+
+    """
+    def set_simulation_params(self, name, supply_variable, vacant_variable,
+                              choosers, alternatives):
+        """
+        Add simulation parameters as additional attributes.
+        Parameters
+        ----------
+        name : str
+            Name of the model.
+        supply_variable : str
+            The name of the column in the alternatives table indicating number of
+            available spaces, vacant or not, that can be occupied by choosers.
+        vacant_variable : str
+            The name of the column in the alternatives table indicating number of
+            vacant spaces that can be occupied by choosers.
+        choosers : str
+            Name of the choosers table.
+        alternatives : str
+            Name of the alternatives table.
+        Returns
+        -------
+        None
+        """
+        self.name = name
+        self.supply_variable = supply_variable
+        self.vacant_variable = vacant_variable
+        self.choosers = choosers
+        self.alternatives = alternatives
+
+    def simulate(self, choice_function=None, save_probabilities=False, **kwargs):
+        """
+        Computing choices, with arbitrary function for handling simulation strategy. 
+        Parameters
+        ----------
+        choice_function : function
+            Function defining how to simulate choices based on fitted model.
+            Function must accept the following 3 arguments:  model object, choosers
+            DataFrame, and alternatives DataFrame.  Additional optional keyword
+            args can be utilized by function if needed (kwargs).
+        save_probabilities : bool
+            If true, will save the calculated probabilities underlying the simulation 
+            as an orca injectable with name 'probabilities_modelname_itervar'.
+        Returns
+        -------
+        choices : pandas.Series
+            Mapping of chooser ID to alternative ID. Some choosers
+            will map to a nan value when there are not enough alternatives
+            for all the choosers.
+        """
+        choosers, alternatives = self.calculate_model_variables()
+        
+        # By convention, choosers are denoted by a -1 value in the choice column
+        choosers = choosers[choosers[self.choice_column] == -1]
+        print "%s agents are making a choice." % len(choosers)
+
+        if choice_function:
+            choices = choice_function(self, choosers, alternatives, **kwargs)
+        else:
+            choices = self.predict(choosers, alternatives, debug=True)
+        
+        if save_probabilities:
+            if not self.sim_pdf:
+                probabilities = self.calculate_probabilities(self, choosers, alternatives)
+            else:
+                probabilities = self.sim_pdf.reset_index().set_index('alternative_id')[0]
+            orca.add_injectable('probabilities_%s_%s' % (self.name, orca.get_injectable('iter_var')),
+                                probabilities)
+        
+        return choices
+
+    def calculate_probabilities(self, choosers, alternatives):
+        """
+        Calculate model probabilities.
+        Parameters
+        ----------
+        choosers : pandas.DataFrame
+            DataFrame of choosers.
+        alternatives : pandas.DataFrame
+            DataFrame of alternatives.
+        Returns
+        -------
+        probabilities : pandas.Series
+            Mapping of alternative ID to probabilities.
+        """
+        probabilities = self.probabilities(choosers, alternatives)
+        probabilities = probabilities.reset_index().set_index('alternative_id')[0] # remove chooser_id col from idx
+        return probabilities
+
+    def calculate_model_variables(self):
+        """
+        Calculate variables needed to simulate the model, and returns DataFrames 
+        of simulation-ready tables with needed variables.
+        Returns
+        -------
+        choosers : pandas.DataFrame
+            DataFrame of choosers.
+        alternatives : pandas.DataFrame
+            DataFrame of alternatives.
+        """
+        columns_used = self.columns_used() + [self.choice_column]
+        choosers = orca.get_table(self.choosers).to_frame(columns_used)
+        
+        supply_column_names = [col for col in [self.supply_variable, self.vacant_variable] if col is not None]
+        alternatives = orca.get_table(self.alternatives).to_frame(columns_used + supply_column_names)
+        return choosers, alternatives
