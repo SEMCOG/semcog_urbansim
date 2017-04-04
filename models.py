@@ -137,18 +137,19 @@ def households_transition(households, persons, annual_household_control_totals, 
         i = 0
         if col.endswith('_max'):
             if len(ct[col][ct[col] == -1]) > 0:
-                ct[col][ct[col] == -1] = np.inf
+                ct.loc[ct[col] == -1, col] = np.inf
                 i += 1
             if i > 0:
-                ct[col] += 1
+                ct[col] += 1  # TODO Why????
     tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
     model = transition.TransitionModel(tran)
-    hh = households.to_frame(households.local_columns)
+    hh = households.to_frame(households.local_columns + ['large_area_id'])
     p = persons.to_frame(persons.local_columns)
     new, added_hh_idx, new_linked = \
         model.transition(hh, iter_var,
                          linked_tables={'linked': (p, 'household_id')})
     new.loc[added_hh_idx, "building_id"] = -1
+    new = new[households.local_columns]
     orca.add_table("households", new)
     orca.add_table("persons", new_linked['linked'])
 
