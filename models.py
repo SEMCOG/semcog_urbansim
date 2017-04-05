@@ -132,26 +132,48 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
 
 @orca.step()
 def households_transition(households, persons, annual_household_control_totals, iter_var):
-    ct = annual_household_control_totals.to_frame()
-    for col in ct.columns:
+    region_ct = annual_household_control_totals.to_frame()
+    for col in region_ct.columns:
         i = 0
         if col.endswith('_max'):
-            if len(ct[col][ct[col] == -1]) > 0:
-                ct.loc[ct[col] == -1, col] = np.inf
+            if len(region_ct[col][region_ct[col] == -1]) > 0:
+                region_ct.loc[region_ct[col] == -1, col] = np.inf
                 i += 1
             if i > 0:
-                ct[col] += 1  # TODO Why????
-    tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
-    model = transition.TransitionModel(tran)
-    hh = households.to_frame(households.local_columns + ['large_area_id'])
-    p = persons.to_frame(persons.local_columns)
-    new, added_hh_idx, new_linked = \
-        model.transition(hh, iter_var,
-                         linked_tables={'linked': (p, 'household_id')})
-    new.loc[added_hh_idx, "building_id"] = -1
-    new = new[households.local_columns]
-    orca.add_table("households", new)
-    orca.add_table("persons", new_linked['linked'])
+                region_ct[col] += 1  # TODO Why????
+    region_hh = households.to_frame(households.local_columns + ['large_area_id'])
+    region_p = persons.to_frame(persons.local_columns + ['large_area_id'])
+
+    out_hh = []
+    out_p = []
+    for large_area_id, hh in region_hh.groupby('large_area_id'):
+        p = region_p[region_p.household_id.isin(hh.index)]
+        ct = region_ct[region_ct.large_area_id == large_area_id]
+        del ct["large_area_id"]
+        tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
+        model = transition.TransitionModel(tran)
+        new, added_hh_idx, new_linked = \
+            model.transition(hh, iter_var,
+                             linked_tables={'linked': (p, 'household_id')})
+        new.loc[added_hh_idx, "building_id"] = -1
+        new = new[households.local_columns]
+        out_hh.append(new)
+        out_p.append(new_linked['linked'][persons.local_columns])
+
+    # check that not index overlap
+    index_set = set()
+    for hh in out_hh:
+        ihh = set(hh.index)
+        assert len(index_set & ihh) == 0, "check that not index overlap"
+        index_set |= ihh
+    index_set = set()
+    for p in out_p:
+        ip = set(p.index)
+        assert len(index_set & ip) == 0, "check that not index overlap"
+        index_set |= ip
+
+    orca.add_table("households", pd.concat(out_hh))
+    orca.add_table("persons", pd.concat(out_p))
 
 
 @orca.step()
