@@ -142,7 +142,7 @@ def households_transition(households, persons, annual_household_control_totals, 
             if i > 0:
                 region_ct[col] += 1  # TODO Why????
     region_hh = households.to_frame(households.local_columns + ['large_area_id'])
-    region_p = persons.to_frame(persons.local_columns + ['large_area_id'])
+    region_p = persons.to_frame(persons.local_columns)
 
     out_hh = []
     out_p = []
@@ -158,22 +158,43 @@ def households_transition(households, persons, annual_household_control_totals, 
         new.loc[added_hh_idx, "building_id"] = -1
         new = new[households.local_columns]
         out_hh.append(new)
-        out_p.append(new_linked['linked'][persons.local_columns])
+        out_p.append(new_linked['linked'])
+
+    # fix indexes
+    out_hh_fixed = []
+    out_p_fixed = []
+    hhidmax = region_hh.index.values.max() + 1
+    pidmax = region_p.index.values.max() + 1
+    for hh, p in zip(out_hh, out_p):
+        hh = hh.reset_index()
+        hh['household_id_old'] = hh['household_id']
+        new_hh = (hh.building_id == -1).sum()
+        hh.loc[hh.building_id == -1, 'household_id'] = range(hhidmax, hhidmax + new_hh)
+        hhidmax += new_hh
+        hhid_map = hh[['household_id_old', 'household_id']].set_index('household_id_old')
+        p = pd.merge(p.reset_index(), hhid_map, left_on='household_id', right_index=True)
+        new_p = (p.household_id_x != p.household_id_y).sum()
+        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+        pidmax += new_p
+        p['household_id'] = p['household_id_y']
+
+        out_hh.append(hh.set_index('household_id')[households.local_columns])
+        out_p.append(p.set_index('person_id')[persons.local_columns])
 
     # check that not index overlap
     index_set = set()
-    for hh in out_hh:
+    for hh in out_hh_fixed:
         ihh = set(hh.index)
         assert len(index_set & ihh) == 0, "check that not index overlap"
         index_set |= ihh
     index_set = set()
-    for p in out_p:
+    for p in out_p_fixed:
         ip = set(p.index)
         assert len(index_set & ip) == 0, "check that not index overlap"
         index_set |= ip
 
-    orca.add_table("households", pd.concat(out_hh))
-    orca.add_table("persons", pd.concat(out_p))
+    orca.add_table("households", pd.concat(out_hh_fixed))
+    orca.add_table("persons", pd.concat(out_p_fixed))
 
 
 @orca.step()
