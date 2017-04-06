@@ -46,6 +46,71 @@ def transit_jobs_45min(zones, travel_data):
     temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     transit_jobs_45min = temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum()
     return transit_jobs_45min
+
+@orca.column('zones', 'a_ln_emp_26min_drive_alone', cache=True, cache_scope='iteration')
+def a_ln_emp_26min_drive_alone(zones, travel_data):
+    drvtime = travel_data.to_frame("am_auto_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(drvtime, zemp, left_on ='to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.am_auto_total_time <=26].groupby('from_zone_id').employment.sum().fillna(0))
+
+@orca.column('zones', 'a_ln_emp_50min_transit', cache=True, cache_scope='iteration')
+def a_ln_emp_50min_transit(zones, travel_data):
+    transittime = travel_data.to_frame("am_transit_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(transittime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum().fillna(0))
+
+@orca.column('zones', 'a_ln_retail_emp_15min_drive_alone', cache=True, cache_scope='iteration')
+def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
+    drvtime = travel_data.to_frame("midday_auto_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(drvtime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
+
+@orca.column('nodes_walk', 'node_r1500_acre', cache=True, cache_scope='iteration')
+def node_r1500_acre(nodes_walk):
+    return nodes_walk['node_r1500_sqft'] / 43560
+
+@orca.column('nodes_walk', 'ln_empden', cache=True, cache_scope='iteration')
+def ln_empden(nodes_walk):
+    return np.log1p(nodes_walk.jobs / nodes_walk.node_r1500_acre).fillna(0)
+
+@orca.column('nodes_walk', 'ln_popden', cache=True, cache_scope='iteration')
+def ln_popden(nodes_walk):
+    return np.log1p(nodes_walk.population / nodes_walk.node_r1500_acre).fillna(0)
+
+@orca.column('nodes_walk', 'percent_high_income', cache=True, cache_scope='iteration')
+def percent_high_income(nodes_walk):
+    return np.log1p(nodes_walk.highinc_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_mid_income', cache=True, cache_scope='iteration')
+def percent_mid_income(nodes_walk):
+    return np.log1p(nodes_walk.midinc_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_low_income', cache=True, cache_scope='iteration')
+def percent_low_income(nodes_walk):
+    return np.log1p(nodes_walk.lowinc_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_race1', cache=True, cache_scope='iteration')
+def percent_race1(nodes_walk):
+    return np.log1p(nodes_walk.race_1_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_race2', cache=True, cache_scope='iteration')
+def percent_race2(nodes_walk):
+    return np.log1p(nodes_walk.race_2_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_race3', cache=True, cache_scope='iteration')
+def percent_race3(nodes_walk):
+    return np.log1p(nodes_walk.race_3_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_race4', cache=True, cache_scope='iteration')
+def percent_race4(nodes_walk):
+    return np.log1p(nodes_walk.race_4_hhs / nodes_walk.households).fillna(0)
+
+@orca.column('nodes_walk', 'percent_hh_with_children', cache=True, cache_scope='iteration')
+def percent_hh_with_children(nodes_walk):
+    return np.log1p(nodes_walk.hhs_with_children / nodes_walk.households).fillna(0)
     
 @orca.column('buildings', 'building_age', cache=True, cache_scope='iteration')
 def building_age(buildings, year):
