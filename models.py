@@ -150,7 +150,21 @@ def households_transition(households, persons, annual_household_control_totals, 
         p = region_p[region_p.household_id.isin(hh.index)]
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
-        tran = transition.TabularTotalsTransition(ct, 'total_number_of_households')
+
+        ct_finite = ct[ct.persons_max <= 100]
+        ct_inf = ct[ct.persons_max > 100]
+
+        tran = transition.TabularTotalsTransition(ct_finite, 'total_number_of_households')
+        model = transition.TransitionModel(tran)
+        new, added_hh_idx, new_linked = \
+            model.transition(hh, iter_var,
+                             linked_tables={'linked': (p, 'household_id')})
+        new.loc[added_hh_idx, "building_id"] = -1
+        new = new[households.local_columns]
+        out_hh.append(new)
+        out_p.append(new_linked['linked'])
+
+        tran = transition.TabularTotalsTransition(ct_inf, 'total_number_of_households')
         model = transition.TransitionModel(tran)
         new, added_hh_idx, new_linked = \
             model.transition(hh, iter_var,
@@ -178,8 +192,8 @@ def households_transition(households, persons, annual_household_control_totals, 
         pidmax += new_p
         p['household_id'] = p['household_id_y']
 
-        out_hh.append(hh.set_index('household_id')[households.local_columns])
-        out_p.append(p.set_index('person_id')[persons.local_columns])
+        out_hh_fixed.append(hh.set_index('household_id')[households.local_columns])
+        out_p_fixed.append(p.set_index('person_id')[persons.local_columns])
 
     # check that not index overlap
     index_set = set()
