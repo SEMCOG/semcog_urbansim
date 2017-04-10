@@ -131,7 +131,7 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
 
 
 @orca.step()
-def households_transition(households, persons, annual_household_control_totals, iter_var):
+def households_transition(households, persons, annual_household_control_totals, remi_pop_total, iter_var):
     region_ct = annual_household_control_totals.to_frame()
     for col in region_ct.columns:
         i = 0
@@ -143,14 +143,15 @@ def households_transition(households, persons, annual_household_control_totals, 
                 region_ct[col] += 1  # TODO Why????
     region_hh = households.to_frame(households.local_columns + ['large_area_id'])
     region_p = persons.to_frame(persons.local_columns)
+    region_target = remi_pop_total.to_frame()
 
     out_hh = []
     out_p = []
     for large_area_id, hh in region_hh.groupby('large_area_id'):
         p = region_p[region_p.household_id.isin(hh.index)]
+        target = int(region_target.loc[large_area_id, str(iter_var)])
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
-
         ct_finite = ct[ct.persons_max <= 100]
         ct_inf = ct[ct.persons_max > 100]
 
@@ -161,18 +162,30 @@ def households_transition(households, persons, annual_household_control_totals, 
                              linked_tables={'linked': (p, 'household_id')})
         new.loc[added_hh_idx, "building_id"] = -1
         new = new[households.local_columns]
+        pers = new_linked['linked']
+        pers = pers[pers.household_id.isin(new.index)]
         out_hh.append(new)
-        out_p.append(new_linked['linked'])
+        out_p.append(pers)
+        target -= len(pers)
 
-        tran = transition.TabularTotalsTransition(ct_inf, 'total_number_of_households')
-        model = transition.TransitionModel(tran)
-        new, added_hh_idx, new_linked = \
-            model.transition(hh, iter_var,
-                             linked_tables={'linked': (p, 'household_id')})
-        new.loc[added_hh_idx, "building_id"] = -1
-        new = new[households.local_columns]
-        out_hh.append(new)
-        out_p.append(new_linked['linked'])
+        best_qal = np.inf
+        best = []
+        for _ in range(3):
+            tran = transition.TabularTotalsTransition(ct_inf, 'total_number_of_households')
+            model = transition.TransitionModel(tran)
+            new, added_hh_idx, new_linked = \
+                model.transition(hh, iter_var,
+                                 linked_tables={'linked': (p, 'household_id')})
+            new.loc[added_hh_idx, "building_id"] = -1
+            new = new[households.local_columns]
+            pers = new_linked['linked']
+            pers = pers[pers.household_id.isin(new.index)]
+            qal = abs(target - len(pers))
+            if qal < best_qal:
+                best = (new, pers)
+                best_qal = qal
+        out_hh.append(best[0])
+        out_p.append(best[1])
 
     # fix indexes
     out_hh_fixed = []

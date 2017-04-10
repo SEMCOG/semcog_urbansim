@@ -44,6 +44,8 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'emplo
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
+orca.add_table("remi_pop_total", pd.read_csv("data/remi_pop_total.csv", index_col='large_area_id'))
+
 # these are dummy returns that last until accessibility runs
 for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
     empty_df = pd.DataFrame()
