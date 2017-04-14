@@ -225,6 +225,36 @@ def households_transition(households, persons, annual_household_control_totals, 
 
 
 @orca.step()
+def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
+    from numpy.random import choice
+    hh = households.to_frame(households.local_columns + ['large_area_id'])
+    hh["target_workers"] = 0
+    p = persons.to_frame(persons.local_columns + ['large_area_id'])
+    lpr = remi_labor_participation_rates.to_frame()
+    employed = p.workers == True
+
+    for large_area_id, row in lpr.iterrows():
+        select = (p.large_area_id == large_area_id) & (p.age >= row.age_min) & (p.age <= row.age_max)
+        lpr_workers = int(select.sum() * float(row[str(iter_var)][:-1]) / 100)
+        num_workers = (select & employed).sum()
+
+        if lpr_workers > num_workers:
+            # employ some persons
+            new_workers = choice(p[select & (~employed)].index, int(lpr_workers - num_workers), False)
+            p.loc[new_workers].workers = True
+        else:
+            # unemploy some persons
+            new_workers = choice(p[select & employed].index, int(lpr_workers - num_workers), False)
+            p.loc[new_workers].workers = False
+        # print large_area_id, row.age_min, row.age_max, num_workers, lpr_workers
+
+    hh.workers = p.groupby("household_id").workers.sum()
+
+    orca.add_table("households", hh[households.local_columns])
+    orca.add_table("persons", p[persons.local_columns])
+
+
+@orca.step()
 def jobs_transition(jobs, annual_employment_control_totals, iter_var):
     ct_emp = annual_employment_control_totals.to_frame()
     ct_emp = ct_emp.reset_index().set_index('year')

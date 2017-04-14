@@ -65,6 +65,11 @@ def nodeid_drv(households, buildings):
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
+
+@orca.column('persons', cache=True, cache_scope='iteration')
+def large_area_id(households, persons):
+    return misc.reindex(households.large_area_id, persons.household_id)
+
 ##@orca.column('persons', 'school_district_id', cache=True)
 ##def school_district_id(persons, households):
 ##    return misc.reindex(households.school_district_id, persons.household_id)
