@@ -203,3 +203,67 @@ def walk_nearest_library(buildings, parcels):
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def walk_nearest_park(buildings, parcels):
     return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
+
+
+@orca.column('buildings', 'building_age', cache=True, cache_scope='iteration')
+def building_age(buildings, year):
+    year_built = buildings.year_built
+    year_built[year_built < 1600] = year_built[year_built > 1600].mean()
+    age = year - year_built
+    return age
+
+
+@orca.column('buildings', 'b_is_pre_1945', cache=True, cache_scope='iteration')
+def b_is_pre_1945(buildings):
+    return (buildings.year_built < 1945).astype('int32')
+
+
+@orca.column('buildings', 'b_is_newerthan2010', cache=True, cache_scope='iteration')
+def b_is_newerthan2010(buildings):
+    return (buildings.year_built > 2010).astype('int32')
+
+
+### Variable generation functions
+
+def make_dummy_variable(geog_var, geog_id):
+    """
+    Generate dummy variable. Registers with orca.
+    """
+    var_name = '%s_is_%s' % (geog_var, geog_id)
+    
+    @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
+    def func():
+        buildings = orca.get_table('buildings')
+        return (buildings[geog_var] == geog_id).astype('int32')
+
+    return func
+
+
+def make_logged_variable(var_to_log):
+    """
+    Generate logged variable. Registers with orca.
+    """
+    var_name = 'b_ln_%s' % var_to_log
+    
+    @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
+    def func():
+        buildings = orca.get_table('buildings')
+        return np.log1p(buildings[var_to_log]).fillna(0)
+
+    return func
+
+
+vars_to_dummify = ['city_id', 'building_type_id']
+vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit', 
+               'parcels_parcel_far', 'sqft_price_nonres']
+
+
+for dummifiable_var in vars_to_dummify:
+    var_cat_ids = np.unique(orca.get_table('buildings')[dummifiable_var]).astype('int')
+    for var_cat_id in var_cat_ids:
+        if var_cat_id > 0:
+            make_dummy_variable(dummifiable_var, var_cat_id)
+
+
+for var_to_log in vars_to_log:
+    make_logged_variable(var_to_log)

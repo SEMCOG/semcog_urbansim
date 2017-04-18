@@ -4,6 +4,20 @@ from urbansim.utils import misc
 import orca
 import verify_data_structure
 
+
+@orca.injectable('year')
+def year():
+    default_year = 2015
+    try:
+        iter_var = orca.get_injectable('iter_var')
+        if iter_var is not None:
+            return iter_var
+        else:
+            return default_year
+    except:
+        return default_year
+
+
 orca.add_injectable("transcad_available", False)
 
 orca.add_injectable("emp_btypes", [1,3,4,5,6,7,8,10,21,22,23,24,25,26,27,28,29,31,32,33,35,38,39])
