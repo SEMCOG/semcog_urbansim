@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: sector_id == 9
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_is_newerthan2010
+- zones_ln_empden_5
+- parcels_pct_undev
+- b_ln_building_sqft
+- building_type_id_is_23
+- building_type_id_is_83
+- zones_z_total_jobs
+- b_ln_land_area
+- nodes_walk_retail
+- nodes_drv_drv_30min_jobs
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_newerthan2010: -2.4054681625513368
+        b_ln_building_sqft: 1.038083037126524
+        b_ln_land_area: 0.0725784071457455
+        building_type_id_is_23: 2.8688110316101256
+        building_type_id_is_83: -0.3205878195346462
+        nodes_drv_drv_30min_jobs: -0.014943426285480444
+        nodes_walk_retail: 0.003209194407805681
+        parcels_pct_undev: 0.007104477315797116
+        zones_ln_empden_5: 0.3284737486504111
+        zones_z_total_jobs: 0.00011554936110165108
+    Std. Error:
+        b_is_newerthan2010: 0.5645395259239554
+        b_ln_building_sqft: 0.04705077006205779
+        b_ln_land_area: 0.051622815975621995
+        building_type_id_is_23: 0.05264355710591121
+        building_type_id_is_83: 0.11817525647145039
+        nodes_drv_drv_30min_jobs: 0.011043107823234996
+        nodes_walk_retail: 0.00018943261350851486
+        parcels_pct_undev: 0.0006427799700102652
+        zones_ln_empden_5: 0.06916136682771604
+        zones_z_total_jobs: 1.3135650121793926e-05
+    T-Score:
+        b_is_newerthan2010: -4.260938432281459
+        b_ln_building_sqft: 22.06304032340683
+        b_ln_land_area: 1.4059366149266135
+        building_type_id_is_23: 54.495007353672804
+        building_type_id_is_83: -2.712816786753461
+        nodes_drv_drv_30min_jobs: -1.353190290693266
+        nodes_walk_retail: 16.94108711466112
+        parcels_pct_undev: 11.052736001844703
+        zones_ln_empden_5: 4.749381970264605
+        zones_z_total_jobs: 8.796622933031546
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -5778.6438936844115
+    'null': -13815.51055796495
+    ratio: 0.5817278073481769

@@ -1,0 +1,90 @@
+- name: building_space
+  sign: positive
+  variables: [b_ln_building_sqft,building_sqft,residential_units,sqft_per_unit, nodes_walk_ave_unit_sqft, parcels_ave_unit_size]
+
+- name: size_vars
+  sign: positive
+  variables: [parcels_total_units, popden, residential_units, nodes_walk_sum_residential_units, nodes_walk_ln_popden, 
+              nodes_walk_population, zones_population, nodes_walk_households, zones_households]
+
+- name: crime
+  sign: negative
+  variables: [crime_ucr_rate, crime_other_rate, crime08]
+
+- name: building_age
+  sign: ''
+  variables: [b_is_newerthan2010,b_is_pre_1945,building_age,year_built]
+
+- name: price_attempt1
+  sign: negative
+  variables: [sqft_price_res]
+
+- name: land_area
+  sign: positive
+  variables: [b_ln_land_area,b_ln_parcel_sqft,b_ln_parcels_parcel_far,parcel_sqft,parcels_acres,land_area,nodes_walk_ave_lot_sqft,
+              parcels_total_sqft]
+
+- name: employment_access_drive
+  sign: positive
+  variables: [nodes_drv_drv_15min_retail_jobs,nodes_drv_drv_30min_jobs,nodes_drv_drv_45min_jobs,nodes_drv_drv_60min_jobs,
+              zones_a_ln_emp_26min_drive_alone, zones_a_ln_retail_emp_15min_drive_alone]
+
+- name: employment_access_transit
+  sign: positive
+  variables: [zones_transit_jobs_50min, zones_a_ln_emp_50min_transit]
+
+- name: other_access
+  sign: ''
+  variables: [zones_logsum_pop_low_income, zones_logsum_job_low_income, zones_logsum_pop_high_income, zones_logsum_job_high_income]
+
+- name: nearby_emp
+  sign: negative
+  variables: [b_total_jobs,zones_z_total_jobs,zones_empden,zones_employment]
+
+- name: population_access
+  sign: positive
+  variables: [nodes_drv_drv_10min_pop,nodes_drv_drv_20min_pop]
+
+- name: positive_structure
+  sign: positive
+  variables: [building_type_id_is_81,building_type_id_is_82,building_type_id_is_83,building_type_id_is_84]
+
+- name: negative_structure
+  sign: negative
+  variables: [building_type_id_is_82,building_type_id_is_83,building_type_id_is_84]
+
+- name: price_attempt2
+  sign: negative
+  variables: [sqft_price_res]
+
+- name: income_clustering
+  sign: positive
+  variables: [nodes_walk_percent_low_income, nodes_walk_percent_mid_income, zones_logsum_pop_low_income, nodes_walk_lowinc_hhs, zones_logsum_job_low_income,
+              zones_logsum_pop_high_income, nodes_walk_midinc_hhs, nodes_walk_ave_income, zones_logsum_job_high_income, nodes_walk_percent_high_income,
+              nodes_walk_highinc_hhs]
+
+- name: demographic_clustering
+  sign: positive
+  variables: [nodes_walk_race_3_hhs, nodes_walk_hhs_with_children, nodes_walk_percent_hh_with_children, nodes_walk_race_2_hhs, nodes_walk_race_4_hhs,
+              nodes_walk_race_1_hhs, nodes_walk_hhsize]
+
+- name: other_site_characteristics
+  sign: ''
+  variables: [improvement_value,parcels_pct_undev,popden,residential_units,stories,vacant_job_spaces,vacant_residential_units,parcels_land_cost, nodes_walk_ave_nonres_sqft_price]
+
+- name: local_characteristics
+  sign: ''
+  variables: [crime08, nodes_walk_industrial,drv_nearest_healthcenter, drv_nearest_park,walk_nearest_grocery,walk_nearest_healthcenter,
+              nodes_walk_max_industrial_far,nodes_walk_max_medical_far,nodes_walk_max_office_far,nodes_walk_max_retail_far,
+              nodes_walk_medical,nodes_walk_office,nodes_walk_population,nodes_walk_quarter_mile_to_transit,
+              nodes_walk_retail,nodes_walk_retail_jobs,nodes_walk_sfdu,nodes_walk_sum_nonresidential_units,
+              drv_nearest_library,drv_nearest_grocery,walk_nearest_hospital,drv_nearest_hospital,walk_nearest_park,walk_nearest_urgentcare,
+              drv_nearest_urgentcare,walk_nearest_library]
+
+- name: property_tax
+  sign: negative
+  variables: [parcels_pptytax]
+
+- name: price_attempt3
+  sign: negative
+  variables: [sqft_price_res]

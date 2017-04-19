@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: sector_id == 5
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_ln_empden_3
+- year_built
+- b_ln_building_sqft
+- nodes_walk_sum_residential_units
+- b_total_jobs
+- building_type_id_is_14
+- stories
+- b_ln_land_area
+- nodes_drv_drv_30min_jobs
+- building_type_id_is_21
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.33945768806439386
+        b_ln_land_area: 0.8073433947981261
+        b_total_jobs: 0.002675692934691072
+        building_type_id_is_14: -1.3485981149477517
+        building_type_id_is_21: 2.6245518941072574
+        nodes_drv_drv_30min_jobs: 0.2111997475903413
+        nodes_walk_sum_residential_units: -0.32096812307445965
+        stories: -0.1253781638768957
+        year_built: 0.00012286963420495605
+        zones_ln_empden_3: 0.12171463207004024
+    Std. Error:
+        b_ln_building_sqft: 0.07361703895740068
+        b_ln_land_area: 0.07545850458228733
+        b_total_jobs: 0.00010955579701303819
+        building_type_id_is_14: 0.4119510155663913
+        building_type_id_is_21: 0.058613423851138664
+        nodes_drv_drv_30min_jobs: 0.015631323400805277
+        nodes_walk_sum_residential_units: 0.019587149566910045
+        stories: 0.021724335097461245
+        year_built: 3.499518825755454e-05
+        zones_ln_empden_3: 0.06555572600244108
+    T-Score:
+        b_ln_building_sqft: 4.61112933733758
+        b_ln_land_area: 10.69917034888652
+        b_total_jobs: 24.423106833613186
+        building_type_id_is_14: -3.2736856179212586
+        building_type_id_is_21: 44.77731757784478
+        nodes_drv_drv_30min_jobs: 13.511315847988978
+        nodes_walk_sum_residential_units: -16.386668309139466
+        stories: -5.7713234174678005
+        year_built: 3.5110436697945677
+        zones_ln_empden_3: 1.8566590516518418
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -4421.3757896872
+    'null': -13815.51055796495
+    ratio: 0.6799701486863851

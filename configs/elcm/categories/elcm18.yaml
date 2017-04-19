@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: sector_id == 18
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- bldg_empratio_15
+- zones_logsum_job_high_income
+- b_ln_non_residential_sqft
+- zones_employment
+- nodes_walk_population
+- building_type_id_is_14
+- building_type_id_is_13
+- parcels_land_cost
+- zones_transit_jobs_50min
+- sqft_price_nonres
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.7532595205791951
+        bldg_empratio_15: 2.563388070576537
+        building_type_id_is_13: -2.563220731311737
+        building_type_id_is_14: 2.4276495253286807
+        nodes_walk_population: -0.004902433314896443
+        parcels_land_cost: 2.8074429671063772e-09
+        sqft_price_nonres: -0.02533426739699282
+        zones_employment: -0.0004271114472986424
+        zones_logsum_job_high_income: -1.6649695651765962e-06
+        zones_transit_jobs_50min: 1.3779239064140833e-05
+    Std. Error:
+        b_ln_non_residential_sqft: 0.010810518607993954
+        bldg_empratio_15: 0.5229070272719949
+        building_type_id_is_13: 0.459882337903624
+        building_type_id_is_14: 0.07836909286533644
+        nodes_walk_population: 0.00016990822436554104
+        parcels_land_cost: 1.7722851722275277e-10
+        sqft_price_nonres: 0.00048617778952548396
+        zones_employment: 1.863870902590269e-05
+        zones_logsum_job_high_income: 1.5814616845135365e-07
+        zones_transit_jobs_50min: 5.191682430727441e-07
+    T-Score:
+        b_ln_non_residential_sqft: 69.67838897406729
+        bldg_empratio_15: 4.90218707510918
+        building_type_id_is_13: -5.573644647881439
+        building_type_id_is_14: 30.977129332097427
+        nodes_walk_population: -28.853419739996422
+        parcels_land_cost: 15.840808302750698
+        sqft_price_nonres: -52.10905957205368
+        zones_employment: -22.91529132758469
+        zones_logsum_job_high_income: -10.528042389397168
+        zones_transit_jobs_50min: 26.540989839030146
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -2320.1532735033234
+    'null': -13815.51055796495
+    ratio: 0.8320617060246316

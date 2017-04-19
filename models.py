@@ -620,6 +620,8 @@ def neighborhood_vars(jobs, households, buildings):
     # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_drv", nodes)
 
+    post_access_variables()
+
 
 @orca.step('gq_model')  # group quarters
 def gq_model(iter_var, tazcounts2015gq, tazcounts2020gq, tazcounts2025gq, tazcounts2030gq, tazcounts2035gq,
@@ -915,3 +917,21 @@ def _print_number_unplaced(df, fieldname="building_id"):
     """
     counts = (df[fieldname] == -1).sum()
     print "Total currently unplaced: %d" % counts
+
+
+def post_access_variables():
+    """
+    Disaggregate nodal variables to building.
+    """
+
+    geographic_levels = [('nodes_walk', 'nodeid_walk'),
+                         ('nodes_drv', 'nodeid_drv')]
+
+    for geography in geographic_levels:
+        geography_name = geography[0]
+        geography_id = geography[1]
+        if geography_name != 'buildings':
+            building_vars = orca.get_table('buildings').columns
+            for var in orca.get_table(geography_name).columns:
+                if var not in building_vars:
+                    variables.make_disagg_var(geography_name, 'buildings', var, geography_id)

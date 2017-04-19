@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: sector_id == 16
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_non_residential_sqft
+- zones_logsum_pop_low_income
+- b_ln_land_area
+- nodes_walk_population
+- building_type_id_is_13
+- zones_ln_empden_12
+- building_type_id_is_26
+- nodes_drv_drv_20min_pop
+- zones_transit_jobs_50min
+- year_built
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.7587195845665012
+        b_ln_non_residential_sqft: 0.3137413241514606
+        building_type_id_is_13: -0.21377891374171973
+        building_type_id_is_26: 3.0
+        nodes_drv_drv_20min_pop: 0.04626216840108612
+        nodes_walk_population: -0.00034258320738303103
+        year_built: 0.0001941117805486079
+        zones_ln_empden_12: 0.6930701699723637
+        zones_logsum_pop_low_income: -1.0995598967660965e-07
+        zones_transit_jobs_50min: 1.988593771882822e-06
+    Std. Error:
+        b_ln_land_area: 0.02147318570481501
+        b_ln_non_residential_sqft: 0.01008233129985371
+        building_type_id_is_13: 0.37588260593299905
+        building_type_id_is_26: 0.0611136238927793
+        nodes_drv_drv_20min_pop: 0.015318849176305587
+        nodes_walk_population: 0.00012650277342175485
+        year_built: 3.026715571388577e-05
+        zones_ln_empden_12: 0.06775795046396814
+        zones_logsum_pop_low_income: 4.4032677533045445e-08
+        zones_transit_jobs_50min: 6.00605721258473e-07
+    T-Score:
+        b_ln_land_area: 35.333349927503804
+        b_ln_non_residential_sqft: 31.117934416221065
+        building_type_id_is_13: -0.5687385113527327
+        building_type_id_is_26: 49.08889064185337
+        nodes_drv_drv_20min_pop: 3.0199506417650537
+        nodes_walk_population: -2.708108273965451
+        year_built: 6.413281194425368
+        zones_ln_empden_12: 10.228617678465936
+        zones_logsum_pop_low_income: -2.4971452075357075
+        zones_transit_jobs_50min: 3.310980401112468
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -4627.46698663192
+    'null': -13815.51055796495
+    ratio: 0.6650527704193978

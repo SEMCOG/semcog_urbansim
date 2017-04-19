@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: sector_id == 6
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- vacant_job_spaces
+- year_built
+- zones_employment
+- b_ln_building_sqft
+- building_type_id_is_83
+- nodes_drv_drv_45min_jobs
+- b_ln_land_area
+- building_type_id_is_41
+- nodes_walk_max_office_far
+- bldg_empratio_6
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.382590184892143
+        b_ln_land_area: 0.7891485212367023
+        bldg_empratio_6: 3.0
+        building_type_id_is_41: 1.3677765352914013
+        building_type_id_is_83: -1.3396371606608677
+        nodes_drv_drv_45min_jobs: 0.0897652952787471
+        nodes_walk_max_office_far: 0.003708579717814795
+        vacant_job_spaces: -0.0013391899824706814
+        year_built: 3.648544284787633e-05
+        zones_employment: 5.997040456996439e-05
+    Std. Error:
+        b_ln_building_sqft: 0.07937998070525336
+        b_ln_land_area: 0.08274130662396105
+        bldg_empratio_6: 0.0948226558918518
+        building_type_id_is_41: 0.21208272973112777
+        building_type_id_is_83: 0.2672209782977273
+        nodes_drv_drv_45min_jobs: 0.016079907019440235
+        nodes_walk_max_office_far: 0.00829167343954218
+        vacant_job_spaces: 7.223863473247662e-05
+        year_built: 4.170074198957492e-05
+        zones_employment: 2.5218822095545364e-05
+    T-Score:
+        b_ln_building_sqft: 4.819731391882579
+        b_ln_land_area: 9.537539995871576
+        bldg_empratio_6: 31.63800857277815
+        building_type_id_is_41: 6.4492593858322556
+        building_type_id_is_83: -5.013218532447313
+        nodes_drv_drv_45min_jobs: 5.582451140434017
+        nodes_walk_max_office_far: 0.447265530276306
+        vacant_job_spaces: -18.53841766846981
+        year_built: 0.8749350996439726
+        zones_employment: 2.3780018092342834
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -2464.592924174272
+    'null': -13815.51055796495
+    ratio: 0.8216068154822278
