@@ -18,54 +18,50 @@ sample_size: 100
 
 estimation_sample_size: 3000
 
-prediction_sample_size: null
-
 model_expression:
-- b_is_newerthan2010
-- b_ln_building_sqft
-- nodes_walk_medical
-- nodes_walk_population
-- nodes_drv_drv_15min_retail_jobs
-- nodes_walk_ave_lot_sqft
-- crime08
+- has_children:nodes_drv_elem_school_perf
 - sqft_price_res
+- is_race2:nodes_walk_percent_race2
+- is_young:nodes_walk_retail_jobs
+- ln_income:nodes_walk_ln_popden
+- crime_ucr_rate
+- parcels_total_units
 
 fitted: true
 
-choice_mode: aggregate
-
 fit_parameters:
     Coefficient:
-        b_is_newerthan2010: 0.5047942105816854
-        b_ln_building_sqft: 0.7148231545661907
-        crime08: -0.006598245548189589
-        nodes_drv_drv_15min_retail_jobs: 0.005696791688018663
-        nodes_walk_ave_lot_sqft: 0.09424658193678591
-        nodes_walk_medical: 0.001131624382105395
-        nodes_walk_population: 0.0003437910565283324
-        sqft_price_res: -0.0017009025822761115
+        crime_ucr_rate: -0.0002037988981567109
+        has_children:nodes_drv_elem_school_perf: 0.27371492332729946
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:nodes_walk_retail_jobs: 0.0040722974848643335
+        ln_income:nodes_walk_ln_popden: 0.015892392097297047
+        parcels_total_units: 0.0011601483144176223
+        sqft_price_res: -0.001381255529416692
     Std. Error:
-        b_is_newerthan2010: 0.17890572087324053
-        b_ln_building_sqft: 0.017329182362947355
-        crime08: 0.0009831886224685262
-        nodes_drv_drv_15min_retail_jobs: 0.01553460700038075
-        nodes_walk_ave_lot_sqft: 0.025410972771059817
-        nodes_walk_medical: 0.00032895334132241146
-        nodes_walk_population: 6.988162155512183e-05
-        sqft_price_res: 0.00022378509925567784
+        crime_ucr_rate: 1.2817557900101867e-05
+        has_children:nodes_drv_elem_school_perf: 0.14453182423207642
+        is_race2:nodes_walk_percent_race2: 0.12937898660970837
+        is_young:nodes_walk_retail_jobs: 0.0004421507691821545
+        ln_income:nodes_walk_ln_popden: 0.0015547330490043834
+        parcels_total_units: 0.0001413545556685238
+        sqft_price_res: 0.00020593288163245178
     T-Score:
-        b_is_newerthan2010: 2.821565504544964
-        b_ln_building_sqft: 41.24967581243766
-        crime08: -6.711067843343368
-        nodes_drv_drv_15min_retail_jobs: 0.366716176848184
-        nodes_walk_ave_lot_sqft: 3.7088931142424406
-        nodes_walk_medical: 3.4400756580133813
-        nodes_walk_population: 4.919620479286587
-        sqft_price_res: -7.600606957002104
+        crime_ucr_rate: -15.899978743617865
+        has_children:nodes_drv_elem_school_perf: 1.8938038371936152
+        is_race2:nodes_walk_percent_race2: 23.187691282897134
+        is_young:nodes_walk_retail_jobs: 9.210201064213583
+        ln_income:nodes_walk_ln_popden: 10.221942672071055
+        parcels_total_units: 8.207364162624996
+        sqft_price_res: -6.707309286731351
 
-probability_mode: single_chooser
+probability_mode: full_product
+
+choice_mode: individual
+
+prediction_sample_size: 100
 
 log_likelihoods:
-    convergence: -13107.316572966209
+    convergence: -13262.34260073
     'null': -13815.51055796495
-    ratio: 0.05126078996700212
+    ratio: 0.04003963189880344
