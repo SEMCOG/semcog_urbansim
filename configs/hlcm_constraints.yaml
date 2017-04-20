@@ -1,8 +1,7 @@
 - name: income_interactions
   sign: positive
-  variables: ['ln_income:sqft_price_res', 'ln_income:b_is_pre_1945', 
-              'ln_income:building_type_id_is_81', 'ln_income:b_is_newerthan2010', 'ln_income:nodes_walk_ave_income',
-              'ln_income:parcels_acres', 'ln_income:sqft_per_unit', 'ln_income:nodes_walk_ln_popden']
+  variables: ['ln_income:b_is_pre_1945', 'ln_income:building_type_id_is_81', 'ln_income:b_is_newerthan2010', 
+              'ln_income:nodes_walk_ave_income','ln_income:parcels_acres', 'ln_income:sqft_per_unit', 'ln_income:nodes_walk_ln_popden']
 
 - name: hhsize_interactions
   sign: positive
@@ -28,7 +27,7 @@
 
 - name: price_attempt1
   sign: negative
-  variables: [sqft_price_res]
+  variables: [sqft_price_res, ln_income:sqft_price_res]
 
 - name: building_space
   sign: positive
@@ -63,7 +62,7 @@
 
 - name: price_attempt2
   sign: negative
-  variables: [sqft_price_res]
+  variables: [sqft_price_res, ln_income:sqft_price_res]
 
 - name: other_access
   sign: ''
@@ -115,4 +114,4 @@
 
 - name: price_attempt3
   sign: negative
-  variables: [sqft_price_res]
+  variables: [sqft_price_res, ln_income:sqft_price_res]
