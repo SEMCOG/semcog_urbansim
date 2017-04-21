@@ -18,58 +18,70 @@ sample_size: 100
 
 estimation_sample_size: 3000
 
-prediction_sample_size: null
-
 model_expression:
-- b_is_pre_1945
-- crime_other_rate
-- b_ln_building_sqft
-- building_type_id_is_81
-- nodes_walk_industrial
+- has_children:nodes_drv_elem_school_perf
+- parcels_ave_unit_size
+- year_built
+- ln_income:nodes_walk_ave_income
+- persons:sqft_per_unit
+- is_race1:nodes_walk_percent_race1
+- nodes_walk_ln_popden
 - stories
-- b_ln_land_area
-- nodes_drv_drv_30min_jobs
-- nodes_walk_percent_hh_with_children
+- crime08
+- zones_logsum_pop_high_income
+- is_young:nodes_walk_retail_jobs
+- nodes_walk_max_industrial_far
 
 fitted: true
 
-choice_mode: aggregate
-
 fit_parameters:
     Coefficient:
-        b_is_pre_1945: -0.19605741833321147
-        b_ln_building_sqft: 0.11340863542032992
-        b_ln_land_area: 0.8762524354952299
-        building_type_id_is_81: 0.17416147401117552
-        crime_other_rate: -7.397352297869432e-05
-        nodes_drv_drv_30min_jobs: 0.025294366105569285
-        nodes_walk_industrial: -0.0016574719661584447
-        nodes_walk_percent_hh_with_children: 0.960476479544499
-        stories: 0.15183924472105126
+        crime08: -0.007841541602032367
+        has_children:nodes_drv_elem_school_perf: 0.4323407560459128
+        is_race1:nodes_walk_percent_race1: 3.0
+        is_young:nodes_walk_retail_jobs: 0.002457083371567294
+        ln_income:nodes_walk_ave_income: 0.016392841052319678
+        nodes_walk_ln_popden: 0.13953566132125347
+        nodes_walk_max_industrial_far: -0.0908207158078686
+        parcels_ave_unit_size: 0.00022532783512908375
+        persons:sqft_per_unit: 2.784242856137901e-05
+        stories: 0.40347735886361974
+        year_built: 0.0001276788584282741
+        zones_logsum_pop_high_income: 1.98434562072794e-07
     Std. Error:
-        b_is_pre_1945: 0.04570214794678114
-        b_ln_building_sqft: 0.02159646112694965
-        b_ln_land_area: 0.02615698550268842
-        building_type_id_is_81: 0.056942550640887574
-        crime_other_rate: 7.126403455194634e-06
-        nodes_drv_drv_30min_jobs: 0.012460598446624706
-        nodes_walk_industrial: 0.0008969078779806792
-        nodes_walk_percent_hh_with_children: 0.1952513458758694
-        stories: 0.018552794814002932
+        crime08: 0.0014115301134853633
+        has_children:nodes_drv_elem_school_perf: 0.14162516624761853
+        is_race1:nodes_walk_percent_race1: 0.08448772089486731
+        is_young:nodes_walk_retail_jobs: 0.0007835418653493843
+        ln_income:nodes_walk_ave_income: 0.0010660201779280002
+        nodes_walk_ln_popden: 0.03029965789100069
+        nodes_walk_max_industrial_far: 0.01861509856412277
+        parcels_ave_unit_size: 3.008358490917898e-05
+        persons:sqft_per_unit: 4.3041958863535455e-06
+        stories: 0.017950153498940195
+        year_built: 2.799782245242178e-05
+        zones_logsum_pop_high_income: 8.500959508770058e-08
     T-Score:
-        b_is_pre_1945: -4.289895051793075
-        b_ln_building_sqft: 5.251260137190268
-        b_ln_land_area: 33.49974848612309
-        building_type_id_is_81: 3.058547115487288
-        crime_other_rate: -10.380204186274769
-        nodes_drv_drv_30min_jobs: 2.0299479366033943
-        nodes_walk_industrial: -1.8479846223339218
-        nodes_walk_percent_hh_with_children: 4.919179815309032
-        stories: 8.184170969564589
+        crime08: -5.555348431547068
+        has_children:nodes_drv_elem_school_perf: 3.0527113753921737
+        is_race1:nodes_walk_percent_race1: 35.508118436915396
+        is_young:nodes_walk_retail_jobs: 3.135867373815018
+        ln_income:nodes_walk_ave_income: 15.377608596660975
+        nodes_walk_ln_popden: 4.605189333266267
+        nodes_walk_max_industrial_far: -4.878873753744666
+        parcels_ave_unit_size: 7.490059306739492
+        persons:sqft_per_unit: 6.468671337578626
+        stories: 22.477655073392086
+        year_built: 4.560313883168797
+        zones_logsum_pop_high_income: 2.3342607604244905
 
-probability_mode: single_chooser
+probability_mode: full_product
+
+choice_mode: individual
+
+prediction_sample_size: 100
 
 log_likelihoods:
-    convergence: -13025.336711511776
+    convergence: -12988.656299501501
     'null': -13815.51055796495
-    ratio: 0.057194690209810606
+    ratio: 0.05984970696481062

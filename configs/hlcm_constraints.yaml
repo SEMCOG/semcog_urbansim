@@ -1,6 +1,37 @@
+- name: income_interactions
+  sign: positive
+  variables: ['ln_income:b_is_pre_1945', 'ln_income:building_type_id_is_81', 'ln_income:b_is_newerthan2010', 
+              'ln_income:nodes_walk_ave_income','ln_income:parcels_acres', 'ln_income:sqft_per_unit', 'ln_income:nodes_walk_ln_popden']
+
+- name: hhsize_interactions
+  sign: positive
+  variables: ['persons:nodes_walk_ln_popden', 'persons:sqft_per_unit', 'hhsize_gt_2:building_type_id_is_81']
+
+- name: children_interactions
+  sign: positive
+  variables: ['has_children:building_type_id_is_81', 'has_children:sqft_per_unit',
+              'has_children:nodes_walk_percent_hh_with_children', 'has_children:nodes_drv_elem_school_perf']
+
+- name: young_interactions
+  sign: positive
+  variables: ['is_young:zones_empden', 'is_young:nodes_walk_retail_jobs']
+
+- name: worker_interactions
+  sign: positive
+  variables: ['has_workers:nodes_drv_drv_45min_jobs', 'has_workers:zones_a_ln_emp_50min_transit']
+
+- name: race_clustering
+  sign: positive
+  variables: ['is_race1:nodes_walk_percent_race1', 'is_race2:nodes_walk_percent_race2',
+              'is_race3:nodes_walk_percent_race3', 'is_race4:nodes_walk_percent_race4']
+
+- name: price_attempt1
+  sign: negative
+  variables: [sqft_price_res, ln_income:sqft_price_res]
+
 - name: building_space
   sign: positive
-  variables: [b_ln_building_sqft,building_sqft,residential_units,sqft_per_unit, nodes_walk_ave_unit_sqft, parcels_ave_unit_size]
+  variables: [sqft_per_unit, nodes_walk_ave_unit_sqft, parcels_ave_unit_size]
 
 - name: size_vars
   sign: positive
@@ -12,12 +43,8 @@
   variables: [crime_ucr_rate, crime_other_rate, crime08]
 
 - name: building_age
-  sign: ''
-  variables: [b_is_newerthan2010,b_is_pre_1945,building_age,year_built]
-
-- name: price_attempt1
-  sign: negative
-  variables: [sqft_price_res]
+  sign: positive
+  variables: [b_is_newerthan2010, b_is_pre_1945, year_built]
 
 - name: land_area
   sign: positive
@@ -32,6 +59,10 @@
 - name: employment_access_transit
   sign: positive
   variables: [zones_transit_jobs_50min, zones_a_ln_emp_50min_transit]
+
+- name: price_attempt2
+  sign: negative
+  variables: [sqft_price_res, ln_income:sqft_price_res]
 
 - name: other_access
   sign: ''
@@ -52,10 +83,6 @@
 - name: negative_structure
   sign: negative
   variables: [building_type_id_is_82,building_type_id_is_83,building_type_id_is_84]
-
-- name: price_attempt2
-  sign: negative
-  variables: [sqft_price_res]
 
 - name: income_clustering
   sign: positive
@@ -87,4 +114,4 @@
 
 - name: price_attempt3
   sign: negative
-  variables: [sqft_price_res]
+  variables: [sqft_price_res, ln_income:sqft_price_res]

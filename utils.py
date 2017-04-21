@@ -480,9 +480,38 @@ def unit_choices(model, choosers, alternatives):
         choosers = choosers.head(vacant_units.sum())
         
     choices = model.predict(choosers, units, debug=True)
-        
+
+    def identify_duplicate_choices(choices):
+        choice_counts = choices.value_counts()
+        return choice_counts[choice_counts > 1].index.values
+
+    if model.choice_mode == 'individual':
+        print('Choice mode is individual, so utilizing lottery choices.')
+
+        chosen_multiple_times = identify_duplicate_choices(choices)
+
+        while len(chosen_multiple_times) > 0:
+            duplicate_choices = choices[choices.isin(chosen_multiple_times)]
+
+            # Identify the choosers who keep their choice, and those who must
+            # choose again.
+            keep_choice = duplicate_choices.drop_duplicates()
+            rechoose = duplicate_choices[~duplicate_choices.index.isin(
+                                                           keep_choice.index)]
+
+            # Subset choices, units, and choosers to account for occupied
+            # units and choosers who need to choose again.
+            choices = choices.drop(rechoose.index)
+            units_remaining = units.drop(choices.values)
+            choosers = choosers.drop(choices.index)
+
+            # Agents choose again.
+            next_choices = model.predict(choosers, units_remaining)
+            choices = pd.concat([choices, next_choices])
+            chosen_multiple_times = identify_duplicate_choices(choices)
+
     return pd.Series(units.loc[choices.values][model.choice_column].values,
-                              index=choices.index)
+index=choices.index)
 
 class SimulationChoiceModel(MNLDiscreteChoiceModel):
     """
