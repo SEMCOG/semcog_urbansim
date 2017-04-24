@@ -231,24 +231,45 @@ def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ['large_area_id'])
     lpr = remi_labor_participation_rates.to_frame()
-    employed = p.workers == True
+    employed = p.worker == True
+    p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers)
+
+    colls = ['persons', 'race_id', 'workers', 'children', 'large_area_id'] # , 'age_of_head'
+    same = {}
+    for idx, df in hh.groupby(colls):
+        same[tuple(idx)] = df[['income', 'cars']]
 
     for large_area_id, row in lpr.iterrows():
         select = (p.large_area_id == large_area_id) & (p.age >= row.age_min) & (p.age <= row.age_max)
-        lpr_workers = int(select.sum() * float(row[str(iter_var)][:-1]) / 100)
+        lpr = float(row[str(iter_var)][:-1]) / 100
+        lpr_workers = int(select.sum() * lpr)
         num_workers = (select & employed).sum()
 
         if lpr_workers > num_workers:
             # employ some persons
             new_workers = choice(p[select & (~employed)].index, int(lpr_workers - num_workers), False)
-            p.loc[new_workers].workers = True
+            p.loc[new_workers, "worker"] = True
         else:
             # unemploy some persons
-            new_workers = choice(p[select & employed].index, int(lpr_workers - num_workers), False)
-            p.loc[new_workers].workers = False
-        # print large_area_id, row.age_min, row.age_max, num_workers, lpr_workers
+            prob = p[select & employed].weight
+            prob /= prob.sum()
+            new_workers = choice(p[select & employed].index, int(num_workers - lpr_workers), False, p=prob)
+            p.loc[new_workers, "worker"] = False
+        # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
 
-    hh.workers = p.groupby("household_id").workers.sum()
+    hh["old_workers"] = hh.workers
+    hh.workers = p[p.worker == True].groupby("household_id").size()
+    hh.workers = hh.workers.fillna(0)
+    changed = (hh.workers != hh.old_workers)
+
+    for match_colls, chh in hh[changed].groupby(colls):
+        try:
+            match = same[tuple(match_colls)]
+            new_workers = choice(match.index, len(chh), True)
+            hh.loc[chh.index, ['income', 'cars']] = match.loc[new_workers, ['income', 'cars']].values
+        except KeyError:
+            pass
+            # todo: something better!?
 
     orca.add_table("households", hh[households.local_columns])
     orca.add_table("persons", p[persons.local_columns])
