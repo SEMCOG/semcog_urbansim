@@ -167,14 +167,9 @@ def presses_trans((ct, hh, p, target, iter_var)):
 @orca.step()
 def households_transition(households, persons, annual_household_control_totals, remi_pop_total, iter_var):
     region_ct = annual_household_control_totals.to_frame()
-    for col in region_ct.columns:
-        i = 0
-        if col.endswith('_max'):
-            if len(region_ct[col][region_ct[col] == -1]) > 0:
-                region_ct.loc[region_ct[col] == -1, col] = np.inf
-                i += 1
-            if i > 0:
-                region_ct[col] += 1  # TODO Why????
+    max_cols = region_ct.columns[region_ct.columns.str.endswith('_max') & (region_ct == -1).any(axis=0)]
+    region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
+    region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ['large_area_id'])
     region_p = persons.to_frame(persons.local_columns)
     region_target = remi_pop_total.to_frame()
@@ -215,20 +210,8 @@ def households_transition(households, persons, annual_household_control_totals, 
         out_hh_fixed.append(hh.set_index('household_id')[households.local_columns])
         out_p_fixed.append(p.set_index('person_id')[persons.local_columns])
 
-    # check that not index overlap
-    index_set = set()
-    for hh in out_hh_fixed:
-        ihh = set(hh.index)
-        assert len(index_set & ihh) == 0, "check that not index overlap"
-        index_set |= ihh
-    index_set = set()
-    for p in out_p_fixed:
-        ip = set(p.index)
-        assert len(index_set & ip) == 0, "check that not index overlap"
-        index_set |= ip
-
-    orca.add_table("households", pd.concat(out_hh_fixed))
-    orca.add_table("persons", pd.concat(out_p_fixed))
+    orca.add_table("households", pd.concat(out_hh_fixed, verify_integrity=True))
+    orca.add_table("persons", pd.concat(out_p_fixed, verify_integrity=True))
 
 
 @orca.step()
