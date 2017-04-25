@@ -1,5 +1,7 @@
 import os
 import random
+import operator
+from multiprocessing import Pool
 
 import numpy as np
 import orca
@@ -130,6 +132,37 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     _print_number_unplaced(jobs, 'building_id')
 
 
+def presses_trans((ct, hh, p, target, iter_var)):
+    ct_finite = ct[ct.persons_max <= 100]
+    ct_inf = ct[ct.persons_max > 100]
+    tran = transition.TabularTotalsTransition(ct_finite, 'total_number_of_households')
+    model = transition.TransitionModel(tran)
+    new, added_hh_idx, new_linked = \
+        model.transition(hh, iter_var,
+                         linked_tables={'linked': (p, 'household_id')})
+    new.loc[added_hh_idx, "building_id"] = -1
+    pers = new_linked['linked']
+    pers = pers[pers.household_id.isin(new.index)]
+    out = [[new, pers]]
+    target -= len(pers)
+    best_qal = np.inf
+    best = []
+    for _ in range(3):
+        tran = transition.TabularTotalsTransition(ct_inf, 'total_number_of_households')
+        model = transition.TransitionModel(tran)
+        new, added_hh_idx, new_linked = \
+            model.transition(hh, iter_var,
+                             linked_tables={'linked': (p, 'household_id')})
+        new.loc[added_hh_idx, "building_id"] = -1
+        pers = new_linked['linked']
+        pers = pers[pers.household_id.isin(new.index)]
+        qal = abs(target - len(pers))
+        if qal < best_qal:
+            best = (new, pers)
+            best_qal = qal
+    out.append(best)
+    return out
+
 @orca.step()
 def households_transition(households, persons, annual_household_control_totals, remi_pop_total, iter_var):
     region_ct = annual_household_control_totals.to_frame()
@@ -145,54 +178,27 @@ def households_transition(households, persons, annual_household_control_totals, 
     region_p = persons.to_frame(persons.local_columns)
     region_target = remi_pop_total.to_frame()
 
-    out_hh = []
-    out_p = []
-    for large_area_id, hh in region_hh.groupby('large_area_id'):
+    def cut_to_la((large_area_id, hh)):
         p = region_p[region_p.household_id.isin(hh.index)]
         target = int(region_target.loc[large_area_id, str(iter_var)])
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
-        ct_finite = ct[ct.persons_max <= 100]
-        ct_inf = ct[ct.persons_max > 100]
+        return ct, hh, p, target, iter_var
 
-        tran = transition.TabularTotalsTransition(ct_finite, 'total_number_of_households')
-        model = transition.TransitionModel(tran)
-        new, added_hh_idx, new_linked = \
-            model.transition(hh, iter_var,
-                             linked_tables={'linked': (p, 'household_id')})
-        new.loc[added_hh_idx, "building_id"] = -1
-        new = new[households.local_columns]
-        pers = new_linked['linked']
-        pers = pers[pers.household_id.isin(new.index)]
-        out_hh.append(new)
-        out_p.append(pers)
-        target -= len(pers)
-
-        best_qal = np.inf
-        best = []
-        for _ in range(3):
-            tran = transition.TabularTotalsTransition(ct_inf, 'total_number_of_households')
-            model = transition.TransitionModel(tran)
-            new, added_hh_idx, new_linked = \
-                model.transition(hh, iter_var,
-                                 linked_tables={'linked': (p, 'household_id')})
-            new.loc[added_hh_idx, "building_id"] = -1
-            new = new[households.local_columns]
-            pers = new_linked['linked']
-            pers = pers[pers.household_id.isin(new.index)]
-            qal = abs(target - len(pers))
-            if qal < best_qal:
-                best = (new, pers)
-                best_qal = qal
-        out_hh.append(best[0])
-        out_p.append(best[1])
+    arg_per_la = map(cut_to_la, region_hh.groupby('large_area_id'))
+    # cunks_per_la = map(presses_trans, arg_per_la)
+    pool = Pool(8)
+    cunks_per_la = pool.map(presses_trans, arg_per_la)
+    pool.close()
+    pool.join()
+    out = reduce(operator.concat, cunks_per_la)
 
     # fix indexes
     out_hh_fixed = []
     out_p_fixed = []
     hhidmax = region_hh.index.values.max() + 1
     pidmax = region_p.index.values.max() + 1
-    for hh, p in zip(out_hh, out_p):
+    for hh, p in out:
         hh = hh.reset_index()
         hh['household_id_old'] = hh['household_id']
         new_hh = (hh.building_id == -1).sum()
