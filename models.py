@@ -163,6 +163,7 @@ def presses_trans((ct, hh, p, target, iter_var)):
     out.append(best)
     return out
 
+
 @orca.step()
 def households_transition(households, persons, annual_household_control_totals, remi_pop_total, iter_var):
     region_ct = annual_household_control_totals.to_frame()
@@ -236,14 +237,15 @@ def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
     hh = households.to_frame(households.local_columns + ['large_area_id'])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ['large_area_id'])
-    lpr = remi_labor_participation_rates.to_frame()
+    lpr = remi_labor_participation_rates.to_frame(['age_min', 'age_max', str(iter_var)])
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers)
 
     colls = ['persons', 'race_id', 'workers', 'children', 'large_area_id'] # , 'age_of_head'
-    same = {}
-    for idx, df in hh.groupby(colls):
-        same[tuple(idx)] = df[['income', 'cars']]
+    same = {tuple(idx): df[['income', 'cars']] for idx, df in hh.groupby(colls)}
+
+    new_employ = []
+    new_unemploy = []
 
     for large_area_id, row in lpr.iterrows():
         select = (p.large_area_id == large_area_id) & (p.age >= row.age_min) & (p.age <= row.age_max)
@@ -253,15 +255,17 @@ def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
 
         if lpr_workers > num_workers:
             # employ some persons
-            new_workers = choice(p[select & (~employed)].index, int(lpr_workers - num_workers), False)
-            p.loc[new_workers, "worker"] = True
+            new_employ.append(choice(p[select & (~employed)].index, int(lpr_workers - num_workers), False))
         else:
             # unemploy some persons
             prob = p[select & employed].weight
             prob /= prob.sum()
-            new_workers = choice(p[select & employed].index, int(num_workers - lpr_workers), False, p=prob)
-            p.loc[new_workers, "worker"] = False
+            new_unemploy.append(choice(p[select & employed].index, int(num_workers - lpr_workers), False, p=prob))
+
         # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
+
+    p.loc[np.concatenate(new_employ), "worker"] = True
+    p.loc[np.concatenate(new_unemploy), "worker"] = False
 
     hh["old_workers"] = hh.workers
     hh.workers = p[p.worker == True].groupby("household_id").size()
