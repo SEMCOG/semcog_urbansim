@@ -124,12 +124,21 @@ def z_total_jobs(jobs):
 
 
 @orca.column('zones', 'transit_jobs_50min', cache=True, cache_scope='iteration')
-def transit_jobs_45min(zones, travel_data):
+def transit_jobs_50min(zones, travel_data):
     td = travel_data.to_frame('am_transit_total_time').reset_index()
     zemp = zones.to_frame('employment')
     temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
-    transit_jobs_45min = temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum()
-    return transit_jobs_45min
+    transit_jobs_50min = temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum()
+    return transit_jobs_50min
+
+
+@orca.column('zones', 'transit_jobs_30min', cache=True, cache_scope='iteration')
+def transit_jobs_30min(zones, travel_data):
+    td = travel_data.to_frame('am_transit_total_time').reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    transit_jobs_30min = temp[temp.am_transit_total_time <=30].groupby('from_zone_id').employment.sum()
+    return transit_jobs_30min
 
 
 @orca.column('zones', 'a_ln_emp_26min_drive_alone', cache=True, cache_scope='iteration')
@@ -154,6 +163,24 @@ def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
     zemp = zones.to_frame('employment')
     temp = pd.merge(drvtime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
+
+
+@orca.column('zones', 'percent_vacant_job_spaces', cache=True, cache_scope='iteration')
+def percent_vacant_job_spaces(buildings):
+    buildings = buildings.to_frame(buildings.local_columns + ['job_spaces', 'vacant_job_spaces', 'zone_id'])
+    job_spaces = buildings.groupby('zone_id').job_spaces.sum()
+    vacant_job_spaces = buildings.groupby('zone_id').vacant_job_spaces.sum()
+
+    return (vacant_job_spaces*1.0 / job_spaces).fillna(0)
+
+
+@orca.column('zones', 'percent_vacant_residential_units', cache=True, cache_scope='iteration')
+def percent_vacant_residential_units(buildings):
+    buildings = buildings.to_frame(buildings.local_columns + ['vacant_residential_units', 'zone_id'])
+    du = buildings.groupby('zone_id').residential_units.sum()
+    vacant_du = buildings.groupby('zone_id').vacant_residential_units.sum()
+
+    return (vacant_du*1.0 / du).fillna(0)
 
 
 def make_employment_density_variable(sector_id):

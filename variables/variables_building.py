@@ -213,6 +213,36 @@ def building_age(buildings, year):
     return age
 
 
+@orca.column('buildings', 'building_age_gt_50', cache=True, cache_scope='iteration')
+def building_age_gt_50(buildings):
+    return (buildings.building_age > 50).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_70', cache=True, cache_scope='iteration')
+def building_age_gt_70(buildings):
+    return (buildings.building_age > 70).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_80', cache=True, cache_scope='iteration')
+def building_age_gt_80(buildings):
+    return (buildings.building_age > 80).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_90', cache=True, cache_scope='iteration')
+def building_age_gt_90(buildings):
+    return (buildings.building_age > 90).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_100', cache=True, cache_scope='iteration')
+def building_age_gt_100(buildings):
+    return (buildings.building_age > 100).astype('int32')
+
+
+@orca.column('buildings', 'building_age_le_10', cache=True, cache_scope='iteration')
+def building_age_le_10(buildings):
+    return (buildings.building_age < 10).astype('int32')
+
+
 @orca.column('buildings', 'b_is_pre_1945', cache=True, cache_scope='iteration')
 def b_is_pre_1945(buildings):
     return (buildings.year_built < 1945).astype('int32')
