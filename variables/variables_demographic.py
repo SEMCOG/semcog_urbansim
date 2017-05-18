@@ -1,4 +1,5 @@
 import orca
+import numpy as np
 import pandas as pd
 from urbansim.utils import misc
 
@@ -55,6 +56,81 @@ def nodeid_walk(households, buildings):
 @orca.column('households', cache=True, cache_scope='iteration')
 def nodeid_drv(households, buildings):
     return misc.reindex(buildings.nodeid_drv, households.building_id)
+
+
+@orca.column('households', 'ln_income', cache=True, cache_scope='iteration')
+def ln_income(households):
+    return np.log1p(households.income)
+
+
+@orca.column('households', 'low_income', cache=True, cache_scope='iteration')
+def low_income(households):
+    return (households.income_quartile == 1).astype('int32')
+
+
+@orca.column('households', 'mid_income', cache=True, cache_scope='iteration')
+def mid_income(households):
+    return (households.income_quartile.isin([2, 3])).astype('int32')
+
+
+@orca.column('households', 'high_income', cache=True, cache_scope='iteration')
+def high_income(households):
+    return (households.income_quartile == 4).astype('int32')
+
+
+@orca.column('households', 'hhsize_gt_2', cache=True, cache_scope='iteration')
+def hhsize_gt_2(households):
+    return (households.persons > 2).astype('int32')
+
+
+@orca.column('households', 'hhsize_is_1', cache=True, cache_scope='iteration')
+def hhsize_is_1(households):
+    return (households.persons == 1).astype('int32')
+
+
+@orca.column('households', 'has_children', cache=True, cache_scope='iteration')
+def has_children(households):
+    return (households.children > 0).astype('int32')
+
+
+@orca.column('households', 'is_young', cache=True, cache_scope='iteration')
+def has_children(households):
+    return (households.age_of_head < 35).astype('int32')
+
+
+@orca.column('households', 'is_race1', cache=True, cache_scope='iteration')
+def is_race1(households):
+    return (households.race_id == 1).astype('int32')
+
+
+@orca.column('households', 'is_race2', cache=True, cache_scope='iteration')
+def is_race2(households):
+    return (households.race_id == 2).astype('int32')
+
+
+@orca.column('households', 'is_race3', cache=True, cache_scope='iteration')
+def is_race3(households):
+    return (households.race_id == 3).astype('int32')
+
+
+@orca.column('households', 'is_race4', cache=True, cache_scope='iteration')
+def is_race4(households):
+    return (households.race_id == 4).astype('int32')
+
+
+@orca.column('households', 'has_workers', cache=True, cache_scope='iteration')
+def has_workers(households):
+    return (households.workers > 0).astype('int32')
+
+
+@orca.column('households', 'workers_gt_cars', cache=True, cache_scope='iteration')
+def workers_gt_cars(households):
+    return (households.workers > households.cars).astype('int32')
+
+
+@orca.column('households', 'workers_lte_cars', cache=True, cache_scope='iteration')
+def workers_lte_cars(households):
+    return (households.workers <= households.cars).astype('int32')
 
 
 #####################

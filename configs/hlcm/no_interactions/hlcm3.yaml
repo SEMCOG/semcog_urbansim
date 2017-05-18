@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 3
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_is_newerthan2010
+- b_ln_building_sqft
+- nodes_walk_medical
+- nodes_walk_population
+- nodes_drv_drv_15min_retail_jobs
+- nodes_walk_ave_lot_sqft
+- crime08
+- sqft_price_res
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_newerthan2010: 0.5047942105816854
+        b_ln_building_sqft: 0.7148231545661907
+        crime08: -0.006598245548189589
+        nodes_drv_drv_15min_retail_jobs: 0.005696791688018663
+        nodes_walk_ave_lot_sqft: 0.09424658193678591
+        nodes_walk_medical: 0.001131624382105395
+        nodes_walk_population: 0.0003437910565283324
+        sqft_price_res: -0.0017009025822761115
+    Std. Error:
+        b_is_newerthan2010: 0.17890572087324053
+        b_ln_building_sqft: 0.017329182362947355
+        crime08: 0.0009831886224685262
+        nodes_drv_drv_15min_retail_jobs: 0.01553460700038075
+        nodes_walk_ave_lot_sqft: 0.025410972771059817
+        nodes_walk_medical: 0.00032895334132241146
+        nodes_walk_population: 6.988162155512183e-05
+        sqft_price_res: 0.00022378509925567784
+    T-Score:
+        b_is_newerthan2010: 2.821565504544964
+        b_ln_building_sqft: 41.24967581243766
+        crime08: -6.711067843343368
+        nodes_drv_drv_15min_retail_jobs: 0.366716176848184
+        nodes_walk_ave_lot_sqft: 3.7088931142424406
+        nodes_walk_medical: 3.4400756580133813
+        nodes_walk_population: 4.919620479286587
+        sqft_price_res: -7.600606957002104
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -13107.316572966209
+    'null': -13815.51055796495
+    ratio: 0.05126078996700212
