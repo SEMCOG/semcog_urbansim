@@ -1,0 +1,91 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 4
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- has_children:nodes_drv_elem_school_perf
+- zones_logsum_job_low_income
+- parcels_ave_unit_size
+- year_built
+- zones_logsum_pop_low_income
+- ln_income:nodes_walk_ave_income
+- persons:sqft_per_unit
+- is_race1:nodes_walk_percent_race1
+- residential_units
+- nodes_walk_ave_lot_sqft
+- building_type_id_is_84
+- crime_ucr_rate
+- nodes_walk_race_4_hhs
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        building_type_id_is_84: -0.4077565394864339
+        crime_ucr_rate: -0.00017717196614185928
+        has_children:nodes_drv_elem_school_perf: 0.2395243689853156
+        is_race1:nodes_walk_percent_race1: 0.6532104469704827
+        ln_income:nodes_walk_ave_income: 0.021644960073396943
+        nodes_walk_ave_lot_sqft: 0.3126800129615309
+        nodes_walk_race_4_hhs: 0.003301811582479206
+        parcels_ave_unit_size: 6.405100819183022e-05
+        persons:sqft_per_unit: 3.1909669069142594e-05
+        residential_units: 0.025090629793371233
+        year_built: 0.00010096084846082513
+        zones_logsum_job_low_income: 6.108631509573738e-07
+        zones_logsum_pop_low_income: -3.6745599742287174e-07
+    Std. Error:
+        building_type_id_is_84: 0.14828877589083694
+        crime_ucr_rate: 1.5974205053174093e-05
+        has_children:nodes_drv_elem_school_perf: 0.13570138853110328
+        is_race1:nodes_walk_percent_race1: 0.08989911506040613
+        ln_income:nodes_walk_ave_income: 0.0019322388222119528
+        nodes_walk_ave_lot_sqft: 0.03125249638654906
+        nodes_walk_race_4_hhs: 0.0006742844769223234
+        parcels_ave_unit_size: 3.0851556271019624e-05
+        persons:sqft_per_unit: 4.844388426610185e-06
+        residential_units: 0.0011399435878404164
+        year_built: 2.8281855522567664e-05
+        zones_logsum_job_low_income: 2.637082165402569e-07
+        zones_logsum_pop_low_income: 1.6306917561455492e-07
+    T-Score:
+        building_type_id_is_84: -2.749746479710674
+        crime_ucr_rate: -11.091128826260748
+        has_children:nodes_drv_elem_school_perf: 1.7650841423071784
+        is_race1:nodes_walk_percent_race1: 7.266038676037795
+        ln_income:nodes_walk_ave_income: 11.202010757975883
+        nodes_walk_ave_lot_sqft: 10.004961174752973
+        nodes_walk_race_4_hhs: 4.896763451458738
+        parcels_ave_unit_size: 2.076102989073406
+        persons:sqft_per_unit: 6.5869344608832465
+        residential_units: 22.010413551169282
+        year_built: 3.5698099221340995
+        zones_logsum_job_low_income: 2.3164357901761523
+        zones_logsum_pop_low_income: -2.253374962116838
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -13048.40720348167
+    'null': -13815.51055796495
+    ratio: 0.05552479231692431

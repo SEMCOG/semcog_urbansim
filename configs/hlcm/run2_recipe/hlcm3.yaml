@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 3
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- has_children:nodes_drv_elem_school_perf
+- vacant_job_spaces
+- nodes_walk_population
+- is_race1:nodes_walk_percent_race1
+- ln_income:sqft_price_res
+- drv_nearest_healthcenter
+- is_young:nodes_walk_retail_jobs
+- ln_income:nodes_walk_ln_popden
+- zones_transit_jobs_30min
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        drv_nearest_healthcenter: 0.011258121624445599
+        has_children:nodes_drv_elem_school_perf: 0.1703367567757775
+        is_race1:nodes_walk_percent_race1: 3.0
+        is_young:nodes_walk_retail_jobs: 0.002369877328282491
+        ln_income:nodes_walk_ln_popden: 0.013621845239059634
+        ln_income:sqft_price_res: -0.00017473743462034175
+        nodes_walk_population: 0.00028043789598205637
+        vacant_job_spaces: -0.019674109878914124
+        zones_transit_jobs_30min: 7.311049541061351e-06
+    Std. Error:
+        drv_nearest_healthcenter: 0.003977225465432779
+        has_children:nodes_drv_elem_school_perf: 0.14949884916149347
+        is_race1:nodes_walk_percent_race1: 0.0663120421650112
+        is_young:nodes_walk_retail_jobs: 0.000746857754637195
+        ln_income:nodes_walk_ln_popden: 0.0017789859662792386
+        ln_income:sqft_price_res: 2.116432676408195e-05
+        nodes_walk_population: 7.947144868187815e-05
+        vacant_job_spaces: 0.00103022781451918
+        zones_transit_jobs_30min: 1.7567446733150656e-06
+    T-Score:
+        drv_nearest_healthcenter: 2.830647073517255
+        has_children:nodes_drv_elem_school_perf: 1.1393850703945838
+        is_race1:nodes_walk_percent_race1: 45.2406516532063
+        is_young:nodes_walk_retail_jobs: 3.1731307783417453
+        ln_income:nodes_walk_ln_popden: 7.657084146397072
+        ln_income:sqft_price_res: -8.256224569207145
+        nodes_walk_population: 3.528788019262628
+        vacant_job_spaces: -19.096853726567527
+        zones_transit_jobs_30min: 4.161702979446087
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -13396.827873672695
+    'null': -13815.51055796495
+    ratio: 0.030305263242759728

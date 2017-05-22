@@ -1,0 +1,55 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 3
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_building_sqft
+- b_ln_sqft_per_unit
+- x
+- nodes_walk_percent_mid_income
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.8564371688190932
+        b_ln_sqft_per_unit: -0.8052915083997497
+        nodes_walk_percent_mid_income: 3.0
+        x: -9.462479128519457e-07
+    Std. Error:
+        b_ln_building_sqft: 0.01805385175069993
+        b_ln_sqft_per_unit: 0.028022419243026897
+        nodes_walk_percent_mid_income: 0.2028723997040514
+        x: 1.44037581963001e-08
+    T-Score:
+        b_ln_building_sqft: 47.43791965533837
+        b_ln_sqft_per_unit: -28.73740134339538
+        nodes_walk_percent_mid_income: 14.78762022027824
+        x: -65.69451527553474
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -12981.722506205779
+    'null': -13815.51055796495
+    ratio: 0.06035159165930892

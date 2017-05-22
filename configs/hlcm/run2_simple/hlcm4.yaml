@@ -1,0 +1,63 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 4
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_land_area
+- parcels_centroid_x
+- land_area
+- x
+- nodes_walk_ave_income
+- sqft_price_nonres
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.8241607657885577
+        land_area: 2.8049880198766336e-05
+        nodes_walk_ave_income: 0.9836714937203656
+        parcels_centroid_x: -8.265152641499745e-07
+        sqft_price_nonres: -1.6694530888672691e-06
+        x: 3.6593492040360845e-07
+    Std. Error:
+        b_ln_land_area: 0.04304842224423559
+        land_area: 5.566172504195953e-06
+        nodes_walk_ave_income: 0.04464688910322
+        parcels_centroid_x: 4.243096823630915e-08
+        sqft_price_nonres: 0.00019339147749918646
+        x: 2.9972197310622895e-08
+    T-Score:
+        b_ln_land_area: 19.14497031070441
+        land_area: 5.039347986003213
+        nodes_walk_ave_income: 22.032251596437025
+        parcels_centroid_x: -19.47905736081475
+        sqft_price_nonres: -0.008632505994863668
+        x: 12.209145582860286
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -12820.98163845846
+    'null': -13815.51055796495
+    ratio: 0.07198640363914188
