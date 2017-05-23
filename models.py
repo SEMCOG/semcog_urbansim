@@ -484,6 +484,30 @@ def residential_developer(feasibility, households, buildings, parcels, iter_var)
                         bldg_sqft_per_job=400.0)
 
 
+def new_random_type(row):
+    form = row['form']
+    form_to_btype = orca.get_injectable("form_to_btype")
+    return random.choice(form_to_btype[form])
+
+
+@orca.step('new_res_developer')
+def new_res_developer(feasibility, households, buildings, parcels, iter_var):
+    parcel_utils.run_developer(
+        "residential",
+        households,
+        buildings,
+        'residential_units',
+        feasibility,
+        parcels.parcel_size,
+        parcels.ave_unit_size,
+        parcels.total_units,
+        'res_developer.yaml',
+        year=iter_var,
+        target_vacancy=.20,
+        form_to_btype_callback=new_random_type,
+        add_more_columns_callback=add_extra_columns_res)
+
+
 @orca.step()
 def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
     utils.run_developer(["office", "retail", "industrial", "medical"],

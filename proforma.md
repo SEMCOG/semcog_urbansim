@@ -31,4 +31,10 @@ run `to_yaml()` to easily save as a YAML file.
 * New model uses `proforma.yaml` created above
 
 
-
+#### Create and run new_res_developer step
+* Copy "res_developer.yaml" from urbansim_parcels repo and manually edit
+  the values
+* copy "res_developer" model from urbansim_parcels, update parameters
+* Add new random_type function to fit the new format
+* Did not hardcode target_units number like in utils.py; can set using
+num_units_to_build parameter
