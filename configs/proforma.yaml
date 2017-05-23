@@ -1,0 +1,220 @@
+parcel_sizes:
+- 10000.0
+
+fars:
+- 0.1
+- 0.25
+- 0.5
+- 0.75
+- 1.0
+- 1.5
+- 1.8
+- 2.0
+- 2.25
+- 2.5
+- 2.75
+- 3.0
+- 3.25
+- 3.5
+- 3.75
+- 4.0
+- 4.5
+- 5.0
+- 5.5
+- 6.0
+- 6.5
+- 7.0
+- 9.0
+- 11.0
+
+uses:
+- retail
+- industrial
+- office
+- medical
+- residential
+
+residential_uses:
+- false
+- false
+- false
+- false
+- true
+
+forms:
+    industrial:
+        industrial: 1.0
+    medical:
+        medical: 1.0
+    mixedoffice:
+        office: 0.7
+        residential: 0.3
+    mixedresidential:
+        residential: 0.9
+        retail: 0.1
+    office:
+        office: 1.0
+    residential:
+        residential: 1.0
+    retail:
+        retail: 1.0
+
+profit_factor: 1.0
+
+building_efficiency: 0.85
+
+parcel_coverage: 0.85
+
+cap_rate: 0.05
+
+parking_rates:
+    industrial: 0.6
+    medical: 1.0
+    office: 1.0
+    residential: 1.0
+    retail: 2.0
+
+sqft_per_rate: 1000.0
+
+parking_configs:
+- surface
+- deck
+- underground
+
+costs:
+    industrial:
+    - 125.0
+    - 125.0
+    - 130.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    medical:
+    - 210.0
+    - 240.0
+    - 300.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    office:
+    - 165.0
+    - 180.0
+    - 180.0
+    - 180.0
+    - 175.0
+    - 175.0
+    - 175.0
+    - 999.0
+    - 999.0
+    residential:
+    - 106.0
+    - 96.0
+    - 160.0
+    - 180.0
+    - 180.0
+    - 205.0
+    - 205.0
+    - 205.0
+    - 999.0
+    retail:
+    - 120.0
+    - 145.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+
+heights_for_costs:
+- 12
+- 24
+- 36
+- 48
+- 72
+- 108
+- 216
+- 216
+- .inf
+
+parking_sqft_d:
+    deck: 250.0
+    surface: 300.0
+    underground: 250.0
+
+parking_cost_d:
+    deck: 81.0
+    surface: 27.0
+    underground: 99.0
+
+height_per_story: 12.0
+
+max_retail_height: 2.0
+
+max_industrial_height: 2.0
+
+construction_months:
+    industrial:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    medical:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    office:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    residential:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    retail:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+
+loan_fees: 0.02
+
+only_built: true
+
+loan_to_cost_ratio: 0.7
+
+parcel_filter: null
+
+interest_rate: 0.05
+
+residential_to_yearly: true
+
+drawdown_factor: 0.6
+
+construction_sqft_for_months:
+- 10000
+- 20000
+- 50000
+- .inf
+
+forms_to_test:
+- industrial
+- mixedoffice
+- mixedresidential
+- office
+- residential
+- retail
+
+pass_through: []
+
+simple_zoning: false
