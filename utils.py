@@ -267,7 +267,7 @@ def run_feasibility(parcels, parcel_price_callback,
 
     # add prices for each use
     for use in pf.config.uses:
-        df[use] = parcel_price_callback(use)
+        df[use] = parcel_price_callback(use, df)
 
     # convert from cost to yearly rent
     if to_yearly:
