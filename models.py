@@ -8,6 +8,7 @@ import pandas as pd
 from urbansim.developer import sqftproforma
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
+from urbansim_parcels import utils as parcel_utils
 
 import utils
 import variables
@@ -422,6 +423,24 @@ def feasibility(parcels):
                           variables.parcel_average_price,
                           variables.parcel_is_allowed,
                           to_yearly=True, config=pfc)
+
+
+def parcel_average_price(use):
+    # Copied from variables.py
+    parcels_wrapper = orca.get_table('parcels')
+    if len(orca.get_table('nodes_walk')) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels_wrapper.index)
+    return misc.reindex(orca.get_table('nodes_walk')[use],
+                        orca.get_table('parcels').nodeid_walk)
+
+
+@orca.step('new_feasibility')
+def new_feasibility(parcels):
+    parcel_utils.run_feasibility(parcels,
+                                 parcel_average_price,
+                                 variables.parcel_is_allowed,
+                                 cfg='proforma.yaml')
 
 
 def random_type(form):

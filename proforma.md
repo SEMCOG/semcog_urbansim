@@ -22,3 +22,13 @@ in `run_feasibility` in utils.py
 run `to_yaml()` to easily save as a YAML file.
 * Test that pro forma can be loaded from this
 
+
+#### Create and run new_feasibility step
+* Copy "feasibility" model from urbansim_parcels
+* Point to helper function `urbansim_parcels.utils`
+* Copy `parcel_average_price` callback function from variables module and
+  modify slightly (remove the df parameter)
+* New model uses `proforma.yaml` created above
+
+
+
