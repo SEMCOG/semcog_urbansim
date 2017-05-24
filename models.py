@@ -355,11 +355,6 @@ def feasibility(parcels):
                                  cfg='proforma.yaml')
 
 
-def random_type(form):
-    form_to_btype = orca.get_injectable("form_to_btype")
-    return random.choice(form_to_btype[form])
-
-
 def add_extra_columns_res(df):
     for col in ['building_id_old', 'improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
                 'sqft_price_res']:
@@ -378,7 +373,7 @@ def add_extra_columns_nonres(df):
     return df
 
 
-def new_random_type(row):
+def random_type(row):
     form = row['form']
     form_to_btype = orca.get_injectable("form_to_btype")
     return random.choice(form_to_btype[form])
@@ -398,50 +393,26 @@ def residential_developer(feasibility, households, buildings, parcels, iter_var)
         'res_developer.yaml',
         year=iter_var,
         target_vacancy=.20,
-        form_to_btype_callback=new_random_type,
+        form_to_btype_callback=random_type,
         add_more_columns_callback=add_extra_columns_res)
 
 
-# This is still in the old format
-
 @orca.step()
 def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
-    utils.run_developer(["office", "retail", "industrial", "medical"],
-                        jobs,
-                        buildings,
-                        "job_spaces",
-                        parcels.parcel_size,
-                        parcels.ave_unit_size,
-                        parcels.total_job_spaces,
-                        feasibility,
-                        year=iter_var,
-                        target_vacancy=.60,
-                        form_to_btype_callback=random_type,
-                        add_more_columns_callback=add_extra_columns_nonres,
-                        max_parcel_size=10000000,
-                        residential=False,
-                        bldg_sqft_per_job=400.0)
-
-
-##@orca.step()
-##def build_networks(parcels):
-####  'mgf14_walk': {'cost1': 'meters',
-####                  'edges': 'edges_mgf14_walk',
-####                  'nodes': 'nodes_mgf14_walk'}
-##    network='mgf14_walk'
-##    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
-##    nodes, edges = st['nodes_'+network], st['edges_'+network]
-##    net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
-##                       edges[["feet"]])
-##    net.precompute(2000)
-##    orca.add_injectable("net", net)
-##    
-##    p = parcels.to_frame()
-##    p['x'] = p.centroid_x
-##    p['y'] = p.centroid_y
-##    p['_node_id'] = net.get_node_ids(p['x'], p['y'])
-##    orca.add_table("parcels", p)
-
+    parcel_utils.run_developer(
+        ["office", "retail", "industrial", "medical"],
+        jobs,
+        buildings,
+        "job_spaces",
+        feasibility,
+        parcels.parcel_size,
+        parcels.ave_unit_size,
+        parcels.total_job_spaces,
+        'nonres_developer.yaml',
+        year=iter_var,
+        target_vacancy=0.60,
+        form_to_btype_callback=random_type,
+        add_more_columns_callback=add_extra_columns_nonres)
 
 
 @orca.step()
@@ -449,6 +420,7 @@ def build_networks(parcels):
     pdna.network.reserve_num_graphs(2)
 
     # networks in semcog_networks.h5
+    # Todo add injectable that reads from yaml
     dic_net = {'mgf14_drive':
                    {'cost1': 'feet',
                     'cost2': 'minutes',

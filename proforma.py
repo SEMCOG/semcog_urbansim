@@ -14,6 +14,6 @@ orca.run([
     "price_vars",  # compute average price measures
     "feasibility",  # compute development feasibility
     "residential_developer",  # build actual buildings
+    "non_residential_developer"
 ], iter_vars=range(2016, 2017),
-    data_out=utils.get_run_filename(),
     out_interval=1)
