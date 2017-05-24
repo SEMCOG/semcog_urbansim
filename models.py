@@ -27,74 +27,66 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
 
 
 @orca.step()
-def rsh_estimate(buildings, nodes):
-    return utils.hedonic_estimate("rsh.yaml", buildings, nodes)
+def rsh_estimate(buildings, nodes_walk):
+    return utils.hedonic_estimate("rsh.yaml", buildings, nodes_walk)
 
 
 @orca.step()
-def rsh_simulate(buildings, nodes):
-    return utils.hedonic_simulate("rsh.yaml", buildings, nodes,
+def rsh_simulate(buildings, nodes_walk):
+    return utils.hedonic_simulate("rsh.yaml", buildings, nodes_walk,
                                   "sqft_price_res")
 
 
 @orca.step()
-def nrh_estimate(buildings, nodes):
-    return utils.hedonic_estimate("nrh.yaml", buildings, nodes)
+def nrh_estimate(buildings, nodes_walk):
+    return utils.hedonic_estimate("nrh.yaml", buildings, nodes_walk)
 
 
 @orca.step()
-def nrh_simulate(buildings, nodes):
-    return utils.hedonic_simulate("nrh.yaml", buildings, nodes,
+def nrh_simulate(buildings, nodes_walk):
+    return utils.hedonic_simulate("nrh.yaml", buildings, nodes_walk,
                                   "sqft_price_nonres")
 
 
 @orca.step()
-def hlcm_estimate(households, buildings, nodes):
+def hlcm_estimate(households, buildings, nodes_walk):
     return utils.lcm_estimate("hlcm.yaml", households, "building_id",
-                              buildings, nodes)
+                              buildings, nodes_walk)
 
 
 @orca.step()
-def hlcm_simulate(households, buildings, nodes):
-    return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes,
+def hlcm_simulate(households, buildings, nodes_walk):
+    return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes_walk,
                               "building_id", "residential_units",
                               "vacant_residential_units")
 
 
 @orca.step()
-def elcm_estimate(jobs, buildings, nodes):
-    return utils.lcm_estimate("elcm3.yaml", jobs, "building_id",
-                              buildings, nodes)
-    # return utils.lcm_estimate("elcm5.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm93.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm99.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm115.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm125.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm147.yaml", jobs, "building_id",
-    #                           buildings, nodes)
-    # return utils.lcm_estimate("elcm161.yaml", jobs, "building_id",
-    #                           buildings, nodes)
+def elcm_estimate(jobs, buildings, nodes_drv):
+    utils.lcm_estimate("elcm3.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm5.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm93.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm99.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm115.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm125.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm147.yaml", jobs, "building_id", buildings, nodes_drv)
+    utils.lcm_estimate("elcm161.yaml", jobs, "building_id", buildings, nodes_drv)
 
 
 @orca.step()
-def elcm_simulate(jobs, buildings, nodes):
+def elcm_simulate(jobs, buildings, nodes_drv):
     jobs_df = jobs.to_frame()
     buildings = buildings.to_frame()
 
     def register_broadcast_simulate_segment(jobs_df_name, jobs_df, buildings_df_name, buildings_df, yaml_name):
         orca.add_table(jobs_df_name, jobs_df)
         orca.add_table(buildings_df_name, buildings_df)
-        orca.broadcast('nodes', buildings_df_name, cast_index=True, onto_on='_node_id')
+        orca.broadcast('nodes_drv', buildings_df_name, cast_index=True, onto_on='nodeid_drv')
         orca.broadcast('parcels', buildings_df_name, cast_index=True, onto_on='parcel_id')
         orca.broadcast(buildings_df_name, jobs_df_name, cast_index=True, onto_on='building_id')
         jobs_df = orca.get_table(jobs_df_name)
         buildings_df = orca.get_table(buildings_df_name)
-        utils.lcm_simulate(yaml_name, jobs_df, buildings_df, nodes,
+        utils.lcm_simulate(yaml_name, jobs_df, buildings_df, nodes_drv,
                            "building_id", "job_spaces",
                            "vacant_job_spaces")
         jobs.update_col_from_series('building_id',
@@ -215,14 +207,14 @@ def households_transition(households, persons, annual_household_control_totals, 
 
 
 @orca.step()
-def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
+def fix_lpr(households, persons, iter_var, workers_emloyment_rates_by_large_area):
     from numpy.random import choice
     hh = households.to_frame(households.local_columns + ['large_area_id'])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ['large_area_id'])
-    lpr = remi_labor_participation_rates.to_frame(['age_min', 'age_max', str(iter_var)])
+    lpr = workers_emloyment_rates_by_large_area.to_frame(['age_min', 'age_max', str(iter_var)])
     employed = p.worker == True
-    p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers)
+    p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
     colls = ['persons', 'race_id', 'workers', 'children', 'large_area_id'] # , 'age_of_head'
     same = {tuple(idx): df[['income', 'cars']] for idx, df in hh.groupby(colls)}
@@ -232,7 +224,7 @@ def fix_lpr(households, persons, iter_var, remi_labor_participation_rates):
 
     for large_area_id, row in lpr.iterrows():
         select = (p.large_area_id == large_area_id) & (p.age >= row.age_min) & (p.age <= row.age_max)
-        lpr = float(row[str(iter_var)][:-1]) / 100
+        lpr = row[str(iter_var)]
         lpr_workers = int(select.sum() * lpr)
         num_workers = (select & employed).sum()
 
@@ -274,7 +266,7 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
     ct_emp = ct_emp.reset_index().set_index('year')
     tran = transition.TabularTotalsTransition(ct_emp, 'total_number_of_jobs')
     model = transition.TransitionModel(tran)
-    j = jobs.to_frame(jobs.local_columns)
+    j = jobs.to_frame(jobs.local_columns + ['large_area_id'])
     new, added_jobs_idx, new_linked = model.transition(j, iter_var)
     new.loc[added_jobs_idx, "building_id"] = -1
     orca.add_table("jobs", new)
@@ -382,7 +374,7 @@ def refiner(jobs, households, buildings, iter_var):
 @orca.step()
 def scheduled_development_events(buildings, iter_var):
     sched_dev = pd.read_csv("data/scheduled_development_events.csv")
-    sched_dev[sched_dev.year_built == iter_var]
+    sched_dev = sched_dev[sched_dev.year_built == iter_var]
     sched_dev['building_sqft'] = 0
     sched_dev["sqft_price_res"] = 0
     sched_dev["sqft_price_nonres"] = 0
@@ -968,15 +960,15 @@ def travel_model(iter_var, travel_data, buildings, parcels, households, persons,
             transcad.transcad_interaction(merged, taz_table)
 
 
-##
-##@orca.step()
-##def housing_value_update(iter_var):
-##    income_forecast = special_forecast.to_frame().loc['year'==iter_var][['large_area_id','income_growh_rate']]
-##    parcels = parcels.to_frame()
-##    parcels = pd.merge(parcels, income_growth_rate, left_on='large_area_id', left_on='large_area_id', how = 'left')
-##    parcels['sev_value'] =  parcels['sev_value'] * parcels['income_growth_rate']
-##    parcels.drop('income_growth_rate',inplace=True)
-##    orca.add_table("parcels", parcels)
+# @orca.step()
+# def housing_value_update(iter_var):
+#     "update sev with income growth to attempt to fix profarma"
+#     income_forecast = special_forecast.to_frame().loc['year'==iter_var][['large_area_id','income_growh_rate']]
+#     parcels = parcels.to_frame()
+#     parcels = pd.merge(parcels, income_growth_rate, left_on='large_area_id', left_on='large_area_id', how = 'left')
+#     parcels['sev_value'] =  parcels['sev_value'] * parcels['income_growth_rate']
+#     parcels.drop('income_growth_rate',inplace=True)
+#     orca.add_table("parcels", parcels)
 
 
 def _print_number_unplaced(df, fieldname="building_id"):

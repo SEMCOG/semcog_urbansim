@@ -12,15 +12,15 @@ def popden(parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
 
-##@orca.column('zones', 'jobs_within_30_min', cache=True)
-##def jobs_within_30_min(jobs, travel_data):
-##    j = pd.DataFrame({'zone_id':jobs.zone_id})
-##    td = travel_data.to_frame()
-##    zone_ids = np.unique(td.reset_index().to_zone_id)
-##    return misc.compute_range(td,
-##                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
-##                                  "am_single_vehicle_to_work_travel_time",
-##                                  30, agg=np.sum)
+@orca.column('zones', 'jobs_within_30_min', cache=True)
+def jobs_within_30_min(jobs, travel_data):
+    j = pd.DataFrame({'zone_id':jobs.zone_id})
+    td = travel_data.to_frame()
+    zone_ids = np.unique(td.reset_index().to_zone_id)
+    return misc.compute_range(td,
+                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
+                                  "am_single_vehicle_to_work_travel_time",
+                                  30, agg=np.sum)
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def households(households):

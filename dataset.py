@@ -38,19 +38,17 @@ def households(store):
 
 for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'employment_sectors', 'home_based_status',
              'target_vacancies', 'building_sqft_per_job',
+             'annual_relocation_rates_for_households',
              'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
              'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types', 'access_drive_minutes',
-             'access_walk_feet', 'transit_stops', 'crime_rates', 'schools', 'poi', ]:
+             'workers_labor_participation_rates', 'workers_emloyment_rates_by_large_area_age', 'workers_emloyment_rates_by_large_area',
+             'access_walk_feet', 'transit_stops', 'crime_rates', 'schools', 'poi', 
+             'annual_household_control_totals']:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
-orca.add_table("remi_pop_total", pd.read_csv("data/remi_pop_total.csv", index_col='large_area_id'))
-orca.add_table("remi_labor_participation_rates",
-               pd.read_csv("data/remi_labor_participation_rates.csv", index_col='large_area_id'))
-orca.add_table("annual_household_control_totals",
-               pd.read_csv("data/annual_household_control_totals.csv", index_col='year'))
-orca.add_table("annual_relocation_rates_for_households",
-               pd.read_csv("data/annual_household_control_totals.csv", index_col='year'))
+orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
+
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:

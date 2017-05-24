@@ -41,14 +41,6 @@ def y(buildings, parcels):
     return misc.reindex(parcels.y, buildings.parcel_id)
 
 
-##@orca.column('buildings', 'dist_hwy', cache=True)
-##def dist_hwy(buildings, parcels):
-##    return misc.reindex(parcels.dist_hwy, buildings.parcel_id)
-##
-##@orca.column('buildings', 'dist_road', cache=True)
-##def dist_road(buildings, parcels):
-##    return misc.reindex(parcels.dist_road, buildings.parcel_id)
-
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def zone_id(buildings, parcels):
     return misc.reindex(parcels.zone_id, buildings.parcel_id)
@@ -203,3 +195,8 @@ def walk_nearest_library(buildings, parcels):
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def walk_nearest_park(buildings, parcels):
     return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def hedonic_sector_id(buildings):
+    return buildings.large_area_id * 100 + buildings.building_type_id
+
