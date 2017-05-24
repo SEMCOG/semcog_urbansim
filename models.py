@@ -337,94 +337,6 @@ def price_vars(net_walk):
     orca.add_table("nodes_prices", nodes)
 
 
-@orca.step()
-def feasibility(parcels):
-    pfc = sqftproforma.SqFtProFormaConfig()
-    pfc.profit_factor = 1.0
-    # Adjust cost downwards based on RS Means test factor
-    pfc.costs = {btype: list(np.array(pfc.costs[btype]) * 0.9) for btype in pfc.costs}
-    # Adjust price downwards based on RS Means test factor
-    pfc.parking_cost_d = {ptype: pfc.parking_cost_d[ptype] * 0.9 for ptype in pfc.parking_cost_d}
-
-    pfc.uses = ['retail', 'industrial', 'office', 'medical', 'residential']
-    pfc.residential_uses = [False, False, False, False, True]
-    pfc.forms = {
-        'retail': {
-            "retail": 1.0
-        },
-        'industrial': {
-            "industrial": 1.0
-        },
-        'office': {
-            "office": 1.0
-        },
-        'residential': {
-            "residential": 1.0
-        },
-        'medical': {
-            "medical": 1.0
-        },
-        'mixedresidential': {
-            "retail": .1,
-            "residential": .9
-        },
-        'mixedoffice': {
-            "office": 0.7,
-            "residential": 0.3
-        }
-    }
-    pfc.parking_rates = {
-        "retail": 2.0,
-        "industrial": .6,
-        "office": 1.0,
-        "medical": 1.0,
-        "residential": 1.0
-    }
-    pfc.building_efficiency = .85
-    pfc.parcel_coverage = .85
-
-    pfc.costs = {
-        "residential": [106.0, 96.0, 160.0, 180.0, 180.0, 205.0, 205.0, 205.0, 999.0],
-        "industrial": [125.0, 125.0, 130.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0],
-        "office": [165.0, 180.0, 180.0, 180.0, 175.0, 175.0, 175.0, 999.0, 999.0],
-        "medical": [210.0, 240.0, 300.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0],
-        "retail": [120.0, 145.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0]
-    }
-
-    pfc.heights_for_costs = [12, 24, 36, 48, 72, 108, 216, 216, np.inf]
-
-    # from urbansim/developer/sqftproforma.py line 515
-
-    # # debug hack
-    # debug_hack = pd.concat(self._lookup_parking_cfg(form, parking_config, df, False,
-    #                                         pass_through)
-    #                for parking_config in self.config.parking_configs)
-    #
-    # for num in [1320022, 1360867, 1331678]:
-    #     if num in debug_hack.index:
-    #         debug_hack.loc[num].reset_index().to_csv('lookup_df_' + form + '_' + str(num) + '.csv')
-    # # / debug hack
-
-
-    # # debug hack
-    # debug_hack = pd.concat(self._lookup_parking_cfg(form, parking_config, df, False,
-    #                                                 pass_through)
-    #                        for parking_config in self.config.parking_configs)
-    #
-    # for num in [1320022, 1360867, 1331678]:
-    #     if num in debug_hack.index:
-    #         pd.merge(debug_hack.loc[num], df, left_index=True, right_index=True, how="left").reset_index().to_csv(
-    #             'lookup_df_' + str(debug_hack.loc[num].max_profit_far.values[0]) + "_" + form + '_' + str(
-    #                 num) + '.csv')
-    #
-    # # / debug hack
-
-    utils.run_feasibility(parcels,
-                          variables.parcel_average_price,
-                          variables.parcel_is_allowed,
-                          to_yearly=True, config=pfc)
-
-
 def parcel_average_price(use):
     # Copied from variables.py
     parcels_wrapper = orca.get_table('parcels')
@@ -435,8 +347,8 @@ def parcel_average_price(use):
                         orca.get_table('parcels').nodeid_walk)
 
 
-@orca.step('new_feasibility')
-def new_feasibility(parcels):
+@orca.step('feasibility')
+def feasibility(parcels):
     parcel_utils.run_feasibility(parcels,
                                  parcel_average_price,
                                  variables.parcel_is_allowed,
@@ -466,32 +378,14 @@ def add_extra_columns_nonres(df):
     return df
 
 
-@orca.step()
-def residential_developer(feasibility, households, buildings, parcels, iter_var):
-    utils.run_developer("residential",
-                        households,
-                        buildings,
-                        "residential_units",
-                        parcels.parcel_size,
-                        parcels.ave_unit_size,
-                        parcels.total_units,
-                        feasibility,
-                        year=iter_var,
-                        target_vacancy=.20,
-                        form_to_btype_callback=random_type,
-                        add_more_columns_callback=add_extra_columns_res,
-                        max_parcel_size=10000000,
-                        bldg_sqft_per_job=400.0)
-
-
 def new_random_type(row):
     form = row['form']
     form_to_btype = orca.get_injectable("form_to_btype")
     return random.choice(form_to_btype[form])
 
 
-@orca.step('new_res_developer')
-def new_res_developer(feasibility, households, buildings, parcels, iter_var):
+@orca.step('residential_developer')
+def residential_developer(feasibility, households, buildings, parcels, iter_var):
     parcel_utils.run_developer(
         "residential",
         households,
@@ -507,6 +401,8 @@ def new_res_developer(feasibility, households, buildings, parcels, iter_var):
         form_to_btype_callback=new_random_type,
         add_more_columns_callback=add_extra_columns_res)
 
+
+# This is still in the old format
 
 @orca.step()
 def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
