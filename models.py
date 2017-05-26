@@ -385,10 +385,29 @@ def scheduled_development_events(buildings, iter_var, scheduled_development_even
         b = buildings.to_frame(buildings.local_columns)
         all_buildings = Developer.merge(b, sched_dev[b.columns])
         orca.add_table("buildings", all_buildings)
+
         # Todo: maybe we need to impute some columns
         # Todo: parcel use need to be updated
-        # Todo: demolished event
         # Todo: record dev_id -> building_id
+
+
+@orca.step()
+def scheduled_demolition_events(buildings, households, jobs, iter_var, scheduled_demolition_events):
+    sched_dev = scheduled_demolition_events.to_frame()
+    sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
+    if len(sched_dev) > 0:
+        orca.add_table("buildings", buildings.to_frame(buildings.local_columns).drop(sched_dev.building_id))
+
+        # unplace HH
+        households = households.to_frame(households.local_columns)
+        households.building_id[households.building_id.isin(sched_dev.building_id)] = -1
+        orca.add_table("households", households)
+
+        # unplace jobs
+        jobs = jobs.to_frame(jobs.local_columns)
+        jobs.building_id[jobs.building_id.isin(sched_dev.building_id)] = -1
+        orca.add_table("jobs", jobs)
+        # Todo: parcel use need to be updated
 
 
 @orca.step()
