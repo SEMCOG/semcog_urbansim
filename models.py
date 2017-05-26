@@ -274,17 +274,15 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
 
 @orca.step()
 def government_jobs_scaling_model(jobs):
-    jobs = jobs.to_frame(jobs.local_columns)
-    government_sectors = [18, 19, 20]
+    jobs = jobs.to_frame(jobs.local_columns+['large_area_id'])
+    government_sectors = [18]
 
     def random_choice(chooser_ids, alternative_ids, probabilities):
-        choices = pd.Series([np.nan] * len(chooser_ids), index=chooser_ids)
-        chosen = np.random.choice(
-            alternative_ids, size=len(chooser_ids), replace=True, p=probabilities)
-        choices[chooser_ids] = chosen
-        return choices
+        return pd.Series(np.random.choice(
+            alternative_ids, size=len(chooser_ids), replace=True, p=probabilities), index=chooser_ids)
 
-    jobs_to_place = jobs[jobs.building_id.isnull().values]
+    jobs_to_place = jobs[jobs.building_id.isnull()]
+
     if len(jobs_to_place) > 0:
         segments = jobs_to_place.groupby(['large_area_id', 'sector_id'])
         for name, segment in segments:
@@ -292,7 +290,7 @@ def government_jobs_scaling_model(jobs):
             sector = int(name[1])
             if sector in government_sectors:
                 jobs_to_place = segment.index.values
-                counts_by_bid = jobs[(jobs.sector_id == sector).values * (jobs.large_area_id == large_area_id)].groupby(
+                counts_by_bid = jobs[(jobs.sector_id == sector) & (jobs.large_area_id == large_area_id)].groupby(
                     ['building_id']).size()
                 prop_by_bid = counts_by_bid / counts_by_bid.sum()
                 choices = random_choice(jobs_to_place, prop_by_bid.index.values, prop_by_bid.values)
@@ -305,12 +303,14 @@ def refiner(jobs, households, buildings, iter_var):
     jobs = jobs.to_frame()
     households = households.to_frame()
     refinements1 = pd.read_csv("data/refinements.csv")
-    refinements2 = pd.read_csv("data/employment_events.csv")
+    refinements2 = pd.read_csv("data/employment_events_test.csv")
     refinements = pd.concat([refinements1, refinements2])
     refinements = refinements[refinements.year == iter_var]
     if len(refinements) > 0:
         def relocate_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
             agents = agents.query(filter_expression)
+            if location_type == 'building':
+                new_building_id = location_id
             if location_type == 'zone':
                 new_building_id = buildings.zone_id[buildings.zone_id == location_id].index.values[0]
                 agent_pool = agents[agents.zone_id != location_id]
@@ -333,6 +333,8 @@ def refiner(jobs, households, buildings, iter_var):
 
         def unplace_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
             agents = agents.query(filter_expression)
+            if location_type == 'building':
+                agent_pool = agents[agents.building_id == location_id]
             if location_type == 'zone':
                 agent_pool = agents[agents.zone_id == location_id]
             if location_type == 'parcel':
@@ -352,7 +354,7 @@ def refiner(jobs, households, buildings, iter_var):
             record = refinements[refinements.index.values == idx]
             action = record.action.values[0]
             agent_dataset = record.agent_dataset.values[0]
-            filter_expression = record.filter_expression.values[0]
+            filter_expression = record.agent_expression.values[0]
             amount = record.amount.values[0]
             location_id = record.location_id.values[0]
             location_type = record.location_type.values[0]
@@ -372,22 +374,21 @@ def refiner(jobs, households, buildings, iter_var):
 
 
 @orca.step()
-def scheduled_development_events(buildings, iter_var):
-    sched_dev = pd.read_csv("data/scheduled_development_events.csv")
-    sched_dev = sched_dev[sched_dev.year_built == iter_var]
-    sched_dev['building_sqft'] = 0
-    sched_dev["sqft_price_res"] = 0
-    sched_dev["sqft_price_nonres"] = 0
+def scheduled_development_events(buildings, iter_var, scheduled_development_events):
+    from urbansim.developer.developer import Developer
+    sched_dev = scheduled_development_events.to_frame()
+    sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        max_bid = buildings.index.values.max()
-        idx = np.arange(max_bid + 1, max_bid + len(sched_dev) + 1)
-        sched_dev['building_id'] = idx
-        sched_dev = sched_dev.set_index('building_id')
-        from urbansim.developer.developer import Developer
-        merge = Developer(pd.DataFrame({})).merge
+        sched_dev["sqft_price_res"] = 0
+        sched_dev["sqft_price_nonres"] = 0
+        sched_dev = add_extra_columns_res(sched_dev)
         b = buildings.to_frame(buildings.local_columns)
-        all_buildings = merge(b, sched_dev[b.columns])
+        all_buildings = Developer.merge(b, sched_dev[b.columns])
         orca.add_table("buildings", all_buildings)
+        # Todo: maybe we need to impute some columns
+        # Todo: parcel use need to be updated
+        # Todo: demolished event
+        # Todo: record dev_id -> building_id
 
 
 @orca.step()
@@ -493,7 +494,7 @@ def random_type(form):
 
 
 def add_extra_columns_res(df):
-    for col in ['building_id_old', 'improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
+    for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
                 'sqft_price_res']:
         df[col] = 0
     df['sqft_per_unit'] = 1500
@@ -502,7 +503,7 @@ def add_extra_columns_res(df):
 
 
 def add_extra_columns_nonres(df):
-    for col in ['building_id_old', 'improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
+    for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
                 'sqft_price_res']:
         df[col] = 0
     df['sqft_per_unit'] = 0

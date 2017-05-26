@@ -11,7 +11,8 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 @orca.table()
 def scheduled_development_events():
-    return pd.read_csv("data/scheduled_development_events.csv")
+    sched_dev = pd.read_csv("data/events_addition.csv", index_col="objectid")
+    return sched_dev
 
 
 @orca.table()
