@@ -116,3 +116,91 @@ def logsum_job_low_income(zones, travel_data):
     name_attribute = 'am_work_lowinc_logsum'
     spatial_var = 'employment'
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
+
+
+@orca.column('zones', 'z_total_jobs', cache=True, cache_scope='iteration')
+def z_total_jobs(jobs):
+    return jobs.zone_id.value_counts()
+
+
+@orca.column('zones', 'transit_jobs_50min', cache=True, cache_scope='iteration')
+def transit_jobs_50min(zones, travel_data):
+    td = travel_data.to_frame('am_transit_total_time').reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    transit_jobs_50min = temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum()
+    return transit_jobs_50min
+
+
+@orca.column('zones', 'transit_jobs_30min', cache=True, cache_scope='iteration')
+def transit_jobs_30min(zones, travel_data):
+    td = travel_data.to_frame('am_transit_total_time').reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    transit_jobs_30min = temp[temp.am_transit_total_time <=30].groupby('from_zone_id').employment.sum()
+    return transit_jobs_30min
+
+
+@orca.column('zones', 'a_ln_emp_26min_drive_alone', cache=True, cache_scope='iteration')
+def a_ln_emp_26min_drive_alone(zones, travel_data):
+    drvtime = travel_data.to_frame("am_auto_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(drvtime, zemp, left_on ='to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.am_auto_total_time <=26].groupby('from_zone_id').employment.sum().fillna(0))
+
+
+@orca.column('zones', 'a_ln_emp_50min_transit', cache=True, cache_scope='iteration')
+def a_ln_emp_50min_transit(zones, travel_data):
+    transittime = travel_data.to_frame("am_transit_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(transittime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum().fillna(0))
+
+
+@orca.column('zones', 'a_ln_retail_emp_15min_drive_alone', cache=True, cache_scope='iteration')
+def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
+    drvtime = travel_data.to_frame("midday_auto_total_time").reset_index()
+    zemp = zones.to_frame('employment')
+    temp = pd.merge(drvtime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
+    return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
+
+
+@orca.column('zones', 'percent_vacant_job_spaces', cache=True, cache_scope='iteration')
+def percent_vacant_job_spaces(buildings):
+    buildings = buildings.to_frame(buildings.local_columns + ['job_spaces', 'vacant_job_spaces', 'zone_id'])
+    job_spaces = buildings.groupby('zone_id').job_spaces.sum()
+    vacant_job_spaces = buildings.groupby('zone_id').vacant_job_spaces.sum()
+
+    return (vacant_job_spaces*1.0 / job_spaces).fillna(0)
+
+
+@orca.column('zones', 'percent_vacant_residential_units', cache=True, cache_scope='iteration')
+def percent_vacant_residential_units(buildings):
+    buildings = buildings.to_frame(buildings.local_columns + ['vacant_residential_units', 'zone_id'])
+    du = buildings.groupby('zone_id').residential_units.sum()
+    vacant_du = buildings.groupby('zone_id').vacant_residential_units.sum()
+
+    return (vacant_du*1.0 / du).fillna(0)
+
+
+def make_employment_density_variable(sector_id):
+    """
+    Generate zonal employment density variable. Registers with orca.
+    """
+    var_name = 'ln_empden_%s' % sector_id
+    
+    @orca.column('zones', var_name, cache=True, cache_scope='iteration')
+    def func():
+        zones = orca.get_table('zones')
+        jobs = orca.get_table('jobs')
+        total_acres = zones.acres
+        jobs = jobs.to_frame(jobs.local_columns + ['zone_id'])
+        jobs_sector = jobs[jobs.sector_id == sector_id].zone_id.value_counts()
+        return np.log1p(jobs_sector / total_acres).fillna(0)
+
+    return func
+
+
+emp_sectors = np.arange(18) + 1
+for sector in emp_sectors:
+    make_employment_density_variable(sector)

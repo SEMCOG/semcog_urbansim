@@ -1,0 +1,67 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 3
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+model_expression:
+- has_children:nodes_drv_elem_school_perf
+- sqft_price_res
+- is_race2:nodes_walk_percent_race2
+- is_young:nodes_walk_retail_jobs
+- ln_income:nodes_walk_ln_popden
+- crime_ucr_rate
+- parcels_total_units
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        crime_ucr_rate: -0.0002037988981567109
+        has_children:nodes_drv_elem_school_perf: 0.27371492332729946
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:nodes_walk_retail_jobs: 0.0040722974848643335
+        ln_income:nodes_walk_ln_popden: 0.015892392097297047
+        parcels_total_units: 0.0011601483144176223
+        sqft_price_res: -0.001381255529416692
+    Std. Error:
+        crime_ucr_rate: 1.2817557900101867e-05
+        has_children:nodes_drv_elem_school_perf: 0.14453182423207642
+        is_race2:nodes_walk_percent_race2: 0.12937898660970837
+        is_young:nodes_walk_retail_jobs: 0.0004421507691821545
+        ln_income:nodes_walk_ln_popden: 0.0015547330490043834
+        parcels_total_units: 0.0001413545556685238
+        sqft_price_res: 0.00020593288163245178
+    T-Score:
+        crime_ucr_rate: -15.899978743617865
+        has_children:nodes_drv_elem_school_perf: 1.8938038371936152
+        is_race2:nodes_walk_percent_race2: 23.187691282897134
+        is_young:nodes_walk_retail_jobs: 9.210201064213583
+        ln_income:nodes_walk_ln_popden: 10.221942672071055
+        parcels_total_units: 8.207364162624996
+        sqft_price_res: -6.707309286731351
+
+probability_mode: full_product
+
+choice_mode: individual
+
+prediction_sample_size: 100
+
+log_likelihoods:
+    convergence: -13262.34260073
+    'null': -13815.51055796495
+    ratio: 0.04003963189880344

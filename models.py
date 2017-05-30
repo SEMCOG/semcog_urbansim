@@ -10,6 +10,7 @@ import pandas as pd
 from urbansim.developer import sqftproforma
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
+from urbansim_parcels import utils as parcel_utils
 
 import utils
 import variables
@@ -409,97 +410,22 @@ def price_vars(net_walk):
     orca.add_table("nodes_prices", nodes)
 
 
-@orca.step()
+def parcel_average_price(use):
+    # Copied from variables.py
+    parcels_wrapper = orca.get_table('parcels')
+    if len(orca.get_table('nodes_walk')) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels_wrapper.index)
+    return misc.reindex(orca.get_table('nodes_walk')[use],
+                        orca.get_table('parcels').nodeid_walk)
+
+
+@orca.step('feasibility')
 def feasibility(parcels):
-    pfc = sqftproforma.SqFtProFormaConfig()
-    pfc.profit_factor = 1.0
-    # Adjust cost downwards based on RS Means test factor
-    pfc.costs = {btype: list(np.array(pfc.costs[btype]) * 0.9) for btype in pfc.costs}
-    # Adjust price downwards based on RS Means test factor
-    pfc.parking_cost_d = {ptype: pfc.parking_cost_d[ptype] * 0.9 for ptype in pfc.parking_cost_d}
-
-    pfc.uses = ['retail', 'industrial', 'office', 'medical', 'residential']
-    pfc.residential_uses = [False, False, False, False, True]
-    pfc.forms = {
-        'retail': {
-            "retail": 1.0
-        },
-        'industrial': {
-            "industrial": 1.0
-        },
-        'office': {
-            "office": 1.0
-        },
-        'residential': {
-            "residential": 1.0
-        },
-        'medical': {
-            "medical": 1.0
-        },
-        'mixedresidential': {
-            "retail": .1,
-            "residential": .9
-        },
-        'mixedoffice': {
-            "office": 0.7,
-            "residential": 0.3
-        }
-    }
-    pfc.parking_rates = {
-        "retail": 2.0,
-        "industrial": .6,
-        "office": 1.0,
-        "medical": 1.0,
-        "residential": 1.0
-    }
-    pfc.building_efficiency = .85
-    pfc.parcel_coverage = .85
-
-    pfc.costs = {
-        "residential": [106.0, 96.0, 160.0, 180.0, 180.0, 205.0, 205.0, 205.0, 999.0],
-        "industrial": [125.0, 125.0, 130.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0],
-        "office": [165.0, 180.0, 180.0, 180.0, 175.0, 175.0, 175.0, 999.0, 999.0],
-        "medical": [210.0, 240.0, 300.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0],
-        "retail": [120.0, 145.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0, 999.0]
-    }
-
-    pfc.heights_for_costs = [12, 24, 36, 48, 72, 108, 216, 216, np.inf]
-
-    # from urbansim/developer/sqftproforma.py line 515
-
-    # # debug hack
-    # debug_hack = pd.concat(self._lookup_parking_cfg(form, parking_config, df, False,
-    #                                         pass_through)
-    #                for parking_config in self.config.parking_configs)
-    #
-    # for num in [1320022, 1360867, 1331678]:
-    #     if num in debug_hack.index:
-    #         debug_hack.loc[num].reset_index().to_csv('lookup_df_' + form + '_' + str(num) + '.csv')
-    # # / debug hack
-
-
-    # # debug hack
-    # debug_hack = pd.concat(self._lookup_parking_cfg(form, parking_config, df, False,
-    #                                                 pass_through)
-    #                        for parking_config in self.config.parking_configs)
-    #
-    # for num in [1320022, 1360867, 1331678]:
-    #     if num in debug_hack.index:
-    #         pd.merge(debug_hack.loc[num], df, left_index=True, right_index=True, how="left").reset_index().to_csv(
-    #             'lookup_df_' + str(debug_hack.loc[num].max_profit_far.values[0]) + "_" + form + '_' + str(
-    #                 num) + '.csv')
-    #
-    # # / debug hack
-
-    utils.run_feasibility(parcels,
-                          variables.parcel_average_price,
-                          variables.parcel_is_allowed,
-                          to_yearly=True, config=pfc)
-
-
-def random_type(form):
-    form_to_btype = orca.get_injectable("form_to_btype")
-    return random.choice(form_to_btype[form])
+    parcel_utils.run_feasibility(parcels,
+                                 parcel_average_price,
+                                 variables.parcel_is_allowed,
+                                 cfg='proforma.yaml')
 
 
 def add_extra_columns_res(df):
@@ -520,62 +446,46 @@ def add_extra_columns_nonres(df):
     return df
 
 
-@orca.step()
+def random_type(row):
+    form = row['form']
+    form_to_btype = orca.get_injectable("form_to_btype")
+    return random.choice(form_to_btype[form])
+
+
+@orca.step('residential_developer')
 def residential_developer(feasibility, households, buildings, parcels, iter_var):
-    utils.run_developer("residential",
-                        households,
-                        buildings,
-                        "residential_units",
-                        parcels.parcel_size,
-                        parcels.ave_unit_size,
-                        parcels.total_units,
-                        feasibility,
-                        year=iter_var,
-                        target_vacancy=.20,
-                        form_to_btype_callback=random_type,
-                        add_more_columns_callback=add_extra_columns_res,
-                        max_parcel_size=10000000,
-                        bldg_sqft_per_job=400.0)
+    parcel_utils.run_developer(
+        "residential",
+        households,
+        buildings,
+        'residential_units',
+        feasibility,
+        parcels.parcel_size,
+        parcels.ave_unit_size,
+        parcels.total_units,
+        'res_developer.yaml',
+        year=iter_var,
+        target_vacancy=.20,
+        form_to_btype_callback=random_type,
+        add_more_columns_callback=add_extra_columns_res)
 
 
 @orca.step()
 def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
-    utils.run_developer(["office", "retail", "industrial", "medical"],
-                        jobs,
-                        buildings,
-                        "job_spaces",
-                        parcels.parcel_size,
-                        parcels.ave_unit_size,
-                        parcels.total_job_spaces,
-                        feasibility,
-                        year=iter_var,
-                        target_vacancy=.60,
-                        form_to_btype_callback=random_type,
-                        add_more_columns_callback=add_extra_columns_nonres,
-                        max_parcel_size=10000000,
-                        residential=False,
-                        bldg_sqft_per_job=400.0)
-
-
-##@orca.step()
-##def build_networks(parcels):
-####  'mgf14_walk': {'cost1': 'meters',
-####                  'edges': 'edges_mgf14_walk',
-####                  'nodes': 'nodes_mgf14_walk'}
-##    network='mgf14_walk'
-##    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
-##    nodes, edges = st['nodes_'+network], st['edges_'+network]
-##    net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
-##                       edges[["feet"]])
-##    net.precompute(2000)
-##    orca.add_injectable("net", net)
-##    
-##    p = parcels.to_frame()
-##    p['x'] = p.centroid_x
-##    p['y'] = p.centroid_y
-##    p['_node_id'] = net.get_node_ids(p['x'], p['y'])
-##    orca.add_table("parcels", p)
-
+    parcel_utils.run_developer(
+        ["office", "retail", "industrial", "medical"],
+        jobs,
+        buildings,
+        "job_spaces",
+        feasibility,
+        parcels.parcel_size,
+        parcels.ave_unit_size,
+        parcels.total_job_spaces,
+        'nonres_developer.yaml',
+        year=iter_var,
+        target_vacancy=0.60,
+        form_to_btype_callback=random_type,
+        add_more_columns_callback=add_extra_columns_nonres)
 
 
 @orca.step()
@@ -583,6 +493,7 @@ def build_networks(parcels):
     pdna.network.reserve_num_graphs(2)
 
     # networks in semcog_networks.h5
+    # Todo add injectable that reads from yaml
     dic_net = {'mgf14_drive':
                    {'cost1': 'feet',
                     'cost2': 'minutes',
@@ -692,6 +603,8 @@ def neighborhood_vars(jobs, households, buildings):
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_drv", nodes)
+
+    post_access_variables()
 
 
 @orca.step('gq_model')  # group quarters
@@ -988,3 +901,21 @@ def _print_number_unplaced(df, fieldname="building_id"):
     """
     counts = (df[fieldname] == -1).sum()
     print "Total currently unplaced: %d" % counts
+
+
+def post_access_variables():
+    """
+    Disaggregate nodal variables to building.
+    """
+
+    geographic_levels = [('nodes_walk', 'nodeid_walk'),
+                         ('nodes_drv', 'nodeid_drv')]
+
+    for geography in geographic_levels:
+        geography_name = geography[0]
+        geography_id = geography[1]
+        if geography_name != 'buildings':
+            building_vars = orca.get_table('buildings').columns
+            for var in orca.get_table(geography_name).columns:
+                if var not in building_vars:
+                    variables.make_disagg_var(geography_name, 'buildings', var, geography_id)

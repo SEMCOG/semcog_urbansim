@@ -196,7 +196,157 @@ def walk_nearest_library(buildings, parcels):
 def walk_nearest_park(buildings, parcels):
     return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
 
+
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def hedonic_sector_id(buildings):
     return buildings.large_area_id * 100 + buildings.building_type_id
 
+
+@orca.column('buildings', 'building_age', cache=True, cache_scope='iteration')
+def building_age(buildings, year):
+    year_built = buildings.year_built
+    year_built[year_built < 1600] = year_built[year_built > 1600].mean()
+    age = year - year_built
+    return age
+
+
+@orca.column('buildings', 'building_age_gt_50', cache=True, cache_scope='iteration')
+def building_age_gt_50(buildings):
+    return (buildings.building_age > 50).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_70', cache=True, cache_scope='iteration')
+def building_age_gt_70(buildings):
+    return (buildings.building_age > 70).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_80', cache=True, cache_scope='iteration')
+def building_age_gt_80(buildings):
+    return (buildings.building_age > 80).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_90', cache=True, cache_scope='iteration')
+def building_age_gt_90(buildings):
+    return (buildings.building_age > 90).astype('int32')
+
+
+@orca.column('buildings', 'building_age_gt_100', cache=True, cache_scope='iteration')
+def building_age_gt_100(buildings):
+    return (buildings.building_age > 100).astype('int32')
+
+
+@orca.column('buildings', 'building_age_le_10', cache=True, cache_scope='iteration')
+def building_age_le_10(buildings):
+    return (buildings.building_age < 10).astype('int32')
+
+
+@orca.column('buildings', 'b_is_pre_1945', cache=True, cache_scope='iteration')
+def b_is_pre_1945(buildings):
+    return (buildings.year_built < 1945).astype('int32')
+
+
+@orca.column('buildings', 'b_is_newerthan2010', cache=True, cache_scope='iteration')
+def b_is_newerthan2010(buildings):
+    return (buildings.year_built > 2010).astype('int32')
+
+
+@orca.column('buildings', 'b_total_jobs', cache=True, cache_scope='iteration')
+def b_total_jobs(jobs, buildings):
+    jobs_by_b = jobs.building_id.groupby(jobs.building_id).size()
+    return pd.Series(index=buildings.index, data=jobs_by_b).fillna(0)
+
+
+### Variable generation functions
+
+def make_dummy_variable(geog_var, geog_id):
+    """
+    Generate dummy variable. Registers with orca.
+    """
+    var_name = '%s_is_%s' % (geog_var, geog_id)
+
+    @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
+    def func():
+        buildings = orca.get_table('buildings')
+        return (buildings[geog_var] == geog_id).astype('int32')
+
+    return func
+
+
+def make_logged_variable(var_to_log):
+    """
+    Generate logged variable. Registers with orca.
+    """
+    var_name = 'b_ln_%s' % var_to_log
+
+    @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
+    def func():
+        buildings = orca.get_table('buildings')
+        return np.log1p(buildings[var_to_log]).fillna(0)
+
+    return func
+
+
+def make_employment_proportion_variable(sector_id):
+    """
+    Generate employment proportion of total jobs in building variable. Registers with orca.
+    """
+    var_name = 'bldg_empratio_%s' % sector_id
+
+    @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
+    def func():
+        buildings = orca.get_table('buildings')
+        jobs = orca.get_table('jobs')
+        total_jobs = buildings.b_total_jobs
+        jobs = jobs.to_frame(jobs.local_columns)
+        jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
+        return (jobs_sector / total_jobs).fillna(0)
+
+    return func
+
+
+def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog_id_name, name_based_on_geography=True):
+    """
+    Generator function for disaggregating variables. Registers with orca.
+    """
+    if name_based_on_geography:
+        var_name = from_geog_name + '_' + var_to_disaggregate
+    else:
+        var_name = var_to_disaggregate
+    @orca.column(to_geog_name, var_name, cache=True, cache_scope='iteration')
+    def func():
+        print 'Disaggregating %s to %s from %s' % (var_to_disaggregate, to_geog_name, from_geog_name)
+
+        from_geog = orca.get_table(from_geog_name)
+        to_geog = orca.get_table(to_geog_name)
+        return misc.reindex(from_geog[var_to_disaggregate], to_geog[from_geog_id_name]).fillna(0)
+
+    return func
+
+
+geographic_levels = [('parcels', 'parcel_id'),
+                     ('zones', 'zone_id')]
+vars_to_dummify = ['city_id', 'building_type_id']
+vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
+               'parcels_parcel_far', 'sqft_price_nonres']
+
+for geography in geographic_levels:
+    geography_name = geography[0]
+    geography_id = geography[1]
+    if geography_name != 'buildings':
+        building_vars = orca.get_table('buildings').columns
+        for var in orca.get_table(geography_name).columns:
+            if var not in building_vars:
+                make_disagg_var(geography_name, 'buildings', var, geography_id)
+
+for dummifiable_var in vars_to_dummify:
+    var_cat_ids = np.unique(orca.get_table('buildings')[dummifiable_var]).astype('int')
+    for var_cat_id in var_cat_ids:
+        if var_cat_id > 0:
+            make_dummy_variable(dummifiable_var, var_cat_id)
+
+for var_to_log in vars_to_log:
+    make_logged_variable(var_to_log)
+
+emp_sectors = np.arange(18) + 1
+for sector in emp_sectors:
+    make_employment_proportion_variable(sector)

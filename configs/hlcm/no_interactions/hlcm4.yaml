@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: income_quartile == 4
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- b_is_pre_1945
+- crime_other_rate
+- b_ln_building_sqft
+- building_type_id_is_81
+- nodes_walk_industrial
+- stories
+- b_ln_land_area
+- nodes_drv_drv_30min_jobs
+- nodes_walk_percent_hh_with_children
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: -0.19605741833321147
+        b_ln_building_sqft: 0.11340863542032992
+        b_ln_land_area: 0.8762524354952299
+        building_type_id_is_81: 0.17416147401117552
+        crime_other_rate: -7.397352297869432e-05
+        nodes_drv_drv_30min_jobs: 0.025294366105569285
+        nodes_walk_industrial: -0.0016574719661584447
+        nodes_walk_percent_hh_with_children: 0.960476479544499
+        stories: 0.15183924472105126
+    Std. Error:
+        b_is_pre_1945: 0.04570214794678114
+        b_ln_building_sqft: 0.02159646112694965
+        b_ln_land_area: 0.02615698550268842
+        building_type_id_is_81: 0.056942550640887574
+        crime_other_rate: 7.126403455194634e-06
+        nodes_drv_drv_30min_jobs: 0.012460598446624706
+        nodes_walk_industrial: 0.0008969078779806792
+        nodes_walk_percent_hh_with_children: 0.1952513458758694
+        stories: 0.018552794814002932
+    T-Score:
+        b_is_pre_1945: -4.289895051793075
+        b_ln_building_sqft: 5.251260137190268
+        b_ln_land_area: 33.49974848612309
+        building_type_id_is_81: 3.058547115487288
+        crime_other_rate: -10.380204186274769
+        nodes_drv_drv_30min_jobs: 2.0299479366033943
+        nodes_walk_industrial: -1.8479846223339218
+        nodes_walk_percent_hh_with_children: 4.919179815309032
+        stories: 8.184170969564589
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -13025.336711511776
+    'null': -13815.51055796495
+    ratio: 0.057194690209810606
