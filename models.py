@@ -299,78 +299,68 @@ def government_jobs_scaling_model(jobs):
 
 
 @orca.step()
-def refiner(jobs, households, buildings, iter_var):
-    jobs = jobs.to_frame()
-    households = households.to_frame()
+def refiner(orca_jobs, orca_households, buildings, iter_var):
+    jobs = orca_jobs.to_frame()
+    households = orca_households.to_frame()
+    dic_agent = {'jobs': jobs, 'households': households}
+
     refinements1 = pd.read_csv("data/refinements.csv")
     refinements2 = pd.read_csv("data/employment_events_test.csv")
     refinements = pd.concat([refinements1, refinements2])
     refinements = refinements[refinements.year == iter_var]
+
+    def rec_values(record):
+        action = record.action.values[0]
+        agents = record.agent_dataset.values[0]
+        agents_expression = record.agent_expression.values[0]
+        amount = record.amount.values[0]
+        location_expression = record.agent_expression.values[0]
+        return action, agents, agents_expression, amount, location_expression
+
     if len(refinements) > 0:
-        def relocate_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
-            agents = agents.query(filter_expression)
-            if location_type == 'building':
-                new_building_id = location_id
-            if location_type == 'zone':
-                new_building_id = buildings.zone_id[buildings.zone_id == location_id].index.values[0]
-                agent_pool = agents[agents.zone_id != location_id]
-            if location_type == 'parcel':
-                try:
-                    new_building_id = buildings.parcel_id[buildings.parcel_id == location_id].index.values[0]
-                except:
-                    print 'No building in %s %s.' % (location_type, location_id)
-                    return
-                agent_pool = agents[agents.parcel_id != location_id]
-            shuffled_ids = agent_pool.index.values
-            np.random.shuffle(shuffled_ids)
-            agents_to_relocate = shuffled_ids[:number_of_agents]
-            if agent_type == 'households':
-                idx_agents_to_relocate = np.in1d(households.index.values, agents_to_relocate)
-                households.building_id[idx_agents_to_relocate] = new_building_id
-            if agent_type == 'jobs':
-                idx_agents_to_relocate = np.in1d(jobs.index.values, agents_to_relocate)
-                jobs.building_id[idx_agents_to_relocate] = new_building_id
+        def relocate_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+            bselect = buildings.query(location_expression)
+            new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
+            # maybe use job reallocation instead of random
 
-        def unplace_agents(agents, agent_type, filter_expression, location_type, location_id, number_of_agents):
-            agents = agents.query(filter_expression)
-            if location_type == 'building':
-                agent_pool = agents[agents.building_id == location_id]
-            if location_type == 'zone':
-                agent_pool = agents[agents.zone_id == location_id]
-            if location_type == 'parcel':
-                agent_pool = agents[agents.parcel_id == location_id]
-            if len(agent_pool) >= number_of_agents:
-                shuffled_ids = agent_pool.index.values
-                np.random.shuffle(shuffled_ids)
-                agents_to_relocate = shuffled_ids[:number_of_agents]
-                if agent_type == 'households':
-                    idx_agents_to_relocate = np.in1d(households.index.values, agents_to_relocate)
-                    households.building_id[idx_agents_to_relocate] = -1
-                if agent_type == 'jobs':
-                    idx_agents_to_relocate = np.in1d(jobs.index.values, agents_to_relocate)
-                    jobs.building_id[idx_agents_to_relocate] = -1
+            if len(agents_pool) > 0:
+                agents_sample = agents_pool.sample(number_of_agents, replace=False)
+                agents_sample.building_id = new_building_ids
+                agents_pool.drop(agents_sample.index, inplace=True)
+            else:
+                agents_sample = agents.query(agent_expression).sample(number_of_agents, replace=True)
+                agents_sample.index = agents.index.values.max() + 1 + np.array(range(number_of_agents))
+                agents_sample.building_id = new_building_ids
+            agents = pd.concat(agents, agents_sample)
 
-        for idx in refinements.index.values:
-            record = refinements[refinements.index.values == idx]
-            action = record.action.values[0]
-            agent_dataset = record.agent_dataset.values[0]
-            filter_expression = record.agent_expression.values[0]
-            amount = record.amount.values[0]
-            location_id = record.location_id.values[0]
-            location_type = record.location_type.values[0]
-            if action == 'add':
-                if agent_dataset == 'job':
-                    relocate_agents(jobs, 'jobs', filter_expression, location_type, location_id, amount)
-                if agent_dataset == 'household':
-                    relocate_agents(households, 'households', filter_expression, location_type, location_id, amount)
-            if action in ['delete', 'subtract']:
-                if agent_dataset == 'job':
-                    unplace_agents(jobs, 'jobs', filter_expression, location_type, location_id, amount)
-                if agent_dataset == 'household':
-                    unplace_agents(households, 'households', filter_expression, location_type, location_id, amount)
+        def unplace_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+            available_agents = agents.query(agent_expression)
+            bselect = buildings.query(location_expression)
+            selected_agents = available_agents.loc[available_agents.building_id.isin(bselect)].sample(number_of_agents)
 
-        orca.add_table('jobs', jobs)
-        orca.add_table('households', households)
+            agents_pool = pd.concat(agents_pool, selected_agents)
+            agents.drop(selected_agents.index.values, inplace=True)
+            return agents_pool
+
+        for tid, trecords in refinements.groupby("transaction_id"):
+            dic_agent['jobs_pool'] = pd.DataFrame(data=None, columns=jobs.columns)
+            dic_agent['households_pool'] = pd.DataFrame(data=None, columns=households.columns)
+
+            records = trecords[trecords.action == 'substract']
+            for _, record in records.iterrows():
+                action, agents, agents_expression, amount, location_expression = rec_values(record)
+                unplace_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
+                                    location_expression, amount)
+            records = trecords[trecords.action == 'add']
+            for _, record in records.iterrows():
+                action, agents, agents_expression, amount, location_expression = rec_values(record)
+                relocate_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
+                                    location_expression, amount)
+
+            # TODO:  add action 'target'
+
+        orca.add_table('jobs', jobs[orca_jobs.local_columns])
+        orca.add_table('households', households[orca_households.local_columns])
 
 
 @orca.step()
