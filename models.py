@@ -208,12 +208,12 @@ def households_transition(households, persons, annual_household_control_totals, 
 
 
 @orca.step()
-def fix_lpr(households, persons, iter_var, workers_emloyment_rates_by_large_area):
+def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_area):
     from numpy.random import choice
     hh = households.to_frame(households.local_columns + ['large_area_id'])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ['large_area_id'])
-    lpr = workers_emloyment_rates_by_large_area.to_frame(['age_min', 'age_max', str(iter_var)])
+    lpr = workers_employment_rates_by_large_area.to_frame(['age_min', 'age_max', str(iter_var)])
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
@@ -325,7 +325,11 @@ def refiner(orca_jobs, orca_households, buildings, iter_var):
             # maybe use job reallocation instead of random
 
             if len(agents_pool) > 0:
-                agents_sample = agents_pool.sample(number_of_agents, replace=False)
+                agents_sub_pool = agents_pool.query(agent_expression)
+                if len(agents_sub_pool) >= number_of_agents:
+                    agents_sample = agents_sub_pool.sample(number_of_agents, replace=False)
+                else:
+                    agents_sample = agents_sub_pool.sample(number_of_agents, replace=True)
                 agents_sample.building_id = new_building_ids
                 agents_pool.drop(agents_sample.index, inplace=True)
             else:
@@ -337,11 +341,30 @@ def refiner(orca_jobs, orca_households, buildings, iter_var):
         def unplace_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
             available_agents = agents.query(agent_expression)
             bselect = buildings.query(location_expression)
-            selected_agents = available_agents.loc[available_agents.building_id.isin(bselect)].sample(number_of_agents)
+            local_agents = available_agents.loc[available_agents.building_id.isin(bselect)]
+            selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
 
             agents_pool = pd.concat(agents_pool, selected_agents)
-            agents.drop(selected_agents.index.values, inplace=True)
+            agents.drop(selected_agents.index, inplace=True)
             return agents_pool
+
+        def target_agents(agents, agent_expression, location_expression, number_of_agents):
+            exist_agents = agents.query(agent_expression)
+            bselect = buildings.query(location_expression)
+            local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect)]
+
+            diff = len(local_agents) - number_of_agents
+            if diff > 0:
+                select_agents = local_agents.sample(diff)
+                agents.drop(select_agents.index, inplace=True)
+            else:
+                if len(local_agents) == 0:
+                    local_agents = exist_agents.loc[exist_agents.large_area_id == bselect.large_area_id[0]]
+                select_agents = local_agents.sample(abs(diff), replace=True)
+                select_agents.index = agents.index.values.max() + 1 + np.array(range(abs(diff)))
+                select_agents.building_id = bselect.sample(abs(diff), replace=True).index.values
+                agents = pd.concat(agents, select_agents)
+
 
         for tid, trecords in refinements.groupby("transaction_id"):
             dic_agent['jobs_pool'] = pd.DataFrame(data=None, columns=jobs.columns)
@@ -352,13 +375,20 @@ def refiner(orca_jobs, orca_households, buildings, iter_var):
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
                 unplace_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
                                     location_expression, amount)
+
             records = trecords[trecords.action == 'add']
+            if records.amount.sum() <> len(agent_pool):
+                print 'warning, unplaced agents are different than the number to be allocated'
             for _, record in records.iterrows():
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
                 relocate_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
                                     location_expression, amount)
 
-            # TODO:  add action 'target'
+            records = trecords[trecords.action == 'target']
+            for _, record in records.iterrows():
+                action, agents, agents_expression, amount, location_expression = rec_values(record)
+                target_agents(dic_agent[agents], agents_expression,
+                                    location_expression, amount)
 
         orca.add_table('jobs', jobs[orca_jobs.local_columns])
         orca.add_table('households', households[orca_households.local_columns])
@@ -387,7 +417,9 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, scheduled
     sched_dev = scheduled_demolition_events.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        orca.add_table("buildings", buildings.to_frame(buildings.local_columns).drop(sched_dev.building_id))
+        buildings = buildings.to_frame(buildings.local_columns)
+        buildings_idx = buildings[buildings.index.isin(sched_dev.building_id)].index
+        orca.add_table("buildings", buildings.drop(buildings_idx))
 
         # unplace HH
         households = households.to_frame(households.local_columns)
