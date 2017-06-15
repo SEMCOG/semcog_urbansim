@@ -57,6 +57,7 @@ def hlcm_estimate(households, buildings, nodes_walk):
 
 @orca.step()
 def hlcm_simulate(households, buildings, nodes_walk):
+    # todo: set invalid building_id to -1
     return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes_walk,
                               "building_id", "residential_units",
                               "vacant_residential_units")
@@ -76,28 +77,30 @@ def elcm_estimate(jobs, buildings, nodes_drv):
 
 @orca.step()
 def elcm_simulate(jobs, buildings, nodes_drv):
+    # todo: set invalid building_id to -1
     jobs_df = jobs.to_frame()
     buildings = buildings.to_frame()
 
-    def register_broadcast_simulate_segment(jobs_df_name, jobs_df, buildings_df_name, buildings_df, yaml_name):
-        orca.add_table(jobs_df_name, jobs_df)
-        orca.add_table(buildings_df_name, buildings_df)
+    def register_broadcast_simulate_segment(jobs_df_name, jobs_in_la, buildings_df_name, buildings_in_la, yaml_name):
+        orca.add_table(jobs_df_name, jobs_in_la)
+        orca.add_table(buildings_df_name, buildings_in_la)
         orca.broadcast('nodes_drv', buildings_df_name, cast_index=True, onto_on='nodeid_drv')
         orca.broadcast('parcels', buildings_df_name, cast_index=True, onto_on='parcel_id')
         orca.broadcast(buildings_df_name, jobs_df_name, cast_index=True, onto_on='building_id')
-        jobs_df = orca.get_table(jobs_df_name)
-        buildings_df = orca.get_table(buildings_df_name)
-        utils.lcm_simulate(yaml_name, jobs_df, buildings_df, nodes_drv,
+        jobs_in_la = orca.get_table(jobs_df_name)
+        buildings_in_la = orca.get_table(buildings_df_name)
+        utils.lcm_simulate(yaml_name, jobs_in_la, buildings_in_la, nodes_drv,
                            "building_id", "job_spaces",
                            "vacant_job_spaces")
-        jobs.update_col_from_series('building_id',
-                                    pd.Series(jobs_df.building_id.values, index=jobs_df.index.values))
+        jobs.update_col_from_series('building_id', jobs_in_la.building_id, cast=True)
 
     for large_area_id in [3, 5, 93, 99, 115, 125, 147, 161]:
         str_id = str(large_area_id)
-        register_broadcast_simulate_segment('jobs' + str_id, jobs_df[jobs_df.lid == large_area_id],
-                                            'buildings' + str_id, buildings[buildings.large_area_id == large_area_id],
-                                            'elcm' + str_id + '.yaml')
+        register_broadcast_simulate_segment(jobs_df_name='jobs' + str_id,
+                                            jobs_in_la=jobs_df[jobs_df.lid == large_area_id],
+                                            buildings_df_name='buildings' + str_id,
+                                            buildings_in_la=buildings[buildings.large_area_id == large_area_id],
+                                            yaml_name='elcm' + str_id + '.yaml')
 
 
 @orca.step()
@@ -109,7 +112,8 @@ def households_relocation(households, annual_relocation_rates_for_households):
     hh = households.to_frame(households.local_columns)
     idx_reloc = reloc.find_movers(hh)
     households.update_col_from_series('building_id',
-                                      pd.Series(-1, index=idx_reloc))
+                                      pd.Series(-1, index=idx_reloc),
+                                      cast=True)
     _print_number_unplaced(households, 'building_id')
 
 
@@ -187,6 +191,7 @@ def households_transition(households, persons, annual_household_control_totals, 
     out_p_fixed = []
     hhidmax = region_hh.index.values.max() + 1
     pidmax = region_p.index.values.max() + 1
+    hh_la_lookup = orca.get_injectable("households_large_area_lookup")
     for hh, p in out:
         hh = hh.reset_index()
         hh['household_id_old'] = hh['household_id']
@@ -200,9 +205,15 @@ def households_transition(households, persons, annual_household_control_totals, 
         pidmax += new_p
         p['household_id'] = p['household_id_y']
 
-        out_hh_fixed.append(hh.set_index('household_id')[households.local_columns])
+        new_hh_df = hh.set_index('household_id')
+        hh_la_lookup = hh_la_lookup.append(new_hh_df[new_hh_df.building_id == -1].large_area_id,
+                                           verify_integrity=True)
+        out_hh_fixed.append(new_hh_df[households.local_columns])
         out_p_fixed.append(p.set_index('person_id')[persons.local_columns])
 
+    orca.add_injectable("households_large_area_lookup",
+                        hh_la_lookup,
+                        autocall=False, cache=True)
     orca.add_table("households", pd.concat(out_hh_fixed, verify_integrity=True))
     orca.add_table("persons", pd.concat(out_p_fixed, verify_integrity=True))
 
@@ -240,8 +251,10 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
 
         # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
 
-    p.loc[np.concatenate(new_employ), "worker"] = True
-    p.loc[np.concatenate(new_unemploy), "worker"] = False
+    if len(new_employ) > 0:
+        p.loc[np.concatenate(new_employ), "worker"] = True
+    if len(new_unemploy):
+        p.loc[np.concatenate(new_unemploy), "worker"] = False
 
     hh["old_workers"] = hh.workers
     hh.workers = p[p.worker == True].groupby("household_id").size()
@@ -268,9 +281,12 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
     tran = transition.TabularTotalsTransition(ct_emp, 'total_number_of_jobs')
     model = transition.TransitionModel(tran)
     j = jobs.to_frame(jobs.local_columns + ['large_area_id'])
-    new, added_jobs_idx, new_linked = model.transition(j, iter_var)
+    new, added_jobs_idx, _ = model.transition(j, iter_var)
+    orca.add_injectable("jobs_large_area_lookup",
+                        new.large_area_id,
+                        autocall=False, cache=True)
     new.loc[added_jobs_idx, "building_id"] = -1
-    orca.add_table("jobs", new)
+    orca.add_table("jobs", new[jobs.local_columns])
 
 
 @orca.step()
@@ -300,27 +316,54 @@ def government_jobs_scaling_model(jobs):
 
 
 @orca.step()
-def refiner(orca_jobs, orca_households, buildings, iter_var):
-    jobs = orca_jobs.to_frame()
-    households = orca_households.to_frame()
+def gq_pop_scaling_model(jobs):
+    gqpop = gqpop.to_frame(gqpop.local_columns+['large_area_id']) # add gq pop table to database
+    target_gq = gq_pop_forecast.to_frame()
+
+    diff_gq = target_gq - exist_gq#by large area and age group
+    gqpop_lab = gqpop.grouby(['large_area_id', 'age_group', 'building_id']).size()
+
+    for id, row in diff_gq.iterrows():
+        local_gqpop =gqpop.loc[(
+            gqpop.large_area_id==row.large_area_id) & (gqpop.age_group==row.age_group)]
+        if row.diff >=0:
+            newgq = local_gqpop.sample(gqpop_lab.building_id, row.diff) #add some updates
+        else:
+            removegq = local_gqpop.sample(gqpop_lab.building_id, abs(row.diff))
+            gqpop.drop(removegq.index, inplace = True)
+
+
+
+
+@orca.step()
+def refiner(jobs, households, buildings, iter_var):
+    # need clean up
+    jobs_columns = jobs.local_columns + ['zone_id', 'large_area_id']
+    jobs = jobs.to_frame(jobs_columns)
+    households_columns = households.local_columns + ['zone_id', 'large_area_id']
+    households = households.to_frame(households_columns)
+    buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'large_area_id'])
     dic_agent = {'jobs': jobs, 'households': households}
 
-    refinements1 = pd.read_csv("data/refinements.csv")
-    refinements2 = pd.read_csv("data/employment_events_test.csv")
-    refinements = pd.concat([refinements1, refinements2])
+  #  refinements1 = pd.read_csv("data/refinements.csv")
+    refinements = pd.read_csv("data/employment_events.csv")
+    #refinements = pd.concat([refinements1, refinements2])
     refinements = refinements[refinements.year == iter_var]
 
     def rec_values(record):
-        action = record.action.values[0]
-        agents = record.agent_dataset.values[0]
-        agents_expression = record.agent_expression.values[0]
-        amount = record.amount.values[0]
-        location_expression = record.agent_expression.values[0]
+        action = record.action
+        agents = record.agents
+        agents_expression = record.agent_expression
+        amount = record.amount
+        location_expression = record.location_expression
         return action, agents, agents_expression, amount, location_expression
 
     if len(refinements) > 0:
         def relocate_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
             bselect = buildings.query(location_expression)
+            if len(bselect) <= 0:
+                print("We can't fined a building to place these agents")
+                return agents, agents_pool
             new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
             # maybe use job reallocation instead of random
 
@@ -336,22 +379,25 @@ def refiner(orca_jobs, orca_households, buildings, iter_var):
                 agents_sample = agents.query(agent_expression).sample(number_of_agents, replace=True)
                 agents_sample.index = agents.index.values.max() + 1 + np.array(range(number_of_agents))
                 agents_sample.building_id = new_building_ids
-            agents = pd.concat(agents, agents_sample)
+            agents = pd.concat([agents, agents_sample])
+            return agents, agents_pool
 
         def unplace_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
             available_agents = agents.query(agent_expression)
             bselect = buildings.query(location_expression)
-            local_agents = available_agents.loc[available_agents.building_id.isin(bselect)]
-            selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
+            local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
+            if len(local_agents) > 0:
+                selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
 
-            agents_pool = pd.concat(agents_pool, selected_agents)
-            agents.drop(selected_agents.index, inplace=True)
-            return agents_pool
+                agents_pool = pd.concat([agents_pool, selected_agents])
+                agents.drop(selected_agents.index, inplace=True)
+            return agents, agents_pool
 
         def target_agents(agents, agent_expression, location_expression, number_of_agents):
+            #use for employment event model
             exist_agents = agents.query(agent_expression)
             bselect = buildings.query(location_expression)
-            local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect)]
+            local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect.index.values)]
 
             diff = len(local_agents) - number_of_agents
             if diff > 0:
@@ -363,35 +409,43 @@ def refiner(orca_jobs, orca_households, buildings, iter_var):
                 select_agents = local_agents.sample(abs(diff), replace=True)
                 select_agents.index = agents.index.values.max() + 1 + np.array(range(abs(diff)))
                 select_agents.building_id = bselect.sample(abs(diff), replace=True).index.values
-                agents = pd.concat(agents, select_agents)
-
+                agents = pd.concat([agents, select_agents])
+            return agents
 
         for tid, trecords in refinements.groupby("transaction_id"):
             dic_agent['jobs_pool'] = pd.DataFrame(data=None, columns=jobs.columns)
             dic_agent['households_pool'] = pd.DataFrame(data=None, columns=households.columns)
+            print '** processing transcaction ', tid
 
-            records = trecords[trecords.action == 'substract']
+            records = trecords[trecords.action == 'subtract']
             for _, record in records.iterrows():
+                print record
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
-                unplace_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
-                                    location_expression, amount)
+                dic_agent[agents], dic_agent[agents + '_pool'] = unplace_agents(dic_agent[agents],
+                                                             dic_agent[agents+'_pool'],
+                                                             agents_expression,
+                                                            location_expression,
+                                                            amount)
 
             records = trecords[trecords.action == 'add']
-            if records.amount.sum() <> len(agent_pool):
-                print 'warning, unplaced agents are different than the number to be allocated'
             for _, record in records.iterrows():
+                print record
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
-                relocate_agents(dic_agent[agents], dic_agent[agents+'_pool'], agents_expression,
-                                    location_expression, amount)
+                dic_agent[agents], dic_agent[agents + '_pool'] = relocate_agents(dic_agent[agents],
+                                                                                 dic_agent[agents+'_pool'],
+                                                                                 agents_expression,
+                                                                                 location_expression, amount)
 
             records = trecords[trecords.action == 'target']
             for _, record in records.iterrows():
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
-                target_agents(dic_agent[agents], agents_expression,
-                                    location_expression, amount)
+                dic_agent[agents] = target_agents(dic_agent[agents],
+                                                  agents_expression,
+                                                location_expression,
+                                                  amount)
 
-        orca.add_table('jobs', jobs[orca_jobs.local_columns])
-        orca.add_table('households', households[orca_households.local_columns])
+        orca.add_table('jobs', dic_agent['jobs'][jobs_columns])
+        orca.add_table('households', dic_agent['households'][households_columns])
 
 
 @orca.step()
@@ -423,12 +477,12 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, scheduled
 
         # unplace HH
         households = households.to_frame(households.local_columns)
-        households.building_id[households.building_id.isin(sched_dev.building_id)] = -1
+        households.loc[households.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("households", households)
 
         # unplace jobs
         jobs = jobs.to_frame(jobs.local_columns)
-        jobs.building_id[jobs.building_id.isin(sched_dev.building_id)] = -1
+        jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
         # Todo: parcel use need to be updated
 
@@ -615,14 +669,16 @@ def neighborhood_vars(jobs, households, buildings):
     # print b.large_area_id.head()
 
     if idx_invalid_building_id.sum() > 0:
-        j.building_id[idx_invalid_building_id] = np.random.choice(
-            b[np.in1d(b.large_area_id, j[idx_invalid_building_id].large_area_id)].index.values,
+        print("we have jobs with bad building id's there are #", idx_invalid_building_id.sum())
+        j.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
+            b.index.values,
             idx_invalid_building_id.sum())
         orca.add_table("jobs", j)
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
-        h.building_id[idx_invalid_building_id] = np.random.choice(
-            b[np.in1d(b.large_area_id, h[idx_invalid_building_id].large_area_id)].index.values,
+        print("we have households with bad building id's there are #", idx_invalid_building_id.sum())
+        h.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
+            b.index.values,
             idx_invalid_building_id.sum())
         orca.add_table("households", h)
 

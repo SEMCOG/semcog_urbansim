@@ -1,53 +1,31 @@
-name: access_drive_minutes
-indexs:
-- nodeid_drv
-columns:
-  drv_grocery: float64
-  drv_healthcenters: float64
-  drv_highschool: float64
-  drv_hospital: float64
-  drv_library: float64
-  drv_otherschool: float64
-  drv_park: float64
-  drv_urgentcare: float64
----
-name: access_walk_feet
-indexs:
-- nodeid_walk
-columns:
-  wlk_grocery: float64
-  wlk_healthcenter: float64
-  wlk_highschool: float64
-  wlk_hospital: float64
-  wlk_library: float64
-  wlk_otherschool: float64
-  wlk_park: float64
-  wlk_urgentcare: float64
----
 name: annual_employment_control_totals
 indexs:
-- sector_id
 - year
+- sector_id
 - home_based_status
 columns:
-  large_area_id: int32
-  total_number_of_jobs: int32
+  large_area_id: int64
+  total_number_of_jobs: int64
 ---
 name: annual_household_control_totals
 indexs:
 - year
 columns:
-  age_of_head_max: int32
-  age_of_head_min: int32
-  children_max: int32
-  children_min: int32
-  income_max: int32
-  income_min: int32
-  large_area_id: int32
-  persons_max: int32
-  persons_min: int32
-  race_id: int32
-  total_number_of_households: int32
+  age_of_head_max: int64
+  age_of_head_min: int64
+  cars_max: int64
+  cars_min: int64
+  children_max: int64
+  children_min: int64
+  income_max: int64
+  income_min: int64
+  large_area_id: int64
+  persons_max: int64
+  persons_min: int64
+  race_id: int64
+  total_number_of_households: int64
+  workers_max: int64
+  workers_min: int64
 ---
 name: annual_relocation_rates_for_households
 indexs:
@@ -105,11 +83,6 @@ indexs:
 columns:
   city_code: object
   city_name: object
-  crime08: int32
-  crm_both: int32
-  crm_prprty: int32
-  crm_vlnt: int32
-  is_det: int32
   liv_index: float32
   price_adj: int32
 ---
@@ -125,28 +98,6 @@ indexs:
 columns:
   other_crime_rate: float64
   ucr_crime_rate: float64
----
-name: demolition_cost_per_sqft
-indexs:
-- None
-columns:
-  building_type_id: int32
-  building_type_name: object
-  demolition_cost_per_sqft: int32
----
-name: employment_adhoc_sector_group_definitions
-indexs:
-- None
-columns:
-  group_id: int32
-  sector_id: int32
----
-name: employment_adhoc_sector_groups
-indexs:
-- None
-columns:
-  group_id: int32
-  name: object
 ---
 name: employment_events
 indexs:
@@ -171,19 +122,6 @@ columns:
   sector_name: object
   sqft_per_job: int64
 ---
-name: generic_land_use_types
-indexs:
-- generic_land_use_type_id
-columns:
-  generic_description: object
----
-name: home_based_status
-indexs:
-- None
-columns:
-  home_based_status: int64
-  name: object
----
 name: households
 indexs:
 - household_id
@@ -195,7 +133,7 @@ columns:
   income: float64
   persons: float64
   race_id: float64
-  workers: float64
+  workers: int64
 ---
 name: income_growth_rates
 indexs:
@@ -204,14 +142,6 @@ indexs:
 columns:
   income_growth_rate: float64
   large_area_name: object
----
-name: job_building_types
-indexs:
-- None
-columns:
-  home_based: int32
-  id: int32
-  name: object
 ---
 name: jobs
 indexs:
@@ -305,7 +235,6 @@ indexs:
 - parcel_id
 columns:
   census_bg_id: object
-  census_block_id: object
   centroid_x: float64
   centroid_y: float64
   city_id: int64
@@ -328,7 +257,6 @@ columns:
   race_id: float64
   relate: float64
   sex: float64
-  worker: float64
 ---
 name: poi
 indexs:
@@ -469,7 +397,7 @@ columns:
   midday_other_logsum: float64
   midday_transit_total_time: float64
 ---
-name: workers_emloyment_rates_by_large_area
+name: workers_employment_rates_by_large_area
 indexs:
 - large_area_id
 columns:
@@ -511,7 +439,7 @@ columns:
   age_min: int64
   la_rates: float64
 ---
-name: workers_emloyment_rates_by_large_area_age
+name: workers_employment_rates_by_large_area_age
 indexs:
 - large_area_id
 columns:
@@ -558,40 +486,40 @@ name: workers_labor_participation_rates
 indexs:
 - large_area_id
 columns:
-  '2010': float64
-  '2013': float64
-  '2014': float64
-  '2015': float64
-  '2016': float64
-  '2017': float64
-  '2018': float64
-  '2019': float64
-  '2020': float64
-  '2021': float64
-  '2022': float64
-  '2023': float64
-  '2024': float64
-  '2025': float64
-  '2026': float64
-  '2027': float64
-  '2028': float64
-  '2029': float64
-  '2030': float64
-  '2031': float64
-  '2032': float64
-  '2033': float64
-  '2034': float64
-  '2035': float64
-  '2036': float64
-  '2037': float64
-  '2038': float64
-  '2039': float64
-  '2040': float64
-  '2041': float64
-  '2042': float64
-  '2043': float64
-  '2044': float64
-  '2045': float64
+  '2010': object
+  '2013': object
+  '2014': object
+  '2015': object
+  '2016': object
+  '2017': object
+  '2018': object
+  '2019': object
+  '2020': object
+  '2021': object
+  '2022': object
+  '2023': object
+  '2024': object
+  '2025': object
+  '2026': object
+  '2027': object
+  '2028': object
+  '2029': object
+  '2030': object
+  '2031': object
+  '2032': object
+  '2033': object
+  '2034': object
+  '2035': object
+  '2036': object
+  '2037': object
+  '2038': object
+  '2039': object
+  '2040': object
+  '2041': object
+  '2042': object
+  '2043': object
+  '2044': object
+  '2045': object
   age_max: int64
   age_min: int64
 ---

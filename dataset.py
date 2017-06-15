@@ -22,10 +22,11 @@ def scheduled_demolition_events():
 @orca.table()
 def buildings(store):
     df = store['buildings']
+    # Todo: combine two sqft prices into one and set non use sqft price to 0
     df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
-    df.loc[df.sqft_price_nonres == np.inf, 'sqft_price_nonres'] = 0
+    df.loc[df.sqft_price_nonres > 1000, 'sqft_price_nonres'] = 0
     df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit * df.residential_units)
-    df.loc[df.sqft_price_res == np.inf, 'sqft_price_res'] = 0
+    df.loc[df.sqft_price_res > 1000, 'sqft_price_res'] = 0
     df.fillna(0, inplace=True)
     return df
 
@@ -41,13 +42,14 @@ def households(store):
     return df
 
 
-for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'employment_sectors', 'home_based_status',
+for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'employment_sectors',
              'target_vacancies', 'building_sqft_per_job',
              'annual_relocation_rates_for_households',
              'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
-             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types', 'access_drive_minutes',
-             'workers_labor_participation_rates', 'workers_emloyment_rates_by_large_area_age', 'workers_emloyment_rates_by_large_area',
-             'access_walk_feet', 'transit_stops', 'crime_rates', 'schools', 'poi', 
+             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
+             'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
+             'workers_employment_rates_by_large_area',
+             'transit_stops', 'crime_rates', 'schools', 'poi',
              'annual_household_control_totals']:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
@@ -61,18 +63,16 @@ for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
     orca.add_table(node_tbl, empty_df)
 
 # GQ placeholders
-for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq',
-               'tazcounts2030gq']:
-    empty_df = pd.DataFrame()
-    orca.add_table(gq_tbl, empty_df)
+# for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq',
+#                'tazcounts2030gq']:
+#     empty_df = pd.DataFrame()
+#     orca.add_table(gq_tbl, empty_df)
 
 # this specifies the relationships between tables
 orca.broadcast('nodes_walk', 'buildings', cast_index=True, onto_on='nodeid_walk')
 orca.broadcast('nodes_walk', 'parcels', cast_index=True, onto_on='nodeid_walk')
 orca.broadcast('nodes_drv', 'buildings', cast_index=True, onto_on='nodeid_drv')
 orca.broadcast('nodes_drv', 'parcels', cast_index=True, onto_on='nodeid_drv')
-# orca.broadcast('transit_to_jobs_am', 'parcels', cast_index=True, onto_on='nodeid_walk')
-# orca.broadcast('transit_to_jobs_midday', 'parcels', cast_index=True, onto_on='nodeid_walk')
 orca.broadcast('parcels', 'buildings', cast_index=True, onto_on='parcel_id')
 orca.broadcast('buildings', 'households', cast_index=True, onto_on='building_id')
 orca.broadcast('buildings', 'jobs', cast_index=True, onto_on='building_id')
