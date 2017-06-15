@@ -57,11 +57,6 @@ def large_area_id(buildings, parcels):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
-def crime08(buildings, cities):
-    return misc.reindex(cities.crime08, buildings.city_id).fillna(0)
-
-
-@orca.column('buildings', cache=True, cache_scope='iteration')
 def popden(buildings, zones):
     return misc.reindex(zones.popden, buildings.zone_id).fillna(0)
 
@@ -99,9 +94,10 @@ def non_residential_units(buildings):
     return job_spaces
 
 
-##@orca.column('buildings', 'jobs_within_30_min', cache=True)
-##def jobs_within_30_min(buildings, zones):
-##    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
+@orca.column('buildings', 'jobs_within_30_min', cache=True)
+def jobs_within_30_min(buildings, zones):
+    return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
+
 
 @orca.column('buildings')
 def vacant_residential_units(buildings, households):

@@ -14,13 +14,15 @@ def popden(parcels, households):
 
 @orca.column('zones', 'jobs_within_30_min', cache=True)
 def jobs_within_30_min(jobs, travel_data):
-    j = pd.DataFrame({'zone_id':jobs.zone_id})
+    from urbansim.utils import misc
+    j = pd.DataFrame({'zone_id': jobs.zone_id})
     td = travel_data.to_frame()
     zone_ids = np.unique(td.reset_index().to_zone_id)
     return misc.compute_range(td,
-                                  j.groupby('zone_id').size().reindex(index = zone_ids).fillna(0),
-                                  "am_single_vehicle_to_work_travel_time",
-                                  30, agg=np.sum)
+                              j.groupby('zone_id').size().reindex(index=zone_ids).fillna(0),
+                              "am_auto_total_time",
+                              30, agg=np.sum)
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def households(households):
@@ -125,8 +127,8 @@ def z_total_jobs(jobs):
 
 @orca.column('zones', 'transit_jobs_50min', cache=True, cache_scope='iteration')
 def transit_jobs_50min(zones, travel_data):
-    td = travel_data.to_frame('am_transit_total_time').reset_index()
-    zemp = zones.to_frame('employment')
+    td = travel_data.to_frame(['am_transit_total_time']).reset_index()
+    zemp = zones.to_frame(['employment'])
     temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     transit_jobs_50min = temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum()
     return transit_jobs_50min
@@ -134,8 +136,8 @@ def transit_jobs_50min(zones, travel_data):
 
 @orca.column('zones', 'transit_jobs_30min', cache=True, cache_scope='iteration')
 def transit_jobs_30min(zones, travel_data):
-    td = travel_data.to_frame('am_transit_total_time').reset_index()
-    zemp = zones.to_frame('employment')
+    td = travel_data.to_frame(['am_transit_total_time']).reset_index()
+    zemp = zones.to_frame(['employment'])
     temp = pd.merge(td,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     transit_jobs_30min = temp[temp.am_transit_total_time <=30].groupby('from_zone_id').employment.sum()
     return transit_jobs_30min
@@ -143,24 +145,24 @@ def transit_jobs_30min(zones, travel_data):
 
 @orca.column('zones', 'a_ln_emp_26min_drive_alone', cache=True, cache_scope='iteration')
 def a_ln_emp_26min_drive_alone(zones, travel_data):
-    drvtime = travel_data.to_frame("am_auto_total_time").reset_index()
-    zemp = zones.to_frame('employment')
+    drvtime = travel_data.to_frame(['am_auto_total_time']).reset_index()
+    zemp = zones.to_frame(['employment'])
     temp = pd.merge(drvtime, zemp, left_on ='to_zone_id', right_index = True, how='left' )
     return np.log1p(temp[temp.am_auto_total_time <=26].groupby('from_zone_id').employment.sum().fillna(0))
 
 
 @orca.column('zones', 'a_ln_emp_50min_transit', cache=True, cache_scope='iteration')
 def a_ln_emp_50min_transit(zones, travel_data):
-    transittime = travel_data.to_frame("am_transit_total_time").reset_index()
-    zemp = zones.to_frame('employment')
+    transittime = travel_data.to_frame(['am_transit_total_time']).reset_index()
+    zemp = zones.to_frame(['employment'])
     temp = pd.merge(transittime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     return np.log1p(temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum().fillna(0))
 
 
 @orca.column('zones', 'a_ln_retail_emp_15min_drive_alone', cache=True, cache_scope='iteration')
 def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
-    drvtime = travel_data.to_frame("midday_auto_total_time").reset_index()
-    zemp = zones.to_frame('employment')
+    drvtime = travel_data.to_frame(['midday_auto_total_time']).reset_index()
+    zemp = zones.to_frame(['employment'])
     temp = pd.merge(drvtime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
 
@@ -180,7 +182,7 @@ def percent_vacant_residential_units(buildings):
     du = buildings.groupby('zone_id').residential_units.sum()
     vacant_du = buildings.groupby('zone_id').vacant_residential_units.sum()
 
-    return (vacant_du*1.0 / du).fillna(0)
+    return (vacant_du*1.0 / du).replace([np.inf, -np.inf], 0).fillna(0)
 
 
 def make_employment_density_variable(sector_id):

@@ -24,6 +24,11 @@ def zone_id(households, buildings):
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
+def city_id(households, buildings):
+    return misc.reindex(buildings.city_id, households.building_id)
+
+
+@orca.column('households', cache=True, cache_scope='iteration')
 def x(households, buildings):
     return misc.reindex(buildings.x, households.building_id)
 
@@ -34,17 +39,24 @@ def y(households, buildings):
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
-def large_area(households, buildings):
-    return misc.reindex(buildings.large_area_id, households.building_id)
+def large_area_id(households, buildings):
+    hh_la = "households_large_area_lookup"
+    if not orca.is_injectable(hh_la):
+        orca.add_injectable(hh_la,
+                            misc.reindex(buildings.large_area_id, households.building_id),
+                            autocall=False, cache=True)
+    return orca.get_injectable(hh_la)
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
-def large_area_id(households, buildings):
-    return misc.reindex(buildings.large_area_id, households.building_id)
+def large_area(households):
+    # todo: remove and fix
+    return households.large_area_id
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def lid(households):
+    # todo: remove and fix
     return households.large_area_id
 
 
@@ -140,6 +152,11 @@ def workers_lte_cars(households):
 @orca.column('persons', cache=True, cache_scope='iteration')
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
+
+
+@orca.column('persons', cache=True, cache_scope='iteration')
+def city_id(households, persons):
+    return misc.reindex(households.city_id, persons.household_id)
 
 
 @orca.column('persons', cache=True, cache_scope='iteration')
