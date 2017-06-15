@@ -254,7 +254,7 @@ variable_definitions:
     add_fields:
     - general_type
     filters:
-    - general_type == "Residential"
+    - 81 <= building_type_id <= 84
     - sqft_price_res < 500
     decay: flat
     name: residential
@@ -264,10 +264,8 @@ variable_definitions:
   - aggregation: average
     dataframe: buildings
     decay: flat
-    add_fields:
-    - general_type
     filters:
-    - (general_type =="Retail") | (general_type =="Office") | (general_type =="Industrial")|(general_type =="Medical")
+    - 21 <= building_type_id <= 71
     name: ave_nonres_sqft_price
     radius: 2000
     varname: sqft_price_nonres

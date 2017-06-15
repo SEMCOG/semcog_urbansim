@@ -25,28 +25,28 @@ estimation_sample_size: 15000
 prediction_sample_size: null
 
 default_config:
-    model_expression: np.log1p(sqft_per_unit) + np.log1p(jobs_within_30_min) + np.log1p(crime08)
+    model_expression: np.log1p(sqft_per_unit) + np.log1p(jobs_within_30_min) + np.log1p(crime_ucr_rate)
         + np.log1p(popden) + np.log1p(income * sqft_price_res) + np.log1p(residential_units)
 
 models:
     3:
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): -0.7127531806461502
+                np.log1p(crime_ucr_rate): -0.7127531806461502
                 np.log1p(income * sqft_price_res): 0.07215426563577643
                 np.log1p(jobs_within_30_min): 0.6444809647015457
                 np.log1p(popden): 0.31146427411611777
                 np.log1p(residential_units): 1.1721405361788937
                 np.log1p(sqft_per_unit): 0.1741007388709195
             Std. Error:
-                np.log1p(crime08): 0.020214770557492448
+                np.log1p(crime_ucr_rate): 0.020214770557492448
                 np.log1p(income * sqft_price_res): 0.00398239687969035
                 np.log1p(jobs_within_30_min): 0.012504349713567698
                 np.log1p(popden): 0.014936561743761336
                 np.log1p(residential_units): 0.013461313639808103
                 np.log1p(sqft_per_unit): 0.016407115468376955
             T-Score:
-                np.log1p(crime08): -35.25902896691419
+                np.log1p(crime_ucr_rate): -35.25902896691419
                 np.log1p(income * sqft_price_res): 18.11830106731772
                 np.log1p(jobs_within_30_min): 51.54054224845129
                 np.log1p(popden): 20.852474582794084
@@ -61,21 +61,21 @@ models:
     &id001 !!python/long '5':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): 3.0
+                np.log1p(crime_ucr_rate): 3.0
                 np.log1p(income * sqft_price_res): 0.07512295878606837
                 np.log1p(jobs_within_30_min): -0.008931293328441827
                 np.log1p(popden): 0.48862896355082924
                 np.log1p(residential_units): 1.118922722557264
                 np.log1p(sqft_per_unit): 0.1833725114786372
             Std. Error:
-                np.log1p(crime08): 0.03518026459304308
+                np.log1p(crime_ucr_rate): 0.03518026459304308
                 np.log1p(income * sqft_price_res): 0.003298658766405699
                 np.log1p(jobs_within_30_min): 0.00271768031549774
                 np.log1p(popden): 0.02122500372289343
                 np.log1p(residential_units): 0.016454204752867
                 np.log1p(sqft_per_unit): 0.020424199751689118
             T-Score:
-                np.log1p(crime08): 85.27508347942477
+                np.log1p(crime_ucr_rate): 85.27508347942477
                 np.log1p(income * sqft_price_res): 22.77378901726298
                 np.log1p(jobs_within_30_min): -3.2863664197406055
                 np.log1p(popden): 23.02138411517878
@@ -90,21 +90,21 @@ models:
     &id002 !!python/long '93':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): -2.614025219288856
+                np.log1p(crime_ucr_rate): -2.614025219288856
                 np.log1p(income * sqft_price_res): 0.2713060771156804
                 np.log1p(jobs_within_30_min): -0.25730223469587776
                 np.log1p(popden): -0.8800924113058565
                 np.log1p(residential_units): 1.2328610935092363
                 np.log1p(sqft_per_unit): -0.06727412676139992
             Std. Error:
-                np.log1p(crime08): 0.018693876047508315
+                np.log1p(crime_ucr_rate): 0.018693876047508315
                 np.log1p(income * sqft_price_res): 0.0050393346570381
                 np.log1p(jobs_within_30_min): 0.008228673510824134
                 np.log1p(popden): 0.022672735473588078
                 np.log1p(residential_units): 0.022128016832807906
                 np.log1p(sqft_per_unit): 0.013379504930023102
             T-Score:
-                np.log1p(crime08): -139.83323804253405
+                np.log1p(crime_ucr_rate): -139.83323804253405
                 np.log1p(income * sqft_price_res): 53.8376781023593
                 np.log1p(jobs_within_30_min): -31.268980882206364
                 np.log1p(popden): -38.81721340290384
@@ -119,21 +119,21 @@ models:
     &id003 !!python/long '99':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): -0.802815217772548
+                np.log1p(crime_ucr_rate): -0.802815217772548
                 np.log1p(income * sqft_price_res): 0.01374380863716801
                 np.log1p(jobs_within_30_min): 0.006766959347298409
                 np.log1p(popden): 0.6110184784030727
                 np.log1p(residential_units): 1.140157239508731
                 np.log1p(sqft_per_unit): 0.2132002073490369
             Std. Error:
-                np.log1p(crime08): 0.02077751732450661
+                np.log1p(crime_ucr_rate): 0.02077751732450661
                 np.log1p(income * sqft_price_res): 0.003505833605876687
                 np.log1p(jobs_within_30_min): 0.010832708801079552
                 np.log1p(popden): 0.018907240196674724
                 np.log1p(residential_units): 0.014385098945713132
                 np.log1p(sqft_per_unit): 0.01319719531831101
             T-Score:
-                np.log1p(crime08): -38.6386499038384
+                np.log1p(crime_ucr_rate): -38.6386499038384
                 np.log1p(income * sqft_price_res): 3.920268381856407
                 np.log1p(jobs_within_30_min): 0.624678413456848
                 np.log1p(popden): 32.3166401890073
@@ -148,21 +148,21 @@ models:
     &id004 !!python/long '115':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): 0.7689588107455351
+                np.log1p(crime_ucr_rate): 0.7689588107455351
                 np.log1p(income * sqft_price_res): 0.06225562493731344
                 np.log1p(jobs_within_30_min): -0.188623396323723
                 np.log1p(popden): -1.4593805706501366
                 np.log1p(residential_units): 1.264778160045622
                 np.log1p(sqft_per_unit): 0.20949651598934704
             Std. Error:
-                np.log1p(crime08): 0.0325731746824087
+                np.log1p(crime_ucr_rate): 0.0325731746824087
                 np.log1p(income * sqft_price_res): 0.004263817453229891
                 np.log1p(jobs_within_30_min): 0.004775499265359851
                 np.log1p(popden): 0.011862774574028784
                 np.log1p(residential_units): 0.019804087022942906
                 np.log1p(sqft_per_unit): 0.015125557295768583
             T-Score:
-                np.log1p(crime08): 23.607118994170836
+                np.log1p(crime_ucr_rate): 23.607118994170836
                 np.log1p(income * sqft_price_res): 14.60091235616902
                 np.log1p(jobs_within_30_min): -39.49815209729899
                 np.log1p(popden): -123.0218581279597
@@ -177,21 +177,21 @@ models:
     &id005 !!python/long '125':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): -0.8334903117985266
+                np.log1p(crime_ucr_rate): -0.8334903117985266
                 np.log1p(income * sqft_price_res): 0.09852350342079681
                 np.log1p(jobs_within_30_min): 0.5977812382050604
                 np.log1p(popden): -0.43040225080444444
                 np.log1p(residential_units): 1.2807643706862957
                 np.log1p(sqft_per_unit): 0.1815238482384853
             Std. Error:
-                np.log1p(crime08): 0.01888741418728192
+                np.log1p(crime_ucr_rate): 0.01888741418728192
                 np.log1p(income * sqft_price_res): 0.0034262980164280446
                 np.log1p(jobs_within_30_min): 0.009239598621710574
                 np.log1p(popden): 0.016811347993386176
                 np.log1p(residential_units): 0.012839022289983343
                 np.log1p(sqft_per_unit): 0.009309997850190859
             T-Score:
-                np.log1p(crime08): -44.12940297352974
+                np.log1p(crime_ucr_rate): -44.12940297352974
                 np.log1p(income * sqft_price_res): 28.755088713359704
                 np.log1p(jobs_within_30_min): 64.69774961873723
                 np.log1p(popden): -25.601888139711985
@@ -206,21 +206,21 @@ models:
     &id006 !!python/long '147':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): 0.7854487431300146
+                np.log1p(crime_ucr_rate): 0.7854487431300146
                 np.log1p(income * sqft_price_res): 0.1644362512459425
                 np.log1p(jobs_within_30_min): -0.24057273974167676
                 np.log1p(popden): -1.4001058723653792
                 np.log1p(residential_units): 1.1045964017359147
                 np.log1p(sqft_per_unit): 0.05046063776649855
             Std. Error:
-                np.log1p(crime08): 0.02526126643614196
+                np.log1p(crime_ucr_rate): 0.02526126643614196
                 np.log1p(income * sqft_price_res): 0.004262829139355404
                 np.log1p(jobs_within_30_min): 0.004261269705876095
                 np.log1p(popden): 0.015429917389422999
                 np.log1p(residential_units): 0.019498415454476385
                 np.log1p(sqft_per_unit): 0.011715804744547148
             T-Score:
-                np.log1p(crime08): 31.09300735636327
+                np.log1p(crime_ucr_rate): 31.09300735636327
                 np.log1p(income * sqft_price_res): 38.57444102739886
                 np.log1p(jobs_within_30_min): -56.45564734143394
                 np.log1p(popden): -90.73968687124228
@@ -235,21 +235,21 @@ models:
     &id007 !!python/long '161':
         fit_parameters:
             Coefficient:
-                np.log1p(crime08): 0.3436749235581998
+                np.log1p(crime_ucr_rate): 0.3436749235581998
                 np.log1p(income * sqft_price_res): 0.2744902708987326
                 np.log1p(jobs_within_30_min): -0.0618735885916048
                 np.log1p(popden): -0.5177960575479428
                 np.log1p(residential_units): 1.7573622470349632
                 np.log1p(sqft_per_unit): 0.46714176790357925
             Std. Error:
-                np.log1p(crime08): 0.025684965429269985
+                np.log1p(crime_ucr_rate): 0.025684965429269985
                 np.log1p(income * sqft_price_res): 0.0035483498951613306
                 np.log1p(jobs_within_30_min): 0.004246119608889338
                 np.log1p(popden): 0.011026696868058843
                 np.log1p(residential_units): 0.01131729966902949
                 np.log1p(sqft_per_unit): 0.010988092222717254
             T-Score:
-                np.log1p(crime08): 13.380392685541866
+                np.log1p(crime_ucr_rate): 13.380392685541866
                 np.log1p(income * sqft_price_res): 77.357160090959
                 np.log1p(jobs_within_30_min): -14.5717959668567
                 np.log1p(popden): -46.95840139106829
