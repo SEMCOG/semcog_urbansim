@@ -450,7 +450,7 @@ def refiner(jobs, households, buildings, iter_var):
 
 @orca.step()
 def scheduled_development_events(buildings, iter_var, scheduled_development_events):
-    from urbansim.developer.developer import Developer
+    from urbansim_parcels.utils import merge_buildings
     sched_dev = scheduled_development_events.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -458,7 +458,9 @@ def scheduled_development_events(buildings, iter_var, scheduled_development_even
         sched_dev["sqft_price_nonres"] = 0
         sched_dev = add_extra_columns_res(sched_dev)
         b = buildings.to_frame(buildings.local_columns)
-        all_buildings = Developer.merge(b, sched_dev[b.columns])
+        max_id = orca.get_injectable("max_building_id")
+        all_buildings = merge_buildings(b, sched_dev[b.columns], False, max_id)
+        orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
         # Todo: maybe we need to impute some columns
@@ -520,6 +522,7 @@ def add_extra_columns_res(df):
         df[col] = 0
     df['sqft_per_unit'] = 1500
     df = df.fillna(0)
+    # todo this is a good place to add year built
     return df
 
 
