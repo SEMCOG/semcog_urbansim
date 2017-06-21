@@ -6,7 +6,7 @@ orca.run(['build_networks'])
 
 base_tables = ['jobs', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                'households', 'persons', 'annual_relocation_rates_for_households',
-               'buildings', 'parcels', 'zones', 'cities', 'counties',
+               'buildings', 'parcels', 'zones', 'semmcds', 'counties',
                'target_vacancies', 'building_sqft_per_job',
                'annual_employment_control_totals',
                'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
@@ -44,5 +44,4 @@ orca.run([
     out_base_tables=base_tables, #TODO: check pass None to get all tables for base  year
     out_run_tables=out_tables,
     out_interval=1)
-# TODO: remove `liv_index`, `price_adj` coll
 # TODO: check target_vacancies used or not and how

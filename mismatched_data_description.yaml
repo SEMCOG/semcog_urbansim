@@ -77,15 +77,6 @@ columns:
   stories: float64
   year_built: int64
 ---
-name: cities
-indexs:
-- city_id
-columns:
-  city_code: object
-  city_name: object
-  liv_index: float32
-  price_adj: int32
----
 name: counties
 indexs:
 - county_id
@@ -188,6 +179,7 @@ columns:
   parcel_sqft: float64
   pptytax: float64
   school_id: int64
+  semmcd: int64
   sev_value: float64
   spid: int64
   tax_exempt_flag: int64
@@ -234,16 +226,17 @@ name: parcels
 indexs:
 - parcel_id
 columns:
-  census_bg_id: object
+  census_bg_id: int64
   centroid_x: float64
   centroid_y: float64
-  city_id: int64
+  city_id_new: int64
   county_id: int64
   land_use_type_id: int64
   large_area_id: int64
   parcel_sqft: float64
   pptytax: float64
   school_id: int64
+  semmcd: int64
   sev_value: float64
   zone_id: int64
 ---
@@ -257,6 +250,7 @@ columns:
   race_id: float64
   relate: float64
   sex: float64
+  worker: int64
 ---
 name: poi
 indexs:
@@ -338,6 +332,12 @@ columns:
   point_x: float64
   point_y: float64
   totalachievementindex: float64
+---
+name: semmcds
+indexs:
+- semmcd_id
+columns:
+  city_name: object
 ---
 name: target_vacancies
 indexs:

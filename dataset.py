@@ -28,6 +28,7 @@ def buildings(store):
     df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit * df.residential_units)
     df.loc[df.sqft_price_res > 1000, 'sqft_price_res'] = 0
     df.fillna(0, inplace=True)
+    orca.add_injectable("max_building_id", df.index.max())
     return df
 
 
@@ -42,7 +43,7 @@ def households(store):
     return df
 
 
-for name in ['jobs', 'persons', 'parcels', 'zones', 'cities', 'counties', 'employment_sectors',
+for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_sectors',
              'target_vacancies', 'building_sqft_per_job',
              'annual_relocation_rates_for_households',
              'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',

@@ -46,9 +46,14 @@ def zone_id(buildings, parcels):
     return misc.reindex(parcels.zone_id, buildings.parcel_id)
 
 
+# @orca.column('buildings', cache=True, cache_scope='iteration')
+# def city_id(buildings, parcels):
+#     return misc.reindex(parcels.city_id, buildings.parcel_id)
+
+
 @orca.column('buildings', cache=True, cache_scope='iteration')
-def city_id(buildings, parcels):
-    return misc.reindex(parcels.city_id, buildings.parcel_id)
+def semmcd(buildings, parcels):
+    return misc.reindex(parcels.semmcd, buildings.parcel_id)
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
@@ -321,7 +326,7 @@ def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog
 
 geographic_levels = [('parcels', 'parcel_id'),
                      ('zones', 'zone_id')]
-vars_to_dummify = ['city_id', 'building_type_id']
+vars_to_dummify = ['building_type_id'] # 'city_id'
 vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
                'parcels_parcel_far', 'sqft_price_nonres']
 

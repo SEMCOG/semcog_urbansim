@@ -12,6 +12,7 @@ from urbansim.utils import misc
 ##def school_district_id(households, buildings):
 ##    return misc.reindex(buildings.school_district_id, households.building_id)
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def income_quartile(households):
     return pd.Series(pd.qcut(households.income, 4, labels=False),
@@ -23,9 +24,14 @@ def zone_id(households, buildings):
     return misc.reindex(buildings.zone_id, households.building_id)
 
 
+# @orca.column('households', cache=True, cache_scope='iteration')
+# def city_id(households, buildings):
+#     return misc.reindex(buildings.city_id, households.building_id)
+
+
 @orca.column('households', cache=True, cache_scope='iteration')
-def city_id(households, buildings):
-    return misc.reindex(buildings.city_id, households.building_id)
+def semmcd(households, buildings):
+    return misc.reindex(buildings.semmcd, households.building_id)
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -154,9 +160,14 @@ def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
 
+# @orca.column('persons', cache=True, cache_scope='iteration')
+# def city_id(households, persons):
+#     return misc.reindex(households.city_id, persons.household_id)
+
+
 @orca.column('persons', cache=True, cache_scope='iteration')
-def city_id(households, persons):
-    return misc.reindex(households.city_id, persons.household_id)
+def semmcd(households, persons):
+    return misc.reindex(households.semmcd, persons.household_id)
 
 
 @orca.column('persons', cache=True, cache_scope='iteration')
