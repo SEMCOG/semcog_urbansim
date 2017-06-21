@@ -522,7 +522,7 @@ def add_extra_columns_res(df):
         df[col] = 0
     df['sqft_per_unit'] = 1500
     df = df.fillna(0)
-    # todo this is a good place to add year built
+    df['year_built'] = orca.get_injectable('year')
     return df
 
 
@@ -531,6 +531,7 @@ def add_extra_columns_nonres(df):
                 'sqft_price_res']:
         df[col] = 0
     df['sqft_per_unit'] = 0
+    df['year_built'] = orca.get_injectable('year')
     df = df.fillna(0)
     return df
 
