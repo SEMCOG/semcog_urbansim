@@ -20,7 +20,7 @@ def year():
 
 orca.add_injectable("transcad_available", False)
 
-orca.add_injectable("emp_btypes", [1,3,4,5,6,7,8,10,21,22,23,24,25,26,27,28,29,31,32,33,35,38,39])
+orca.add_injectable("emp_btypes", [1, 3, 4, 5, 6, 7, 8, 10, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 32, 33, 35, 38, 39])
 
 # maps building type ids to general building types; reduces dimensionality
 
@@ -89,17 +89,11 @@ orca.add_injectable("form_to_btype", {
 
 
 def verify():
-    with open(r"configs/data_structure.yaml", "r") as out:
-        structure = out.read()
-
     hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "all_semcog_data_06-21-17.h5"), mode="r")
 
     new = verify_data_structure.yaml_from_store(hdf_store)
-
-    if structure != new:
-        with open("mismatched_data_description.yaml", "w") as out:
-            out.write(new)
-       # assert structure == new
+    with open(r"configs/data_structure.yaml", "w") as out:
+        out.write(new)
 
     return hdf_store
 
