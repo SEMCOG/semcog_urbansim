@@ -450,7 +450,6 @@ def refiner(jobs, households, buildings, iter_var):
 
 @orca.step()
 def scheduled_development_events(buildings, iter_var, scheduled_development_events):
-    from urbansim_parcels.utils import merge_buildings
     sched_dev = scheduled_development_events.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -459,7 +458,7 @@ def scheduled_development_events(buildings, iter_var, scheduled_development_even
         sched_dev = add_extra_columns_res(sched_dev)
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
-        all_buildings = merge_buildings(b, sched_dev[b.columns], False, max_id)
+        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
         orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
@@ -656,7 +655,7 @@ def build_networks(parcels):
         orca.add_injectable(n['net'], net)
 
     # spatially join node ids to parcels
-    p = parcels.to_frame()
+    p = parcels.local
     p['nodeid_walk'] = orca.get_injectable('net_walk').get_node_ids(p['centroid_x'], p['centroid_y'])
     p['nodeid_drv'] = orca.get_injectable('net_drv').get_node_ids(p['centroid_x'], p['centroid_y'])
     orca.add_table("parcels", p)
