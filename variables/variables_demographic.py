@@ -47,7 +47,7 @@ def y(households, buildings):
 @orca.column('households', cache=True, cache_scope='iteration')
 def large_area_id(households, buildings):
     hh_la = "households_large_area_lookup"
-    if not orca.is_injectable(hh_la):
+    if (not orca.is_injectable(hh_la)) or (len(orca.get_injectable(hh_la)) == 0):
         orca.add_injectable(hh_la,
                             misc.reindex(buildings.large_area_id, households.building_id),
                             autocall=False, cache=True)
