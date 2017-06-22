@@ -39,19 +39,28 @@ def parcel_average_price(use, parcels):
 
 def parcel_is_allowed(form):
     form_to_btype = orca.get_injectable("form_to_btype")
-    buildings = orca.get_table("buildings").to_frame(["parcel_id", "building_type_id", "residential_units"])
+    buildings = orca.get_table("buildings").to_frame(
+        ["parcel_id", "building_type_id", "residential_units", "building_age"])
+    zoning = orca.get_table('zoning')
+
     lone_house = buildings[
                      (buildings.building_type_id == 81) &
-                     (buildings.residential_units == 1)].groupby(by="parcel_id").building_type_id.count() == 1
-    orca.add_injectable("lone_house", lone_house)
-    zoning = orca.get_table('zoning')
+                     (buildings.residential_units == 1)].groupby("parcel_id").building_type_id.count() == 1
+    lone_house = lone_house.reindex(zoning.index, fill_value=False)
+
+    new_building = buildings.groupby("parcel_id").building_age.min() <= 5
+    new_building = new_building.reindex(zoning.index, fill_value=False)
+
+    # Todo: filter out parcel_id used in scheduled_development_events
+    # Todo: filter out parcel_id used in scheduled_demolition_events
+    # Todo: filter out parcel_id used in refiner
+
     allowed = [(zoning['type%d' % typ] > 0)
                for typ in form_to_btype[form]]
 
     s = pd.concat(allowed, axis=1).max(axis=1).reindex(orca.get_table('parcels').index).fillna(False)
 
-    return s.astype("bool") & (~lone_house).reindex(zoning.index, fill_value=True)
-    # return s.astype("bool")
+    return s.astype("bool") & (~lone_house) & (~new_building)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
