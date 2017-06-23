@@ -57,7 +57,13 @@ def hlcm_estimate(households, buildings, nodes_walk):
 
 @orca.step()
 def hlcm_simulate(households, buildings, nodes_walk):
-    # todo: set invalid building_id to -1
+    h = households.building_id
+    idx_invalid_building_id = np.in1d(h, buildings.index.values) == False
+    if idx_invalid_building_id.sum() > 0:
+        print("we have households with bad building id's there are #", idx_invalid_building_id.sum())
+        h.loc[idx_invalid_building_id] = -1
+        households.update_col_from_series('building_id', h)
+
     return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes_walk,
                               "building_id", "residential_units",
                               "vacant_residential_units")
@@ -77,9 +83,13 @@ def elcm_estimate(jobs, buildings, nodes_drv):
 
 @orca.step()
 def elcm_simulate(jobs, buildings, nodes_drv):
-    # todo: set invalid building_id to -1
     jobs_df = jobs.to_frame()
     buildings = buildings.to_frame()
+
+    idx_invalid_building_id = np.in1d(jobs_df.building_id, buildings.index.values) == False
+    if idx_invalid_building_id.sum() > 0:
+        print("we have jobs with bad building id's there are #", idx_invalid_building_id.sum())
+        jobs_df.loc[idx_invalid_building_id, 'building_id'] = -1
 
     def register_broadcast_simulate_segment(jobs_df_name, jobs_in_la, buildings_df_name, buildings_in_la, yaml_name):
         orca.add_table(jobs_df_name, jobs_in_la)
