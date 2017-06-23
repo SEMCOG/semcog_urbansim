@@ -137,8 +137,9 @@ def parcel_far(parcels):
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
 def school_district_achievement(parcels, schools):
-    return misc.reindex(parcels['school_id'], schools.to_frame(['dcode', 'totalachievementindex']).
-                        groupby('dcode').totalachievementindex.mean())
+    schools = schools.to_frame(['dcode', 'totalachievementindex'])
+    achievement = schools.groupby('dcode').totalachievementindex.mean()
+    return misc.reindex(achievement, parcels.school_id).fillna(0)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
