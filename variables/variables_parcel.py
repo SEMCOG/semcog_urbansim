@@ -64,31 +64,23 @@ def parcel_is_allowed(form):
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
-def max_far(parcels):
-    df = pd.DataFrame(index=parcels.index)
-    df['max_far'] = orca.get_table('zoning').max_far
-    return df.max_far
+def max_far(parcels, zoning):
+    return zoning.max_far.reindex(parcels.index)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
-def max_dua(parcels):
-    df = pd.DataFrame(index=parcels.index)
-    df['max_dua'] = orca.get_table('zoning').max_dua
-    return df.max_dua
+def max_dua(parcels, zoning):
+    return zoning.max_dua.reindex(parcels.index)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
-def max_height(parcels):
-    df = pd.DataFrame(index=parcels.index)
-    df['max_height'] = orca.get_table('zoning').max_height
-    return df.max_height
+def max_height(parcels, zoning):
+    return zoning.max_height.reindex(parcels.index)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
-def pct_undev(parcels):
-    df = pd.DataFrame(index=parcels.index)
-    df['pct_undev'] = orca.get_table('zoning').pct_undev
-    return df.pct_undev
+def pct_undev(parcels, zoning):
+    return zoning.pct_undev.reindex(parcels.index)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -147,8 +139,7 @@ def drv_nearest_hospital(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_hospital,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_hospital, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -156,8 +147,7 @@ def drv_nearest_healthcenter(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_healthcenter,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_healthcenter, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -165,8 +155,7 @@ def drv_nearest_grocery(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_grocery,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_grocery, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -174,8 +163,7 @@ def drv_nearest_urgentcare(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_urgentcare,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_urgentcare, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -183,8 +171,7 @@ def drv_nearest_library(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_library,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_library, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -192,8 +179,7 @@ def drv_nearest_park(parcels, nodes_drv):
     if len(nodes_drv) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_drv').drv_nearest_park,
-                        parcels.nodeid_drv)
+    return misc.reindex(nodes_drv.drv_nearest_park, parcels.nodeid_drv)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -201,8 +187,7 @@ def walk_nearest_hospital(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_hospital,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_hospital, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -210,8 +195,7 @@ def walk_nearest_grocery(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_grocery,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_grocery, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -219,8 +203,7 @@ def walk_nearest_healthcenter(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_healthcenter,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_healthcenter, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -228,8 +211,7 @@ def walk_nearest_urgentcare(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_urgentcare,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_urgentcare, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -237,8 +219,7 @@ def walk_nearest_library(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_library,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_library, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
@@ -246,8 +227,7 @@ def walk_nearest_park(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(orca.get_table('nodes_walk').walk_nearest_park,
-                        parcels.nodeid_walk)
+    return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
 
 
 @orca.column('parcels', cache=True, cache_scope='forever')
