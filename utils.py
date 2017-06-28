@@ -121,7 +121,6 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     price_or_rent, _ = yaml_to_class(cfg).predict_from_cfg(df, cfg)
 
     if price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum() > 0:
-        # TODO: check why inf
         print "Hedonic output %d nas or inf (out of %d) in column %s" % \
               (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname)
         price_or_rent[price_or_rent > 1000] = 1000
