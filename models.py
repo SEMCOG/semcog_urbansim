@@ -345,10 +345,8 @@ def gq_pop_scaling_model(jobs):
             gqpop.drop(removegq.index, inplace = True)
 
 
-
-
 @orca.step()
-def refiner(jobs, households, buildings, iter_var):
+def refiner(jobs, households, buildings, iter_var, refiner_events):
     # need clean up
     jobs_columns = jobs.local_columns + ['zone_id', 'large_area_id']
     jobs = jobs.to_frame(jobs_columns)
@@ -357,9 +355,7 @@ def refiner(jobs, households, buildings, iter_var):
     buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'large_area_id'])
     dic_agent = {'jobs': jobs, 'households': households}
 
-  #  refinements1 = pd.read_csv("data/refinements.csv")
-    refinements = pd.read_csv("data/employment_events.csv")
-    #refinements = pd.concat([refinements1, refinements2])
+    refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == iter_var]
 
     def rec_values(record):

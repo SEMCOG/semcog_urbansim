@@ -38,6 +38,7 @@ def parcel_average_price(use, parcels):
 
 
 def parcel_is_allowed(form):
+    index = orca.get_table('parcels').index
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
         ["parcel_id", "building_type_id", "residential_units", "building_age"])
@@ -46,21 +47,34 @@ def parcel_is_allowed(form):
     lone_house = buildings[
                      (buildings.building_type_id == 81) &
                      (buildings.residential_units == 1)].groupby("parcel_id").building_type_id.count() == 1
-    lone_house = lone_house.reindex(zoning.index, fill_value=False)
+    lone_house = lone_house.reindex(index, fill_value=False)
 
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
-    new_building = new_building.reindex(zoning.index, fill_value=False)
+    new_building = new_building.reindex(index, fill_value=False)
 
-    # Todo: filter out parcel_id used in scheduled_development_events
-    # Todo: filter out parcel_id used in scheduled_demolition_events
-    # Todo: filter out parcel_id used in refiner
+    development = index.isin(orca.get_table('scheduled_development_events').parcel_id)
+
+    demolition = index.isin(
+        buildings[
+            buildings.index.isin(orca.get_table('scheduled_demolition_events').building_id)
+        ].parcel_id
+    )
+
+    parcel_refin = set()
+    refinements = orca.get_table('refiner_events').to_frame()
+
+    for e in refinements.location_expression:
+        parcel_refin |= set(buildings.query(e).parcel_id)
+
+    refiner = index.isin(parcel_refin)
+
+    protected = lone_house | new_building | development | demolition | refiner
 
     allowed = [(zoning['type%d' % typ] > 0)
                for typ in form_to_btype[form]]
 
-    s = pd.concat(allowed, axis=1).max(axis=1).reindex(orca.get_table('parcels').index).fillna(False)
-
-    return s.astype("bool") & (~lone_house) & (~new_building)
+    s = pd.concat(allowed, axis=1).max(axis=1).reindex(index, fill_value=False)
+    return s.astype("bool") & (~protected)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')

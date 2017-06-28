@@ -20,6 +20,13 @@ def scheduled_demolition_events():
 
 
 @orca.table()
+def refiner_events():
+    # refinements1 = pd.read_csv("data/refinements.csv")
+    # refinements = pd.concat([refinements1, refinements2])
+    return pd.read_csv("data/employment_events.csv")
+
+
+@orca.table()
 def buildings(store):
     df = store['buildings']
     # Todo: combine two sqft prices into one and set non use sqft price to 0
