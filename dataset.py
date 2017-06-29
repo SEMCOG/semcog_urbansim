@@ -11,19 +11,25 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 @orca.table()
 def scheduled_development_events():
-    return pd.read_csv("data/events_addition.csv", index_col="objectid")
+    df = pd.read_csv("data/events_addition.csv", index_col="objectid")
+    df.loc[df.year_built == 2015, 'year_built'] = 2016
+    return df
 
 
 @orca.table()
 def scheduled_demolition_events():
-    return pd.read_csv("data/events_deletion.csv", index_col="objectid")
+    df = pd.read_csv("data/events_deletion.csv", index_col="objectid")
+    df.loc[df.year_built == 2015, 'year_built'] = 2016
+    return df
 
 
 @orca.table()
 def refiner_events():
     # refinements1 = pd.read_csv("data/refinements.csv")
     # refinements = pd.concat([refinements1, refinements2])
-    return pd.read_csv("data/employment_events.csv")
+    df = pd.read_csv("data/employment_events.csv")
+    df.loc[df.year == 2015, 'year_built'] = 2016
+    return df
 
 
 @orca.table()
