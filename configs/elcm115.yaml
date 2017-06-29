@@ -1,37 +1,49 @@
 name: elcm115
-
+
+
 model_type: segmented_discretechoice
-
+
+
 segmentation_col: sector_id
-
+
+
 choosers_fit_filters:
 - home_based_status == 0
-- lid == 115
-
+- large_area_id == 115
+
+
 choosers_predict_filters:
-- lid == 115
-
+- large_area_id == 115
+
+
 alts_fit_filters: null
-
+
+
 alts_predict_filters:
 - non_residential_sqft > 0
 - building_type_id not in [16,17,18,19,20]
 - large_area_id == 115
-
+
+
 interaction_predict_filters: null
-
+
+
 choice_column: null
-
+
+
 sample_size: 200
-
+
+
 estimation_sample_size: 5000
 
 prediction_sample_size: null
-
+
+
 default_config:
     model_expression: np.log1p(non_residential_sqft) + np.log1p(jobs_within_30_min)
         + np.log1p(popden)
-
+
+
 models:
     !!python/long '1':
         fit_parameters:
@@ -413,7 +425,8 @@ models:
             'null': -10596.634733096356
             ratio: 0.4769795340277293
         name: !!python/long '20'
-
+
+
 fitted: true
 
 choice_mode: aggregate

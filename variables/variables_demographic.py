@@ -7,10 +7,11 @@ from urbansim.utils import misc
 #####################
 # HOUSEHOLDS VARIABLES
 #####################
-##
-##@orca.column('households', 'school_district_id', cache=True)
-##def school_district_id(households, buildings):
-##    return misc.reindex(buildings.school_district_id, households.building_id)
+
+
+## @orca.column('households', cache=True)
+## def school_district_id(households, buildings):
+##     return misc.reindex(buildings.school_district_id, households.building_id)
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -52,12 +53,6 @@ def large_area_id(households, buildings):
                             misc.reindex(buildings.large_area_id, households.building_id),
                             autocall=False, cache=True)
     return orca.get_injectable(hh_la)
-
-
-@orca.column('households', cache=True, cache_scope='iteration')
-def large_area(households):
-    # todo: remove and fix
-    return households.large_area_id
 
 
 @orca.column('households', cache=True, cache_scope='iteration')

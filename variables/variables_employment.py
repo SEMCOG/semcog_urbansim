@@ -49,12 +49,6 @@ def large_area_id(jobs, buildings):
 
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
-def lid(jobs):
-    # todo: remove and fix
-    return jobs.large_area_id
-
-
-@orca.column('jobs', cache=True, cache_scope='iteration')
 def nodeid_walk(jobs, buildings):
     return misc.reindex(buildings.nodeid_walk, jobs.building_id)
 
