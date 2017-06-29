@@ -107,7 +107,7 @@ def elcm_simulate(jobs, buildings, nodes_drv):
     for large_area_id in [3, 5, 93, 99, 115, 125, 147, 161]:
         str_id = str(large_area_id)
         register_broadcast_simulate_segment(jobs_df_name='jobs' + str_id,
-                                            jobs_in_la=jobs_df[jobs_df.lid == large_area_id],
+                                            jobs_in_la=jobs_df[jobs_df.large_area_id == large_area_id],
                                             buildings_df_name='buildings' + str_id,
                                             buildings_in_la=buildings[buildings.large_area_id == large_area_id],
                                             yaml_name='elcm' + str_id + '.yaml')
@@ -481,7 +481,17 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, scheduled
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
         buildings = buildings.to_frame(buildings.local_columns)
-        buildings_idx = buildings[buildings.index.isin(sched_dev.building_id)].index
+        drop_buildings = buildings[buildings.index.isin(sched_dev.building_id)].copy()
+        buildings_idx = drop_buildings.index
+        drop_buildings['year_demo'] = iter_var
+
+        if orca.is_table("dropped_buildings"):
+            prev_drops = orca.get_table("dropped_buildings").to_frame()
+            orca.add_table("dropped_buildings",
+                           pd.concat([drop_buildings, prev_drops]))
+        else:
+            orca.add_table("dropped_buildings", drop_buildings)
+
         orca.add_table("buildings", buildings.drop(buildings_idx))
 
         # unplace HH
