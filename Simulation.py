@@ -5,23 +5,23 @@ from urbansim.utils import misc, networks
 orca.run(['build_networks'])
 
 orca.run([
-    "neighborhood_vars",  # worked
-    "households_transition",  # worked
-    "fix_lpr",  # worked
-    "households_relocation",  # worked
-    "jobs_transition",  # worked
-    "jobs_relocation",  # worked
-    "scheduled_development_events",  # worked
-    "scheduled_demolition_events",  # worked
-    "price_vars",  # worked # compute average price measures
-    "feasibility",  # fix in other branch
-    "residential_developer",  # fix in other branch
-    "non_residential_developer",  # fix in other branch
-    "nrh_simulate",  # worked # non-residential rent hedonic
-    "rsh_simulate",  # worked # residential sales hedonic
-    "hlcm_simulate",  # worked # households location choice
-    "elcm_simulate",  # worked # employment location choice
-    "government_jobs_scaling_model",  # worked
+    "neighborhood_vars",
+    "households_transition",
+    "fix_lpr",
+    "households_relocation",
+    "jobs_transition",
+    "jobs_relocation",
+    "scheduled_demolition_events",
+    "scheduled_development_events",
+    "price_vars",  # compute average price measures
+    "feasibility",
+    "residential_developer",
+    "non_residential_developer",
+    "nrh_simulate",  # non-residential rent hedonic
+    "rsh_simulate",  # residential sales hedonic
+    "hlcm_simulate",  # households location choice
+    "elcm_simulate",  # employment location choice
+    "government_jobs_scaling_model",
     "refiner",
     # "gq_model", Fixme: we have new data so need new approach
     # "travel_model", Fixme: on hold
