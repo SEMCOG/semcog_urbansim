@@ -70,11 +70,9 @@ def parcel_is_allowed(form):
 
     protected = lone_house | new_building | development | demolition | refiner
 
-    allowed = [(zoning['type%d' % typ] > 0)
-               for typ in form_to_btype[form]]
-
-    s = pd.concat(allowed, axis=1).max(axis=1).reindex(index, fill_value=False)
-    return s.astype("bool") & (~protected)
+    columns = ['type%d' % typ for typ in form_to_btype[form]]
+    allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=False)
+    return (allowed > 0) & (~protected)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
