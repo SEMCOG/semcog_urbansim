@@ -597,54 +597,12 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
 
 @orca.step()
 def build_networks(parcels):
+    import yaml
     pdna.network.reserve_num_graphs(2)
 
     # networks in semcog_networks.h5
-    # Todo add injectable that reads from yaml
-    dic_net = {'mgf14_drive':
-                   {'cost1': 'feet',
-                    'cost2': 'minutes',
-                    'edges': 'edges_mgf14_drive_full',
-                    'local_edges': 'edges_mgf14_drive_local',
-                    'local_nodes': 'nodes_mgf14_drive_local',
-                    'nodes': 'nodes_mgf14_drive_full'
-                    },
-               'mgf14_ext_drive':
-                   {'cost1': 'feet',
-                    'cost2': 'minutes',
-                    'edges': 'edges_mgf14_ext_drive_full',
-                    'local_edges': 'edges_mgf14_ext_drive_local',
-                    'local_nodes': 'nodes_mgf14_ext_drive_local',
-                    'nodes': 'nodes_mgf14_ext_drive_full'
-                    },
-               'mgf14_ext_walk':
-                   {'cost1': 'feet',
-                    'cost2': 'meters',
-                    'edges': 'edges_mgf14_ext_walk',
-                    'nodes': 'nodes_mgf14_ext_walk'
-                    },
-               'mgf14_walk':
-                   {'cost1': 'meters',
-                    'edges': 'edges_mgf14_walk',
-                    'nodes': 'nodes_mgf14_walk'
-                    },
-               'tdm':
-                   {'cost1': 'peak_mins',
-                    'cost2': 'nonpk_mins',
-                    'edges': 'edges_tdm_full',
-                    'local_edges': 'edges_tdm_local',
-                    'local_nodes': 'nodes_tdm_local',
-                    'nodes': 'nodes_tdm_full'
-                    },
-               'tdm_ext':
-                   {'cost1': 'peak_mins',
-                    'cost2': 'nonpk_mins',
-                    'edges': 'edges_tdm_ext_full',
-                    'local_edges': 'edges_tdm_ext_local',
-                    'local_nodes': 'nodes_tdm_ext_local',
-                    'nodes': 'nodes_tdm_ext_full'
-                    }
-               }
+    with open(r"configs/available_networks.yaml", 'r') as stream:
+        dic_net = yaml.load(stream)
 
     st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
 
@@ -664,9 +622,10 @@ def build_networks(parcels):
     ]
 
     for n in lstnet:
-        nodes, edges = st[dic_net[n['name']]['nodes']], st[dic_net[n['name']]['edges']]
+        n_dic_net = dic_net[n['name']]
+        nodes, edges = st[n_dic_net['nodes']], st[n_dic_net['edges']]
         net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
-                           edges[[dic_net[n['name']][n['cost']]]])
+                           edges[[n_dic_net[n['cost']]]])
         net.precompute(n['prev'])
         net.init_pois(num_categories=10, max_dist=n['prev'], max_pois=3)
 
