@@ -37,7 +37,8 @@ orca.run([
                      'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
                      'workers_employment_rates_by_large_area',
                      'transit_stops', 'crime_rates', 'schools', 'poi',
-                     'annual_household_control_totals', 'scheduled_development_events', 'scheduled_demolition_events'],
+                     'annual_household_control_totals',
+                     'events_addition', 'events_deletion', 'refiner_events'],
     out_run_tables=['buildings', 'jobs', 'parcels', 'households', 'persons', 'dropped_buildings'],
     out_interval=1)
 # TODO: check target_vacancies used or not and how

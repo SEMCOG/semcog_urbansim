@@ -113,6 +113,26 @@ columns:
   sector_name: object
   sqft_per_job: int64
 ---
+name: events_addition
+indexs:
+- objectid
+columns:
+  building_type_id: int64
+  land_area: object
+  non_residential_sqft: int64
+  parcel_id: int64
+  residential_units: int64
+  sqft_per_unit: object
+  stories: object
+  year_built: int64
+---
+name: events_deletion
+indexs:
+- objectid
+columns:
+  building_id: int64
+  year_built: int64
+---
 name: households
 indexs:
 - household_id
@@ -273,6 +293,19 @@ columns:
   location_expression: object
   transaction_id: int32
   year: int32
+---
+name: refiner_events
+indexs:
+- refinement_id
+columns:
+  action: object
+  agent_expression: object
+  agents: object
+  amount: int64
+  location_capacity_attribute: float64
+  location_expression: object
+  transaction_id: int64
+  year: int64
 ---
 name: remi_pop_total
 indexs:

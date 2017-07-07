@@ -10,29 +10,6 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 
 @orca.table()
-def scheduled_development_events():
-    df = pd.read_csv("data/events_addition.csv", index_col="objectid")
-    df.loc[df.year_built == 2015, 'year_built'] = 2016
-    return df
-
-
-@orca.table()
-def scheduled_demolition_events():
-    df = pd.read_csv("data/events_deletion.csv", index_col="objectid")
-    df.loc[df.year_built == 2015, 'year_built'] = 2016
-    return df
-
-
-@orca.table()
-def refiner_events():
-    # refinements1 = pd.read_csv("data/refinements.csv")
-    # refinements = pd.concat([refinements1, refinements2])
-    df = pd.read_csv("data/employment_events.csv")
-    df.loc[df.year == 2015, 'year_built'] = 2016
-    return df
-
-
-@orca.table()
 def buildings(store):
     df = store['buildings']
     # Todo: combine two sqft prices into one and set non use sqft price to 0
@@ -64,7 +41,8 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
              'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
              'workers_employment_rates_by_large_area',
              'transit_stops', 'crime_rates', 'schools', 'poi',
-             'annual_household_control_totals']:
+             'annual_household_control_totals',
+             'events_addition', 'events_deletion', 'refiner_events']:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 

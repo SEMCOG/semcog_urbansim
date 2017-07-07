@@ -457,8 +457,8 @@ def refiner(jobs, households, buildings, iter_var, refiner_events):
 
 
 @orca.step()
-def scheduled_development_events(buildings, iter_var, scheduled_development_events):
-    sched_dev = scheduled_development_events.to_frame()
+def scheduled_development_events(buildings, iter_var, events_addition):
+    sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
         sched_dev["sqft_price_res"] = 0
@@ -476,8 +476,8 @@ def scheduled_development_events(buildings, iter_var, scheduled_development_even
 
 
 @orca.step()
-def scheduled_demolition_events(buildings, households, jobs, iter_var, scheduled_demolition_events):
-    sched_dev = scheduled_demolition_events.to_frame()
+def scheduled_demolition_events(buildings, households, jobs, iter_var, events_deletion):
+    sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
         buildings = buildings.to_frame(buildings.local_columns)

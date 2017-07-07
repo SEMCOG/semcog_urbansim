@@ -52,11 +52,11 @@ def parcel_is_allowed(form):
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     new_building = new_building.reindex(index, fill_value=False)
 
-    development = index.isin(orca.get_table('scheduled_development_events').parcel_id)
+    development = index.isin(orca.get_table('events_addition').parcel_id)
 
     demolition = index.isin(
         buildings[
-            buildings.index.isin(orca.get_table('scheduled_demolition_events').building_id)
+            buildings.index.isin(orca.get_table('events_deletion').building_id)
         ].parcel_id
     )
 
