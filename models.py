@@ -135,6 +135,7 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     j = jobs.to_frame(jobs.local_columns)
     idx_reloc = reloc.find_movers(j)
     j.loc[idx_reloc, "building_id"] = -1
+    # todo: use orca.update_col_from_series
     orca.add_table("jobs", j)
     _print_number_unplaced(jobs, 'building_id')
 
@@ -306,15 +307,15 @@ def government_jobs_scaling_model(jobs):
     jobs = jobs.to_frame(jobs.local_columns+['large_area_id'])
     government_sectors = [18]
 
+    # todo: use .sample
     def random_choice(chooser_ids, alternative_ids, probabilities):
         return pd.Series(np.random.choice(
             alternative_ids, size=len(chooser_ids), replace=True, p=probabilities), index=chooser_ids)
 
-    jobs_to_place = jobs[jobs.building_id.isnull()]
+    jobs_to_place = jobs[jobs.building_id.isnull() | (jobs.building_id == -1)]
 
     if len(jobs_to_place) > 0:
-        segments = jobs_to_place.groupby(['large_area_id', 'sector_id'])
-        for name, segment in segments:
+        for name, segment in jobs_to_place.groupby(['large_area_id', 'sector_id']):
             large_area_id = int(name[0])
             sector = int(name[1])
             if sector in government_sectors:
@@ -323,6 +324,7 @@ def government_jobs_scaling_model(jobs):
                     ['building_id']).size()
                 prop_by_bid = counts_by_bid / counts_by_bid.sum()
                 choices = random_choice(jobs_to_place, prop_by_bid.index.values, prop_by_bid.values)
+                # todo: use orca.update_col_from_series
                 jobs.loc[choices.index, 'building_id'] = choices.values
         orca.add_table("jobs", jobs)
 
@@ -383,9 +385,10 @@ def refiner(jobs, households, buildings, iter_var, refiner_events):
                     agents_sample = agents_sub_pool.sample(number_of_agents, replace=True)
                 agents_sample.building_id = new_building_ids
                 agents_pool.drop(agents_sample.index, inplace=True)
+                agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
             else:
                 agents_sample = agents.query(agent_expression).sample(number_of_agents, replace=True)
-                agents_sample.index = agents.index.values.max() + 1 + np.array(range(number_of_agents))
+                agents_sample.index = agents.index.values.max() + 1 + np.arange(number_of_agents)
                 agents_sample.building_id = new_building_ids
             agents = pd.concat([agents, agents_sample])
             return agents, agents_pool
@@ -415,7 +418,7 @@ def refiner(jobs, households, buildings, iter_var, refiner_events):
                 if len(local_agents) == 0:
                     local_agents = exist_agents.loc[exist_agents.large_area_id == bselect.large_area_id[0]]
                 select_agents = local_agents.sample(abs(diff), replace=True)
-                select_agents.index = agents.index.values.max() + 1 + np.array(range(abs(diff)))
+                select_agents.index = agents.index.values.max() + 1 + np.arange(abs(diff))
                 select_agents.building_id = bselect.sample(abs(diff), replace=True).index.values
                 agents = pd.concat([agents, select_agents])
             return agents
@@ -430,17 +433,17 @@ def refiner(jobs, households, buildings, iter_var, refiner_events):
                 print record
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
                 dic_agent[agents], dic_agent[agents + '_pool'] = unplace_agents(dic_agent[agents],
-                                                             dic_agent[agents+'_pool'],
-                                                             agents_expression,
-                                                            location_expression,
-                                                            amount)
+                                                                                dic_agent[agents + '_pool'],
+                                                                                agents_expression,
+                                                                                location_expression,
+                                                                                amount)
 
             records = trecords[trecords.action == 'add']
             for _, record in records.iterrows():
                 print record
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
                 dic_agent[agents], dic_agent[agents + '_pool'] = relocate_agents(dic_agent[agents],
-                                                                                 dic_agent[agents+'_pool'],
+                                                                                 dic_agent[agents + '_pool'],
                                                                                  agents_expression,
                                                                                  location_expression, amount)
 
@@ -449,9 +452,10 @@ def refiner(jobs, households, buildings, iter_var, refiner_events):
                 action, agents, agents_expression, amount, location_expression = rec_values(record)
                 dic_agent[agents] = target_agents(dic_agent[agents],
                                                   agents_expression,
-                                                location_expression,
+                                                  location_expression,
                                                   amount)
 
+        assert dic_agent['jobs'][jobs_columns].index.duplicated().sum() == 0, "duplicated index in jobs"
         orca.add_table('jobs', dic_agent['jobs'][jobs_columns])
         orca.add_table('households', dic_agent['households'][households_columns])
 
@@ -495,11 +499,13 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
         orca.add_table("buildings", buildings.drop(buildings_idx))
 
         # unplace HH
+        # todo: use orca.update_col_from_series
         households = households.to_frame(households.local_columns)
         households.loc[households.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("households", households)
 
         # unplace jobs
+        # todo: use orca.update_col_from_series
         jobs = jobs.to_frame(jobs.local_columns)
         jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
