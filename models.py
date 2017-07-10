@@ -265,12 +265,12 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
         # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
 
     if len(new_employ) > 0:
-        p.loc[np.concatenate(new_employ), "worker"] = True
+        p.loc[np.concatenate(new_employ), "worker"] = 1
     if len(new_unemploy):
-        p.loc[np.concatenate(new_unemploy), "worker"] = False
+        p.loc[np.concatenate(new_unemploy), "worker"] = 0
 
     hh["old_workers"] = hh.workers
-    hh.workers = p[p.worker == True].groupby("household_id").size()
+    hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
     changed = (hh.workers != hh.old_workers)
 
