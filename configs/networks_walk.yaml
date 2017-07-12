@@ -142,62 +142,6 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - aggregation: average
-    dataframe: buildings
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Residential"
-    - sqft_price_res < 500
-    decay: flat
-    name: residential
-    radius: 2000
-    varname: sqft_price_res
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Retail"
-    name: retail
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Office"
-    name: office
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Industrial"
-    name: industrial
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Medical"
-    name: medical
-    radius: 2000
-    varname: sqft_price_nonres
-
   - name: max_industrial_far
     dataframe: parcels
     varname: parcel_far
@@ -251,8 +195,6 @@ variable_definitions:
  
   - aggregation: average
     dataframe: buildings
-    add_fields:
-    - general_type
     filters:
     - 81 <= building_type_id <= 84
     - sqft_price_res < 500
