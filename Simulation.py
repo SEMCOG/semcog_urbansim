@@ -13,7 +13,6 @@ orca.run([
     "jobs_relocation",
     "scheduled_demolition_events",
     "scheduled_development_events",
-    "price_vars",  # compute average price measures
     "feasibility",
     "residential_developer",
     "non_residential_developer",

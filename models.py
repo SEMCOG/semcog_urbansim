@@ -512,15 +512,6 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
         # Todo: parcel use need to be updated
 
 
-@orca.step()
-def price_vars(net_walk):
-    nodes = networks.from_yaml(net_walk, "networks_walk.yaml")
-    # nodes.residential=nodes.residential*1.2
-    print nodes.describe()
-    print pd.Series(nodes.index).describe()
-    orca.add_table("nodes_prices", nodes)
-
-
 def parcel_average_price(use):
     # Copied from variables.py
     parcels_wrapper = orca.get_table('parcels')

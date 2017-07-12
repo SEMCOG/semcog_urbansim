@@ -11,7 +11,6 @@ orca.run(['build_networks'])
 
 orca.run([
     "neighborhood_vars",  # neighborhood variables
-    "price_vars",  # compute average price measures
     "feasibility",  # compute development feasibility
     "residential_developer",  # build actual buildings
     "non_residential_developer"
