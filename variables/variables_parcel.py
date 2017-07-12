@@ -44,10 +44,10 @@ def parcel_is_allowed(form):
         ["parcel_id", "building_type_id", "residential_units", "building_age"])
     zoning = orca.get_table('zoning')
 
-    lone_house = buildings[
-                     (buildings.building_type_id == 81) &
-                     (buildings.residential_units == 1)].groupby("parcel_id").building_type_id.count() == 1
-    lone_house = lone_house.reindex(index, fill_value=False)
+    # lone_house = buildings[
+    #                  (buildings.building_type_id == 81) &
+    #                  (buildings.residential_units == 1)].groupby("parcel_id").building_type_id.count() == 1
+    # lone_house = lone_house.reindex(index, fill_value=False)
 
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     new_building = new_building.reindex(index, fill_value=False)
@@ -68,10 +68,21 @@ def parcel_is_allowed(form):
 
     refiner = index.isin(parcel_refin)
 
-    protected = lone_house | new_building | development | demolition | refiner
+    protected = new_building | development | demolition | refiner
 
     columns = ['type%d' % typ for typ in form_to_btype[form]]
-    allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=False)
+    allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=0)
+
+    # if form == 'residential':
+    #     out = ((allowed > 0) & (~protected)).to_frame("out")
+    #     out["allowed"] = allowed
+    #     out["lone_house"] = lone_house
+    #     out["new_building"] = new_building
+    #     out["development"] = development
+    #     out["demolition"] = demolition
+    #     out["refiner"] = refiner
+    #     out.to_csv("runs/parcel_is_allowed.csv")
+
     return (allowed > 0) & (~protected)
 
 

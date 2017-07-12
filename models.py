@@ -528,7 +528,7 @@ def parcel_average_price(use):
         # if nodes isn't generated yet
         return pd.Series(index=parcels_wrapper.index)
     return misc.reindex(orca.get_table('nodes_walk')[use],
-                        orca.get_table('parcels').nodeid_walk)
+                        parcels_wrapper.nodeid_walk)
 
 
 @orca.step('feasibility')
