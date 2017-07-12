@@ -530,23 +530,17 @@ def feasibility(parcels):
                                  cfg='proforma.yaml')
 
 
-def add_extra_columns_res(df):
-    for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res']:
-        df[col] = 0
-    df['sqft_per_unit'] = 1500
-    df = df.fillna(0)
-    df['year_built'] = orca.get_injectable('year')
-    return df
-
-
 def add_extra_columns_nonres(df):
     for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res']:
+                'sqft_price_res', 'sqft_per_unit']:
         df[col] = 0
-    df['sqft_per_unit'] = 0
     df['year_built'] = orca.get_injectable('year')
-    df = df.fillna(0)
+    return df.fillna(0)
+
+
+def add_extra_columns_res(df):
+    df = add_extra_columns_nonres(df)
+    df['sqft_per_unit'] = 1500
     return df
 
 
@@ -569,7 +563,7 @@ def residential_developer(feasibility, households, buildings, parcels, iter_var)
         parcels.total_units,
         'res_developer.yaml',
         year=iter_var,
-        target_vacancy=.20,
+        target_vacancy=.20,  # TODO: use target_vacancies
         form_to_btype_callback=random_type,
         add_more_columns_callback=add_extra_columns_res)
 
@@ -587,7 +581,7 @@ def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
         parcels.total_job_spaces,
         'nonres_developer.yaml',
         year=iter_var,
-        target_vacancy=0.60,
+        target_vacancy=0.60,  # TODO: use target_vacancies
         form_to_btype_callback=random_type,
         add_more_columns_callback=add_extra_columns_nonres)
 

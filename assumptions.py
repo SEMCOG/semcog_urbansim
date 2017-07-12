@@ -89,7 +89,7 @@ orca.add_injectable("form_to_btype", {
 
 
 def verify():
-    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "all_semcog_data_07-11-17.h5"), mode="r")
+    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "all_semcog_data_07-12-17.h5"), mode="r")
 
     new = verify_data_structure.yaml_from_store(hdf_store)
     with open(r"configs/data_structure.yaml", "w") as out:

@@ -40,4 +40,3 @@ orca.run([
                      'events_addition', 'events_deletion', 'refiner_events'],
     out_run_tables=['buildings', 'jobs', 'parcels', 'households', 'persons', 'dropped_buildings'],
     out_interval=1)
-# TODO: check target_vacancies used or not and how
