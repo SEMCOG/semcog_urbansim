@@ -1,6 +1,13 @@
 import orca
+import shutil
+
+import path
+
 import models, utils
 from urbansim.utils import misc, networks
+import output_indicators
+
+data_out = utils.get_run_filename()
 
 orca.run(['build_networks'])
 
@@ -25,8 +32,9 @@ orca.run([
     # "gq_model", Fixme: we have new data so need new approach
     # "travel_model", Fixme: on hold
     # "housing_value_update", Fixme: maybe we don't need
-], iter_vars=range(2016, 2045 + 1),
-    data_out=utils.get_run_filename(),
+],
+    iter_vars=range(2016, 2045 + 1),
+    data_out=data_out,
     out_base_tables=['jobs', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',
                      'buildings', 'parcels', 'zones', 'semmcds', 'counties',
@@ -39,4 +47,12 @@ orca.run([
                      'annual_household_control_totals',
                      'events_addition', 'events_deletion', 'refiner_events'],
     out_run_tables=['buildings', 'jobs', 'parcels', 'households', 'persons', 'dropped_buildings'],
-    out_interval=1)
+    out_interval=1,
+    compress=True)
+
+output_indicators.main(data_out)
+
+dir_out = data_out.replace('.h5', '')
+shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + path.basename(path.normpath(dir_out)))
+shutil.copy(data_out, '/mnt/hgfs/J')
+
