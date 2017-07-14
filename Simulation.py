@@ -1,7 +1,7 @@
 import orca
 import shutil
 
-import path
+import os
 
 import models, utils
 from urbansim.utils import misc, networks
@@ -53,6 +53,6 @@ orca.run([
 output_indicators.main(data_out)
 
 dir_out = data_out.replace('.h5', '')
-shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + path.basename(path.normpath(dir_out)))
+shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))
 shutil.copy(data_out, '/mnt/hgfs/J')
 
