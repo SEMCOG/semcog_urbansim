@@ -197,7 +197,7 @@ variable_definitions:
     dataframe: buildings
     filters:
     - 81 <= building_type_id <= 84
-    - sqft_price_res < 500
+    - 0 < sqft_price_res < 500
     decay: flat
     name: residential
     radius: 2000

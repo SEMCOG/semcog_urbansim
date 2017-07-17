@@ -9,7 +9,11 @@ import output_indicators
 
 data_out = utils.get_run_filename()
 
-orca.run(['build_networks'])
+orca.run(['build_networks',
+          "neighborhood_vars",
+          "nrh_simulate",  # non-residential rent hedonic
+          "rsh_simulate",  # residential sales hedonic
+          ])
 
 orca.run([
     "neighborhood_vars",
