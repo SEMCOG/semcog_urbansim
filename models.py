@@ -467,6 +467,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     if len(sched_dev) > 0:
         sched_dev["sqft_price_res"] = 0
         sched_dev["sqft_price_nonres"] = 0
+        sched_dev["stories"] = 0
         sched_dev = add_extra_columns_res(sched_dev)
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")

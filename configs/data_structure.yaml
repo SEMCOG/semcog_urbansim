@@ -4,35 +4,35 @@ indexs:
 - sector_id
 - home_based_status
 columns:
-  large_area_id: int64
-  total_number_of_jobs: int64
+  large_area_id: int16
+  total_number_of_jobs: int32
 ---
 name: annual_household_control_totals
 indexs:
 - year
 columns:
-  age_of_head_max: int64
-  age_of_head_min: int64
-  cars_max: int64
-  cars_min: int64
-  children_max: int64
-  children_min: int64
-  income_max: int64
-  income_min: int64
-  large_area_id: int64
-  persons_max: int64
-  persons_min: int64
-  race_id: int64
-  total_number_of_households: int64
-  workers_max: int64
-  workers_min: int64
+  age_of_head_max: int8
+  age_of_head_min: int8
+  cars_max: int8
+  cars_min: int8
+  children_max: int8
+  children_min: int8
+  income_max: int32
+  income_min: int32
+  large_area_id: int16
+  persons_max: int8
+  persons_min: int8
+  race_id: int8
+  total_number_of_households: int16
+  workers_max: int8
+  workers_min: int8
 ---
 name: annual_relocation_rates_for_households
 indexs:
 - None
 columns:
-  age_max: int32
-  age_min: int32
+  age_max: int8
+  age_min: int8
   income_max: int32
   income_min: int32
   probability_of_relocating: float32
@@ -48,34 +48,34 @@ indexs:
 - zone_id
 - building_type_id
 columns:
-  building_sqft_per_job: int64
+  building_sqft_per_job: int16
 ---
 name: building_types
 indexs:
 - building_type_id
 columns:
-  NAICS: object
-  'building_type_description ': object
-  'building_type_name ': object
-  'generic_building_type_description ': object
-  'generic_building_type_id ': int64
-  'generic_building_type_name ': object
-  'is_residential ': int64
+  building_type_description: object
+  building_type_name: object
+  generic_building_type_description: object
+  generic_building_type_id: int8
+  generic_building_type_name: object
+  is_residential: int8
+  naics: object
   unit_name: object
 ---
 name: buildings
 indexs:
 - building_id
 columns:
-  building_type_id: int64
+  building_type_id: int8
   improvement_value: float64
-  land_area: float64
-  non_residential_sqft: int64
-  parcel_id: int64
-  residential_units: int64
-  sqft_per_unit: int64
+  land_area: int32
+  non_residential_sqft: int32
+  parcel_id: int32
+  residential_units: int16
+  sqft_per_unit: int16
   stories: float64
-  year_built: int64
+  year_built: int16
 ---
 name: counties
 indexs:
@@ -97,12 +97,12 @@ columns:
   action: object
   agent_dataset: object
   agent_expression: object
-  amount: int32
+  amount: int16
   location_capacity_attribute: object
   location_expression: object
-  refinement_id: int32
-  transaction_id: int32
-  year: int32
+  refinement_id: int16
+  transaction_id: int8
+  year: int16
 ---
 name: employment_sectors
 indexs:
@@ -111,40 +111,37 @@ columns:
   naics sector description: object
   naics_code: object
   sector_name: object
-  sqft_per_job: int64
+  sqft_per_job: int16
 ---
 name: events_addition
 indexs:
 - objectid
 columns:
-  building_type_id: int64
-  land_area: object
-  non_residential_sqft: int64
-  parcel_id: int64
-  residential_units: int64
-  sqft_per_unit: object
-  stories: object
-  year_built: int64
+  building_type_id: int8
+  non_residential_sqft: int32
+  parcel_id: int32
+  residential_units: int16
+  year_built: int16
 ---
 name: events_deletion
 indexs:
 - objectid
 columns:
-  building_id: int64
-  year_built: int64
+  building_id: int32
+  year_built: int16
 ---
 name: households
 indexs:
 - household_id
 columns:
-  age_of_head: float64
+  age_of_head: int8
   building_id: int32
-  cars: float64
-  children: int64
+  cars: int8
+  children: int8
   income: float64
-  persons: float64
-  race_id: float64
-  workers: int64
+  persons: int8
+  race_id: int8
+  workers: int8
 ---
 name: income_growth_rates
 indexs:
@@ -169,19 +166,19 @@ indexs:
 columns:
   description: object
   generic_land_use_type_descripti: object
-  generic_land_use_type_id: int64
-  home_based_status: int64
-  is_residential: int64
+  generic_land_use_type_id: int8
+  home_based_status: int8
+  is_residential: int8
   land_use_name: object
-  objectid: int64
+  objectid: int8
   unit_name: object
 ---
 name: large_areas
 indexs:
 - large_area_id
 columns:
-  alt_large_id: int64
-  large_area_group_id: int64
+  alt_large_id: int8
+  large_area_group_id: int8
   large_area_name: object
 ---
 name: orig_lu_parcels
@@ -192,18 +189,18 @@ columns:
   census_block_id: object
   centroid_x: float64
   centroid_y: float64
-  city_id: int64
-  county_id: int64
-  land_use_type_id: int64
-  large_area_id: int64
-  parcel_sqft: float64
+  city_id: int16
+  county_id: int16
+  land_use_type_id: int8
+  large_area_id: int16
+  parcel_sqft: int32
   pptytax: float64
-  school_id: int64
-  semmcd: int64
-  sev_value: float64
-  spid: int64
-  tax_exempt_flag: int64
-  zone_id: int64
+  school_id: int32
+  semmcd: int16
+  sev_value: int32
+  spid: int32
+  tax_exempt_flag: int8
+  zone_id: int16
 ---
 name: orig_lu_zoning
 indexs:
@@ -212,72 +209,72 @@ columns:
   future_use: object
   max_dua: float64
   max_far: float64
-  max_height: int64
-  max_stories: float64
+  max_height: int16
+  max_stories: float16
   pct_undev: float64
-  type11: int64
-  type12: int64
-  type13: int64
-  type14: int64
-  type21: int64
-  type22: int64
-  type23: int64
-  type24: int64
-  type25: int64
-  type26: int64
-  type31: int64
-  type32: int64
-  type33: int64
-  type41: int64
-  type42: int64
-  type43: int64
-  type51: int64
-  type52: int64
-  type53: int64
-  type61: int64
-  type62: int64
-  type71: int64
-  type81: int64
-  type82: int64
-  type83: int64
-  type84: int64
+  type11: int8
+  type12: int8
+  type13: int8
+  type14: int8
+  type21: int8
+  type22: int8
+  type23: int8
+  type24: int8
+  type25: int8
+  type26: int8
+  type31: int8
+  type32: int8
+  type33: int8
+  type41: int8
+  type42: int8
+  type43: int8
+  type51: int8
+  type52: int8
+  type53: int8
+  type61: int8
+  type62: int8
+  type71: int8
+  type81: int8
+  type82: int8
+  type83: int8
+  type84: int8
 ---
 name: parcels
 indexs:
 - parcel_id
 columns:
-  census_bg_id: int64
+  census_bg_id: int32
   centroid_x: float64
   centroid_y: float64
-  city_id: int64
-  county_id: int64
-  land_use_type_id: int64
-  large_area_id: int64
-  parcel_sqft: float64
+  city_id: int16
+  county_id: int16
+  land_use_type_id: int8
+  large_area_id: int16
+  parcel_sqft: int32
   pptytax: float64
-  school_id: int64
-  semmcd: int64
-  sev_value: float64
-  zone_id: int64
+  school_id: int32
+  semmcd: int16
+  sev_value: int32
+  zone_id: int16
 ---
 name: persons
 indexs:
 - person_id
 columns:
-  age: float64
-  household_id: float64
-  member_id: float64
-  race_id: float64
-  relate: float64
-  sex: float64
-  worker: int64
+  age: int8
+  household_id: int32
+  member_id: int8
+  race_id: int8
+  relate: int8
+  sex: int8
+  worker: int8
 ---
 name: poi
 indexs:
 - None
 columns:
   category: object
-  index: int64
+  index: int16
   point_x: float64
   point_y: float64
 ---
@@ -288,11 +285,11 @@ columns:
   action: object
   agent_dataset: object
   agent_expression: object
-  amount: int32
+  amount: int16
   location_capacity_attribute: object
   location_expression: object
-  transaction_id: int32
-  year: int32
+  transaction_id: int16
+  year: int16
 ---
 name: refiner_events
 indexs:
@@ -301,67 +298,67 @@ columns:
   action: object
   agent_expression: object
   agents: object
-  amount: int64
+  amount: int16
   location_capacity_attribute: float64
   location_expression: object
-  transaction_id: int64
-  year: int64
+  transaction_id: int8
+  year: int16
 ---
 name: remi_pop_total
 indexs:
 - large_area_id
 columns:
-  '2015': int64
-  '2016': int64
-  '2017': int64
-  '2018': int64
-  '2019': int64
-  '2020': int64
-  '2021': int64
-  '2022': int64
-  '2023': int64
-  '2024': int64
-  '2025': int64
-  '2026': int64
-  '2027': int64
-  '2028': int64
-  '2029': int64
-  '2030': int64
-  '2031': int64
-  '2032': int64
-  '2033': int64
-  '2034': int64
-  '2035': int64
-  '2036': int64
-  '2037': int64
-  '2038': int64
-  '2039': int64
-  '2040': int64
-  '2041': int64
-  '2042': int64
-  '2043': int64
-  '2044': int64
-  '2045': int64
+  '2015': int32
+  '2016': int32
+  '2017': int32
+  '2018': int32
+  '2019': int32
+  '2020': int32
+  '2021': int32
+  '2022': int32
+  '2023': int32
+  '2024': int32
+  '2025': int32
+  '2026': int32
+  '2027': int32
+  '2028': int32
+  '2029': int32
+  '2030': int32
+  '2031': int32
+  '2032': int32
+  '2033': int32
+  '2034': int32
+  '2035': int32
+  '2036': int32
+  '2037': int32
+  '2038': int32
+  '2039': int32
+  '2040': int32
+  '2041': int32
+  '2042': int32
+  '2043': int32
+  '2044': int32
+  '2045': int32
 ---
 name: school_districts
 indexs:
 - school_district_id
 columns:
   district_name: object
-  isd_code: int32
+  isd_code: int8
   isd_name: object
   meap10: float32
   proficient10: float32
-  public: int32
+  public: int8
 ---
 name: schools
 indexs:
 - bcode
 columns:
   bname: object
-  dcode: int64
+  dcode: int32
   gradelist: object
-  is_grade_school: bool
+  is_grade_school: int8
   point_x: float64
   point_y: float64
   totalachievementindex: float64
@@ -377,7 +374,7 @@ indexs:
 - building_type_id
 - year
 columns:
-  large_area_id: int32
+  large_area_id: int16
   target_vacancy_rate: float32
 ---
 name: transit_stops
@@ -391,31 +388,31 @@ name: transit_to_jobs_am
 indexs:
 - node_id
 columns:
-  <=10.0: int64
-  <=15.0: int64
-  <=20.0: int64
-  <=25.0: int64
-  <=30.0: int64
-  <=45.0: int64
-  <=5.0: int64
-  <=60.0: int64
-  <=75.0: int64
-  <=90.0: int64
+  <=10.0: int32
+  <=15.0: int32
+  <=20.0: int32
+  <=25.0: int32
+  <=30.0: int32
+  <=45.0: int32
+  <=5.0: int16
+  <=60.0: int32
+  <=75.0: int32
+  <=90.0: int32
 ---
 name: transit_to_jobs_midday
 indexs:
 - node_id
 columns:
-  <=10.0: int64
-  <=15.0: int64
-  <=20.0: int64
-  <=25.0: int64
-  <=30.0: int64
-  <=45.0: int64
-  <=5.0: int64
-  <=60.0: int64
-  <=75.0: int64
-  <=90.0: int64
+  <=10.0: int32
+  <=15.0: int32
+  <=20.0: int32
+  <=25.0: int32
+  <=30.0: int32
+  <=45.0: int32
+  <=5.0: int16
+  <=60.0: int32
+  <=75.0: int32
+  <=90.0: int32
 ---
 name: travel_data
 indexs:
@@ -468,8 +465,8 @@ columns:
   '2043': float64
   '2044': float64
   '2045': float64
-  age_max: int64
-  age_min: int64
+  age_max: int8
+  age_min: int8
   la_rates: float64
 ---
 name: workers_employment_rates_by_large_area_age
@@ -510,9 +507,9 @@ columns:
   '2043': float64
   '2044': float64
   '2045': float64
-  age_group: int64
-  age_max: int64
-  age_min: int64
+  age_group: int8
+  age_max: int8
+  age_min: int8
   la_age_rates: float64
 ---
 name: workers_labor_participation_rates
@@ -553,8 +550,8 @@ columns:
   '2043': object
   '2044': object
   '2045': object
-  age_max: int64
-  age_min: int64
+  age_max: int8
+  age_min: int8
 ---
 name: zones
 indexs:
@@ -562,7 +559,7 @@ indexs:
 columns:
   acres: float64
   taz: object
-  tazce10_n: int64
+  tazce10_n: int32
 ---
 name: zoning
 indexs:
@@ -571,32 +568,32 @@ columns:
   future_use: object
   max_dua: float64
   max_far: float64
-  max_height: int64
-  max_stories: float64
+  max_height: int16
+  max_stories: float16
   pct_undev: float64
-  type11: int64
-  type12: int64
-  type13: int64
-  type14: int64
-  type21: int64
-  type22: int64
-  type23: int64
-  type24: int64
-  type25: int64
-  type26: int64
-  type31: int64
-  type32: int64
-  type33: int64
-  type41: int64
-  type42: int64
-  type43: int64
-  type51: int64
-  type52: int64
-  type53: int64
-  type61: int64
-  type62: int64
-  type71: int64
-  type81: int64
-  type82: int64
-  type83: int64
-  type84: int64
+  type11: int8
+  type12: int8
+  type13: int8
+  type14: int8
+  type21: int8
+  type22: int8
+  type23: int8
+  type24: int8
+  type25: int8
+  type26: int8
+  type31: int8
+  type32: int8
+  type33: int8
+  type41: int8
+  type42: int8
+  type43: int8
+  type51: int8
+  type52: int8
+  type53: int8
+  type61: int8
+  type62: int8
+  type71: int8
+  type81: int8
+  type82: int8
+  type83: int8
+  type84: int8

@@ -9,20 +9,21 @@ import assumptions
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 
 
-@orca.table()
+@orca.table(cache=True)
 def buildings(store):
     df = store['buildings']
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
     df.loc[df.sqft_price_nonres > 1000, 'sqft_price_nonres'] = 0
-    df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit * df.residential_units)
+    df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit.astype(int) * df.residential_units)
     df.loc[df.sqft_price_res > 1000, 'sqft_price_res'] = 0
     df.fillna(0, inplace=True)
     orca.add_injectable("max_building_id", 10000000)
+    df = df[df.parcel_id > 0]  # todo: what dos this mean how do we use this
     return df
 
 
-@orca.table()
+@orca.table(cache=True)
 def households(store):
     df = store['households']
     df.loc[df.building_id == -1, 'building_id'] = np.random.choice(store.buildings.index.values,
