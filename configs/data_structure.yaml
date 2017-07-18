@@ -4,7 +4,7 @@ indexs:
 - sector_id
 - home_based_status
 columns:
-  large_area_id: int16
+  large_area_id: int32
   total_number_of_jobs: int32
 ---
 name: annual_household_control_totals
@@ -19,11 +19,11 @@ columns:
   children_min: int8
   income_max: int32
   income_min: int32
-  large_area_id: int16
+  large_area_id: int32
   persons_max: int8
   persons_min: int8
   race_id: int8
-  total_number_of_households: int16
+  total_number_of_households: int32
   workers_max: int8
   workers_min: int8
 ---
@@ -48,7 +48,7 @@ indexs:
 - zone_id
 - building_type_id
 columns:
-  building_sqft_per_job: int16
+  building_sqft_per_job: int32
 ---
 name: building_types
 indexs:
@@ -72,10 +72,10 @@ columns:
   land_area: int32
   non_residential_sqft: int32
   parcel_id: int32
-  residential_units: int16
-  sqft_per_unit: int16
+  residential_units: int32
+  sqft_per_unit: int32
   stories: float64
-  year_built: int16
+  year_built: int32
 ---
 name: counties
 indexs:
@@ -97,12 +97,12 @@ columns:
   action: object
   agent_dataset: object
   agent_expression: object
-  amount: int16
+  amount: int32
   location_capacity_attribute: object
   location_expression: object
-  refinement_id: int16
+  refinement_id: int32
   transaction_id: int8
-  year: int16
+  year: int32
 ---
 name: employment_sectors
 indexs:
@@ -111,7 +111,7 @@ columns:
   naics sector description: object
   naics_code: object
   sector_name: object
-  sqft_per_job: int16
+  sqft_per_job: int32
 ---
 name: events_addition
 indexs:
@@ -120,15 +120,15 @@ columns:
   building_type_id: int8
   non_residential_sqft: int32
   parcel_id: int32
-  residential_units: int16
-  year_built: int16
+  residential_units: int32
+  year_built: int32
 ---
 name: events_deletion
 indexs:
 - objectid
 columns:
   building_id: int32
-  year_built: int16
+  year_built: int32
 ---
 name: households
 indexs:
@@ -189,18 +189,18 @@ columns:
   census_block_id: object
   centroid_x: float64
   centroid_y: float64
-  city_id: int16
-  county_id: int16
+  city_id: int32
+  county_id: int32
   land_use_type_id: int8
-  large_area_id: int16
+  large_area_id: int32
   parcel_sqft: int32
   pptytax: float64
   school_id: int32
-  semmcd: int16
+  semmcd: int32
   sev_value: int32
   spid: int32
   tax_exempt_flag: int8
-  zone_id: int16
+  zone_id: int32
 ---
 name: orig_lu_zoning
 indexs:
@@ -209,7 +209,7 @@ columns:
   future_use: object
   max_dua: float64
   max_far: float64
-  max_height: int16
+  max_height: int32
   max_stories: float16
   pct_undev: float64
   type11: int8
@@ -246,16 +246,16 @@ columns:
   census_bg_id: int32
   centroid_x: float64
   centroid_y: float64
-  city_id: int16
-  county_id: int16
+  city_id: int32
+  county_id: int32
   land_use_type_id: int8
-  large_area_id: int16
+  large_area_id: int32
   parcel_sqft: int32
   pptytax: float64
   school_id: int32
-  semmcd: int16
+  semmcd: int32
   sev_value: int32
-  zone_id: int16
+  zone_id: int32
 ---
 name: persons
 indexs:
@@ -274,7 +274,7 @@ indexs:
 - None
 columns:
   category: object
-  index: int16
+  index: int32
   point_x: float64
   point_y: float64
 ---
@@ -285,11 +285,11 @@ columns:
   action: object
   agent_dataset: object
   agent_expression: object
-  amount: int16
+  amount: int32
   location_capacity_attribute: object
   location_expression: object
-  transaction_id: int16
-  year: int16
+  transaction_id: int32
+  year: int32
 ---
 name: refiner_events
 indexs:
@@ -298,11 +298,11 @@ columns:
   action: object
   agent_expression: object
   agents: object
-  amount: int16
+  amount: int32
   location_capacity_attribute: float64
   location_expression: object
   transaction_id: int8
-  year: int16
+  year: int32
 ---
 name: remi_pop_total
 indexs:
@@ -374,7 +374,7 @@ indexs:
 - building_type_id
 - year
 columns:
-  large_area_id: int16
+  large_area_id: int32
   target_vacancy_rate: float32
 ---
 name: transit_stops
@@ -394,7 +394,7 @@ columns:
   <=25.0: int32
   <=30.0: int32
   <=45.0: int32
-  <=5.0: int16
+  <=5.0: int32
   <=60.0: int32
   <=75.0: int32
   <=90.0: int32
@@ -409,7 +409,7 @@ columns:
   <=25.0: int32
   <=30.0: int32
   <=45.0: int32
-  <=5.0: int16
+  <=5.0: int32
   <=60.0: int32
   <=75.0: int32
   <=90.0: int32
@@ -568,7 +568,7 @@ columns:
   future_use: object
   max_dua: float64
   max_far: float64
-  max_height: int16
+  max_height: int32
   max_stories: float16
   pct_undev: float64
   type11: int8
