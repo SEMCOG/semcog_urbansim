@@ -191,6 +191,10 @@ def main(run_name):
     outdir = run_name.replace('.h5', '')
     if not (os.path.exists(outdir)):
         os.makedirs(outdir)
+
+    with open(os.path.join(outdir, "runnum.txt"), "w") as runnum:
+        runnum.write(os.path.basename(os.path.normpath(outdir)))
+
     store_la = pd.HDFStore(run_name, mode='r')
 
     for tbl in ['semmcds', 'zones', 'large_areas']:
