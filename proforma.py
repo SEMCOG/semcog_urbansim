@@ -11,6 +11,8 @@ orca.run(['build_networks'])
 
 orca.run([
     "neighborhood_vars",  # neighborhood variables
+    "nrh_simulate",  # non-residential rent hedonic
+    "rsh_simulate",  # residential sales hedonic
     "feasibility",  # compute development feasibility
     "residential_developer",  # build actual buildings
     "non_residential_developer"

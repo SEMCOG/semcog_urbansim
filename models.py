@@ -529,6 +529,9 @@ def feasibility(parcels):
                                  parcel_average_price,
                                  variables.parcel_is_allowed,
                                  cfg='proforma.yaml')
+    feasibility = orca.get_table('feasibility').to_frame()
+    for lid, df in parcels.large_area_id.to_frame().groupby('large_area_id'):
+        orca.add_table('feasibility_' + str(lid), feasibility[feasibility.index.isin(df.index)])
 
 
 def add_extra_columns_nonres(df):
@@ -551,40 +554,83 @@ def random_type(row):
     return random.choice(form_to_btype[form])
 
 
+def run_developer(lid, forms, agents, buildings, supply_fname,
+                  parcel_size, ave_unit_size, current_units, cfg,
+                  target_vacancy=0.1,
+                  add_more_columns_callback=None,
+                  unplace_agents=('households', 'jobs'),
+                  profit_to_prob_func=None,
+                  custom_selection_func=None, pipeline=False):
+    """
+    copied form parcel_utils and modified
+    """
+    from developer import develop
+    cfg = misc.config(cfg)
+
+    b = buildings.to_frame([supply_fname, "large_area_id"])
+    target_units = parcel_utils.compute_units_to_build((agents.large_area_id == lid).sum(),
+                                                       b[b.large_area_id == lid][supply_fname].sum(),
+                                                       target_vacancy)
+
+    dev = develop.Developer.from_yaml(orca.get_table('feasibility_' + str(lid)).to_frame(), forms,
+                                      target_units, parcel_size,
+                                      ave_unit_size, current_units,
+                                      orca.get_injectable('year'), str_or_buffer=cfg)
+
+    print("{:,} feasible buildings before running developer".format(
+        len(dev.feasibility)))
+
+    new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
+    orca.add_table('feasibility_' + str(lid), dev.feasibility)
+
+    if new_buildings is None or len(new_buildings) == 0:
+        return
+
+    parcel_utils.add_buildings(dev.feasibility,
+                               buildings,
+                               new_buildings,
+                               random_type,
+                               add_more_columns_callback,
+                               supply_fname, True,
+                               unplace_agents, pipeline)
+
+
 @orca.step('residential_developer')
-def residential_developer(feasibility, households, buildings, parcels, iter_var):
-    parcel_utils.run_developer(
-        "residential",
-        households,
-        buildings,
-        'residential_units',
-        feasibility,
-        parcels.parcel_size,
-        parcels.ave_unit_size,
-        parcels.total_units,
-        'res_developer.yaml',
-        year=iter_var,
-        target_vacancy=.20,  # TODO: use target_vacancies
-        form_to_btype_callback=random_type,
-        add_more_columns_callback=add_extra_columns_res)
+def residential_developer(households, buildings, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
+    target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
+    for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
+        run_developer(
+            lid,
+            "residential",
+            households,
+            buildings,
+            'residential_units',
+            parcels.parcel_size,
+            parcels.ave_unit_size,
+            parcels.total_units,
+            'res_developer.yaml',
+            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].res),
+            add_more_columns_callback=add_extra_columns_res)
 
 
 @orca.step()
-def non_residential_developer(feasibility, jobs, buildings, parcels, iter_var):
-    parcel_utils.run_developer(
-        ["office", "retail", "industrial", "medical"],
-        jobs,
-        buildings,
-        "job_spaces",
-        feasibility,
-        parcels.parcel_size,
-        parcels.ave_unit_size,
-        parcels.total_job_spaces,
-        'nonres_developer.yaml',
-        year=iter_var,
-        target_vacancy=0.60,  # TODO: use target_vacancies
-        form_to_btype_callback=random_type,
-        add_more_columns_callback=add_extra_columns_nonres)
+def non_residential_developer(jobs, buildings, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
+    target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
+    for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
+        run_developer(
+            lid,
+            ["office", "retail", "industrial", "medical"],
+            jobs,
+            buildings,
+            "job_spaces",
+            parcels.parcel_size,
+            parcels.ave_unit_size,
+            parcels.total_job_spaces,
+            'nonres_developer.yaml',
+            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].non_res),
+            add_more_columns_callback=add_extra_columns_nonres)
 
 
 @orca.step()

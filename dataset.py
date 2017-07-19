@@ -37,7 +37,7 @@ def households(store):
 
 
 for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_sectors',
-             'target_vacancies', 'building_sqft_per_job',
+             'building_sqft_per_job',
              'annual_relocation_rates_for_households',
              'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
              'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
@@ -50,6 +50,7 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
     orca.add_table(name, store[name])
 
 orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
+orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 
 
 # these are dummy returns that last until accessibility runs
