@@ -64,7 +64,9 @@ def parcel_is_allowed(form):
     refinements = orca.get_table('refiner_events').to_frame()
 
     for e in refinements.location_expression:
-        parcel_refin |= set(buildings.query(e).parcel_id)
+        s = set(buildings.query(e).parcel_id)
+        if len(s) < 20:
+            parcel_refin |= s
 
     refiner = index.isin(parcel_refin)
 
