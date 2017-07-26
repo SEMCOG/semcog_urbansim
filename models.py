@@ -401,48 +401,50 @@ def refiner(jobs, households, buildings, year, refiner_events):
         bselect = buildings.query(location_expression)
         local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect.index.values)]
 
-        diff = len(local_agents) - number_of_agents
-        if diff > 0:
-            select_agents = local_agents.sample(diff)
-            agents.drop(select_agents.index, inplace=True)
-        else:
-            if len(local_agents) == 0:
-                local_agents = exist_agents.loc[exist_agents.large_area_id == bselect.large_area_id[0]]
-            select_agents = local_agents.sample(abs(diff), replace=True)
-            select_agents.index = agents.index.values.max() + 1 + np.arange(abs(diff))
-            select_agents.building_id = bselect.sample(abs(diff), replace=True).index.values
-            agents = pd.concat([agents, select_agents])
-        return agents
+        return len(local_agents) - number_of_agents
 
     for tid, trecords in refinements.groupby("transaction_id"):
-        pool = {'jobs': pd.DataFrame(data=None, columns=jobs.columns),
-                'households': pd.DataFrame(data=None, columns=households.columns)}
         print '** processing transcaction ', tid
-        agents = trecords.agents.drop_duplicates()
-        assert len(agents) == 1, "different agents in same transaction_id"
-        agents = agents.iloc[0]
+        agent_types = trecords.agents.drop_duplicates()
+        assert len(agent_types) == 1, "different agents in same transaction_id"
+        agent_type = agent_types.iloc[0]
+        agents = dic_agent[agent_type]
+        pool = pd.DataFrame(data=None, columns=agents.columns)
 
         for _, record in trecords[trecords.action == 'subtract'].iterrows():
             print record
-            dic_agent[agents], pool[agents] = unplace_agents(dic_agent[record.agents],
-                                                             pool[record.agents],
-                                                             record.agents_expression,
-                                                             record.location_expression,
-                                                             record.amount)
+            agents, pool = unplace_agents(agents,
+                                          pool,
+                                          record.agents_expression,
+                                          record.location_expression,
+                                          record.amount)
 
         for _, record in trecords[trecords.action == 'add'].iterrows():
             print record
-            dic_agent[agents], pool[agents] = relocate_agents(dic_agent[record.agents],
-                                                              pool[record.agents],
-                                                              record.agents_expression,
-                                                              record.location_expression,
-                                                              record.amount)
+            agents, pool = relocate_agents(agents,
+                                           pool,
+                                           record.agents_expression,
+                                           record.location_expression,
+                                           record.amount)
 
         for _, record in trecords[trecords.action == 'target'].iterrows():
-            dic_agent[agents] = target_agents(dic_agent[record.agents],
+            diff = target_agents(dic_agent[record.agents],
+                                 record.agents_expression,
+                                 record.location_expression,
+                                 record.amount)
+            if diff < 0:
+                agents, pool = relocate_agents(agents,
+                                               pool,
+                                               record.agents_expression,
+                                               record.location_expression,
+                                               abs(diff))
+            elif diff > 0:
+                agents, pool = unplace_agents(agents,
+                                              pool,
                                               record.agents_expression,
                                               record.location_expression,
-                                              record.amount)
+                                              diff)
+        dic_agent[agent_type] = agents
 
     assert dic_agent['jobs'].index.duplicated().sum() == 0, "duplicated index in jobs"
     orca.add_table('jobs', dic_agent['jobs'][jobs_columns])
