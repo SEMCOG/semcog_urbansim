@@ -415,7 +415,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
             print record
             agents, pool = unplace_agents(agents,
                                           pool,
-                                          record.agents_expression,
+                                          record.agent_expression,
                                           record.location_expression,
                                           record.amount)
 
@@ -423,13 +423,13 @@ def refiner(jobs, households, buildings, year, refiner_events):
             print record
             agents, pool = relocate_agents(agents,
                                            pool,
-                                           record.agents_expression,
+                                           record.agent_expression,
                                            record.location_expression,
                                            record.amount)
 
         for _, record in trecords[trecords.action == 'target'].iterrows():
             diff = target_agents(dic_agent[record.agents],
-                                 record.agents_expression,
+                                 record.agent_expression,
                                  record.location_expression,
                                  record.amount)
             if diff < 0:
@@ -441,7 +441,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
             elif diff > 0:
                 agents, pool = unplace_agents(agents,
                                               pool,
-                                              record.agents_expression,
+                                              record.agent_expression,
                                               record.location_expression,
                                               diff)
         dic_agent[agent_type] = agents
