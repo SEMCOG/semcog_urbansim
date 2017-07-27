@@ -334,14 +334,14 @@ def gq_pop_scaling_model(jobs):
     gqpop = gqpop.to_frame(gqpop.local_columns+['large_area_id']) # add gq pop table to database
     target_gq = gq_pop_forecast.to_frame()
 
-    diff_gq = target_gq - exist_gq#by large area and age group
+    diff_gq = target_gq - exist_gq  # by large area and age group
     gqpop_lab = gqpop.grouby(['large_area_id', 'age_group', 'building_id']).size()
 
     for id, row in diff_gq.iterrows():
         local_gqpop =gqpop.loc[(
             gqpop.large_area_id==row.large_area_id) & (gqpop.age_group==row.age_group)]
         if row.diff >=0:
-            newgq = local_gqpop.sample(gqpop_lab.building_id, row.diff) #add some updates
+            newgq = local_gqpop.sample(gqpop_lab.building_id, row.diff)  # add some updates
         else:
             removegq = local_gqpop.sample(gqpop_lab.building_id, abs(row.diff))
             gqpop.drop(removegq.index, inplace = True)
@@ -349,7 +349,6 @@ def gq_pop_scaling_model(jobs):
 
 @orca.step()
 def refiner(jobs, households, buildings, year, refiner_events):
-    # need clean up
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + ['zone_id', 'large_area_id'])
     households_columns = households.local_columns
@@ -359,8 +358,10 @@ def refiner(jobs, households, buildings, year, refiner_events):
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
+    assert refinements.action.isin({'subtract', 'add', 'target'}).all(), "Unknown action"
+    assert refinements.agents.isin({'jobs', 'households'}).all(), "Unknown agents"
 
-    def relocate_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+    def add_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
         bselect = buildings.query(location_expression)
         if len(bselect) <= 0:
             print("We can't fined a building to place these agents")
@@ -384,7 +385,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
         agents = pd.concat([agents, agents_sample])
         return agents, agents_pool
 
-    def unplace_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+    def subtract_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
         available_agents = agents.query(agent_expression)
         bselect = buildings.query(location_expression)
         local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
@@ -413,7 +414,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
 
         for _, record in trecords[trecords.action == 'subtract'].iterrows():
             print record
-            agents, pool = unplace_agents(agents,
+            agents, pool = subtract_agents(agents,
                                           pool,
                                           record.agent_expression,
                                           record.location_expression,
@@ -421,7 +422,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
 
         for _, record in trecords[trecords.action == 'add'].iterrows():
             print record
-            agents, pool = relocate_agents(agents,
+            agents, pool = add_agents(agents,
                                            pool,
                                            record.agent_expression,
                                            record.location_expression,
@@ -433,13 +434,13 @@ def refiner(jobs, households, buildings, year, refiner_events):
                                  record.location_expression,
                                  record.amount)
             if diff < 0:
-                agents, pool = relocate_agents(agents,
+                agents, pool = add_agents(agents,
                                                pool,
                                                record.agents_expression,
                                                record.location_expression,
                                                abs(diff))
             elif diff > 0:
-                agents, pool = unplace_agents(agents,
+                agents, pool = subtract_agents(agents,
                                               pool,
                                               record.agent_expression,
                                               record.location_expression,
@@ -448,6 +449,7 @@ def refiner(jobs, households, buildings, year, refiner_events):
 
     assert dic_agent['jobs'].index.duplicated().sum() == 0, "duplicated index in jobs"
     orca.add_table('jobs', dic_agent['jobs'][jobs_columns])
+    assert dic_agent['households'].index.duplicated().sum() == 0, "duplicated index in households"
     orca.add_table('households', dic_agent['households'][households_columns])
 
 
