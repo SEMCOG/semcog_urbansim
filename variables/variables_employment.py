@@ -45,7 +45,7 @@ def large_area_id(jobs, buildings):
         orca.add_injectable(job_la,
                             misc.reindex(buildings.large_area_id, jobs.building_id),
                             autocall=False, cache=True)
-    return orca.get_injectable(job_la)
+    return orca.get_injectable(job_la).loc[jobs.index]
 
 
 @orca.column('jobs', cache=True, cache_scope='iteration')

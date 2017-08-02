@@ -580,6 +580,7 @@ def run_developer(lid, forms, agents, buildings, supply_fname,
     copied form parcel_utils and modified
     """
     from developer import develop
+    print 'processing large area id:', lid
     cfg = misc.config(cfg)
 
     b = buildings.to_frame([supply_fname, "large_area_id"])

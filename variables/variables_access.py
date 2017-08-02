@@ -89,7 +89,6 @@ def drv_nearest_urgentcare(poi):
 def walk_nearest_hospital(poi):
     cats = ['Hospitals']
     t = poi.to_frame()[poi.category.isin(cats)]
-    print 't', t
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 

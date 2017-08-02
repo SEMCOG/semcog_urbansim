@@ -52,7 +52,7 @@ def large_area_id(households, buildings):
         orca.add_injectable(hh_la,
                             misc.reindex(buildings.large_area_id, households.building_id),
                             autocall=False, cache=True)
-    return orca.get_injectable(hh_la)
+    return orca.get_injectable(hh_la).loc[households.index]
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
