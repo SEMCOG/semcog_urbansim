@@ -191,6 +191,9 @@ def main(run_name):
     outdir = run_name.replace('.h5', '')
     if not (os.path.exists(outdir)):
         os.makedirs(outdir)
+    out_annual = os.path.join(outdir, 'annual')
+    if not (os.path.exists(out_annual)):
+        os.makedirs(out_annual)
 
     with open(os.path.join(outdir, "runnum.txt"), "w") as runnum:
         runnum.write(os.path.basename(os.path.normpath(outdir)))
@@ -223,7 +226,7 @@ def main(run_name):
 
         # 4) pro forma changes by counts, and building types; trace relocating HHs
 
-    years = range(2015, 2045 + 1, 5)
+    years = range(2015, 2045 + 1)
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'hh_units', 'buildings', 'household_size', 'vacant_units', 'vacancy_rate',
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
@@ -274,6 +277,14 @@ def main(run_name):
     for tab in geom:
         print tab
         writer = pd.ExcelWriter(os.path.join(outdir, tab + "_by_indicator_for_year.xlsx"))
+        for i, y in list(enumerate(year_names))[::5]:
+            df = dict_ind[tab][i]
+            df = df.fillna(0)
+            df = df.sort_index().sort_index(1)
+            df.to_excel(writer, y)
+        writer.save()
+
+        writer = pd.ExcelWriter(os.path.join(out_annual, tab + "_by_indicator_for_year.xlsx"))
         for i, y in enumerate(year_names):
             df = dict_ind[tab][i]
             df = df.fillna(0)
@@ -282,6 +293,30 @@ def main(run_name):
         writer.save()
 
         writer = pd.ExcelWriter(os.path.join(outdir, tab + "_by_year_for_indicator.xlsx"))
+        if tab == 'cities':
+            la_id = orca.get_table(tab).large_area_id
+        if tab == 'semmcds':
+            la_id = orca.get_table(tab).large_area_id
+            # name = orca.get_table(tab).city_name
+        for ind in indicators:
+            df = pd.concat([df[ind] for df in dict_ind[tab][::5]], axis=1)
+            df.columns = year_names[::5]
+            if tab == 'cities':
+                df["large_area_id"] = la_id
+                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+            if tab == 'semmcds':
+                df["large_area_id"] = la_id
+                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+            if len(df.columns) > 0:
+                print "saving:", ind
+                df = df.fillna(0)
+                df = df.sort_index().sort_index(1)
+                df.to_excel(writer, ind)
+            else:
+                print "somtning is wrong with:", ind
+        writer.save()
+
+        writer = pd.ExcelWriter(os.path.join(out_annual, tab + "_by_year_for_indicator.xlsx"))
         if tab == 'cities':
             la_id = orca.get_table(tab).large_area_id
         if tab == 'semmcds':
