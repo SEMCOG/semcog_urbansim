@@ -612,7 +612,7 @@ def run_developer(lid, forms, agents, buildings, supply_fname,
 
 
 @orca.step('residential_developer')
-def residential_developer(households, buildings, parcels, target_vacancies):
+def residential_developer(households, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
@@ -620,18 +620,18 @@ def residential_developer(households, buildings, parcels, target_vacancies):
             lid,
             "residential",
             households,
-            buildings,
+            orca.get_table('buildings'),
             'residential_units',
             parcels.parcel_size,
             parcels.ave_unit_size,
             parcels.total_units,
             'res_developer.yaml',
-            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].res),
+            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate),
             add_more_columns_callback=add_extra_columns_res)
 
 
 @orca.step()
-def non_residential_developer(jobs, buildings, parcels, target_vacancies):
+def non_residential_developer(jobs, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
@@ -639,13 +639,13 @@ def non_residential_developer(jobs, buildings, parcels, target_vacancies):
             lid,
             ["office", "retail", "industrial", "medical"],
             jobs,
-            buildings,
+            orca.get_table('buildings'),
             "job_spaces",
             parcels.parcel_size,
             parcels.ave_unit_size,
             parcels.total_job_spaces,
             'nonres_developer.yaml',
-            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].non_res),
+            target_vacancy=float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate),
             add_more_columns_callback=add_extra_columns_nonres)
 
 
