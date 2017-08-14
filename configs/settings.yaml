@@ -1,0 +1,37 @@
+# these are the python modules that contain orca registrations.  Omit the '.py'
+orca_modules:
+    - models
+
+# these are links to data files that go into the data directory
+data_files:
+    - 2015_09_01_bayarea_v3.h5
+    - 2015_06_01_osm_bayarea4326.h5
+    - 2015_12_21_zoning_parcels.csv
+    - 02_01_2016_parcels_geography.csv
+    - 2015_08_29_costar.csv
+    - 2015_08_03_tmnet.h5
+
+# these are the orca steps that run prior to the simulation (if any)
+orca_preprocessing_steps:
+    - build_networks
+    - neighborhood_vars
+    - nrh_simulate
+    - rsh_simulate
+
+# these are the orca steps that run each simulation year
+orca_simulation_steps:
+    - neighborhood_vars
+    - households_transition
+    - fix_lpr
+    - households_relocation
+    - jobs_transition
+    - jobs_relocation
+    - feasibility
+    - residential_developer
+    - non_residential_developer
+    - nrh_simulate
+    - rsh_simulate
+    - hlcm_simulate
+    - elcm_simulate
+    - government_jobs_scaling_model
+    - refiner

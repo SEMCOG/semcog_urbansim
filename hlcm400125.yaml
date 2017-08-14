@@ -1,0 +1,87 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: qlid == 400125
+
+alts_fit_filters: residential_units>0
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 3000
+
+prediction_sample_size: null
+
+model_expression:
+- has_children:nodes_drv_elem_school_perf
+- popden
+- residential_units
+- year_built
+- ln_income:nodes_walk_ave_income
+- drv_nearest_healthcenter
+- is_race4:nodes_walk_percent_race4
+- nodes_drv_drv_30min_jobs
+- b_total_jobs
+- persons:nodes_walk_ln_popden
+- is_young:zones_empden
+- crime_ucr_rate
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_total_jobs: -0.0048992130440628
+        crime_ucr_rate: -0.0007132361490865676
+        drv_nearest_healthcenter: 0.07951124439120333
+        has_children:nodes_drv_elem_school_perf: 1.2791685293884738
+        is_race4:nodes_walk_percent_race4: 3.0
+        is_young:zones_empden: 0.0388342911838001
+        ln_income:nodes_walk_ave_income: 0.10229401185998681
+        nodes_drv_drv_30min_jobs: 0.8153986233236403
+        persons:nodes_walk_ln_popden: 0.03773057617213588
+        popden: -0.0361940637176579
+        residential_units: 0.036356960673987075
+        year_built: 0.00043204057731870116
+    Std. Error:
+        b_total_jobs: 0.00489319018682552
+        crime_ucr_rate: 3.155571977087502e-05
+        drv_nearest_healthcenter: 0.0047037902028724266
+        has_children:nodes_drv_elem_school_perf: 0.16754971980103703
+        is_race4:nodes_walk_percent_race4: 0.40163405605243846
+        is_young:zones_empden: 0.005731696779989365
+        ln_income:nodes_walk_ave_income: 0.002211649026288622
+        nodes_drv_drv_30min_jobs: 0.02547853909104245
+        persons:nodes_walk_ln_popden: 0.0061271583811341405
+        popden: 0.006592611059163469
+        residential_units: 0.0013985441931275032
+        year_built: 5.128671636689358e-05
+    T-Score:
+        b_total_jobs: -1.0012308651426416
+        crime_ucr_rate: -22.602436397120726
+        drv_nearest_healthcenter: 16.903654491785968
+        has_children:nodes_drv_elem_school_perf: 7.634560839060004
+        is_race4:nodes_walk_percent_race4: 7.469486102563752
+        is_young:zones_empden: 6.775356875014619
+        ln_income:nodes_walk_ave_income: 46.25237125966901
+        nodes_drv_drv_30min_jobs: 32.00335075767009
+        persons:nodes_walk_ln_popden: 6.157924085708378
+        popden: -5.490095410277477
+        residential_units: 25.996290179921733
+        year_built: 8.42402493128982
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -11221.672100999815
+    'null': -13815.51055796495
+    ratio: 0.18774828813472477
