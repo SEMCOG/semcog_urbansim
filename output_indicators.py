@@ -10,6 +10,7 @@ def orca_year_dataset(hdf, year):
         year = 'base'
     orca.add_injectable("jobs_large_area_lookup", [])
     orca.add_injectable("households_large_area_lookup", [])
+    orca.add_injectable("year", int(year if str(year) != 'base' else 2015))
     for tbl in ['households', 'persons', 'jobs', 'buildings', 'parcels', 'dropped_buildings']:
         name = str(year) + '/' + tbl
         if name in hdf:
@@ -40,7 +41,7 @@ def make_indicators(tab, geo_id):
         return households.groupby(geo_id).persons.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_units(buildings):
+    def housing_units(buildings):
         buildings = buildings.to_frame([geo_id, 'residential_units'])
         return buildings.groupby(geo_id).residential_units.sum()
 
@@ -58,14 +59,14 @@ def make_indicators(tab, geo_id):
     @orca.column(tab, cache=True, cache_scope='iteration')
     def vacant_units():
         df = orca.get_table(tab)
-        df = df.to_frame(['hh', 'hh_units'])
-        return df.hh_units - df.hh
+        df = df.to_frame(['hh', 'housing_units'])
+        return df.housing_units - df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def vacancy_rate():
         df = orca.get_table(tab)
-        df = df.to_frame(['vacant_units', 'hh_units'])
-        return df.vacant_units / df.hh_units
+        df = df.to_frame(['vacant_units', 'housing_units'])
+        return df.vacant_units / df.housing_units
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_1(households):
@@ -228,7 +229,7 @@ def main(run_name):
 
     years = range(2015, 2045 + 1)
     year_names = ["yr" + str(i) for i in years]
-    indicators = ['hh', 'hh_pop', 'hh_units', 'buildings', 'household_size', 'vacant_units', 'vacancy_rate',
+    indicators = ['hh', 'hh_pop', 'housing_units', 'buildings', 'household_size', 'vacant_units', 'vacancy_rate',
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
                   'with_children', 'without_children',
                   'with_seniors', 'without_seniors',
