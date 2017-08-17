@@ -13,6 +13,15 @@ from urbansim.utils import misc
 ##    return misc.reindex(parcels.school_district_id, buildings.parcel_id)
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
+def hedonic_id(buildings):
+    hedonic_id = buildings.large_area_id * 100 + buildings.building_type_id
+    hedonic_id.loc[buildings.building_type_id.isin([24, 32, 42, 43, 52, 53, 61, 62])] = buildings.building_type_id
+    hedonic_id.loc[hedonic_id == 571] = 371
+    hedonic_id.loc[hedonic_id == 584] = 384
+    return hedonic_id
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
 
@@ -278,6 +287,7 @@ def make_logged_variable(var_to_log):
     Generate logged variable. Registers with orca.
     """
     var_name = 'b_ln_%s' % var_to_log
+    # print var_name
 
     @orca.column('buildings', var_name, cache=True, cache_scope='iteration')
     def func():
