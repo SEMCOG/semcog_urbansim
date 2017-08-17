@@ -173,7 +173,7 @@ def percent_vacant_job_spaces(buildings):
     job_spaces = buildings.groupby('zone_id').job_spaces.sum()
     vacant_job_spaces = buildings.groupby('zone_id').vacant_job_spaces.sum()
 
-    return (vacant_job_spaces*1.0 / job_spaces).fillna(0)
+    return (vacant_job_spaces*1.0 / job_spaces).replace([np.inf, -np.inf], np.nan).fillna(0)
 
 
 @orca.column('zones', 'percent_vacant_residential_units', cache=True, cache_scope='iteration')
@@ -182,7 +182,7 @@ def percent_vacant_residential_units(buildings):
     du = buildings.groupby('zone_id').residential_units.sum()
     vacant_du = buildings.groupby('zone_id').vacant_residential_units.sum()
 
-    return (vacant_du*1.0 / du).replace([np.inf, -np.inf], 0).fillna(0)
+    return (vacant_du*1.0 / du).replace([np.inf, -np.inf], np.nan).fillna(0)
 
 
 def make_employment_density_variable(sector_id):
