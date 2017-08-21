@@ -299,6 +299,8 @@ def main(run_name):
         if tab == 'semmcds':
             la_id = orca.get_table(tab).large_area_id
             # name = orca.get_table(tab).city_name
+        if tab == 'large_areas':
+            name = orca.get_table(tab).large_area_name
         for ind in indicators:
             df = pd.concat([df[ind] for df in dict_ind[tab][::5]], axis=1)
             df.columns = year_names[::5]
@@ -308,6 +310,9 @@ def main(run_name):
             if tab == 'semmcds':
                 df["large_area_id"] = la_id
                 df.set_index("large_area_id", drop=True, append=True, inplace=True)
+            if tab == 'large_areas':
+                df["large_area_name"] = name
+                df.set_index("large_area_name", drop=True, append=True, inplace=True)
             if len(df.columns) > 0:
                 print "saving:", ind
                 df = df.fillna(0)
@@ -323,6 +328,8 @@ def main(run_name):
         if tab == 'semmcds':
             la_id = orca.get_table(tab).large_area_id
             # name = orca.get_table(tab).city_name
+        if tab == 'large_areas':
+            name = orca.get_table(tab).large_area_name
         for ind in indicators:
             df = pd.concat([df[ind] for df in dict_ind[tab]], axis=1)
             df.columns = year_names
@@ -332,6 +339,9 @@ def main(run_name):
             if tab == 'semmcds':
                 df["large_area_id"] = la_id
                 df.set_index("large_area_id", drop=True, append=True, inplace=True)
+            if tab == 'large_areas':
+                df["large_area_name"] = name
+                df.set_index("large_area_name", drop=True, append=True, inplace=True)
             if len(df.columns) > 0:
                 print "saving:", ind
                 df = df.fillna(0)
