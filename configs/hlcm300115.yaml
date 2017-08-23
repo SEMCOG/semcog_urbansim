@@ -1,0 +1,59 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: qlid == 300115
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 115)
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- walk_nearest_library
+- is_race1:nodes_walk_percent_race1
+- residential_units
+- ln_income:sqft_per_unit
+- nodes_walk_percent_mid_income
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        is_race1:nodes_walk_percent_race1: 2.061237395759515
+        ln_income:sqft_per_unit: 5.6049303141549325e-06
+        nodes_walk_percent_mid_income: 2.2601763334728906
+        residential_units: 0.045479991342529245
+        walk_nearest_library: 1.263738910735759e-05
+    Std. Error:
+        is_race1:nodes_walk_percent_race1: 0.21369066078071816
+        ln_income:sqft_per_unit: 2.4860573225892323e-06
+        nodes_walk_percent_mid_income: 0.2974087088262255
+        residential_units: 0.003029020371097358
+        walk_nearest_library: 1.5017866960247065e-05
+    T-Score:
+        is_race1:nodes_walk_percent_race1: 9.645893686831192
+        ln_income:sqft_per_unit: 2.2545458880720375
+        nodes_walk_percent_mid_income: 7.599563383308661
+        residential_units: 15.014752550525992
+        walk_nearest_library: 0.8414902822624076
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -4324.427051300701
+    'null': -4382.026634673841
+    ratio: 0.013144507821419626

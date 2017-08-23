@@ -1,0 +1,67 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: qlid == 300003
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 3)
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_high_income
+- has_children:nodes_walk_percent_hh_with_children
+- is_race4:nodes_walk_percent_race4
+- nodes_walk_ave_lot_sqft
+- ln_income:sqft_price_res
+- ln_income:nodes_walk_ln_popden
+- crime_ucr_rate
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        crime_ucr_rate: -9.641153733366185e-05
+        has_children:nodes_walk_percent_hh_with_children: 1.3141403109354362
+        is_race4:nodes_walk_percent_race4: 3.0
+        ln_income:nodes_walk_ln_popden: 0.028038227820317754
+        ln_income:sqft_price_res: -0.00035321284454460265
+        nodes_walk_ave_lot_sqft: 0.7822844809512977
+        zones_logsum_job_high_income: -2.238972762438267e-07
+    Std. Error:
+        crime_ucr_rate: 3.6299623085053326e-05
+        has_children:nodes_walk_percent_hh_with_children: 0.22478362303293153
+        is_race4:nodes_walk_percent_race4: 1.1820312176383312
+        ln_income:nodes_walk_ln_popden: 0.004782287320223304
+        ln_income:sqft_price_res: 5.929545684161172e-05
+        nodes_walk_ave_lot_sqft: 0.02814242038417648
+        zones_logsum_job_high_income: 2.87004499430401e-07
+    T-Score:
+        crime_ucr_rate: -2.6559927938579646
+        has_children:nodes_walk_percent_hh_with_children: 5.84624579497462
+        is_race4:nodes_walk_percent_race4: 2.5380040351167077
+        ln_income:nodes_walk_ln_popden: 5.862932513851664
+        ln_income:sqft_price_res: -5.9568281173394855
+        nodes_walk_ave_lot_sqft: 27.797341887165803
+        zones_logsum_job_high_income: -0.7801176521210677
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -4272.258991770134
+    'null': -4382.026634673841
+    ratio: 0.025049515225476604

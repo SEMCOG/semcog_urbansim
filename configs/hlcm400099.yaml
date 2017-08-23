@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: qlid == 400099
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 99)
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 2000
+
+prediction_sample_size: null
+
+model_expression:
+- building_type_id_is_84
+- residential_units
+- ln_income:nodes_walk_ave_income
+- is_race4:nodes_walk_percent_race4
+- building_type_id_is_83
+- nodes_walk_population
+- has_children:sqft_per_unit
+- persons:nodes_walk_ln_popden
+- is_young:zones_empden
+- crime_ucr_rate
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        building_type_id_is_83: 1.4514103529503342
+        building_type_id_is_84: -1.3414536900330452
+        crime_ucr_rate: -6.06513351849583e-05
+        has_children:sqft_per_unit: 0.00018517514084068917
+        is_race4:nodes_walk_percent_race4: 3.0
+        is_young:zones_empden: 0.029824453269964225
+        ln_income:nodes_walk_ave_income: 0.13915878208614824
+        nodes_walk_population: 0.0005405916851511515
+        persons:nodes_walk_ln_popden: 0.030339826350626493
+        residential_units: 0.017537118980647227
+    Std. Error:
+        building_type_id_is_83: 0.13942928483960967
+        building_type_id_is_84: 0.25091771367036947
+        crime_ucr_rate: 2.7610055745028976e-05
+        has_children:sqft_per_unit: 2.289562039076453e-05
+        is_race4:nodes_walk_percent_race4: 1.2137932766230712
+        is_young:zones_empden: 0.024002597589777873
+        ln_income:nodes_walk_ave_income: 0.00046102304011502395
+        nodes_walk_population: 0.00014338212803040052
+        persons:nodes_walk_ln_popden: 0.0071554396078899445
+        residential_units: 0.0020917793633121588
+    T-Score:
+        building_type_id_is_83: 10.409652137425374
+        building_type_id_is_84: -5.346189674736605
+        crime_ucr_rate: -2.196711797507986
+        has_children:sqft_per_unit: 8.08779747743301
+        is_race4:nodes_walk_percent_race4: 2.4715905564631115
+        is_young:zones_empden: 1.2425510680004792
+        ln_income:nodes_walk_ave_income: 301.84778194909416
+        nodes_walk_population: 3.7702863849010027
+        persons:nodes_walk_ln_popden: 4.24010655015134
+        residential_units: 8.383828279517328
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -8341.88456909481
+    'null': -8764.053269347662
+    ratio: 0.048170485422468934

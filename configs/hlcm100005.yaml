@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>1
+
+choosers_predict_filters: qlid == 100005
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 5)
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_high_income
+- residential_units
+- has_children:nodes_walk_percent_hh_with_children
+- has_workers:zones_a_ln_emp_50min_transit
+- is_race1:nodes_walk_percent_race1
+- persons:nodes_walk_ln_popden
+- building_age_le_10
+- is_young:nodes_walk_retail_jobs
+- ln_income:nodes_walk_ln_popden
+- nodes_drv_drv_30min_jobs
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        building_age_le_10: 0.3670114608521018
+        has_children:nodes_walk_percent_hh_with_children: 3.0
+        has_workers:zones_a_ln_emp_50min_transit: 0.09447014658989035
+        is_race1:nodes_walk_percent_race1: 3.0
+        is_young:nodes_walk_retail_jobs: 0.004664932066131964
+        ln_income:nodes_walk_ln_popden: -0.012984539914668303
+        nodes_drv_drv_30min_jobs: 0.5624852323961576
+        persons:nodes_walk_ln_popden: 0.08020114826302358
+        residential_units: 0.03803408081256697
+        zones_logsum_job_high_income: -6.668624534762569e-07
+    Std. Error:
+        building_age_le_10: 0.3375384056838519
+        has_children:nodes_walk_percent_hh_with_children: 0.31423735914935513
+        has_workers:zones_a_ln_emp_50min_transit: 0.006356280506114186
+        is_race1:nodes_walk_percent_race1: 0.35787360383960537
+        is_young:nodes_walk_retail_jobs: 0.002170216740977058
+        ln_income:nodes_walk_ln_popden: 0.004018129434548222
+        nodes_drv_drv_30min_jobs: 0.028413742022482345
+        persons:nodes_walk_ln_popden: 0.009678930514853358
+        residential_units: 0.0009311975048479044
+        zones_logsum_job_high_income: 3.4832995277371084e-07
+    T-Score:
+        building_age_le_10: 1.0873176345919437
+        has_children:nodes_walk_percent_hh_with_children: 9.54692340885578
+        has_workers:zones_a_ln_emp_50min_transit: 14.862488604620003
+        is_race1:nodes_walk_percent_race1: 8.382847932379399
+        is_young:nodes_walk_retail_jobs: 2.1495235835438975
+        ln_income:nodes_walk_ln_popden: -3.231488712888668
+        nodes_drv_drv_30min_jobs: 19.796239156077778
+        persons:nodes_walk_ln_popden: 8.28615807706712
+        residential_units: 40.84426839049488
+        zones_logsum_job_high_income: -1.9144562451954212
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -3961.6841307816844
+    'null': -4382.026634673841
+    ratio: 0.0959242238662118
