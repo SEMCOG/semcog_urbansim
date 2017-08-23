@@ -3,6 +3,7 @@ import os
 import orca
 import time
 from collections import defaultdict
+from urbansim.utils import misc
 
 
 def orca_year_dataset(hdf, year):
@@ -215,10 +216,41 @@ def main(run_name):
 
     orca.add_table('cities', cities)
 
+    p = orca.get_table('parcels')
+    p = p.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id'])
+    whatnot = p.drop_duplicates(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index(drop=True)
+    whatnot.index.name = "whatnot_id"
+
+    orca.add_table('whatnots', whatnot)
+
+    @orca.column('parcels', cache=True)
+    def whatnot_id(parcels, whatnots):
+        parcels = parcels.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index()
+        whatnots = whatnots.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index()
+        m = pd.merge(parcels, whatnots, 'left', ['large_area_id', 'city_id', 'school_id', 'zone_id'])
+        return m.set_index('parcel_id').whatnot_id
+
+    @orca.column('buildings', cache=True, cache_scope='iteration')
+    def whatnot_id(buildings, parcels):
+        return misc.reindex(parcels.whatnot_id, buildings.parcel_id)
+
+    @orca.column('jobs', cache=True, cache_scope='iteration')
+    def whatnot_id(jobs, buildings):
+        return misc.reindex(buildings.whatnot_id, jobs.building_id)
+
+    @orca.column('households', cache=True, cache_scope='iteration')
+    def whatnot_id(households, buildings):
+        return misc.reindex(buildings.whatnot_id, households.building_id)
+
+    @orca.column('persons', cache=True, cache_scope='iteration')
+    def whatnot_id(households, persons):
+        return misc.reindex(households.whatnot_id, persons.household_id)
+
     for tab, geo_id in [('cities', 'city_id'),
                         ('semmcds', 'semmcd'),
                         ('zones', 'zone_id'),
-                        ('large_areas', 'large_area_id')]:
+                        ('large_areas', 'large_area_id'),
+                        ('whatnots', 'whatnot_id')]:
         make_indicators(tab, geo_id)
 
 
@@ -244,7 +276,7 @@ def main(run_name):
                   'jobs_sec_16', 'jobs_sec_17', 'jobs_sec_18',
                   ]
 
-    geom = ['cities', 'large_areas', 'semmcds', 'zones']
+    geom = ['cities', 'large_areas', 'semmcds', 'zones', 'whatnots']
 
     start = time.clock()
     dict_ind = defaultdict(list)
@@ -275,6 +307,37 @@ def main(run_name):
     print set(orca.get_table('semmcds').to_frame(indicators).hh_pop.index) ^ set(orca.get_table('semmcds').hh_pop.index)
 
     start = time.clock()
+
+    whatnots_ouput = []
+    whatnots_local = orca.get_table('whatnots').local
+    for i, y in enumerate(year_names):
+        df = dict_ind['whatnots'][i].copy()
+        df.index.name = 'whatnot_id'
+        del df['vacancy_rate']
+        del df['household_size']
+
+        df[whatnots_local.columns] = whatnots_local
+
+        df.set_index('large_area_id', append=True, inplace=True)
+        df.set_index('city_id', append=True, inplace=True)
+        df.set_index('school_id', append=True, inplace=True)
+        df.set_index('zone_id', append=True, inplace=True)
+
+        df = df.fillna(0)
+        df = df.sort_index().sort_index(1)
+
+        df.columns.name = 'indicator'
+        df = df.stack().to_frame()
+        df['year'] = y
+        df.set_index('year', append=True, inplace=True)
+        whatnots_ouput.append(df)
+
+    whatnots_ouput = pd.concat(whatnots_ouput).unstack()
+    whatnots_ouput.columns = year_names
+    whatnots_ouput[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_ouput.csv"))
+    whatnots_ouput.to_csv(os.path.join(out_annual, "whatnots_ouput.csv"))
+
+    geom = ['cities', 'large_areas', 'semmcds', 'zones']
     for tab in geom:
         print tab
         writer = pd.ExcelWriter(os.path.join(outdir, tab + "_by_indicator_for_year.xlsx"))
