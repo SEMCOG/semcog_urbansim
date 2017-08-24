@@ -27,10 +27,9 @@ orca.run([
     "feasibility",
     "residential_developer",
     "non_residential_developer",
-    "nrh_simulate",  # non-residential rent hedonic
-    "rsh_simulate",  # residential sales hedonic
-    "hlcm_simulate",  # households location choice
-    "elcm_simulate",  # employment location choice
+    "nrh_simulate",  
+    "rsh_simulate"] + orca.get_injectable('hlcm_step_names') + 
+    ["elcm_simulate",  
     "government_jobs_scaling_model",
     "refiner",
     # "gq_model", Fixme: we have new data so need new approach

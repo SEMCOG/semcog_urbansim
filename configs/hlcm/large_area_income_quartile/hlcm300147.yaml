@@ -1,0 +1,59 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id>1) & (qlid == 300147)
+
+choosers_predict_filters: qlid == 300147
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 2000
+
+prediction_sample_size: 100
+
+model_expression:
+- ln_income:nodes_walk_ave_income
+- residential_units
+- nodes_walk_quarter_mile_to_transit
+- hhsize_gt_2:building_type_id_is_81
+- building_type_id_is_82
+
+fitted: true
+
+choice_mode: individual
+
+fit_parameters:
+    Coefficient:
+        building_type_id_is_82: 1.0607631214977695
+        hhsize_gt_2:building_type_id_is_81: -0.105644561461814
+        ln_income:nodes_walk_ave_income: 0.03289998658672638
+        nodes_walk_quarter_mile_to_transit: -0.019628219066059622
+        residential_units: 0.03201763895477756
+    Std. Error:
+        building_type_id_is_82: 0.18871553341906636
+        hhsize_gt_2:building_type_id_is_81: 0.0661030241190452
+        ln_income:nodes_walk_ave_income: 0.0003546379387232275
+        nodes_walk_quarter_mile_to_transit: 0.033030725606437876
+        residential_units: 0.004459808256899749
+    T-Score:
+        building_type_id_is_82: 5.620963480214492
+        hhsize_gt_2:building_type_id_is_81: -1.5981804595135964
+        ln_income:nodes_walk_ave_income: 92.77063448195469
+        nodes_walk_quarter_mile_to_transit: -0.5942412316317378
+        residential_units: 7.179151459088676
+
+probability_mode: full_product
+
+log_likelihoods:
+    convergence: -4347.3505339373305
+    'null': -4382.026634673841
+    ratio: 0.007913256496920207

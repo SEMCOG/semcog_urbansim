@@ -1,0 +1,67 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id>1) & (qlid == 300005)
+
+choosers_predict_filters: qlid == 300005
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 5)
+
+alts_predict_filters: large_area_id == 5
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 2000
+
+prediction_sample_size: 100
+
+model_expression:
+- residential_units
+- zones_logsum_pop_high_income
+- persons:nodes_walk_ln_popden
+- drv_nearest_urgentcare
+- ln_income:nodes_walk_ln_popden
+- nodes_walk_ave_unit_sqft
+- parcel_sqft
+
+fitted: true
+
+choice_mode: individual
+
+fit_parameters:
+    Coefficient:
+        drv_nearest_urgentcare: -0.06746065980678233
+        ln_income:nodes_walk_ln_popden: 0.032523735008645006
+        nodes_walk_ave_unit_sqft: 0.0003379705290116053
+        parcel_sqft: 3.1565345554254693e-07
+        persons:nodes_walk_ln_popden: 0.0438104589817382
+        residential_units: 0.025894679502284818
+        zones_logsum_pop_high_income: 3.317752342048201e-07
+    Std. Error:
+        drv_nearest_urgentcare: 0.021841857686735067
+        ln_income:nodes_walk_ln_popden: 0.0062143442306290975
+        nodes_walk_ave_unit_sqft: 5.523571779704356e-05
+        parcel_sqft: 8.529350640747153e-08
+        persons:nodes_walk_ln_popden: 0.006297926493555895
+        residential_units: 0.001091726760164522
+        zones_logsum_pop_high_income: 1.1598127676650684e-07
+    T-Score:
+        drv_nearest_urgentcare: -3.0885953371883903
+        ln_income:nodes_walk_ln_popden: 5.233655201838172
+        nodes_walk_ave_unit_sqft: 6.118695338647249
+        parcel_sqft: 3.7007911720099758
+        persons:nodes_walk_ln_popden: 6.95633063144918
+        residential_units: 23.719011429547187
+        zones_logsum_pop_high_income: 2.8605930496242853
+
+probability_mode: full_product
+
+log_likelihoods:
+    convergence: -4084.9716925003668
+    'null': -4382.026634673841
+    ratio: 0.06778939676517604
