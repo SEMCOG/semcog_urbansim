@@ -8,17 +8,17 @@ choosers_predict_filters: qlid == 300161
 
 alts_fit_filters: (residential_units>0) & (large_area_id == 161)
 
-alts_predict_filters: null
+alts_predict_filters: large_area_id == 161
 
 interaction_predict_filters: null
 
 choice_column: building_id
 
-sample_size: 80
+sample_size: 100
 
-estimation_sample_size: 1000
+estimation_sample_size: 2000
 
-prediction_sample_size: null
+prediction_sample_size: 100
 
 model_expression:
 - has_children:nodes_walk_percent_hh_with_children
@@ -33,7 +33,7 @@ model_expression:
 
 fitted: true
 
-choice_mode: aggregate
+choice_mode: individual
 
 fit_parameters:
     Coefficient:
@@ -67,7 +67,7 @@ fit_parameters:
         nodes_walk_sum_residential_units: 5.5791120906914164
         zones_transit_jobs_30min: 2.469973543639645
 
-probability_mode: single_chooser
+probability_mode: full_product
 
 log_likelihoods:
     convergence: -4048.084113317426

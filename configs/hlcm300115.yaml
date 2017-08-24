@@ -8,17 +8,17 @@ choosers_predict_filters: qlid == 300115
 
 alts_fit_filters: (residential_units>0) & (large_area_id == 115)
 
-alts_predict_filters: null
+alts_predict_filters: large_area_id == 115
 
 interaction_predict_filters: null
 
 choice_column: building_id
 
-sample_size: 80
+sample_size: 100
 
-estimation_sample_size: 1000
+estimation_sample_size: 2000
 
-prediction_sample_size: null
+prediction_sample_size: 100
 
 model_expression:
 - walk_nearest_library
@@ -29,7 +29,7 @@ model_expression:
 
 fitted: true
 
-choice_mode: aggregate
+choice_mode: individual
 
 fit_parameters:
     Coefficient:
@@ -51,7 +51,7 @@ fit_parameters:
         residential_units: 15.014752550525992
         walk_nearest_library: 0.8414902822624076
 
-probability_mode: single_chooser
+probability_mode: full_product
 
 log_likelihoods:
     convergence: -4324.427051300701

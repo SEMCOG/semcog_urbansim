@@ -8,17 +8,17 @@ choosers_predict_filters: qlid == 400003
 
 alts_fit_filters: (residential_units>0) & (large_area_id == 3)
 
-alts_predict_filters: null
+alts_predict_filters: large_area_id == 3
 
 interaction_predict_filters: null
 
 choice_column: building_id
 
-sample_size: 80
+sample_size: 100
 
-estimation_sample_size: 1000
+estimation_sample_size: 2000
 
-prediction_sample_size: null
+prediction_sample_size: 100
 
 model_expression:
 - has_children:nodes_drv_elem_school_perf
@@ -30,7 +30,7 @@ model_expression:
 
 fitted: true
 
-choice_mode: aggregate
+choice_mode: individual
 
 fit_parameters:
     Coefficient:
@@ -55,7 +55,7 @@ fit_parameters:
         persons:sqft_per_unit: 5.858114785159927
         zones_a_ln_emp_26min_drive_alone: 0.7495038434943837
 
-probability_mode: single_chooser
+probability_mode: full_product
 
 log_likelihoods:
     convergence: -4105.253909312769
