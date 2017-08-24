@@ -7,7 +7,6 @@ from sklearn.metrics import accuracy_score
 from urbansim.models import RegressionModel, SegmentedRegressionModel, \
     MNLDiscreteChoiceModel, SegmentedMNLDiscreteChoiceModel, \
     GrowthRateTransition
-from urbansim.developer import sqftproforma, developer
 from urbansim.utils import misc
 
 
@@ -52,6 +51,7 @@ def deal_with_nas(df):
     fail = False
 
     df = df.replace([np.inf, -np.inf], np.nan)
+    # df[df.isnull().any(axis=1)].to_csv('nulls.csv')
     for col in df.columns:
         s_cnt = df[col].count()
         if df_cnt != s_cnt:

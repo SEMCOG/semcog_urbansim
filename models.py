@@ -28,17 +28,18 @@ for model_category_name, model_category_attributes in model_configs.items():
 
         for model_config in model_config_files:
             model = lcm_utils.create_lcm_from_config(model_config,
-                                                 model_category_attributes)
+                                                     model_category_attributes)
             location_choice_models[model.name] = model
-            if model_category_name == 'hlcm':  hlcm_step_names.append(model.name)
+            if model_category_name == 'hlcm':
+                hlcm_step_names.append(model.name)
 
 orca.add_injectable('location_choice_models', location_choice_models)
 orca.add_injectable('hlcm_step_names', hlcm_step_names)
 
 for name, model in location_choice_models.items():
     lcm_utils.register_choice_model_step(model.name,
-                                     model.choosers,
-                                     choice_function=lcm_utils.unit_choices)
+                                         model.choosers,
+                                         choice_function=lcm_utils.unit_choices)
 
 
 @orca.step()
@@ -72,26 +73,6 @@ def nrh_estimate(buildings, nodes_walk):
 def nrh_simulate(buildings, nodes_walk):
     return utils.hedonic_simulate("nrh.yaml", buildings, nodes_walk,
                                   "sqft_price_nonres")
-
-
-@orca.step()
-def hlcm_estimate(households, buildings, nodes_walk):
-    return utils.lcm_estimate("hlcm.yaml", households, "building_id",
-                              buildings, nodes_walk)
-
-
-@orca.step()
-def hlcm_simulate(households, buildings, nodes_walk):
-    h = households.building_id
-    idx_invalid_building_id = np.in1d(h, buildings.index.values) == False
-    if idx_invalid_building_id.sum() > 0:
-        print("we have households with bad building id's there are #", idx_invalid_building_id.sum())
-        h.loc[idx_invalid_building_id] = -1
-        households.update_col_from_series('building_id', h)
-
-    return utils.lcm_simulate("hlcm.yaml", households, buildings, nodes_walk,
-                              "building_id", "residential_units",
-                              "vacant_residential_units")
 
 
 @orca.step()
