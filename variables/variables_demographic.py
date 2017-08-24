@@ -15,6 +15,11 @@ from urbansim.utils import misc
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
+def qlid(households):
+    return (households.income_quartile*100000 + households.large_area_id).fillna(0).astype('int')
+
+
+@orca.column('households', cache=True, cache_scope='iteration')
 def income_quartile(households):
     return pd.Series(pd.qcut(households.income, 4, labels=False),
                      index=households.index) + 1

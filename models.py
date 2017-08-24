@@ -13,7 +13,32 @@ from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
 
 import utils
+import lcm_utils
 import variables
+
+
+# Set up location choice model objects.
+# Register as injectable to be used throughout simulation
+location_choice_models = {}
+hlcm_step_names = []
+model_configs = lcm_utils.get_model_category_configs()
+for model_category_name, model_category_attributes in model_configs.items():
+    if model_category_attributes['model_type'] == 'location_choice':
+        model_config_files = model_category_attributes['config_filenames']
+
+        for model_config in model_config_files:
+            model = lcm_utils.create_lcm_from_config(model_config,
+                                                 model_category_attributes)
+            location_choice_models[model.name] = model
+            if model_category_name == 'hlcm':  hlcm_step_names.append(model.name)
+
+orca.add_injectable('location_choice_models', location_choice_models)
+orca.add_injectable('hlcm_step_names', hlcm_step_names)
+
+for name, model in location_choice_models.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                     model.choosers,
+                                     choice_function=lcm_utils.unit_choices)
 
 
 @orca.step()
