@@ -469,8 +469,11 @@ def get_model_category_configs():
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    yaml_configs = yaml.load(os.path.join(misc.configs_dir(), 'yaml_configs.yaml'))
-    model_category_configs = yaml.load(os.path.join(misc.configs_dir(), 'model_structure.yaml'))['models']
+    with open(os.path.join(misc.configs_dir(), 'yaml_configs.yaml')) as f:
+        yaml_configs = yaml.load(f)
+
+    with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
+        model_category_configs = yaml.load(f)['models']
 
     for model_category, category_attributes in model_category_configs.items():
         category_attributes['config_filenames'] = yaml_configs[model_category]

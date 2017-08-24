@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id>1) & (qlid == 300125)
+
+choosers_predict_filters: qlid == 300125
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 125)
+
+alts_predict_filters: large_area_id == 125
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 2000
+
+prediction_sample_size: 100
+
+model_expression:
+- has_children:nodes_walk_percent_hh_with_children
+- crime_other_rate
+- building_type_id_is_82
+- nodes_walk_ave_lot_sqft
+- is_young:zones_empden
+- is_race2:nodes_walk_percent_race2
+- parcels_total_units
+- ln_income:nodes_walk_ln_popden
+
+fitted: true
+
+choice_mode: individual
+
+fit_parameters:
+    Coefficient:
+        building_type_id_is_82: 0.6077133546216283
+        crime_other_rate: -1.4121238896637728e-05
+        has_children:nodes_walk_percent_hh_with_children: 1.6538314930314673
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:zones_empden: 0.022472275053059855
+        ln_income:nodes_walk_ln_popden: 0.04425755250436244
+        nodes_walk_ave_lot_sqft: 0.7120308814050578
+        parcels_total_units: 0.0013718718270276176
+    Std. Error:
+        building_type_id_is_82: 0.11397794131105665
+        crime_other_rate: 1.9070013082195245e-05
+        has_children:nodes_walk_percent_hh_with_children: 0.2329879929267672
+        is_race2:nodes_walk_percent_race2: 0.22303676398746028
+        is_young:zones_empden: 0.006983422377247268
+        ln_income:nodes_walk_ln_popden: 0.004640935058951333
+        nodes_walk_ave_lot_sqft: 0.013414926089924119
+        parcels_total_units: 0.00020863514043892246
+    T-Score:
+        building_type_id_is_82: 5.331850598732265
+        crime_other_rate: -0.7404944525089
+        has_children:nodes_walk_percent_hh_with_children: 7.098355036481642
+        is_race2:nodes_walk_percent_race2: 13.450697303735396
+        is_young:zones_empden: 3.2179458493412794
+        ln_income:nodes_walk_ln_popden: 9.536343849285167
+        nodes_walk_ave_lot_sqft: 53.07751057531807
+        parcels_total_units: 6.575459072433824
+
+probability_mode: full_product
+
+log_likelihoods:
+    convergence: -4036.908406077802
+    'null': -4382.026634673841
+    ratio: 0.0787576747857277

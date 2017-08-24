@@ -1,0 +1,83 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id>1) & (qlid == 100125)
+
+choosers_predict_filters: qlid == 100125
+
+alts_fit_filters: (residential_units>0) & (large_area_id == 125)
+
+alts_predict_filters: large_area_id == 125
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 100
+
+estimation_sample_size: 2000
+
+prediction_sample_size: 100
+
+model_expression:
+- has_children:nodes_drv_elem_school_perf
+- nodes_walk_population
+- residential_units
+- nodes_walk_midinc_hhs
+- b_ln_parcel_sqft
+- nodes_drv_drv_45min_jobs
+- persons:nodes_walk_ln_popden
+- zones_a_ln_emp_50min_transit
+- is_young:zones_empden
+- is_race2:nodes_walk_percent_race2
+- ln_income:nodes_walk_ln_popden
+
+fitted: true
+
+choice_mode: individual
+
+fit_parameters:
+    Coefficient:
+        b_ln_parcel_sqft: 0.3173271647552335
+        has_children:nodes_drv_elem_school_perf: 1.2134601231579605
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:zones_empden: 0.005757669115163136
+        ln_income:nodes_walk_ln_popden: 0.044716144691051236
+        nodes_drv_drv_45min_jobs: 0.08485858948206834
+        nodes_walk_midinc_hhs: 0.002946865164431388
+        nodes_walk_population: -0.0012799090200661485
+        persons:nodes_walk_ln_popden: 0.14968017800128688
+        residential_units: 0.057469266154521866
+        zones_a_ln_emp_50min_transit: 0.022416630387749777
+    Std. Error:
+        b_ln_parcel_sqft: 0.014098076283893722
+        has_children:nodes_drv_elem_school_perf: 0.2570124821438535
+        is_race2:nodes_walk_percent_race2: 0.13580486965749064
+        is_young:zones_empden: 0.007159798961695594
+        ln_income:nodes_walk_ln_popden: 0.0034865027490092082
+        nodes_drv_drv_45min_jobs: 0.013782324001261477
+        nodes_walk_midinc_hhs: 0.00039051607759006375
+        nodes_walk_population: 0.00016173458404738082
+        persons:nodes_walk_ln_popden: 0.008050088071412975
+        residential_units: 0.0009379449173860366
+        zones_a_ln_emp_50min_transit: 0.00680341689678134
+    T-Score:
+        b_ln_parcel_sqft: 22.508543603056136
+        has_children:nodes_drv_elem_school_perf: 4.721405408157452
+        is_race2:nodes_walk_percent_race2: 22.090518606337234
+        is_young:zones_empden: 0.8041663105299812
+        ln_income:nodes_walk_ln_popden: 12.825501056541153
+        nodes_drv_drv_45min_jobs: 6.157059540488335
+        nodes_walk_midinc_hhs: 7.546078979940998
+        nodes_walk_population: -7.913638431785213
+        persons:nodes_walk_ln_popden: 18.59360750757781
+        residential_units: 61.271472438576936
+        zones_a_ln_emp_50min_transit: 3.2949076512355084
+
+probability_mode: full_product
+
+log_likelihoods:
+    convergence: -6724.721538446877
+    'null': -8764.053269347662
+    ratio: 0.23269275850174964

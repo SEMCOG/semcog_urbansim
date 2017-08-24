@@ -35,6 +35,11 @@ for model_category_name, model_category_attributes in model_configs.items():
 orca.add_injectable('location_choice_models', location_choice_models)
 orca.add_injectable('hlcm_step_names', hlcm_step_names)
 
+for name, model in location_choice_models.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                     model.choosers,
+                                     choice_function=lcm_utils.unit_choices)
+
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
