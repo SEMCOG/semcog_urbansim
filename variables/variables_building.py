@@ -76,8 +76,13 @@ def popden(buildings, zones):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
+def residential_sqft(buildings):
+    return buildings.sqft_per_unit * buildings.residential_units
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_sqft(buildings):
-    return buildings.non_residential_sqft.astype(int) + buildings.sqft_per_unit * buildings.residential_units
+    return buildings.non_residential_sqft.astype(int) + buildings.residential_sqft
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
