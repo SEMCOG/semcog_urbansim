@@ -54,6 +54,17 @@ def hlcm_estimate(households, buildings, nodes_walk):
     return utils.lcm_estimate("hlcm.yaml", households, "building_id",
                               buildings, nodes_walk)
 
+@orca.step()
+def increase_property_values(buildings, income_growth_rates):
+    #dfinc = pd.read_csv("income_growth_rates0.csv", index_col=['year'])
+    dfinc = income_growth_rates.loc[:orca.get_injectable('year')]
+    dfrates = dfinc.apply(lambda s:(reduce(lambda x, y: x*y, s)), axis=0).to_frame(name='cumu_rates') #get cumulative increase from base to current year
+    dfrates.index = dfrates.index.astype(float)
+    bd = buildings.to_frame(['large_area_id', 'sqft_price_res', 'sqft_price_nonres'])
+    bd = pd.merge(bd, dfrates, left_on = 'large_area_id', right_index = True, how = 'left')
+    buildings.update_col_from_series('sqft_price_res', bd.sqft_price_res * bd.cumu_rates)
+    buildings.update_col_from_series('sqft_price_nonres', bd.sqft_price_nonres * bd.cumu_rates )
+
 
 @orca.step()
 def hlcm_simulate(households, buildings, nodes_walk):
@@ -617,6 +628,7 @@ def residential_developer(households, parcels, target_vacancies):
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         run_developer(
+        run_developer(nrh
             lid,
             "residential",
             households,

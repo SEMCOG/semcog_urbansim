@@ -24,6 +24,7 @@ orca.run([
     "jobs_relocation",
     "scheduled_demolition_events",
     "scheduled_development_events",
+    "increase_property_values",
     "feasibility",
     "residential_developer",
     "non_residential_developer",
