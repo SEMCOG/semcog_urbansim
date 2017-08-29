@@ -56,9 +56,10 @@ def hlcm_estimate(households, buildings, nodes_walk):
 
 @orca.step()
 def increase_property_values(buildings, income_growth_rates):
-    #dfinc = pd.read_csv("income_growth_rates0.csv", index_col=['year'])
-    dfinc = income_growth_rates.loc[:orca.get_injectable('year')]
-    dfrates = dfinc.apply(lambda s:(reduce(lambda x, y: x*y, s)), axis=0).to_frame(name='cumu_rates') #get cumulative increase from base to current year
+    # Hack to make more feasibility
+    # dfinc = pd.read_csv("income_growth_rates.csv", index_col=['year'])
+    dfinc = income_growth_rates.to_frame().loc[:orca.get_injectable('year')]
+    dfrates = dfinc.prod().to_frame(name='cumu_rates')  # get cumulative increase from base to current year
     dfrates.index = dfrates.index.astype(float)
     bd = buildings.to_frame(['large_area_id', 'sqft_price_res', 'sqft_price_nonres'])
     bd = pd.merge(bd, dfrates, left_on = 'large_area_id', right_index = True, how = 'left')
@@ -628,7 +629,6 @@ def residential_developer(households, parcels, target_vacancies):
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         run_developer(
-        run_developer(nrh
             lid,
             "residential",
             households,
@@ -1015,17 +1015,6 @@ def travel_model(iter_var, travel_data, buildings, parcels, households, persons,
         #######################################################################
         if orca.get_injectable("transcad_available") == True:
             transcad.transcad_interaction(merged, taz_table)
-
-
-# @orca.step()
-# def housing_value_update(iter_var):
-#     "update sev with income growth to attempt to fix profarma"
-#     income_forecast = special_forecast.to_frame().loc['year'==iter_var][['large_area_id','income_growh_rate']]
-#     parcels = parcels.to_frame()
-#     parcels = pd.merge(parcels, income_growth_rate, left_on='large_area_id', left_on='large_area_id', how = 'left')
-#     parcels['sev_value'] =  parcels['sev_value'] * parcels['income_growth_rate']
-#     parcels.drop('income_growth_rate',inplace=True)
-#     orca.add_table("parcels", parcels)
 
 
 def _print_number_unplaced(df, fieldname="building_id"):
