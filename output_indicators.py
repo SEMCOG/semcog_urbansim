@@ -47,6 +47,21 @@ def make_indicators(tab, geo_id):
         return buildings.groupby(geo_id).residential_units.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def job_spaces(buildings):
+        buildings = buildings.to_frame([geo_id, 'job_spaces'])
+        return buildings.groupby(geo_id).job_spaces.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def nonres_sqft(buildings):
+        buildings = buildings.to_frame([geo_id, 'non_residential_sqft'])
+        return buildings.groupby(geo_id).non_residential_sqft.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def res_sqft(buildings):
+        buildings = buildings.to_frame([geo_id, 'residential_sqft'])
+        return buildings.groupby(geo_id).residential_sqft.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def buildings(buildings):
         buildings = buildings.to_frame([geo_id])
         return buildings.groupby(geo_id).size()
@@ -64,10 +79,16 @@ def make_indicators(tab, geo_id):
         return df.housing_units - df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
-    def vacancy_rate():
+    def res_vacancy_rate():
         df = orca.get_table(tab)
         df = df.to_frame(['vacant_units', 'housing_units'])
         return df.vacant_units / df.housing_units
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def nonres_vacancy_rate():
+        df = orca.get_table(tab)
+        df = df.to_frame(['jobs_total', 'job_spaces'])
+        return 1.0 - df.jobs_total / df.job_spaces
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_1(households):
@@ -261,7 +282,9 @@ def main(run_name):
 
     years = range(2015, 2045 + 1)
     year_names = ["yr" + str(i) for i in years]
-    indicators = ['hh', 'hh_pop', 'housing_units', 'buildings', 'household_size', 'vacant_units', 'vacancy_rate',
+    indicators = ['hh', 'hh_pop', 'housing_units', 'buildings', 'household_size', 'vacant_units', 'job_spaces',
+                  'res_sqft', 'nonres_sqft',
+                  'res_vacancy_rate', 'nonres_vacancy_rate',
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
                   'with_children', 'without_children',
                   'with_seniors', 'without_seniors',
@@ -296,7 +319,8 @@ def main(run_name):
     df = df.T
     df.index = pd.MultiIndex.from_tuples(df.index)
     df = df.sort_index().sort_index(1)
-    del df['vacancy_rate']
+    del df['res_vacancy_rate']
+    del df['nonres_vacancy_rate']
     del df['household_size']
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print sumstd[sumstd > 0]
@@ -313,7 +337,8 @@ def main(run_name):
     for i, y in enumerate(year_names):
         df = dict_ind['whatnots'][i].copy()
         df.index.name = 'whatnot_id'
-        del df['vacancy_rate']
+        del df['res_vacancy_rate']
+        del df['nonres_vacancy_rate']
         del df['household_size']
 
         df[whatnots_local.columns] = whatnots_local
