@@ -13,6 +13,7 @@ orca.run(['build_networks',
           "neighborhood_vars",
           "nrh_simulate",  # non-residential rent hedonic
           "rsh_simulate",  # residential sales hedonic
+          "increase_property_values",  # Hack to make more feasibility
           ])
 
 orca.run([
@@ -24,12 +25,12 @@ orca.run([
     "jobs_relocation",
     "scheduled_demolition_events",
     "scheduled_development_events",
-    "increase_property_values",  # Hack to make more feasibility
     "feasibility",
     "residential_developer",
     "non_residential_developer",
     "nrh_simulate",  # non-residential rent hedonic
     "rsh_simulate",  # residential sales hedonic
+    "increase_property_values",  # Hack to make more feasibility
     "hlcm_simulate",  # households location choice
     "elcm_simulate",  # employment location choice
     "government_jobs_scaling_model",

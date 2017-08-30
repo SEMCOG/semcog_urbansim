@@ -59,12 +59,12 @@ def increase_property_values(buildings, income_growth_rates):
     # Hack to make more feasibility
     # dfinc = pd.read_csv("income_growth_rates.csv", index_col=['year'])
     dfinc = income_growth_rates.to_frame().loc[:orca.get_injectable('year')]
-    dfrates = dfinc.prod().to_frame(name='cumu_rates')  # get cumulative increase from base to current year
+    dfrates = dfinc.prod().to_frame(name='cumu_rates').fillna(1.0)  # get cumulative increase from base to current year
     dfrates.index = dfrates.index.astype(float)
     bd = buildings.to_frame(['large_area_id', 'sqft_price_res', 'sqft_price_nonres'])
-    bd = pd.merge(bd, dfrates, left_on = 'large_area_id', right_index = True, how = 'left')
+    bd = pd.merge(bd, dfrates, left_on='large_area_id', right_index=True, how='left')
     buildings.update_col_from_series('sqft_price_res', bd.sqft_price_res * bd.cumu_rates)
-    buildings.update_col_from_series('sqft_price_nonres', bd.sqft_price_nonres * bd.cumu_rates )
+    buildings.update_col_from_series('sqft_price_nonres', bd.sqft_price_nonres * bd.cumu_rates)
 
 
 @orca.step()
