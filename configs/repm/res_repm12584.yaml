@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 12584
+
+predict_filters: hedonic_id == 12584
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - year_built
+    - walk_nearest_library
+    - building_age_gt_70
+    - popden
+    - nodes_walk_percent_low_income
+    - improvement_value
+    - nodes_walk_race_3_hhs
+    - drv_nearest_healthcenter
+    - drv_nearest_urgentcare
+    - nodes_drv_drv_20min_pop
+    - zones_transit_jobs_30min
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 5.17690394529632
+        building_age_gt_70: 0.3761840874955383
+        drv_nearest_healthcenter: 0.06730035188692987
+        drv_nearest_urgentcare: -0.05341880849737805
+        improvement_value: -8.051765951044396e-06
+        nodes_drv_drv_20min_pop: -0.3367383565956784
+        nodes_walk_percent_low_income: 1.8667097420049463
+        nodes_walk_race_3_hhs: 0.01705104420294734
+        parcel_sqft: 3.332697368376551e-08
+        popden: 0.17073896785292172
+        walk_nearest_library: 2.360721518048134e-05
+        year_built: 4.490707849339342e-05
+        zones_transit_jobs_30min: 0.00029852654821738357
+    Std. Error:
+        Intercept: 0.19571277586476638
+        building_age_gt_70: 0.14062159980594066
+        drv_nearest_healthcenter: 0.002303317064514631
+        drv_nearest_urgentcare: 0.0027789480336172807
+        improvement_value: 1.0114023118135796e-06
+        nodes_drv_drv_20min_pop: 0.018195980453243804
+        nodes_walk_percent_low_income: 0.10805461794659464
+        nodes_walk_race_3_hhs: 0.0005571215087599148
+        parcel_sqft: 4.62359706693313e-09
+        popden: 0.004429992643268582
+        walk_nearest_library: 1.0917844307469217e-05
+        year_built: 7.921340515235072e-06
+        zones_transit_jobs_30min: 6.141548216039616e-06
+    T-Score:
+        Intercept: 26.451538089028265
+        building_age_gt_70: 2.675151527323515
+        drv_nearest_healthcenter: 29.21888302907694
+        drv_nearest_urgentcare: -19.222672698864486
+        improvement_value: -7.960992235232786
+        nodes_drv_drv_20min_pop: -18.50619467639887
+        nodes_walk_percent_low_income: 17.2756128102508
+        nodes_walk_race_3_hhs: 30.60561104686284
+        parcel_sqft: 7.2080186057111515
+        popden: 38.54159173658252
+        walk_nearest_library: 2.162259738795776
+        year_built: 5.669126129223188
+        zones_transit_jobs_30min: 48.607702441826426
+
+fit_rsquared_adj: 0.5898674658352345
+
+fit_rsquared: 0.5901872157319326

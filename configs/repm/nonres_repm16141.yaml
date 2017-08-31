@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 16141
+
+predict_filters: hedonic_id == 16141
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - zones_logsum_job_low_income
+    - zones_ln_empden_1
+    - b_is_pre_1945
+    - crime_other_rate
+    - zones_employment
+    - walk_nearest_park
+    - stories
+    - year_built
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -11.39698011511183
+        b_is_pre_1945: 15.076641708893414
+        crime_other_rate: -0.00013682755458018007
+        nodes_walk_households: -0.0016257718368003365
+        stories: 0.2026527042675861
+        walk_nearest_park: -0.00013378429075975676
+        year_built: 0.008067656030971423
+        zones_employment: -0.00015294983026702843
+        zones_ln_empden_1: 2.881532292988363
+        zones_logsum_job_high_income: 4.476040965117945e-06
+        zones_logsum_job_low_income: -2.714106504477377e-06
+    Std. Error:
+        Intercept: 0.8778739645187715
+        b_is_pre_1945: 0.4675453149508131
+        crime_other_rate: 5.32676520988596e-05
+        nodes_walk_households: 0.0004459252953170189
+        stories: 0.08606957077393367
+        walk_nearest_park: 4.921116939071998e-05
+        year_built: 0.0001763560127610503
+        zones_employment: 3.0020806986639622e-05
+        zones_ln_empden_1: 1.3990870422121375
+        zones_logsum_job_high_income: 1.4872956095439237e-06
+        zones_logsum_job_low_income: 7.082572217483605e-07
+    T-Score:
+        Intercept: -12.982478779125621
+        b_is_pre_1945: 32.2463753283027
+        crime_other_rate: -2.568680037299962
+        nodes_walk_households: -3.645839009075582
+        stories: 2.354522073775229
+        walk_nearest_park: -2.7185757301874887
+        year_built: 45.7464188754512
+        zones_employment: -5.094794098476327
+        zones_ln_empden_1: 2.0595804307016436
+        zones_logsum_job_high_income: 3.0095166935176487
+        zones_logsum_job_low_income: -3.8320915355829337
+
+fit_rsquared_adj: 0.8558112818406335
+
+fit_rsquared: 0.8596665951604027

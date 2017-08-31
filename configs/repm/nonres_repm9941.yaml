@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9941
+
+predict_filters: hedonic_id == 9941
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - year_built
+    - bldg_empratio_18
+    - nodes_walk_quarter_mile_to_transit
+    - zones_ln_empden_16
+    - building_sqft
+    - nodes_walk_retail_jobs
+    - nodes_walk_ave_nonres_sqft_price
+    - drv_nearest_hospital
+    - parcels_total_units
+    - crime_ucr_rate
+    - nodes_walk_race_4_hhs
+    - zones_a_ln_retail_emp_15min_drive_alone
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.644404494113736
+        bldg_empratio_18: -1.451078091346586
+        building_sqft: -7.761698824391977e-06
+        crime_ucr_rate: -0.00012434286994684042
+        drv_nearest_hospital: -0.03829230504436453
+        nodes_walk_ave_nonres_sqft_price: 0.0005883294163440343
+        nodes_walk_quarter_mile_to_transit: 0.04880113883683205
+        nodes_walk_race_4_hhs: -0.024254498995988274
+        nodes_walk_retail_jobs: -0.0019343195976415251
+        parcels_total_units: -0.007517890863521462
+        year_built: 0.00012493733661384705
+        zones_a_ln_retail_emp_15min_drive_alone: 0.11482954182560562
+        zones_ln_empden_16: 1.2174054816604736
+        zones_logsum_job_high_income: -1.5718386356984424e-06
+    Std. Error:
+        Intercept: 0.5377889185186905
+        bldg_empratio_18: 0.23430256308225803
+        building_sqft: 1.4211039516610127e-06
+        crime_ucr_rate: 4.5567085044464654e-05
+        drv_nearest_hospital: 0.014870604434970998
+        nodes_walk_ave_nonres_sqft_price: 0.00022088746052759716
+        nodes_walk_quarter_mile_to_transit: 0.01848731146158787
+        nodes_walk_race_4_hhs: 0.006776659965220671
+        nodes_walk_retail_jobs: 0.0006873215462687272
+        parcels_total_units: 0.002342148684690423
+        year_built: 3.3208190009580143e-05
+        zones_a_ln_retail_emp_15min_drive_alone: 0.037836884361236924
+        zones_ln_empden_16: 0.18628967681511047
+        zones_logsum_job_high_income: 3.537387553311423e-07
+    T-Score:
+        Intercept: 8.636110440703183
+        bldg_empratio_18: -6.193180613381285
+        building_sqft: -5.461738963796392
+        crime_ucr_rate: -2.728787014256142
+        drv_nearest_hospital: -2.575033530870678
+        nodes_walk_ave_nonres_sqft_price: 2.6634803756573127
+        nodes_walk_quarter_mile_to_transit: 2.639709886330899
+        nodes_walk_race_4_hhs: -3.579122919029104
+        nodes_walk_retail_jobs: -2.814286280042282
+        parcels_total_units: -3.2098264779954184
+        year_built: 3.7622446925834923
+        zones_a_ln_retail_emp_15min_drive_alone: 3.034857223689539
+        zones_ln_empden_16: 6.535013117601407
+        zones_logsum_job_high_income: -4.4435013467128055
+
+fit_rsquared_adj: 0.6094535814134368
+
+fit_rsquared: 0.6247001382951944

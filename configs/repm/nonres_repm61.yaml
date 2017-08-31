@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 61
+
+predict_filters: hedonic_id == 61
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - zones_logsum_job_low_income
+    - year_built
+    - b_ln_building_sqft
+    - nodes_walk_ave_nonres_sqft_price
+    - nodes_walk_percent_race2
+    - b_total_jobs
+    - zones_ln_empden_13
+    - parcels_total_units
+    - bldg_empratio_6
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.6612360857155934
+        b_ln_building_sqft: -0.19699190781286763
+        b_total_jobs: 0.000999279411394213
+        bldg_empratio_6: 8.721690879368252
+        nodes_walk_ave_nonres_sqft_price: 0.00826702477197164
+        nodes_walk_percent_race2: -1.0042513195903826
+        parcels_total_units: -0.0009112604436571978
+        year_built: 0.00011180194309415295
+        zones_ln_empden_13: -0.4286597886301002
+        zones_logsum_job_high_income: 7.959333346377594e-07
+        zones_logsum_job_low_income: -2.1874218625587214e-07
+    Std. Error:
+        Intercept: 0.2302756099497571
+        b_ln_building_sqft: 0.021039614038607993
+        b_total_jobs: 0.00020689584196218592
+        bldg_empratio_6: 0.8814091322918818
+        nodes_walk_ave_nonres_sqft_price: 0.0006890990653570527
+        nodes_walk_percent_race2: 0.1912155542132055
+        parcels_total_units: 0.00021779176386001
+        year_built: 3.107872684728838e-05
+        zones_ln_empden_13: 0.03791306053295069
+        zones_logsum_job_high_income: 2.1398816744804805e-07
+        zones_logsum_job_low_income: 7.106968965698694e-08
+    T-Score:
+        Intercept: 20.241987793377724
+        b_ln_building_sqft: -9.362905015813725
+        b_total_jobs: 4.829867057342071
+        bldg_empratio_6: 9.895167363072014
+        nodes_walk_ave_nonres_sqft_price: 11.996859649908435
+        nodes_walk_percent_race2: -5.251933210781805
+        parcels_total_units: -4.184090470211393
+        year_built: 3.5973784783242393
+        zones_ln_empden_13: -11.30638842141343
+        zones_logsum_job_high_income: 3.7195203086684487
+        zones_logsum_job_low_income: -3.07785481140577
+
+fit_rsquared_adj: 0.7495316661908822
+
+fit_rsquared: 0.7571912482645555

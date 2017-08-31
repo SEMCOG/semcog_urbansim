@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9984
+
+predict_filters: hedonic_id == 9984
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - walk_nearest_healthcenter
+    - b_is_pre_1945
+    - walk_nearest_grocery
+    - zones_households
+    - parcels_pptytax
+    - b_ln_parcels_parcel_far
+    - nodes_walk_retail_jobs
+    - improvement_value
+    - nodes_drv_drv_30min_jobs
+    - nodes_walk_ave_income
+    - nodes_walk_percent_hh_with_children
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -39.41477294700593
+        b_is_pre_1945: 1.3513386357208261
+        b_ln_parcels_parcel_far: 15.956305850823691
+        improvement_value: 3.6466396206004324e-05
+        nodes_drv_drv_30min_jobs: 1.4188478544608292
+        nodes_walk_ave_income: 1.586829595356253
+        nodes_walk_percent_hh_with_children: 20.37877990198359
+        nodes_walk_retail_jobs: 0.018955182340205802
+        parcels_pptytax: -0.016209991845492138
+        walk_nearest_grocery: 0.0005264634178991338
+        walk_nearest_healthcenter: -0.00044773505219023086
+        zones_households: -0.000327317374620115
+    Std. Error:
+        Intercept: 0.728888612037539
+        b_is_pre_1945: 0.03495154790634838
+        b_ln_parcels_parcel_far: 0.38514971727209424
+        improvement_value: 1.153338132186428e-06
+        nodes_drv_drv_30min_jobs: 0.03470589020476276
+        nodes_walk_ave_income: 0.051607753090749456
+        nodes_walk_percent_hh_with_children: 0.2239862083500781
+        nodes_walk_retail_jobs: 0.0006256011929222266
+        parcels_pptytax: 0.002378613904698187
+        walk_nearest_grocery: 7.681633470261069e-06
+        walk_nearest_healthcenter: 1.3123341577260725e-05
+        zones_households: 2.6331938323892638e-05
+    T-Score:
+        Intercept: -54.075166350624784
+        b_is_pre_1945: 38.663198532485524
+        b_ln_parcels_parcel_far: 41.4288395791581
+        improvement_value: 31.618131047894476
+        nodes_drv_drv_30min_jobs: 40.882047574337044
+        nodes_walk_ave_income: 30.747891553540388
+        nodes_walk_percent_hh_with_children: 90.98229775885434
+        nodes_walk_retail_jobs: 30.29914673222541
+        parcels_pptytax: -6.814889887541022
+        walk_nearest_grocery: 68.53534732388648
+        walk_nearest_healthcenter: -34.11745777965859
+        zones_households: -12.430432222420908
+
+fit_rsquared_adj: 0.7551702689741597
+
+fit_rsquared: 0.7553808834295663

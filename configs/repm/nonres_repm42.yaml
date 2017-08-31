@@ -1,0 +1,55 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 42
+
+predict_filters: hedonic_id == 42
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_employment
+    - nodes_walk_race_2_hhs
+    - bldg_empratio_8
+    - zones_ln_empden_10
+    - crime_ucr_rate
+    - nodes_walk_sum_nonresidential_units
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.6259101905934057
+        bldg_empratio_8: 101.76937132905577
+        crime_ucr_rate: -0.00011978610204437516
+        nodes_walk_race_2_hhs: -0.004625013544730097
+        nodes_walk_sum_nonresidential_units: 0.21145306069403874
+        parcel_sqft: 6.000368567945401e-08
+        zones_employment: 0.000676988976310132
+        zones_ln_empden_10: -2.1852452628212258
+    Std. Error:
+        Intercept: 0.3295247420130842
+        bldg_empratio_8: 2.9149041837480976
+        crime_ucr_rate: 4.641270007180318e-05
+        nodes_walk_race_2_hhs: 0.0021044063330896163
+        nodes_walk_sum_nonresidential_units: 0.07708662637438686
+        parcel_sqft: 1.0216379595130167e-08
+        zones_employment: 0.00014268722141957087
+        zones_ln_empden_10: 0.47967945401271417
+    T-Score:
+        Intercept: 11.003453544770348
+        bldg_empratio_8: 34.91345338089184
+        crime_ucr_rate: -2.580890615263904
+        nodes_walk_race_2_hhs: -2.19777591048199
+        nodes_walk_sum_nonresidential_units: 2.7430576565521756
+        parcel_sqft: 5.873282714363503
+        zones_employment: 4.744566258806388
+        zones_ln_empden_10: -4.555636570507155
+
+fit_rsquared_adj: 0.9076229313059333
+
+fit_rsquared: 0.9115183498653217

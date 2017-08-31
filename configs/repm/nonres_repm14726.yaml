@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 14726
+
+predict_filters: hedonic_id == 14726
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - bldg_empratio_16
+    - year_built
+    - zones_empden
+    - nodes_walk_hhsize
+    - nodes_walk_ave_lot_sqft
+    - building_sqft
+    - parcels_total_units
+    - nodes_walk_percent_mid_income
+    - zones_a_ln_emp_26min_drive_alone
+    - bldg_empratio_6
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.4494557979903693
+        bldg_empratio_16: 0.38100810048437256
+        bldg_empratio_6: 102.2974026639589
+        building_sqft: -5.636736404939862e-05
+        nodes_walk_ave_lot_sqft: 0.08998189192949986
+        nodes_walk_hhsize: -0.11935702644289425
+        nodes_walk_percent_mid_income: 0.36275830847485474
+        parcels_total_units: -0.09941472212846626
+        year_built: 0.00014613802137587514
+        zones_a_ln_emp_26min_drive_alone: 0.1070375968606548
+        zones_empden: -0.00542084701600129
+    Std. Error:
+        Intercept: 0.339092447767392
+        bldg_empratio_16: 0.04262015558438399
+        bldg_empratio_6: 24.140020805749177
+        building_sqft: 5.566006182278524e-06
+        nodes_walk_ave_lot_sqft: 0.03223567826237812
+        nodes_walk_hhsize: 0.04045785427739571
+        nodes_walk_percent_mid_income: 0.16187297897341285
+        parcels_total_units: 0.04558234853498404
+        year_built: 2.031389583998618e-05
+        zones_a_ln_emp_26min_drive_alone: 0.024214769301340883
+        zones_empden: 0.0025318080121747074
+    T-Score:
+        Intercept: 7.22356340908727
+        bldg_empratio_16: 8.939622468763906
+        bldg_empratio_6: 4.237668371834866
+        building_sqft: -10.127075357707174
+        nodes_walk_ave_lot_sqft: 2.7913757916648727
+        nodes_walk_hhsize: -2.950157109779805
+        nodes_walk_percent_mid_income: 2.2410059466097594
+        parcels_total_units: -2.180991662861916
+        year_built: 7.193992847409153
+        zones_a_ln_emp_26min_drive_alone: 4.420343449430577
+        zones_empden: -2.1410971882283563
+
+fit_rsquared_adj: 0.5167871064111383
+
+fit_rsquared: 0.5317010846083254

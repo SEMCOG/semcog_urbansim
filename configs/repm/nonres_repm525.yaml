@@ -1,0 +1,55 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 525
+
+predict_filters: hedonic_id == 525
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_empden
+    - b_ln_building_sqft
+    - nodes_walk_percent_race1
+    - building_age_le_10
+    - parcels_total_units
+    - zones_a_ln_retail_emp_15min_drive_alone
+    - nodes_walk_percent_mid_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.688114959762292
+        b_ln_building_sqft: -0.16208717902869388
+        building_age_le_10: 0.9698878631377865
+        nodes_walk_percent_mid_income: 1.0221192176233074
+        nodes_walk_percent_race1: 0.7450883095975595
+        parcels_total_units: -0.0032928446792652635
+        zones_a_ln_retail_emp_15min_drive_alone: 0.04789494285490634
+        zones_empden: 0.003201938968315971
+    Std. Error:
+        Intercept: 0.3720210630622979
+        b_ln_building_sqft: 0.0309387645730774
+        building_age_le_10: 0.4737878475345627
+        nodes_walk_percent_mid_income: 0.5178712654186068
+        nodes_walk_percent_race1: 0.2546668510373079
+        parcels_total_units: 0.0006773201877196782
+        zones_a_ln_retail_emp_15min_drive_alone: 0.014222632077820334
+        zones_empden: 0.0005524724417409932
+    T-Score:
+        Intercept: 9.913726199811132
+        b_ln_building_sqft: -5.238967401101093
+        building_age_le_10: 2.0470931624455257
+        nodes_walk_percent_mid_income: 1.9736936298195764
+        nodes_walk_percent_race1: 2.9257373174508934
+        parcels_total_units: -4.861577639301178
+        zones_a_ln_retail_emp_15min_drive_alone: 3.3675161245010847
+        zones_empden: 5.795653731117841
+
+fit_rsquared_adj: 0.5168907541040874
+
+fit_rsquared: 0.545072126781349

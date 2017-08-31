@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 341
+
+predict_filters: hedonic_id == 341
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_drv_drv_10min_pop
+    - bldg_empratio_17
+    - year_built
+    - nodes_drv_elem_school_perf
+    - b_ln_building_sqft
+    - b_total_jobs
+    - nodes_walk_population
+    - stories
+    - zones_ln_empden_6
+    - drv_nearest_urgentcare
+    - drv_nearest_park
+    - nodes_walk_percent_hh_with_children
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.154442525083505
+        b_ln_building_sqft: -0.2714709524446368
+        b_total_jobs: 0.0009544340479259231
+        bldg_empratio_17: 3.0660592874873536
+        drv_nearest_park: -0.059652847783665586
+        drv_nearest_urgentcare: 0.04477822620057789
+        nodes_drv_drv_10min_pop: 0.31703149193021507
+        nodes_drv_elem_school_perf: 1.1129234039236056
+        nodes_walk_percent_hh_with_children: -0.652109360778041
+        nodes_walk_population: -0.0011509466137457041
+        stories: 0.1749117266157871
+        year_built: 0.0001354547443485835
+        zones_ln_empden_6: -0.28782863244732093
+    Std. Error:
+        Intercept: 0.5464042781323654
+        b_ln_building_sqft: 0.014383897767890869
+        b_total_jobs: 3.935027805478439e-05
+        bldg_empratio_17: 1.3463106895028667
+        drv_nearest_park: 0.018230272125216544
+        drv_nearest_urgentcare: 0.01146503420095682
+        nodes_drv_drv_10min_pop: 0.05060296657553686
+        nodes_drv_elem_school_perf: 0.24688363826397958
+        nodes_walk_percent_hh_with_children: 0.14854225098281681
+        nodes_walk_population: 0.00023625798682967898
+        stories: 0.042313745329330396
+        year_built: 2.331150173226228e-05
+        zones_ln_empden_6: 0.04038970524032539
+    T-Score:
+        Intercept: 5.773092655616703
+        b_ln_building_sqft: -18.873253747022634
+        b_total_jobs: 24.254823475380206
+        bldg_empratio_17: 2.2773786997260745
+        drv_nearest_park: -3.2721863598049286
+        drv_nearest_urgentcare: 3.9056338965688306
+        nodes_drv_drv_10min_pop: 6.265077195760268
+        nodes_drv_elem_school_perf: 4.507886434878344
+        nodes_walk_percent_hh_with_children: -4.390059773993032
+        nodes_walk_population: -4.871567006856087
+        stories: 4.133685762260909
+        year_built: 5.810639996698239
+        zones_ln_empden_6: -7.126287026228422
+
+fit_rsquared_adj: 0.6670452176403432
+
+fit_rsquared: 0.6737490052046315

@@ -1,0 +1,39 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 14733
+
+predict_filters: hedonic_id == 14733
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - walk_nearest_grocery
+    - b_is_newerthan2010
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.9517747010214865
+        b_is_newerthan2010: 9.866547671245966
+        nodes_walk_sum_nonresidential_units: -0.17984395733876576
+        walk_nearest_grocery: -0.00010575555571040783
+    Std. Error:
+        Intercept: 0.5266679981990082
+        b_is_newerthan2010: 0.8567259136218358
+        nodes_walk_sum_nonresidential_units: 0.09042629450650587
+        walk_nearest_grocery: 4.0348711815857316e-05
+    T-Score:
+        Intercept: 9.40208009211601
+        b_is_newerthan2010: 11.516574337683828
+        nodes_walk_sum_nonresidential_units: -1.988845814375669
+        walk_nearest_grocery: -2.6210392092082895
+
+fit_rsquared_adj: 0.26554773147209787
+
+fit_rsquared: 0.2710838038479364

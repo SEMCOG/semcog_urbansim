@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 16171
+
+predict_filters: hedonic_id == 16171
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_ln_empden_14
+    - walk_nearest_healthcenter
+    - zones_ln_empden_7
+    - zones_employment
+    - b_ln_building_sqft
+    - nodes_drv_drv_10min_pop
+    - building_age_le_10
+    - nodes_walk_sum_nonresidential_units
+    - stories
+    - nodes_walk_ave_income
+    - nodes_walk_percent_hh_with_children
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.642729878680375
+        b_ln_building_sqft: -0.22704610102419795
+        building_age_le_10: 0.5697806811115577
+        nodes_drv_drv_10min_pop: 0.15918178969589636
+        nodes_walk_ave_income: 0.18144926890760762
+        nodes_walk_households: -0.0043823126990988935
+        nodes_walk_percent_hh_with_children: -0.7717265156393106
+        nodes_walk_sum_nonresidential_units: -0.06699708794014797
+        stories: -0.29608501279081884
+        walk_nearest_healthcenter: -6.90146179432082e-05
+        zones_employment: -0.0001820642273768134
+        zones_ln_empden_14: -1.7754234081127325
+        zones_ln_empden_7: 94.77594750286765
+    Std. Error:
+        Intercept: 0.6606604316525304
+        b_ln_building_sqft: 0.033853041173651136
+        building_age_le_10: 0.15970184609650712
+        nodes_drv_drv_10min_pop: 0.030977047560505774
+        nodes_walk_ave_income: 0.055294995805822256
+        nodes_walk_households: 0.0005227578734702858
+        nodes_walk_percent_hh_with_children: 0.248167062377907
+        nodes_walk_sum_nonresidential_units: 0.028190570315863268
+        stories: 0.09822186626257656
+        walk_nearest_healthcenter: 2.106233525634809e-05
+        zones_employment: 9.047721794902749e-05
+        zones_ln_empden_14: 0.34407396120349976
+        zones_ln_empden_7: 12.948265728903941
+    T-Score:
+        Intercept: 5.513770318541254
+        b_ln_building_sqft: -6.70681549286966
+        building_age_le_10: 3.567777674700402
+        nodes_drv_drv_10min_pop: 5.138701142675888
+        nodes_walk_ave_income: 3.2814772162167705
+        nodes_walk_households: -8.383063979519363
+        nodes_walk_percent_hh_with_children: -3.109705648464062
+        nodes_walk_sum_nonresidential_units: -2.376577954595253
+        stories: -3.014451099913889
+        walk_nearest_healthcenter: -3.276684047767567
+        zones_employment: -2.012265977048318
+        zones_ln_empden_14: -5.16000513930978
+        zones_ln_empden_7: 7.3195862277758765
+
+fit_rsquared_adj: 0.621636228720318
+
+fit_rsquared: 0.6367707795715053

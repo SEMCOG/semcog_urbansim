@@ -1,0 +1,83 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 383
+
+predict_filters: hedonic_id == 383
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - parcels_pptytax
+    - zones_logsum_pop_high_income
+    - zones_employment
+    - building_age_gt_80
+    - nodes_walk_hhs_with_children
+    - crime_ucr_rate
+    - popden
+    - walk_nearest_park
+    - nodes_walk_population
+    - nodes_drv_drv_15min_retail_jobs
+    - drv_nearest_healthcenter
+    - nodes_walk_percent_mid_income
+    - zones_transit_jobs_50min
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.9668427668044846
+        building_age_gt_80: 0.0472350215012108
+        crime_ucr_rate: -8.38803447374021e-05
+        drv_nearest_healthcenter: 0.007876406113233113
+        nodes_drv_drv_15min_retail_jobs: 0.05752805353291572
+        nodes_walk_hhs_with_children: 0.0009614151584789314
+        nodes_walk_percent_mid_income: 0.7356691887876802
+        nodes_walk_population: -0.0004911773539445576
+        parcel_sqft: 1.6711288638165855e-07
+        parcels_pptytax: -0.0017235410081678768
+        popden: 0.008085516802308717
+        walk_nearest_park: -2.563238977520119e-05
+        zones_employment: 7.439347989815186e-05
+        zones_logsum_pop_high_income: 2.3814451923760412e-07
+        zones_transit_jobs_50min: 1.2938480109824147e-06
+    Std. Error:
+        Intercept: 0.13990735886709854
+        building_age_gt_80: 0.02161183107226971
+        crime_ucr_rate: 4.7169597085213546e-06
+        drv_nearest_healthcenter: 0.001170166405832651
+        nodes_drv_drv_15min_retail_jobs: 0.01551053097795662
+        nodes_walk_hhs_with_children: 8.746483435705572e-05
+        nodes_walk_percent_mid_income: 0.052263972020024245
+        nodes_walk_population: 2.6395542873895875e-05
+        parcel_sqft: 9.615980843110753e-09
+        parcels_pptytax: 0.00048600315617356945
+        popden: 0.0007985608426982801
+        walk_nearest_park: 1.9973328658026785e-06
+        zones_employment: 5.090335551971419e-06
+        zones_logsum_pop_high_income: 3.066183334981426e-08
+        zones_transit_jobs_50min: 1.1326095042306207e-07
+    T-Score:
+        Intercept: 21.205766378756117
+        building_age_gt_80: 2.1856094165856397
+        crime_ucr_rate: -17.782713849742937
+        drv_nearest_healthcenter: 6.731013703669375
+        nodes_drv_drv_15min_retail_jobs: 3.7089673857506167
+        nodes_walk_hhs_with_children: 10.992019427535505
+        nodes_walk_percent_mid_income: 14.07602905699204
+        nodes_walk_population: -18.608344457666455
+        parcel_sqft: 17.378662573083684
+        parcels_pptytax: -3.54635764454241
+        popden: 10.125110536334756
+        walk_nearest_park: -12.833308966204875
+        zones_employment: 14.614651458358233
+        zones_logsum_pop_high_income: 7.7668062610824515
+        zones_transit_jobs_50min: 11.423601922370615
+
+fit_rsquared_adj: 0.32933751582598103
+
+fit_rsquared: 0.33107723692630275

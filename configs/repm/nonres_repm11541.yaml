@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 11541
+
+predict_filters: hedonic_id == 11541
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - year_built
+    - zones_population
+    - zones_empden
+    - walk_nearest_library
+    - parcels_pptytax
+    - bldg_empratio_18
+    - nodes_drv_drv_45min_jobs
+    - building_sqft
+    - nodes_walk_ave_nonres_sqft_price
+    - zones_ln_empden_10
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.093305578269464
+        bldg_empratio_18: -1.1416150725167176
+        building_sqft: 8.55752933255274e-07
+        nodes_drv_drv_45min_jobs: 0.19961797325818417
+        nodes_walk_ave_nonres_sqft_price: 0.004312422516635306
+        parcels_pptytax: -0.018178848594441976
+        walk_nearest_library: -0.00011594618274784528
+        year_built: 0.0002968472766217225
+        zones_empden: -0.18595985758506134
+        zones_ln_empden_10: 1.4708577928366797
+        zones_population: -0.00016370624467700338
+    Std. Error:
+        Intercept: 0.7828833999809223
+        bldg_empratio_18: 0.2704464643867709
+        building_sqft: 1.6335006232291517e-07
+        nodes_drv_drv_45min_jobs: 0.06565719115591537
+        nodes_walk_ave_nonres_sqft_price: 0.0007636926598878026
+        parcels_pptytax: 0.0071728188440228595
+        walk_nearest_library: 2.58064537988428e-05
+        year_built: 9.535331995825998e-05
+        zones_empden: 0.05823290071830597
+        zones_ln_empden_10: 0.6709476301952663
+        zones_population: 4.155507789247828e-05
+    T-Score:
+        Intercept: 3.9511702232348305
+        bldg_empratio_18: -4.221223875510057
+        building_sqft: 5.238767105968999
+        nodes_drv_drv_45min_jobs: 3.040306320508803
+        nodes_walk_ave_nonres_sqft_price: 5.646803672656567
+        parcels_pptytax: -2.534407879210624
+        walk_nearest_library: -4.492914200905995
+        year_built: 3.113129954485744
+        zones_empden: -3.193381323808989
+        zones_ln_empden_10: 2.1922095356512625
+        zones_population: -3.9395003686573573
+
+fit_rsquared_adj: 0.36595854845004827
+
+fit_rsquared: 0.38828395167363816

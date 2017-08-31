@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 384
+
+predict_filters: hedonic_id == 384
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - drv_nearest_library
+    - year_built
+    - zones_logsum_pop_low_income
+    - zones_empden
+    - zones_households
+    - nodes_walk_percent_race3
+    - b_ln_parcels_parcel_far
+    - nodes_walk_percent_low_income
+    - nodes_drv_drv_10min_pop
+    - improvement_value
+    - building_age_gt_70
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 5.9519623717658305
+        b_ln_parcels_parcel_far: 0.7552976264401048
+        building_age_gt_70: 0.28924106313043896
+        drv_nearest_library: 0.07030083828406176
+        improvement_value: -1.844805115533123e-05
+        nodes_drv_drv_10min_pop: -0.36770258063915046
+        nodes_walk_percent_low_income: 1.1025450042593254
+        nodes_walk_percent_race3: -2.639828765090736
+        nodes_walk_sum_nonresidential_units: 0.17230121473803234
+        year_built: 1.3655557680349178e-05
+        zones_empden: 0.19512388900879843
+        zones_households: -7.989933478791998e-05
+        zones_logsum_pop_low_income: 9.419359634263639e-08
+    Std. Error:
+        Intercept: 0.12881361054161042
+        b_ln_parcels_parcel_far: 0.12655420949691185
+        building_age_gt_70: 0.02743651176389988
+        drv_nearest_library: 0.002692699884280075
+        improvement_value: 5.643975433911708e-07
+        nodes_drv_drv_10min_pop: 0.012637086210639133
+        nodes_walk_percent_low_income: 0.04775167760315038
+        nodes_walk_percent_race3: 0.0643712931251606
+        nodes_walk_sum_nonresidential_units: 0.005068840294891104
+        year_built: 4.886796569561777e-06
+        zones_empden: 0.006060850732539946
+        zones_households: 1.1841654634531532e-05
+        zones_logsum_pop_low_income: 1.7606166606942466e-08
+    T-Score:
+        Intercept: 46.20600530285718
+        b_ln_parcels_parcel_far: 5.968174661614361
+        building_age_gt_70: 10.542195218526775
+        drv_nearest_library: 26.10793675688723
+        improvement_value: -32.68627117773494
+        nodes_drv_drv_10min_pop: -29.097101539877325
+        nodes_walk_percent_low_income: 23.089136541384796
+        nodes_walk_percent_race3: -41.009410203364624
+        nodes_walk_sum_nonresidential_units: 33.99223583976302
+        year_built: 2.794378175143423
+        zones_empden: 32.19414198096033
+        zones_households: -6.747311693665256
+        zones_logsum_pop_low_income: 5.350034362704142
+
+fit_rsquared_adj: 0.4238001762801269
+
+fit_rsquared: 0.4243339829569306

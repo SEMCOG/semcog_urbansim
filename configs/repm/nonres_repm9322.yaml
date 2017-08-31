@@ -1,0 +1,59 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9322
+
+predict_filters: hedonic_id == 9322
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - bldg_empratio_16
+    - year_built
+    - bldg_empratio_5
+    - nodes_walk_race_1_hhs
+    - b_ln_building_sqft
+    - parcels_total_units
+    - nodes_drv_drv_30min_jobs
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 1.2864463466227052
+        b_ln_building_sqft: -0.4792350768466958
+        bldg_empratio_16: 0.6030239578517864
+        bldg_empratio_5: 0.8171642655147378
+        nodes_drv_drv_30min_jobs: 0.7300376274010534
+        nodes_walk_race_1_hhs: -0.0021585358427906
+        parcels_total_units: -0.9021155530493032
+        year_built: 0.0002202800345565448
+        zones_logsum_job_high_income: -2.0052648979480257e-06
+    Std. Error:
+        Intercept: 1.2907412819658282
+        b_ln_building_sqft: 0.045398673397677516
+        bldg_empratio_16: 0.19741056806970209
+        bldg_empratio_5: 0.10051645624907204
+        nodes_drv_drv_30min_jobs: 0.13960177793548986
+        nodes_walk_race_1_hhs: 0.0007148402112202789
+        parcels_total_units: 0.16288317663233856
+        year_built: 4.5506287648402914e-05
+        zones_logsum_job_high_income: 8.17249512973174e-07
+    T-Score:
+        Intercept: 0.9966725048597023
+        b_ln_building_sqft: -10.556147151013718
+        bldg_empratio_16: 3.054669077487633
+        bldg_empratio_5: 8.129656535939425
+        nodes_drv_drv_30min_jobs: 5.229429296655552
+        nodes_walk_race_1_hhs: -3.019606072671595
+        parcels_total_units: -5.538420674871579
+        year_built: 4.840650510947046
+        zones_logsum_job_high_income: -2.4536752437487817
+
+fit_rsquared_adj: 0.7139742021759041
+
+fit_rsquared: 0.7351612983110223

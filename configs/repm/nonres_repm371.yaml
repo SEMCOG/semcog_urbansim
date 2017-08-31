@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 371
+
+predict_filters: hedonic_id == 371
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - building_age_gt_90
+    - zones_logsum_job_low_income
+    - zones_ln_empden_7
+    - zones_empden
+    - b_ln_building_sqft
+    - b_ln_parcel_sqft
+    - stories
+    - nodes_walk_highinc_hhs
+    - bldg_empratio_2
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.0823116638609473
+        b_ln_building_sqft: -0.24932285456185072
+        b_ln_parcel_sqft: 0.21657876018687586
+        bldg_empratio_2: 1.2613039500152723
+        building_age_gt_90: 1.0701677837247145
+        nodes_walk_highinc_hhs: 0.007531924767628598
+        nodes_walk_households: 0.001974720535855228
+        stories: -0.3477927171115387
+        zones_empden: 0.05506008944932667
+        zones_ln_empden_7: -15.695535660914718
+        zones_logsum_job_low_income: -3.04741944646447e-07
+    Std. Error:
+        Intercept: 0.593303110281283
+        b_ln_building_sqft: 0.0488876863555256
+        b_ln_parcel_sqft: 0.03637775878952586
+        bldg_empratio_2: 0.4368850475297969
+        building_age_gt_90: 0.3053799389227879
+        nodes_walk_highinc_hhs: 0.0021649116022155915
+        nodes_walk_households: 0.0009872980904085732
+        stories: 0.13490654305469502
+        zones_empden: 0.02461197594239205
+        zones_ln_empden_7: 4.690757300158657
+        zones_logsum_job_low_income: 1.372622882322499e-07
+    T-Score:
+        Intercept: 5.195171928897581
+        b_ln_building_sqft: -5.09991110539987
+        b_ln_parcel_sqft: 5.953603723636618
+        bldg_empratio_2: 2.8870384947867724
+        building_age_gt_90: 3.504381419092808
+        nodes_walk_highinc_hhs: 3.4790911369870035
+        nodes_walk_households: 2.000125954905909
+        stories: -2.578027049218313
+        zones_empden: 2.2371259251269753
+        zones_ln_empden_7: -3.346055797937754
+        zones_logsum_job_low_income: -2.220143264192266
+
+fit_rsquared_adj: 0.3920864277604561
+
+fit_rsquared: 0.41710344719418213

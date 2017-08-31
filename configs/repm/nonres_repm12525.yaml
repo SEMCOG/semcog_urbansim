@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 12525
+
+predict_filters: hedonic_id == 12525
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - bldg_empratio_16
+    - zones_ln_empden_5
+    - walk_nearest_grocery
+    - nodes_walk_industrial
+    - building_age_gt_50
+    - b_ln_parcels_parcel_far
+    - nodes_walk_race_1_hhs
+    - b_total_jobs
+    - building_sqft
+    - building_age_le_10
+    - zones_a_ln_emp_26min_drive_alone
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.4616248249307278
+        b_ln_parcels_parcel_far: 0.2030345105863301
+        b_total_jobs: 0.001722430694955809
+        bldg_empratio_16: 0.3062684622575965
+        building_age_gt_50: 0.3354718424122152
+        building_age_le_10: 0.2233958294270903
+        building_sqft: -1.4668800271593345e-06
+        nodes_walk_households: -0.0004451016960958219
+        nodes_walk_industrial: 0.0023890194642078835
+        nodes_walk_race_1_hhs: 0.0015347752576047964
+        walk_nearest_grocery: -2.3985498030261113e-05
+        zones_a_ln_emp_26min_drive_alone: 0.14303391165835824
+        zones_ln_empden_5: 0.27872464646727607
+        zones_logsum_job_low_income: -6.049634052911712e-07
+    Std. Error:
+        Intercept: 0.21227498867364836
+        b_ln_parcels_parcel_far: 0.0984692394258363
+        b_total_jobs: 0.00030908909620872845
+        bldg_empratio_16: 0.040738179274030964
+        building_age_gt_50: 0.040259783288134114
+        building_age_le_10: 0.07630139838617811
+        building_sqft: 1.2295778586263857e-07
+        nodes_walk_households: 0.00018499320772525065
+        nodes_walk_industrial: 0.000644998196246264
+        nodes_walk_race_1_hhs: 0.0003267910362205971
+        walk_nearest_grocery: 7.378904217945526e-06
+        zones_a_ln_emp_26min_drive_alone: 0.018804923266166305
+        zones_ln_empden_5: 0.04499736514283416
+        zones_logsum_job_low_income: 7.315921924464257e-08
+    T-Score:
+        Intercept: 11.596395978214987
+        b_ln_parcels_parcel_far: 2.0619079803012883
+        b_total_jobs: 5.572602579913231
+        bldg_empratio_16: 7.51797129168291
+        building_age_gt_50: 8.332678792910688
+        building_age_le_10: 2.9278078010632913
+        building_sqft: -11.929948289716677
+        nodes_walk_households: -2.406043451913547
+        nodes_walk_industrial: 3.703916504125761
+        nodes_walk_race_1_hhs: 4.696503537412701
+        walk_nearest_grocery: -3.2505501253056357
+        zones_a_ln_emp_26min_drive_alone: 7.606194911505112
+        zones_ln_empden_5: 6.194243720327323
+        zones_logsum_job_low_income: -8.269134246337279
+
+fit_rsquared_adj: 0.701529318536448
+
+fit_rsquared: 0.7093363987356958

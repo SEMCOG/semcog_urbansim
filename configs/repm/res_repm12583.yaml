@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 12583
+
+predict_filters: hedonic_id == 12583
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - walk_nearest_hospital
+    - year_built
+    - zones_employment
+    - zones_households
+    - building_age_gt_50
+    - nodes_walk_percent_race2
+    - nodes_walk_quarter_mile_to_transit
+    - nodes_walk_population
+    - nodes_drv_drv_15min_retail_jobs
+    - stories
+    - crime_ucr_rate
+    - nodes_walk_percent_mid_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.057242634153899
+        building_age_gt_50: 0.06811775078972632
+        crime_ucr_rate: -0.00010098681348640783
+        nodes_drv_drv_15min_retail_jobs: 0.06714135393962656
+        nodes_walk_percent_mid_income: 0.16921220324206232
+        nodes_walk_percent_race2: -0.44337271201141976
+        nodes_walk_population: -0.0001288167316949369
+        nodes_walk_quarter_mile_to_transit: 0.004129555565002638
+        stories: -0.05869244490508979
+        walk_nearest_hospital: 4.11022315970733e-05
+        year_built: 0.0001022128475588293
+        zones_employment: 4.8598427765380976e-05
+        zones_households: 5.671114728545286e-05
+    Std. Error:
+        Intercept: 0.07159498434894086
+        building_age_gt_50: 0.012935088862364254
+        crime_ucr_rate: 5.326257003118333e-06
+        nodes_drv_drv_15min_retail_jobs: 0.006831834469351467
+        nodes_walk_percent_mid_income: 0.05134713791410848
+        nodes_walk_percent_race2: 0.026858674308341508
+        nodes_walk_population: 1.0885931556137129e-05
+        nodes_walk_quarter_mile_to_transit: 0.0019011140280203482
+        stories: 0.00447254938505374
+        walk_nearest_hospital: 3.2443142666592198e-06
+        year_built: 6.924560224970172e-06
+        zones_employment: 2.9583373414594234e-06
+        zones_households: 6.636608620859228e-06
+    T-Score:
+        Intercept: 42.70191078265284
+        building_age_gt_50: 5.2661215948752185
+        crime_ucr_rate: -18.960184126917582
+        nodes_drv_drv_15min_retail_jobs: 9.827719661656287
+        nodes_walk_percent_mid_income: 3.2954554063970227
+        nodes_walk_percent_race2: -16.507617126647286
+        nodes_walk_population: -11.83332184578308
+        nodes_walk_quarter_mile_to_transit: 2.1721766838482544
+        stories: -13.122816508460884
+        walk_nearest_hospital: 12.669004362329442
+        year_built: 14.760915384957835
+        zones_employment: 16.427615297383944
+        zones_households: 8.5451998942964
+
+fit_rsquared_adj: 0.3294930717196063
+
+fit_rsquared: 0.33074071990372245

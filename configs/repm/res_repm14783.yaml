@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 14783
+
+predict_filters: hedonic_id == 14783
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - zones_logsum_job_high_income
+    - nodes_walk_highinc_hhs
+    - year_built
+    - walk_nearest_grocery
+    - nodes_walk_sum_residential_units
+    - nodes_drv_drv_10min_pop
+    - stories
+    - nodes_walk_percent_hh_with_children
+    - walk_nearest_urgentcare
+    - nodes_walk_ave_unit_sqft
+    - zones_transit_jobs_30min
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.677935684238319
+        nodes_drv_drv_10min_pop: -0.0724035867257995
+        nodes_walk_ave_unit_sqft: 9.008300560410814e-05
+        nodes_walk_highinc_hhs: 0.007310273185267481
+        nodes_walk_percent_hh_with_children: -0.35917186069443213
+        nodes_walk_sum_residential_units: -0.15272458415957965
+        stories: -0.04669772283968533
+        walk_nearest_grocery: 1.8648088426997236e-05
+        walk_nearest_urgentcare: -1.896826501208347e-05
+        year_built: 4.6089931290984615e-05
+        zones_logsum_job_high_income: 4.7442480660222714e-07
+        zones_transit_jobs_30min: 2.369935841361842e-05
+    Std. Error:
+        Intercept: 0.25569634381407746
+        nodes_drv_drv_10min_pop: 0.026812684044270518
+        nodes_walk_ave_unit_sqft: 3.587840176349356e-05
+        nodes_walk_highinc_hhs: 0.0011074890855179813
+        nodes_walk_percent_hh_with_children: 0.16609477792853106
+        nodes_walk_sum_residential_units: 0.020490358073180077
+        stories: 0.01979305949823303
+        walk_nearest_grocery: 5.619589597293463e-06
+        walk_nearest_urgentcare: 8.801505928466077e-06
+        year_built: 1.2657713027556121e-05
+        zones_logsum_job_high_income: 1.9434541193766078e-07
+        zones_transit_jobs_30min: 5.836751187969094e-06
+    T-Score:
+        Intercept: 18.294886874251713
+        nodes_drv_drv_10min_pop: -2.7003483353719338
+        nodes_walk_ave_unit_sqft: 2.51078646696487
+        nodes_walk_highinc_hhs: 6.600763186617238
+        nodes_walk_percent_hh_with_children: -2.1624512532776934
+        nodes_walk_sum_residential_units: -7.453485371711564
+        stories: -2.3592978560921387
+        walk_nearest_grocery: 3.318407528545969
+        walk_nearest_urgentcare: -2.1551158592912807
+        year_built: 3.641252664730652
+        zones_logsum_job_high_income: 2.441142303654722
+        zones_transit_jobs_30min: 4.060368114109152
+
+fit_rsquared_adj: 0.3374912325357866
+
+fit_rsquared: 0.35108749455464183

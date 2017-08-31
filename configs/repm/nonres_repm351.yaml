@@ -1,0 +1,83 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 351
+
+predict_filters: hedonic_id == 351
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - walk_nearest_healthcenter
+    - year_built
+    - b_ln_building_sqft
+    - nodes_walk_hhsize
+    - drv_nearest_grocery
+    - nodes_walk_retail_jobs
+    - b_total_jobs
+    - nodes_walk_ln_popden
+    - stories
+    - zones_ln_empden_11
+    - zones_ln_empden_13
+    - nodes_drv_drv_20min_pop
+    - nodes_walk_ave_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 7.515214203481195
+        b_ln_building_sqft: -0.149196317617598
+        b_total_jobs: 0.002155546600492703
+        drv_nearest_grocery: -0.069072050229468
+        nodes_drv_drv_20min_pop: -0.1952641754582402
+        nodes_walk_ave_income: 0.05945827187842557
+        nodes_walk_hhsize: -0.11569735083283234
+        nodes_walk_ln_popden: 0.1360272930475962
+        nodes_walk_retail_jobs: 0.00045697605936868076
+        stories: -0.12839134638240446
+        walk_nearest_healthcenter: 4.997244252413173e-05
+        year_built: 0.00012214890950143517
+        zones_ln_empden_11: 0.5723510521285202
+        zones_ln_empden_13: -0.3938402536697295
+        zones_logsum_job_low_income: -3.7680212568121345e-07
+    Std. Error:
+        Intercept: 0.7260558183653786
+        b_ln_building_sqft: 0.01901755830621093
+        b_total_jobs: 0.000254434176637669
+        drv_nearest_grocery: 0.01469062758317346
+        nodes_drv_drv_20min_pop: 0.06072338623777562
+        nodes_walk_ave_income: 0.009359214932149949
+        nodes_walk_hhsize: 0.04642624131092175
+        nodes_walk_ln_popden: 0.02598061500364556
+        nodes_walk_retail_jobs: 0.00013147547027856868
+        stories: 0.025701016982793413
+        walk_nearest_healthcenter: 9.205013178028346e-06
+        year_built: 1.6382440408473677e-05
+        zones_ln_empden_11: 0.10006962473432866
+        zones_ln_empden_13: 0.08989260732710176
+        zones_logsum_job_low_income: 1.3303866843547125e-07
+    T-Score:
+        Intercept: 10.350738901040328
+        b_ln_building_sqft: -7.845187863516217
+        b_total_jobs: 8.471922400434211
+        drv_nearest_grocery: -4.7017766830181325
+        nodes_drv_drv_20min_pop: -3.2156338365854773
+        nodes_walk_ave_income: 6.352912323252644
+        nodes_walk_hhsize: -2.4920680108043682
+        nodes_walk_ln_popden: 5.235722596578605
+        nodes_walk_retail_jobs: 3.475751472122102
+        stories: -4.995574551324613
+        walk_nearest_healthcenter: 5.428829004113984
+        year_built: 7.456087521505935
+        zones_ln_empden_11: 5.7195283148911065
+        zones_ln_empden_13: -4.381230730538511
+        zones_logsum_job_low_income: -2.8322752333016368
+
+fit_rsquared_adj: 0.3861650222482913
+
+fit_rsquared: 0.39626336500801385

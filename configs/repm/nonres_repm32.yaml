@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 32
+
+predict_filters: hedonic_id == 32
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - year_built
+    - nodes_walk_percent_high_income
+    - walk_nearest_park
+    - b_total_jobs
+    - zones_ln_empden_6
+    - building_sqft
+    - nodes_walk_ave_nonres_sqft_price
+    - nodes_drv_drv_10min_pop
+    - zones_ln_empden_10
+    - building_age_gt_100
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 5.816487189725778
+        b_total_jobs: 0.0008073810617457468
+        building_age_gt_100: 0.8936280570069806
+        building_sqft: -8.862920249914077e-07
+        nodes_drv_drv_10min_pop: -0.13035545486331535
+        nodes_walk_ave_nonres_sqft_price: 0.0023032889648394598
+        nodes_walk_percent_high_income: 0.3914611329961312
+        nodes_walk_sum_nonresidential_units: -0.19609399933194976
+        walk_nearest_park: 3.905989878451839e-05
+        year_built: 0.00012399644739789626
+        zones_ln_empden_10: 0.293748930720242
+        zones_ln_empden_6: -0.2077906782934647
+        zones_logsum_job_low_income: -2.5781089081427025e-07
+    Std. Error:
+        Intercept: 0.4810702890382612
+        b_total_jobs: 0.00021747008283166564
+        building_age_gt_100: 0.42929995668656734
+        building_sqft: 1.9754855237126463e-07
+        nodes_drv_drv_10min_pop: 0.044698245122018386
+        nodes_walk_ave_nonres_sqft_price: 0.0006646520729677728
+        nodes_walk_percent_high_income: 0.18374233869234133
+        nodes_walk_sum_nonresidential_units: 0.02850196962698456
+        walk_nearest_park: 1.3807919541212776e-05
+        year_built: 3.319086648933125e-05
+        zones_ln_empden_10: 0.06475607432494233
+        zones_ln_empden_6: 0.07611324920871353
+        zones_logsum_job_low_income: 8.049009954440908e-08
+    T-Score:
+        Intercept: 12.090722129928029
+        b_total_jobs: 3.7126075055147063
+        building_age_gt_100: 2.081593634213711
+        building_sqft: -4.48645163101852
+        nodes_drv_drv_10min_pop: -2.9163439080766542
+        nodes_walk_ave_nonres_sqft_price: 3.4654055234566914
+        nodes_walk_percent_high_income: 2.130489552827532
+        nodes_walk_sum_nonresidential_units: -6.880015728677767
+        walk_nearest_park: 2.828804054653963
+        year_built: 3.7358605096300583
+        zones_ln_empden_10: 4.536237469341121
+        zones_ln_empden_6: -2.730019811973506
+        zones_logsum_job_low_income: -3.2030136907959386
+
+fit_rsquared_adj: 0.5526564350912756
+
+fit_rsquared: 0.5737078969693332

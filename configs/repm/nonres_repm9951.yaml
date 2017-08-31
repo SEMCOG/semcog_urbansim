@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9951
+
+predict_filters: hedonic_id == 9951
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - zones_logsum_job_low_income
+    - nodes_walk_percent_race4
+    - year_built
+    - bldg_empratio_14
+    - walk_nearest_library
+    - zones_ln_empden_5
+    - nodes_walk_sum_residential_units
+    - b_total_jobs
+    - walk_nearest_grocery
+    - improvement_value
+    - building_sqft
+    - crime_ucr_rate
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.8493737206299015
+        b_total_jobs: 0.001609826928823777
+        bldg_empratio_14: 0.3651655201142689
+        building_sqft: -1.6552775064155455e-05
+        crime_ucr_rate: -0.00017535613143323216
+        improvement_value: 7.471750263168685e-08
+        nodes_walk_highinc_hhs: 0.0016358794300395576
+        nodes_walk_percent_race4: 1.0528111395127655
+        nodes_walk_sum_residential_units: -0.03732964067958899
+        walk_nearest_grocery: -1.2343689216617805e-05
+        walk_nearest_library: -1.76328357978625e-05
+        year_built: 7.296618705056501e-05
+        zones_ln_empden_5: -0.2797296386218714
+        zones_logsum_job_low_income: 1.6863524445778215e-07
+    Std. Error:
+        Intercept: 0.08176990884463575
+        b_total_jobs: 0.00048090523503615
+        bldg_empratio_14: 0.0337013819739171
+        building_sqft: 1.7146948929470948e-06
+        crime_ucr_rate: 1.5523094834886665e-05
+        improvement_value: 1.8803618031347516e-08
+        nodes_walk_highinc_hhs: 0.0006702993047033748
+        nodes_walk_percent_race4: 0.38628022506185095
+        nodes_walk_sum_residential_units: 0.012715116879757963
+        walk_nearest_grocery: 6.051527600216812e-06
+        walk_nearest_library: 6.479620952291026e-06
+        year_built: 1.952406614574994e-05
+        zones_ln_empden_5: 0.05224959824912401
+        zones_logsum_job_low_income: 6.900947344275209e-08
+    T-Score:
+        Intercept: 59.30511344758615
+        b_total_jobs: 3.3474930434116925
+        bldg_empratio_14: 10.835327773706302
+        building_sqft: -9.65348128826915
+        crime_ucr_rate: -11.29646718637163
+        improvement_value: 3.973570538772128
+        nodes_walk_highinc_hhs: 2.4405208517461876
+        nodes_walk_percent_race4: 2.725511354727491
+        nodes_walk_sum_residential_units: -2.9358472307098116
+        walk_nearest_grocery: -2.039764177259236
+        walk_nearest_library: -2.7212758165472604
+        year_built: 3.7372433849517828
+        zones_ln_empden_5: -5.3537184590038684
+        zones_logsum_job_low_income: 2.443653545591479
+
+fit_rsquared_adj: 0.49720509137523805
+
+fit_rsquared: 0.5070046922929621

@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 11531
+
+predict_filters: hedonic_id == 11531
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - non_residential_units
+    - year_built
+    - zones_ln_empden_5
+    - nodes_walk_industrial
+    - popden
+    - nodes_walk_percent_race2
+    - nodes_walk_quarter_mile_to_transit
+    - b_total_jobs
+    - zones_ln_empden_17
+    - zones_a_ln_emp_50min_transit
+    - drv_nearest_hospital
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.4497448248551814
+        b_total_jobs: 0.00038268206786797347
+        drv_nearest_hospital: 0.010055546682473479
+        nodes_walk_industrial: 0.0020439791108694066
+        nodes_walk_percent_race2: -1.2595793583521688
+        nodes_walk_quarter_mile_to_transit: 0.040353423595076425
+        non_residential_units: -0.0003994351025534306
+        popden: 0.04069474856036249
+        year_built: 9.211173183059398e-05
+        zones_a_ln_emp_50min_transit: 0.021897722423587396
+        zones_ln_empden_17: -3.2601095932338127
+        zones_ln_empden_5: 0.9830498393168566
+        zones_logsum_job_high_income: -5.175925115111759e-07
+    Std. Error:
+        Intercept: 0.08286238734042567
+        b_total_jobs: 0.00016511002415602464
+        drv_nearest_hospital: 0.0034793559114942954
+        nodes_walk_industrial: 0.000522724279539164
+        nodes_walk_percent_race2: 0.45127602563857233
+        nodes_walk_quarter_mile_to_transit: 0.017548480668702623
+        non_residential_units: 3.8408849138608e-05
+        popden: 0.019844224249389926
+        year_built: 1.4937147622548623e-05
+        zones_a_ln_emp_50min_transit: 0.0047115831511334635
+        zones_ln_empden_17: 0.8138791560898567
+        zones_ln_empden_5: 0.1883257896928226
+        zones_logsum_job_high_income: 1.649508298259825e-07
+    T-Score:
+        Intercept: 41.632216203022324
+        b_total_jobs: 2.3177397606480206
+        drv_nearest_hospital: 2.890059809418829
+        nodes_walk_industrial: 3.9102432981903723
+        nodes_walk_percent_race2: -2.7911506191134734
+        nodes_walk_quarter_mile_to_transit: 2.2995394505602973
+        non_residential_units: -10.399559255523863
+        popden: 2.0507099722788897
+        year_built: 6.1666212424348785
+        zones_a_ln_emp_50min_transit: 4.64763577786364
+        zones_ln_empden_17: -4.005643305692275
+        zones_ln_empden_5: 5.219942743478231
+        zones_logsum_job_high_income: -3.137859397598777
+
+fit_rsquared_adj: 0.5110844602851554
+
+fit_rsquared: 0.5351294868285085

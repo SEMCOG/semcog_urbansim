@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 14782
+
+predict_filters: hedonic_id == 14782
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - year_built
+    - zones_employment
+    - crime_other_rate
+    - walk_nearest_grocery
+    - popden
+    - b_ln_parcels_parcel_far
+    - drv_nearest_library
+    - nodes_walk_ave_nonres_sqft_price
+    - nodes_walk_race_3_hhs
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 7.548885910674452
+        b_ln_parcels_parcel_far: 5.65614896415578
+        crime_other_rate: -0.00031474054218088904
+        drv_nearest_library: -0.20221102908262145
+        nodes_walk_ave_nonres_sqft_price: 0.006555529545588086
+        nodes_walk_highinc_hhs: 0.07909445132223408
+        nodes_walk_race_3_hhs: -0.034657333431014584
+        popden: 0.2781538542364822
+        walk_nearest_grocery: -0.0003665881236254026
+        year_built: 0.00037144601131608446
+        zones_employment: -0.0006709336355218147
+    Std. Error:
+        Intercept: 0.5174082137903084
+        b_ln_parcels_parcel_far: 1.2739847921291905
+        crime_other_rate: 3.680059105290067e-05
+        drv_nearest_library: 0.04431687827318489
+        nodes_walk_ave_nonres_sqft_price: 0.0013126128666573948
+        nodes_walk_highinc_hhs: 0.007895131605405585
+        nodes_walk_race_3_hhs: 0.01756289649520273
+        popden: 0.05736199887363768
+        walk_nearest_grocery: 4.404871969221667e-05
+        year_built: 0.00011793220598438509
+        zones_employment: 0.0002205885606934527
+    T-Score:
+        Intercept: 14.589806867143805
+        b_ln_parcels_parcel_far: 4.4397303634235294
+        crime_other_rate: -8.552594759373594
+        drv_nearest_library: -4.5628446082352925
+        nodes_walk_ave_nonres_sqft_price: 4.9942597030013305
+        nodes_walk_highinc_hhs: 10.018129560763779
+        nodes_walk_race_3_hhs: -1.9733267482662193
+        popden: 4.849096260561374
+        walk_nearest_grocery: -8.322333229816394
+        year_built: 3.1496571120298222
+        zones_employment: -3.0415613276256748
+
+fit_rsquared_adj: 0.4381956603810392
+
+fit_rsquared: 0.44783209845340566

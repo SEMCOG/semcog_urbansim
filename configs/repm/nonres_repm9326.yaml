@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9326
+
+predict_filters: hedonic_id == 9326
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - non_residential_units
+    - year_built
+    - walk_nearest_library
+    - zones_transit_jobs_50min
+    - drv_nearest_grocery
+    - popden
+    - zones_ln_empden_18
+    - b_total_jobs
+    - bldg_empratio_16
+    - nodes_walk_ave_lot_sqft
+    - drv_nearest_park
+    - nodes_drv_drv_30min_jobs
+    - nodes_walk_percent_hh_with_children
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 1.4452131991723958
+        b_total_jobs: 0.005241608687156278
+        bldg_empratio_16: 0.4402051172452673
+        drv_nearest_grocery: -0.06700824100424148
+        drv_nearest_park: 0.03115021532935705
+        nodes_drv_drv_30min_jobs: 0.1199304296022361
+        nodes_walk_ave_lot_sqft: 0.17258350553719715
+        nodes_walk_percent_hh_with_children: -0.6168792789283888
+        non_residential_units: -0.011463707594157102
+        popden: 0.05856693460715215
+        walk_nearest_library: 4.359426235785663e-05
+        year_built: 0.0001970886027659881
+        zones_ln_empden_18: -0.5255078458561675
+        zones_transit_jobs_50min: 1.2672384134113346e-05
+    Std. Error:
+        Intercept: 0.6734628979053231
+        b_total_jobs: 0.0009682877336222435
+        bldg_empratio_16: 0.06470104306379232
+        drv_nearest_grocery: 0.014064691962527371
+        drv_nearest_park: 0.0148177867960941
+        nodes_drv_drv_30min_jobs: 0.05105650803137924
+        nodes_walk_ave_lot_sqft: 0.03778402284186895
+        nodes_walk_percent_hh_with_children: 0.14727468768875515
+        non_residential_units: 0.001547085303218723
+        popden: 0.01738813540827867
+        walk_nearest_library: 1.4300750409098543e-05
+        year_built: 2.7096894073981428e-05
+        zones_ln_empden_18: 0.20271367598425116
+        zones_transit_jobs_50min: 3.8025278669886324e-06
+    T-Score:
+        Intercept: 2.145943308335847
+        b_total_jobs: 5.4132759356024005
+        bldg_empratio_16: 6.803678834222886
+        drv_nearest_grocery: -4.7642878480930735
+        drv_nearest_park: 2.1022178114729053
+        nodes_drv_drv_30min_jobs: 2.3489743859593193
+        nodes_walk_ave_lot_sqft: 4.567631833684877
+        nodes_walk_percent_hh_with_children: -4.188630705040628
+        non_residential_units: -7.409874277977283
+        popden: 3.36821247546001
+        walk_nearest_library: 3.048389847439105
+        year_built: 7.27347578020883
+        zones_ln_empden_18: -2.592365035583461
+        zones_transit_jobs_50min: 3.332620976726488
+
+fit_rsquared_adj: 0.7629990688161422
+
+fit_rsquared: 0.7750342723528225

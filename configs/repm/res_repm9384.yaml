@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9384
+
+predict_filters: hedonic_id == 9384
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - nodes_walk_race_1_hhs
+    - zones_logsum_pop_high_income
+    - zones_empden
+    - walk_nearest_grocery
+    - popden
+    - nodes_walk_retail_jobs
+    - nodes_drv_drv_10min_pop
+    - walk_nearest_urgentcare
+    - nodes_walk_ave_nonres_sqft_price
+    - b_is_pre_1945
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 33.67472541306188
+        b_is_pre_1945: 0.9997079457737093
+        nodes_drv_drv_10min_pop: -1.2119565155241352
+        nodes_walk_ave_nonres_sqft_price: -0.01771301127499825
+        nodes_walk_highinc_hhs: 0.07767983450655122
+        nodes_walk_race_1_hhs: -0.0155655170284348
+        nodes_walk_retail_jobs: 0.00285246026105218
+        popden: -1.0948884016647424
+        walk_nearest_grocery: -0.001544875007320147
+        walk_nearest_urgentcare: -0.00021832536649994273
+        zones_empden: 5.606354607851658
+        zones_logsum_pop_high_income: -8.394824836162117e-06
+    Std. Error:
+        Intercept: 0.4941928078867721
+        b_is_pre_1945: 0.04844446315691246
+        nodes_drv_drv_10min_pop: 0.06229150770501373
+        nodes_walk_ave_nonres_sqft_price: 0.000520189811199506
+        nodes_walk_highinc_hhs: 0.0013284879492587527
+        nodes_walk_race_1_hhs: 0.00028729457448899994
+        nodes_walk_retail_jobs: 0.0003908098263546524
+        popden: 0.026100406201294387
+        walk_nearest_grocery: 1.9959074776150874e-05
+        walk_nearest_urgentcare: 1.214993525065372e-05
+        zones_empden: 0.03864895854173012
+        zones_logsum_pop_high_income: 3.2129237175478615e-07
+    T-Score:
+        Intercept: 68.14086501391846
+        b_is_pre_1945: 20.636165221516393
+        nodes_drv_drv_10min_pop: -19.456207758904302
+        nodes_walk_ave_nonres_sqft_price: -34.05105385311913
+        nodes_walk_highinc_hhs: 58.472366685669755
+        nodes_walk_race_1_hhs: -54.17964142246891
+        nodes_walk_retail_jobs: 7.298844779976508
+        popden: -41.94909432522334
+        walk_nearest_grocery: -77.40213535179096
+        walk_nearest_urgentcare: -17.96926172822163
+        zones_empden: 145.05836170975616
+        zones_logsum_pop_high_income: -26.128304230544067
+
+fit_rsquared_adj: 0.9773152940175283
+
+fit_rsquared: 0.977379805849433

@@ -1,0 +1,83 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 331
+
+predict_filters: hedonic_id == 331
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - nodes_walk_race_1_hhs
+    - year_built
+    - crime_other_rate
+    - b_ln_building_sqft
+    - b_ln_parcel_sqft
+    - nodes_walk_industrial
+    - walk_nearest_park
+    - vacant_job_spaces
+    - b_total_jobs
+    - nodes_walk_ln_popden
+    - zones_ln_empden_10
+    - nodes_walk_retail_jobs
+    - zones_ln_empden_13
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.249321278460735
+        b_ln_building_sqft: -0.08913392310113435
+        b_ln_parcel_sqft: 0.011733323745167841
+        b_total_jobs: 0.00013630014150494346
+        crime_other_rate: -5.571742419977259e-05
+        nodes_walk_highinc_hhs: 0.001723224296398963
+        nodes_walk_industrial: 0.0010970299014379022
+        nodes_walk_ln_popden: -0.15544445005035137
+        nodes_walk_race_1_hhs: 0.0011825160345497847
+        nodes_walk_retail_jobs: 0.00024222630380337184
+        vacant_job_spaces: -0.00020926689736642544
+        walk_nearest_park: 1.372399430112171e-05
+        year_built: 0.00010371409619643382
+        zones_ln_empden_10: 0.20511483780383574
+        zones_ln_empden_13: -0.12839808773974207
+    Std. Error:
+        Intercept: 0.0625718076464338
+        b_ln_building_sqft: 0.004794203884304789
+        b_ln_parcel_sqft: 0.0035200755874110665
+        b_total_jobs: 2.8474240297596178e-05
+        crime_other_rate: 2.1881774817112472e-06
+        nodes_walk_highinc_hhs: 0.0005429480628526172
+        nodes_walk_industrial: 0.00015850610193058554
+        nodes_walk_ln_popden: 0.014733412599251264
+        nodes_walk_race_1_hhs: 0.00014739509261586255
+        nodes_walk_retail_jobs: 0.00010131409446469237
+        vacant_job_spaces: 1.7161051014598437e-05
+        walk_nearest_park: 3.117185442188871e-06
+        year_built: 6.446045264181239e-06
+        zones_ln_empden_10: 0.015512122828682938
+        zones_ln_empden_13: 0.060873323583128344
+    T-Score:
+        Intercept: 67.91111585702957
+        b_ln_building_sqft: -18.592017622141604
+        b_ln_parcel_sqft: 3.3332590320304534
+        b_total_jobs: 4.786787639649513
+        crime_other_rate: -25.462936469028648
+        nodes_walk_highinc_hhs: 3.1738289797835244
+        nodes_walk_industrial: 6.921057852512982
+        nodes_walk_ln_popden: -10.550471522005084
+        nodes_walk_race_1_hhs: 8.022763943923348
+        nodes_walk_retail_jobs: 2.390845075240611
+        vacant_job_spaces: -12.194293763733224
+        walk_nearest_park: 4.402687795014465
+        year_built: 16.089569952718495
+        zones_ln_empden_10: 13.222873495081208
+        zones_ln_empden_13: -2.1092669199243277
+
+fit_rsquared_adj: 0.5976311063034792
+
+fit_rsquared: 0.6001459118890824

@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 11582
+
+predict_filters: hedonic_id == 11582
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - zones_logsum_job_high_income
+    - zones_logsum_job_low_income
+    - drv_nearest_library
+    - zones_employment
+    - b_ln_parcels_parcel_far
+    - walk_nearest_park
+    - nodes_walk_race_1_hhs
+    - nodes_drv_drv_15min_retail_jobs
+    - drv_nearest_park
+    - vacant_residential_units
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -8.287658735037898
+        b_ln_parcels_parcel_far: 6.8969826440634145
+        drv_nearest_library: -0.5856491779514185
+        drv_nearest_park: -0.21799931094133726
+        nodes_drv_drv_15min_retail_jobs: 2.0110495656283054
+        nodes_walk_households: 0.3116663748383236
+        nodes_walk_race_1_hhs: -0.3110510871310563
+        vacant_residential_units: 0.15567633583928464
+        walk_nearest_park: 0.0006721997949475103
+        zones_employment: -0.000796587046619619
+        zones_logsum_job_high_income: -1.665818228404867e-05
+        zones_logsum_job_low_income: 4.75902198663552e-06
+    Std. Error:
+        Intercept: 1.2156877201103053
+        b_ln_parcels_parcel_far: 0.7953854416575996
+        drv_nearest_library: 0.0868024775649071
+        drv_nearest_park: 0.08962863155315429
+        nodes_drv_drv_15min_retail_jobs: 0.21721743107496763
+        nodes_walk_households: 0.030068783455601437
+        nodes_walk_race_1_hhs: 0.031196882214197228
+        vacant_residential_units: 0.0746016224465347
+        walk_nearest_park: 7.314888398045018e-05
+        zones_employment: 0.00023527221655845668
+        zones_logsum_job_high_income: 2.799393958901778e-06
+        zones_logsum_job_low_income: 1.6016688904566038e-06
+    T-Score:
+        Intercept: -6.817259562583981
+        b_ln_parcels_parcel_far: 8.671245766945345
+        drv_nearest_library: -6.746917765261892
+        drv_nearest_park: -2.4322508015985127
+        nodes_drv_drv_15min_retail_jobs: 9.258232894459734
+        nodes_walk_households: 10.365114215495941
+        nodes_walk_race_1_hhs: -9.970582476652158
+        vacant_residential_units: 2.086768769015102
+        walk_nearest_park: 9.189474375674179
+        zones_employment: -3.3858100980729096
+        zones_logsum_job_high_income: -5.95063879132746
+        zones_logsum_job_low_income: 2.9712895186962256
+
+fit_rsquared_adj: 0.7221852447492323
+
+fit_rsquared: 0.730557744222543

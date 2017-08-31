@@ -1,0 +1,63 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 14741
+
+predict_filters: hedonic_id == 14741
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - walk_nearest_hospital
+    - b_is_pre_1945
+    - nodes_walk_hhs_with_children
+    - walk_nearest_park
+    - nodes_walk_population
+    - walk_nearest_grocery
+    - stories
+    - year_built
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -7.9042648341672
+        b_is_pre_1945: 13.514418273658075
+        nodes_walk_hhs_with_children: 0.06419505294439755
+        nodes_walk_highinc_hhs: 0.14081659336357272
+        nodes_walk_population: -0.035184390172296034
+        stories: 0.11327529514280173
+        walk_nearest_grocery: -0.00014909170762384305
+        walk_nearest_hospital: -0.00022776528963134535
+        walk_nearest_park: 0.00013017277091776285
+        year_built: 0.007565393226998331
+    Std. Error:
+        Intercept: 1.040544267900866
+        b_is_pre_1945: 0.5108708429807864
+        nodes_walk_hhs_with_children: 0.014075986147211566
+        nodes_walk_highinc_hhs: 0.03055155379534616
+        nodes_walk_population: 0.003703423755328342
+        stories: 0.05389460943110024
+        walk_nearest_grocery: 6.370230676760967e-05
+        walk_nearest_hospital: 0.0001076841858538389
+        walk_nearest_park: 3.996445340657915e-05
+        year_built: 0.00019618389809104343
+    T-Score:
+        Intercept: -7.596279253080513
+        b_is_pre_1945: 26.453688753903585
+        nodes_walk_hhs_with_children: 4.560607851771331
+        nodes_walk_highinc_hhs: 4.6091467002579405
+        nodes_walk_population: -9.500503452156698
+        stories: 2.10179267163286
+        walk_nearest_grocery: -2.340444407574434
+        walk_nearest_hospital: -2.115122920096123
+        walk_nearest_park: 3.2572138443493177
+        year_built: 38.562763308370215
+
+fit_rsquared_adj: 0.7790511155971761
+
+fit_rsquared: 0.7834505402866129

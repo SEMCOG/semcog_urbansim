@@ -1,0 +1,59 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 11533
+
+predict_filters: hedonic_id == 11533
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - walk_nearest_hospital
+    - zones_ln_empden_6
+    - crime_other_rate
+    - b_ln_building_sqft
+    - nodes_walk_ave_nonres_sqft_price
+    - b_is_pre_1945
+    - year_built
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -7.166689667473663e-08
+        b_is_pre_1945: 8.662948111600631
+        b_ln_building_sqft: -0.09728715742650128
+        crime_other_rate: -4.039496108852673e-05
+        nodes_walk_ave_nonres_sqft_price: 0.0024730749654112805
+        nodes_walk_households: 0.0013286128191277293
+        walk_nearest_hospital: -0.0005676731060030928
+        year_built: 0.004533723965462267
+        zones_ln_empden_6: -10.594713977290661
+    Std. Error:
+        Intercept: 6.963075789392021e-09
+        b_is_pre_1945: 0.16957359483276288
+        b_ln_building_sqft: 0.04529193816040512
+        crime_other_rate: 1.898834526648663e-05
+        nodes_walk_ave_nonres_sqft_price: 0.0009709506321533697
+        nodes_walk_households: 0.00044773243808566437
+        walk_nearest_hospital: 5.5154457140332086e-05
+        year_built: 7.240750520543104e-05
+        zones_ln_empden_6: 4.9784051308563715
+    T-Score:
+        Intercept: -10.292419448301626
+        b_is_pre_1945: 51.086657213018434
+        b_ln_building_sqft: -2.14800163954015
+        crime_other_rate: -2.127355518430644
+        nodes_walk_ave_nonres_sqft_price: 2.5470656112829406
+        nodes_walk_households: 2.967425868914878
+        walk_nearest_hospital: -10.292424863483568
+        year_built: 62.61400600116531
+        zones_ln_empden_6: -2.128134151161014
+
+fit_rsquared_adj: 0.9403731739608945
+
+fit_rsquared: 0.9420035949854013

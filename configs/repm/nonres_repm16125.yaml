@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 16125
+
+predict_filters: hedonic_id == 16125
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - bldg_empratio_16
+    - zones_logsum_pop_high_income
+    - zones_population
+    - parcels_pptytax
+    - nodes_walk_percent_race3
+    - vacant_job_spaces
+    - zones_ln_empden_6
+    - nodes_drv_drv_20min_pop
+    - zones_transit_jobs_50min
+    - building_age_gt_100
+    - zones_logsum_pop_low_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.2986745889545555
+        bldg_empratio_16: 0.35331042744832897
+        building_age_gt_100: 0.3637044476909055
+        nodes_drv_drv_20min_pop: 0.5079368718235009
+        nodes_walk_percent_race3: -10.531219036226348
+        parcels_pptytax: -0.018521856846279848
+        vacant_job_spaces: -0.0018334220641447812
+        zones_ln_empden_6: -0.9149616848342534
+        zones_logsum_pop_high_income: -3.918029676813243e-06
+        zones_logsum_pop_low_income: 6.488940730142645e-07
+        zones_population: 0.0003432051129720978
+        zones_transit_jobs_50min: 5.342183156603184e-06
+    Std. Error:
+        Intercept: 1.6938457948971832
+        bldg_empratio_16: 0.11462384633956146
+        building_age_gt_100: 0.11533609617886893
+        nodes_drv_drv_20min_pop: 0.17657526060146508
+        nodes_walk_percent_race3: 2.1964932557249486
+        parcels_pptytax: 0.00666875355120813
+        vacant_job_spaces: 0.0004909620484635094
+        zones_ln_empden_6: 0.05370046508548105
+        zones_logsum_pop_high_income: 6.617258281640479e-07
+        zones_logsum_pop_low_income: 1.8010827420329487e-07
+        zones_population: 6.791785972082396e-05
+        zones_transit_jobs_50min: 1.119825283989925e-06
+    T-Score:
+        Intercept: 1.3570742955937647
+        bldg_empratio_16: 3.082346638427076
+        building_age_gt_100: 3.1534312304697276
+        nodes_drv_drv_20min_pop: 2.876602702401938
+        nodes_walk_percent_race3: -4.794560151176307
+        parcels_pptytax: -2.7774091071223315
+        vacant_job_spaces: -3.7343458010299746
+        zones_ln_empden_6: -17.03824507623549
+        zones_logsum_pop_high_income: -5.920926024126608
+        zones_logsum_pop_low_income: 3.602799904027917
+        zones_population: 5.053238049356102
+        zones_transit_jobs_50min: 4.770550578719784
+
+fit_rsquared_adj: 0.7708094871618114
+
+fit_rsquared: 0.7816296401284212

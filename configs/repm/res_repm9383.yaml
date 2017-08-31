@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters: hedonic_id == 9383
+
+predict_filters: hedonic_id == 9383
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - walk_nearest_hospital
+    - vacant_job_spaces
+    - zones_logsum_pop_high_income
+    - b_is_newerthan2010
+    - nodes_walk_percent_race2
+    - walk_nearest_park
+    - b_total_jobs
+    - b_is_pre_1945
+    - parcels_total_units
+    - nodes_drv_drv_20min_pop
+    - zones_transit_jobs_50min
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 7.71634688199272
+        b_is_newerthan2010: 1.0574292722771415
+        b_is_pre_1945: 0.07033284531956409
+        b_total_jobs: 0.0018235494039412345
+        nodes_drv_drv_20min_pop: -0.15625338525137167
+        nodes_walk_percent_race2: 17.248733080210158
+        parcel_sqft: 3.7733259852601546e-07
+        parcels_total_units: -0.0035424466192862034
+        vacant_job_spaces: -0.001823550569577961
+        walk_nearest_hospital: 8.291502318948041e-05
+        walk_nearest_park: -6.32853777004569e-05
+        zones_logsum_pop_high_income: -2.2332287652255065e-06
+        zones_transit_jobs_50min: 1.8451409746353424e-05
+    Std. Error:
+        Intercept: 0.5192042100945388
+        b_is_newerthan2010: 0.0743325120131963
+        b_is_pre_1945: 0.03561377756492379
+        b_total_jobs: 0.0008279115471929457
+        nodes_drv_drv_20min_pop: 0.053358380602390065
+        nodes_walk_percent_race2: 1.8409071338250496
+        parcel_sqft: 2.2281412740897014e-08
+        parcels_total_units: 0.0002580917233864038
+        vacant_job_spaces: 0.0008279115385272091
+        walk_nearest_hospital: 1.234563210202667e-05
+        walk_nearest_park: 8.67730829331447e-06
+        zones_logsum_pop_high_income: 1.7809546714289987e-07
+        zones_transit_jobs_50min: 4.205093439247982e-06
+    T-Score:
+        Intercept: 14.861872712063905
+        b_is_newerthan2010: 14.225663086556464
+        b_is_pre_1945: 1.9748774246525116
+        b_total_jobs: 2.202589648766252
+        nodes_drv_drv_20min_pop: -2.928375701948733
+        nodes_walk_percent_race2: 9.369692128016595
+        parcel_sqft: 16.934859692869935
+        parcels_total_units: -13.725533592499614
+        vacant_job_spaces: -2.2025910797449653
+        walk_nearest_hospital: 6.716142397914887
+        walk_nearest_park: -7.293203786387979
+        zones_logsum_pop_high_income: -12.5395036777304
+        zones_transit_jobs_50min: 4.387871521269497
+
+fit_rsquared_adj: 0.7085475761010063
+
+fit_rsquared: 0.7155322747129647
