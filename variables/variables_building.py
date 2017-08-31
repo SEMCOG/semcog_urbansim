@@ -76,17 +76,22 @@ def popden(buildings, zones):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
+def residential_sqft(buildings):
+    return buildings.sqft_per_unit * buildings.residential_units
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_sqft(buildings):
-    return buildings.non_residential_sqft.astype(int) + buildings.sqft_per_unit * buildings.residential_units
+    return buildings.non_residential_sqft.astype(int) + buildings.residential_sqft
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def building_sqft_per_job(buildings, building_sqft_per_job):
-    b = pd.DataFrame({'zone_id': buildings.zone_id, 'building_type_id': buildings.building_type_id})
+    b = buildings.to_frame(["building_type_id"])
     bsqft_job = building_sqft_per_job.to_frame()
 
     return pd.merge(b, bsqft_job,
-                    left_on=['zone_id', 'building_type_id'],
+                    left_on=['building_type_id'],
                     right_index=True, how='left').building_sqft_per_job.fillna(0)
 
 
@@ -101,14 +106,10 @@ def job_spaces(buildings):
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def non_residential_units(buildings):
-    job_spaces = buildings.non_residential_sqft / buildings.building_sqft_per_job
-    job_spaces[np.isinf(job_spaces)] = np.nan
-    job_spaces[job_spaces < 0] = 0
-    job_spaces = job_spaces.fillna(0).round().astype('int')
-    return job_spaces
+    return buildings.job_spaces
 
 
-@orca.column('buildings', 'jobs_within_30_min', cache=True)
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def jobs_within_30_min(buildings, zones):
     return misc.reindex(zones.jobs_within_30_min, buildings.zone_id).fillna(0)
 

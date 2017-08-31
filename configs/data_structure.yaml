@@ -45,7 +45,6 @@ columns:
 ---
 name: building_sqft_per_job
 indexs:
-- zone_id
 - building_type_id
 columns:
   building_sqft_per_job: int32
@@ -146,10 +145,15 @@ columns:
 name: income_growth_rates
 indexs:
 - year
-- large_area_id
 columns:
-  income_growth_rate: float64
-  large_area_name: object
+  '115': float64
+  '125': float64
+  '147': float64
+  '161': float64
+  '3': float64
+  '5': float64
+  '93': float64
+  '99': float64
 ---
 name: jobs
 indexs:

@@ -45,7 +45,7 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
              'workers_employment_rates_by_large_area',
              'transit_stops', 'crime_rates', 'schools', 'poi',
              'annual_household_control_totals',
-             'events_addition', 'events_deletion', 'refiner_events']:
+             'events_addition', 'events_deletion', 'refiner_events', 'income_growth_rates']:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
