@@ -588,6 +588,27 @@ def random_type(row):
     return random.choice(form_to_btype[form])
 
 
+def probable_type(row):
+    form = row['form']
+    form_to_btype = orca.get_injectable("form_to_btype")
+    btypes = form_to_btype[form]
+
+    buildings = orca.get_table('buildings').to_frame([''])
+
+    return random.choice(form_to_btype[form])
+
+
+def register_btype_distributions(buildings):
+    """
+
+    """
+    form_to_btype = orca.get_injectable("form_to_btype")
+    form_btype_dists = {}
+    for form in form_to_btype.keys():
+        bldgs = buildings.loc[buildings.building_type_id
+                                       .isin(form_to_btype[form])]
+
+
 def run_developer(lid, forms, agents, buildings, supply_fname,
                   parcel_size, ave_unit_size, current_units, cfg,
                   target_vacancy=0.1,
@@ -602,7 +623,7 @@ def run_developer(lid, forms, agents, buildings, supply_fname,
     print 'processing large area id:', lid
     cfg = misc.config(cfg)
 
-    b = buildings.to_frame([supply_fname, "large_area_id"])
+    b = buildings.to_frame([supply_fname, "large_area_id", "building_type_id"])
     target_units = parcel_utils.compute_units_to_build((agents.large_area_id == lid).sum(),
                                                        b[b.large_area_id == lid][supply_fname].sum(),
                                                        target_vacancy)
