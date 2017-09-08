@@ -116,6 +116,12 @@ def make_indicators(tab, geo_id):
         return households[households.children > 0].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_with_children():
+        df = orca.get_table(tab)
+        df = df.to_frame(['with_children', 'hh'])
+        return 1.0 * df.with_children / df.hh
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def without_children(households):
         households = households.to_frame([geo_id, 'children'])
         return households[households.children.fillna(0) == 0].groupby(geo_id).size()
@@ -124,6 +130,12 @@ def make_indicators(tab, geo_id):
     def with_seniors(households):
         households = households.to_frame([geo_id, 'seniors'])
         return households[households.seniors > 0].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_with_seniors():
+        df = orca.get_table(tab)
+        df = df.to_frame(['with_seniors', 'hh'])
+        return 1.0 * df.with_seniors / df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def without_seniors(households):
@@ -151,9 +163,21 @@ def make_indicators(tab, geo_id):
         return persons[persons.race_id == 1].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_race_1():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_race_1', 'hh_pop'])
+        return 1.0 * df.hh_pop_race_1 / df.hh_pop
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_race_2(persons):
         persons = persons.to_frame([geo_id, 'race_id'])
         return persons[persons.race_id == 2].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_race_2():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_race_2', 'hh_pop'])
+        return 1.0 * df.hh_pop_race_2 / df.hh_pop
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_race_3(persons):
@@ -161,9 +185,21 @@ def make_indicators(tab, geo_id):
         return persons[persons.race_id == 3].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_race_3():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_race_3', 'hh_pop'])
+        return 1.0 * df.hh_pop_race_3 / df.hh_pop
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_race_4(persons):
         persons = persons.to_frame([geo_id, 'race_id'])
         return persons[persons.race_id == 4].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_race_4():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_race_4', 'hh_pop'])
+        return 1.0 * df.hh_pop_race_4 / df.hh_pop
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_age_00_04(persons):
@@ -288,8 +324,10 @@ def main(run_name):
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
                   'with_children', 'without_children',
                   'with_seniors', 'without_seniors',
+                  'pct_with_children', 'pct_with_seniors',
                   'hh_size_1', 'hh_size_2', 'hh_size_3p',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
+                  'pct_hh_pop_race_1', 'pct_hh_pop_race_2', 'pct_hh_pop_race_3', 'pct_hh_pop_race_4',
                   'hh_pop_age_00_04', 'hh_pop_age_05_17', 'hh_pop_age_18_24', 'hh_pop_age_25_34',
                   'hh_pop_age_35_64', 'hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
@@ -322,6 +360,12 @@ def main(run_name):
     del df['res_vacancy_rate']
     del df['nonres_vacancy_rate']
     del df['household_size']
+    del df['pct_with_children']
+    del df['pct_with_seniors']
+    del df['pct_hh_pop_race_1']
+    del df['pct_hh_pop_race_2']
+    del df['pct_hh_pop_race_3']
+    del df['pct_hh_pop_race_4']
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print sumstd[sumstd > 0]
 
@@ -340,6 +384,12 @@ def main(run_name):
         del df['res_vacancy_rate']
         del df['nonres_vacancy_rate']
         del df['household_size']
+        del df['pct_with_children']
+        del df['pct_with_seniors']
+        del df['pct_hh_pop_race_1']
+        del df['pct_hh_pop_race_2']
+        del df['pct_hh_pop_race_3']
+        del df['pct_hh_pop_race_4']
 
         df[whatnots_local.columns] = whatnots_local
 
