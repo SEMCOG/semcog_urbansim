@@ -617,7 +617,8 @@ def register_btype_distributions(buildings):
     function registers a dictionary where keys are forms, and values are
     dictionaries of building types. In each sub-dictionary, the keys are
     building type IDs, and values are probabilities. These probabilities are
-    generated from region-wide distributions of building types for each form.
+    generated from distributions of building types for each form in each
+    large area.
 
     Parameters
     ----------
