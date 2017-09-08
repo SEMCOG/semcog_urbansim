@@ -159,10 +159,11 @@ name: jobs
 indexs:
 - job_id
 columns:
-  building_id: int64
-  home_based_status: int64
-  sector_id: int64
-  sqft: int64
+  building_id: int32
+  home_based_status: int32
+  sector_id: int32
+  semcog_id: int32
+  sqft: int32
 ---
 name: land_use_types
 indexs:
