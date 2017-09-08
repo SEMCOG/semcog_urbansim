@@ -589,24 +589,56 @@ def random_type(row):
 
 
 def probable_type(row):
+    """
+    Function to pass to form_to_btype_callback in parcels_utils.add_buildings.
+    Reads form for the given row in new buildings DataFrame, gets the
+    building type probabilities from the form_btype_distributions injectable,
+    and chooses a building type based on those probabilities.
+
+    Parameters
+    ----------
+    row : Series
+
+    Returns
+    -------
+    btype : int
+    """
     form = row['form']
-    form_to_btype = orca.get_injectable("form_to_btype")
-    btypes = form_to_btype[form]
-
-    buildings = orca.get_table('buildings').to_frame([''])
-
-    return random.choice(form_to_btype[form])
+    form_to_btype_dists = orca.get_injectable("form_btype_distributions")
+    btype_dists = form_to_btype_dists[form]
+    # keys() and values() guaranteed to be in same order
+    btype = np.random.choice(a=btype_dists.keys(), p=btype_dists.values())
+    return btype
 
 
 def register_btype_distributions(buildings):
     """
+    Prior to adding new buildings selected by the developer model, this
+    function registers a dictionary where keys are forms, and values are
+    dictionaries of building types. In each sub-dictionary, the keys are
+    building type IDs, and values are probabilities. These probabilities are
+    generated from region-wide distributions of building types for each form.
 
+    Parameters
+    ----------
+    buildings : DataFrame
+        Buildings DataFrame (not wrapper) at the time of registration. Must
+        include building_type_id column.
+
+    Returns
+    -------
+    None
     """
     form_to_btype = orca.get_injectable("form_to_btype")
     form_btype_dists = {}
     for form in form_to_btype.keys():
         bldgs = buildings.loc[buildings.building_type_id
                                        .isin(form_to_btype[form])]
+        bldgs_by_type = bldgs.groupby('building_type_id').size()
+        normed = bldgs_by_type / sum(bldgs_by_type)
+        form_btype_dists[form] = normed.to_dict()
+
+    orca.add_injectable("form_btype_distributions", form_btype_dists)
 
 
 def run_developer(lid, forms, agents, buildings, supply_fname,
@@ -642,10 +674,12 @@ def run_developer(lid, forms, agents, buildings, supply_fname,
     if new_buildings is None or len(new_buildings) == 0:
         return
 
+    register_btype_distributions(b)
+
     parcel_utils.add_buildings(dev.feasibility,
                                buildings,
                                new_buildings,
-                               random_type,
+                               probable_type,
                                add_more_columns_callback,
                                supply_fname, True,
                                unplace_agents, pipeline)
