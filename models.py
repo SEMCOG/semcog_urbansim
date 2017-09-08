@@ -77,7 +77,7 @@ def nrh_simulate(buildings, nodes_walk):
 
 def make_repm_func(model_name, yaml_file, dep_var):
     """
-    Generator function for block REPMs.
+    Generator function for single-model REPMs.
     """
     @orca.step(model_name)
     def func():
