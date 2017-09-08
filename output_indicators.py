@@ -87,8 +87,8 @@ def make_indicators(tab, geo_id):
     @orca.column(tab, cache=True, cache_scope='iteration')
     def nonres_vacancy_rate():
         df = orca.get_table(tab)
-        df = df.to_frame(['jobs_total', 'job_spaces'])
-        return 1.0 - df.jobs_total / df.job_spaces
+        df = df.to_frame(['jobs_total', 'jobs_home_based', 'job_spaces'])
+        return 1.0 - (df.jobs_total - df.jobs_home_based) / df.job_spaces
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_1(households):
@@ -235,6 +235,11 @@ def make_indicators(tab, geo_id):
     def jobs_total(jobs):
         jobs = jobs.to_frame([geo_id])
         return jobs.groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def jobs_home_based(jobs):
+        jobs = jobs.to_frame([geo_id, "home_based_status"])
+        return jobs[jobs.home_based_status == 1].groupby(geo_id).size()
 
     def make_job_sector_ind(i):
         @orca.column(tab, 'jobs_sec_' + str(i).zfill(2), cache=True, cache_scope='iteration')
