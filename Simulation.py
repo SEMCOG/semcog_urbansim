@@ -10,11 +10,9 @@ import output_indicators
 data_out = utils.get_run_filename()
 
 orca.run(['build_networks',
-          "neighborhood_vars",
-          "nrh_simulate",  # non-residential rent hedonic
-          "rsh_simulate",  # residential sales hedonic
-          "increase_property_values",  # Hack to make more feasibility
-          ])
+          "neighborhood_vars"] +
+          orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
+          ["increase_property_values"])  # Hack to make more feasibility
 
 orca.run([
     "neighborhood_vars",
@@ -29,9 +27,10 @@ orca.run([
     "residential_developer",
     "non_residential_developer",
     "nrh_simulate",
-    "rsh_simulate",
-    "increase_property_values",  # Hack to make more feasibility
-    ] + orca.get_injectable('hlcm_step_names') +
+    "rsh_simulate"] + 
+    orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
+    ["increase_property_values"] +  # Hack to make more feasibility
+    orca.get_injectable('hlcm_step_names') +
     ["elcm_simulate",
     "government_jobs_scaling_model",
     "refiner",

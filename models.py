@@ -75,6 +75,33 @@ def nrh_simulate(buildings, nodes_walk):
                                   "sqft_price_nonres")
 
 
+def make_repm_func(model_name, yaml_file, dep_var):
+    """
+    Generator function for block REPMs.
+    """
+    @orca.step(model_name)
+    def func():
+        buildings = orca.get_table('buildings')
+        nodes_walk = orca.get_table('nodes_walk')
+        print yaml_file
+        return utils.hedonic_simulate(yaml_file, buildings,
+                                      nodes_walk, dep_var)
+    return func
+
+repm_step_names = []
+for repm_config in os.listdir('./configs/repm'):
+    model_name = repm_config.split('.')[0]
+
+    if repm_config.startswith('res'):
+        dep_var = 'sqft_price_res'
+    elif repm_config.startswith('nonres'):
+        dep_var = 'sqft_price_nonres'
+
+    make_repm_func(model_name, "repm/" + repm_config, dep_var)
+    repm_step_names.append(model_name)
+orca.add_injectable('repm_step_names', repm_step_names)
+
+
 @orca.step()
 def increase_property_values(buildings, income_growth_rates):
     # Hack to make more feasibility
