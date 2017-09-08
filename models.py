@@ -654,7 +654,6 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
     from developer import develop
     print 'processing large area id:', lid
     cfg = misc.config(cfg)
-    b = buildings.to_frame([supply_fname, "large_area_id", "building_type_id"])
     dev = develop.Developer.from_yaml(orca.get_table('feasibility_' + str(lid)).to_frame(), forms,
                                       target_units, parcel_size,
                                       ave_unit_size, current_units,
@@ -669,8 +668,7 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
     if new_buildings is None or len(new_buildings) == 0:
         return
 
-    register_btype_distributions(b)
-
+    register_btype_distributions(buildings.to_frame(["building_type_id"]))
     parcel_utils.add_buildings(dev.feasibility,
                                buildings,
                                new_buildings,
