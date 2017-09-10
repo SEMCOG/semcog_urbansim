@@ -94,6 +94,8 @@ def to_frame(tables, cfg, additional_columns=[]):
                                tables=tables, columns=columns)
     else:
         df = tables[0].to_frame(columns)
+    df = df.replace([np.inf, -np.inf], 0)
+    df = df.fillna(0)
     df = deal_with_nas(df)
     return df
 
