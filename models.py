@@ -588,6 +588,60 @@ def random_type(row):
     return random.choice(form_to_btype[form])
 
 
+def probable_type(row):
+    """
+    Function to pass to form_to_btype_callback in parcels_utils.add_buildings.
+    Reads form for the given row in new buildings DataFrame, gets the
+    building type probabilities from the form_btype_distributions injectable,
+    and chooses a building type based on those probabilities.
+
+    Parameters
+    ----------
+    row : Series
+
+    Returns
+    -------
+    btype : int
+    """
+    form = row['form']
+    form_to_btype_dists = orca.get_injectable("form_btype_distributions")
+    btype_dists = form_to_btype_dists[form]
+    # keys() and values() guaranteed to be in same order
+    btype = np.random.choice(a=btype_dists.keys(), p=btype_dists.values())
+    return btype
+
+
+def register_btype_distributions(buildings):
+    """
+    Prior to adding new buildings selected by the developer model, this
+    function registers a dictionary where keys are forms, and values are
+    dictionaries of building types. In each sub-dictionary, the keys are
+    building type IDs, and values are probabilities. These probabilities are
+    generated from distributions of building types for each form in each
+    large area.
+
+    Parameters
+    ----------
+    buildings : DataFrame
+        Buildings DataFrame (not wrapper) at the time of registration. Must
+        include building_type_id column.
+
+    Returns
+    -------
+    None
+    """
+    form_to_btype = orca.get_injectable("form_to_btype")
+    form_btype_dists = {}
+    for form in form_to_btype.keys():
+        bldgs = buildings.loc[buildings.building_type_id
+                                       .isin(form_to_btype[form])]
+        bldgs_by_type = bldgs.groupby('building_type_id').size()
+        normed = bldgs_by_type / sum(bldgs_by_type)
+        form_btype_dists[form] = normed.to_dict()
+
+    orca.add_injectable("form_btype_distributions", form_btype_dists)
+
+
 def run_developer(target_units, lid, forms, buildings, supply_fname,
                   parcel_size, ave_unit_size, current_units, cfg,
                   add_more_columns_callback=None,
@@ -617,7 +671,7 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
     parcel_utils.add_buildings(dev.feasibility,
                                buildings,
                                new_buildings,
-                               random_type,
+                               probable_type,
                                add_more_columns_callback,
                                supply_fname, True,
                                unplace_agents, pipeline)
@@ -627,13 +681,14 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
 def residential_developer(households, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
-    orig_buildings = orca.get_table('buildings').to_frame(["residential_units", "large_area_id"])
+    orig_buildings = orca.get_table('buildings').to_frame(["residential_units", "large_area_id", "building_type_id"])
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate)
         target_units = parcel_utils.compute_units_to_build((households.large_area_id == lid).sum(),
                                                            la_orig_buildings.residential_units.sum(),
                                                            target_vacancy)
+        register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
             lid,
@@ -651,7 +706,7 @@ def residential_developer(households, parcels, target_vacancies):
 def non_residential_developer(jobs, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
-    orig_buildings = orca.get_table('buildings').to_frame(["job_spaces", "large_area_id"])
+    orig_buildings = orca.get_table('buildings').to_frame(["job_spaces", "large_area_id", "building_type_id"])
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate)
@@ -659,6 +714,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         target_units = parcel_utils.compute_units_to_build(num_jobs,
                                                            la_orig_buildings.job_spaces.sum(),
                                                            target_vacancy)
+        register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
             lid,
