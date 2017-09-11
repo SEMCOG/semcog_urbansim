@@ -668,7 +668,6 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
     if new_buildings is None or len(new_buildings) == 0:
         return
 
-    register_btype_distributions(buildings.to_frame(["building_type_id"]))
     parcel_utils.add_buildings(dev.feasibility,
                                buildings,
                                new_buildings,
@@ -682,13 +681,14 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
 def residential_developer(households, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
-    orig_buildings = orca.get_table('buildings').to_frame(["residential_units", "large_area_id"])
+    orig_buildings = orca.get_table('buildings').to_frame(["residential_units", "large_area_id", "building_type_id"])
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate)
         target_units = parcel_utils.compute_units_to_build((households.large_area_id == lid).sum(),
                                                            la_orig_buildings.residential_units.sum(),
                                                            target_vacancy)
+        register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
             lid,
@@ -706,7 +706,7 @@ def residential_developer(households, parcels, target_vacancies):
 def non_residential_developer(jobs, parcels, target_vacancies):
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[target_vacancies.year == orca.get_injectable('year')]
-    orig_buildings = orca.get_table('buildings').to_frame(["job_spaces", "large_area_id"])
+    orig_buildings = orca.get_table('buildings').to_frame(["job_spaces", "large_area_id", "building_type_id"])
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate)
@@ -714,6 +714,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         target_units = parcel_utils.compute_units_to_build(num_jobs,
                                                            la_orig_buildings.job_spaces.sum(),
                                                            target_vacancy)
+        register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
             lid,
