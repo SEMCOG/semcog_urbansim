@@ -582,12 +582,6 @@ def add_extra_columns_res(df):
     return df
 
 
-def random_type(row):
-    form = row['form']
-    form_to_btype = orca.get_injectable("form_to_btype")
-    return random.choice(form_to_btype[form])
-
-
 def probable_type(row):
     """
     Function to pass to form_to_btype_callback in parcels_utils.add_buildings.
