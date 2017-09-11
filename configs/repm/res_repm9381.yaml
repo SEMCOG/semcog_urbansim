@@ -2,28 +2,33 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 9381
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 9381
 
 predict_filters: hedonic_id == 9381
 
 model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
+    - parcels_pptytax
     - b_is_newerthan2010
     - crime_other_rate
     - zones_empden
     - nodes_walk_hhs_with_children
     - nodes_walk_ave_unit_sqft
+    - popden
     - walk_nearest_park
     - nodes_drv_drv_45min_jobs
     - nodes_walk_ln_popden
     - nodes_walk_ave_lot_sqft
     - drv_nearest_healthcenter
-    - stories
+    - drv_nearest_hospital
     - nodes_drv_drv_20min_pop
     - zones_transit_jobs_50min
     - nodes_walk_ave_income
-    - nodes_walk_sum_nonresidential_units
 
 ytransform: np.exp
 
@@ -31,57 +36,60 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: -0.41640563040939543
-        b_is_newerthan2010: 1.0673298024126505
-        crime_other_rate: -6.748777998841292e-06
-        drv_nearest_healthcenter: -0.006013388102196322
-        nodes_drv_drv_20min_pop: -0.032781466038778836
-        nodes_drv_drv_45min_jobs: 0.14076585125303448
-        nodes_walk_ave_income: 0.1967421079595299
-        nodes_walk_ave_lot_sqft: 0.2461732654280995
-        nodes_walk_ave_unit_sqft: 1.410383586123737e-05
-        nodes_walk_hhs_with_children: -0.003423521965105337
-        nodes_walk_ln_popden: 0.23810849432990994
-        nodes_walk_sum_nonresidential_units: -0.04758167066764752
-        stories: -0.046087675776464186
-        walk_nearest_park: 2.222307759028419e-06
-        zones_empden: -0.018965645427054742
-        zones_transit_jobs_50min: 1.7980444532352763e-06
+        Intercept: 0.1376874298495382
+        b_is_newerthan2010: 1.0502077392306324
+        crime_other_rate: -1.1435684518952468e-05
+        drv_nearest_healthcenter: -0.004961117110934451
+        drv_nearest_hospital: 0.006500137179071986
+        nodes_drv_drv_20min_pop: 0.020527030544760703
+        nodes_drv_drv_45min_jobs: 0.0745598386832941
+        nodes_walk_ave_income: 0.20876089367908568
+        nodes_walk_ave_lot_sqft: 0.17044536752968226
+        nodes_walk_ave_unit_sqft: 2.5413833578338346e-05
+        nodes_walk_hhs_with_children: -0.003509863617395135
+        nodes_walk_ln_popden: 0.23523722221025317
+        parcels_pptytax: -0.0026830587403120433
+        popden: 0.022525211828852316
+        walk_nearest_park: 1.3412551012875934e-06
+        zones_empden: -0.02396435143586062
+        zones_transit_jobs_50min: 1.2403647106138665e-06
     Std. Error:
-        Intercept: 0.051136686171680185
-        b_is_newerthan2010: 0.006830098750016326
-        crime_other_rate: 1.0593645507353312e-06
-        drv_nearest_healthcenter: 0.0003125974504784121
-        nodes_drv_drv_20min_pop: 0.004589580255666768
-        nodes_drv_drv_45min_jobs: 0.004199639739469353
-        nodes_walk_ave_income: 0.0035946886219613825
-        nodes_walk_ave_lot_sqft: 0.004424316637816426
-        nodes_walk_ave_unit_sqft: 2.7307929350800587e-06
-        nodes_walk_hhs_with_children: 8.158538910970916e-05
-        nodes_walk_ln_popden: 0.002368879228712886
-        nodes_walk_sum_nonresidential_units: 0.0012794451951029016
-        stories: 0.0022987819377659107
-        walk_nearest_park: 6.653981876009668e-07
-        zones_empden: 0.0009096301465983998
-        zones_transit_jobs_50min: 1.467336810763012e-07
+        Intercept: 0.051775679013287064
+        b_is_newerthan2010: 0.008090522355648052
+        crime_other_rate: 1.6010193484613076e-06
+        drv_nearest_healthcenter: 0.00033146896892672967
+        drv_nearest_hospital: 0.000357906849941408
+        nodes_drv_drv_20min_pop: 0.005713762449719028
+        nodes_drv_drv_45min_jobs: 0.005427033192538308
+        nodes_walk_ave_income: 0.0035930803116965278
+        nodes_walk_ave_lot_sqft: 0.00395624089738293
+        nodes_walk_ave_unit_sqft: 2.5874280938960217e-06
+        nodes_walk_hhs_with_children: 8.252927955917564e-05
+        nodes_walk_ln_popden: 0.0024384457161547956
+        parcels_pptytax: 0.00044642934159679895
+        popden: 0.0013258114474868298
+        walk_nearest_park: 6.730060980136203e-07
+        zones_empden: 0.0009809000623237547
+        zones_transit_jobs_50min: 1.4849406798351382e-07
     T-Score:
-        Intercept: -8.142992078356526
-        b_is_newerthan2010: 156.26857553268894
-        crime_other_rate: -6.370590741550487
-        drv_nearest_healthcenter: -19.23684308043199
-        nodes_drv_drv_20min_pop: -7.14258477086297
-        nodes_drv_drv_45min_jobs: 33.51855396787464
-        nodes_walk_ave_income: 54.731335214280904
-        nodes_walk_ave_lot_sqft: 55.64096912141345
-        nodes_walk_ave_unit_sqft: 5.164740130991985
-        nodes_walk_hhs_with_children: -41.96243962876334
-        nodes_walk_ln_popden: 100.51525271690805
-        nodes_walk_sum_nonresidential_units: -37.189299588420965
-        stories: -20.04873755935931
-        walk_nearest_park: 3.3398163692641685
-        zones_empden: -20.84984265085933
-        zones_transit_jobs_50min: 12.253795039056486
+        Intercept: 2.6593070815006365
+        b_is_newerthan2010: 129.80716115288587
+        crime_other_rate: -7.142752228411834
+        drv_nearest_healthcenter: -14.967063514265472
+        drv_nearest_hospital: 18.161533315543153
+        nodes_drv_drv_20min_pop: 3.592559320657461
+        nodes_drv_drv_45min_jobs: 13.738600085550852
+        nodes_walk_ave_income: 58.100814779872266
+        nodes_walk_ave_lot_sqft: 43.08265647888949
+        nodes_walk_ave_unit_sqft: 9.822044383877524
+        nodes_walk_hhs_with_children: -42.52870782518429
+        nodes_walk_ln_popden: 96.4701492642619
+        parcels_pptytax: -6.010041209915136
+        popden: 16.98975512057198
+        walk_nearest_park: 1.9929315726058234
+        zones_empden: -24.430981662993283
+        zones_transit_jobs_50min: 8.352957983153743
 
-fit_rsquared_adj: 0.6160785987360964
+fit_rsquared_adj: 0.5311443086529317
 
-fit_rsquared: 0.616173935562832
+fit_rsquared: 0.5312701442825812

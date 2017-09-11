@@ -2,7 +2,11 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 523
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 523
 
 predict_filters: hedonic_id == 523
 

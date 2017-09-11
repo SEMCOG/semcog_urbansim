@@ -2,21 +2,23 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 52
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 52
 
 predict_filters: hedonic_id == 52
 
 model_expression:
     left_side: np.log1p(sqft_price_nonres)
     right_side:
-    - zones_ln_empden_2
-    - bldg_empratio_12
-    - walk_nearest_library
-    - nodes_walk_ave_lot_sqft
-    - zones_transit_jobs_30min
+    - nodes_walk_hhsize
+    - zones_ln_empden_14
+    - zones_ln_empden_16
     - nodes_walk_ave_nonres_sqft_price
     - parcels_total_units
-    - nodes_walk_race_3_hhs
+    - nodes_walk_percent_high_income
 
 ytransform: np.exp
 
@@ -24,36 +26,30 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: -0.9346824521361259
-        bldg_empratio_12: 8.141386341172936
-        nodes_walk_ave_lot_sqft: 0.4307606298770293
-        nodes_walk_ave_nonres_sqft_price: 0.015005068761253407
-        nodes_walk_race_3_hhs: -0.07450993042822715
-        parcels_total_units: -0.014405204469732936
-        walk_nearest_library: -0.00014265758139522856
-        zones_ln_empden_2: 1.6728644370123809
-        zones_transit_jobs_30min: 2.0613506160733702e-05
+        Intercept: 3.097536601238025
+        nodes_walk_ave_nonres_sqft_price: 0.008812427029728068
+        nodes_walk_hhsize: -0.7846537085713284
+        nodes_walk_percent_high_income: 1.4609693516166156
+        parcels_total_units: -0.01043755639295915
+        zones_ln_empden_14: -0.3618144861026753
+        zones_ln_empden_16: 1.5035504850268002
     Std. Error:
-        Intercept: 1.3308805155553598
-        bldg_empratio_12: 1.405337715877293
-        nodes_walk_ave_lot_sqft: 0.12094815475302406
-        nodes_walk_ave_nonres_sqft_price: 0.0027637621635606974
-        nodes_walk_race_3_hhs: 0.022519850270210626
-        parcels_total_units: 0.004679736139458972
-        walk_nearest_library: 6.367959547886268e-05
-        zones_ln_empden_2: 0.6619304183229966
-        zones_transit_jobs_30min: 7.553704474036797e-06
+        Intercept: 0.2662273734736875
+        nodes_walk_ave_nonres_sqft_price: 0.002239804277739774
+        nodes_walk_hhsize: 0.17886944111516148
+        nodes_walk_percent_high_income: 0.7384577453847085
+        parcels_total_units: 0.003506452253385579
+        zones_ln_empden_14: 0.11745848115945103
+        zones_ln_empden_16: 0.31357328214105085
     T-Score:
-        Intercept: -0.7023038065487754
-        bldg_empratio_12: 5.793188533398616
-        nodes_walk_ave_lot_sqft: 3.5615312259756404
-        nodes_walk_ave_nonres_sqft_price: 5.429218533740111
-        nodes_walk_race_3_hhs: -3.308633473766443
-        parcels_total_units: -3.078208693919725
-        walk_nearest_library: -2.2402400694046687
-        zones_ln_empden_2: 2.527251189408382
-        zones_transit_jobs_30min: 2.7289267446966425
+        Intercept: 11.634929048887487
+        nodes_walk_ave_nonres_sqft_price: 3.934462987373541
+        nodes_walk_hhsize: -4.386739868360996
+        nodes_walk_percent_high_income: 1.978406158981386
+        parcels_total_units: -2.9766714726776597
+        zones_ln_empden_14: -3.080360673245116
+        zones_ln_empden_16: 4.794893476767821
 
-fit_rsquared_adj: 0.5703746494191243
+fit_rsquared_adj: 0.5056674989694524
 
-fit_rsquared: 0.6037436086875418
+fit_rsquared: 0.5386229990381556

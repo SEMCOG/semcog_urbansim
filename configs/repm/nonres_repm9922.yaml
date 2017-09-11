@@ -2,26 +2,29 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 9922
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 9922
 
 predict_filters: hedonic_id == 9922
 
 model_expression:
     left_side: np.log1p(sqft_price_nonres)
     right_side:
+    - nodes_walk_highinc_hhs
     - zones_logsum_job_low_income
     - bldg_empratio_16
     - year_built
     - crime_other_rate
     - walk_nearest_library
     - b_ln_building_sqft
-    - nodes_walk_percent_high_income
+    - nodes_walk_hhsize
     - nodes_walk_sum_residential_units
     - b_total_jobs
-    - nodes_walk_retail_jobs
-    - improvement_value
-    - nodes_walk_race_3_hhs
-    - drv_nearest_urgentcare
+    - nodes_walk_sum_nonresidential_units
+    - drv_nearest_hospital
     - nodes_drv_drv_20min_pop
     - bldg_empratio_5
     - zones_a_ln_retail_emp_15min_drive_alone
@@ -32,60 +35,57 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 8.02234830535068
-        b_ln_building_sqft: -0.516016745412388
-        b_total_jobs: -0.0009935459810798371
-        bldg_empratio_16: 0.9101140086189454
-        bldg_empratio_5: 0.6490271285565979
-        crime_other_rate: -2.194379505185166e-05
-        drv_nearest_urgentcare: -0.03408536316360194
-        improvement_value: 2.632533063472532e-07
-        nodes_drv_drv_20min_pop: -0.17900258262956925
-        nodes_walk_percent_high_income: 0.4551709547645464
-        nodes_walk_race_3_hhs: 0.00949861468934049
-        nodes_walk_retail_jobs: 0.0002708136637396792
-        nodes_walk_sum_residential_units: -0.026229422094039518
-        walk_nearest_library: 2.621587427584006e-05
-        year_built: 0.00012134625319761546
-        zones_a_ln_retail_emp_15min_drive_alone: 0.25860497089148304
-        zones_logsum_job_low_income: -2.741461454876256e-07
+        Intercept: 8.361863196677476
+        b_ln_building_sqft: -0.4042235878890693
+        b_total_jobs: 0.0012385828277186092
+        bldg_empratio_16: 0.8730640432330847
+        bldg_empratio_5: 0.6843725167803562
+        crime_other_rate: -2.454128705773981e-05
+        drv_nearest_hospital: -0.02397915232226904
+        nodes_drv_drv_20min_pop: -0.2261356282304585
+        nodes_walk_hhsize: -0.07126677450028718
+        nodes_walk_highinc_hhs: 0.003011667076115776
+        nodes_walk_sum_nonresidential_units: -0.05983049491493163
+        nodes_walk_sum_residential_units: -0.04135892544717207
+        walk_nearest_library: 2.9111549336647344e-05
+        year_built: 0.00015230302057052782
+        zones_a_ln_retail_emp_15min_drive_alone: 0.2476999402404428
+        zones_logsum_job_low_income: -3.763384369953634e-07
     Std. Error:
-        Intercept: 0.44115439297006825
-        b_ln_building_sqft: 0.016216332118436066
-        b_total_jobs: 0.0004798890140272376
-        bldg_empratio_16: 0.11787554992435385
-        bldg_empratio_5: 0.030962300282676894
-        crime_other_rate: 9.019460588436415e-06
-        drv_nearest_urgentcare: 0.006994729984935753
-        improvement_value: 2.6175456047040687e-08
-        nodes_drv_drv_20min_pop: 0.043907120366973584
-        nodes_walk_percent_high_income: 0.12944021889502136
-        nodes_walk_race_3_hhs: 0.0035426192578439895
-        nodes_walk_retail_jobs: 0.00011173600346896921
-        nodes_walk_sum_residential_units: 0.010826540355956595
-        walk_nearest_library: 6.52894390229901e-06
-        year_built: 1.7763854034993552e-05
-        zones_a_ln_retail_emp_15min_drive_alone: 0.041010093239683645
-        zones_logsum_job_low_income: 9.542198665248009e-08
+        Intercept: 0.5868340340446595
+        b_ln_building_sqft: 0.015953127195373618
+        b_total_jobs: 0.0004385588014141423
+        bldg_empratio_16: 0.12901151698568553
+        bldg_empratio_5: 0.032214708488050844
+        crime_other_rate: 9.504419850954017e-06
+        drv_nearest_hospital: 0.006209766231515213
+        nodes_drv_drv_20min_pop: 0.048164230437135094
+        nodes_walk_hhsize: 0.03479771854762741
+        nodes_walk_highinc_hhs: 0.0008291897987875745
+        nodes_walk_sum_nonresidential_units: 0.014335034315288117
+        nodes_walk_sum_residential_units: 0.015210276419201188
+        walk_nearest_library: 6.922006935770724e-06
+        year_built: 1.8574551783349164e-05
+        zones_a_ln_retail_emp_15min_drive_alone: 0.04575009760626348
+        zones_logsum_job_low_income: 1.0011189917968606e-07
     T-Score:
-        Intercept: 18.18489951180195
-        b_ln_building_sqft: -31.820805200809712
-        b_total_jobs: -2.070366172257166
-        bldg_empratio_16: 7.720973596331108
-        bldg_empratio_5: 20.96185111025883
-        crime_other_rate: -2.432938736933465
-        drv_nearest_urgentcare: -4.8730062828744085
-        improvement_value: 10.057257679642825
-        nodes_drv_drv_20min_pop: -4.076846332291308
-        nodes_walk_percent_high_income: 3.51645693008059
-        nodes_walk_race_3_hhs: 2.6812406296016333
-        nodes_walk_retail_jobs: 2.4236920538766924
-        nodes_walk_sum_residential_units: -2.4226965615667333
-        walk_nearest_library: 4.0153315249972925
-        year_built: 6.831076913746973
-        zones_a_ln_retail_emp_15min_drive_alone: 6.305885953003455
-        zones_logsum_job_low_income: -2.872987191998484
+        Intercept: 14.249110841517957
+        b_ln_building_sqft: -25.33820378529255
+        b_total_jobs: 2.8242115395353418
+        bldg_empratio_16: 6.767334139090509
+        bldg_empratio_5: 21.244100875046104
+        crime_other_rate: -2.582092062702433
+        drv_nearest_hospital: -3.8615225482357673
+        nodes_drv_drv_20min_pop: -4.695094807454988
+        nodes_walk_hhsize: -2.0480300857294655
+        nodes_walk_highinc_hhs: 3.6320599704909275
+        nodes_walk_sum_nonresidential_units: -4.173725266295542
+        nodes_walk_sum_residential_units: -2.719143578150972
+        walk_nearest_library: 4.20565156995266
+        year_built: 8.199552933872527
+        zones_a_ln_retail_emp_15min_drive_alone: 5.41419479302993
+        zones_logsum_job_low_income: -3.759177880742144
 
-fit_rsquared_adj: 0.7019617533473044
+fit_rsquared_adj: 0.6606766588382065
 
-fit_rsquared: 0.7068982046376182
+fit_rsquared: 0.6659841146436568

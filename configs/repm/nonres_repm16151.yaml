@@ -2,7 +2,11 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 16151
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 16151
 
 predict_filters: hedonic_id == 16151
 
@@ -28,48 +32,48 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 5.308361476663327
-        b_ln_building_sqft: -0.06697364091795982
-        bldg_empratio_14: 0.37503254995366136
-        crime_other_rate: -2.796456247119844e-05
-        nodes_walk_ave_nonres_sqft_price: 0.00345742768464678
-        nodes_walk_hhsize: -0.17514609211697563
-        nodes_walk_highinc_hhs: 0.0029939822669798905
-        parcels_total_units: -0.0018604739849080042
-        walk_nearest_library: -4.2047666707182476e-05
-        walk_nearest_urgentcare: -4.3259911199747214e-05
-        year_built: 9.158483255948825e-05
-        zones_employment: -8.965598891234765e-05
-        zones_ln_empden_15: -0.22171406641269398
+        Intercept: 5.31375691305344
+        b_ln_building_sqft: -0.06778717459216063
+        bldg_empratio_14: 0.37717164996059405
+        crime_other_rate: -2.7905250772536625e-05
+        nodes_walk_ave_nonres_sqft_price: 0.0034610597356708956
+        nodes_walk_hhsize: -0.17583761791883742
+        nodes_walk_highinc_hhs: 0.002991670831638035
+        parcels_total_units: -0.0018589156243821623
+        walk_nearest_library: -4.205419318067492e-05
+        walk_nearest_urgentcare: -4.320912485878243e-05
+        year_built: 9.11957694183854e-05
+        zones_employment: -8.93983801301528e-05
+        zones_ln_empden_15: -0.22062276868117758
     Std. Error:
-        Intercept: 0.30955277447380586
-        b_ln_building_sqft: 0.02630965288053198
-        bldg_empratio_14: 0.06663997627926242
-        crime_other_rate: 8.603744084587033e-06
-        nodes_walk_ave_nonres_sqft_price: 0.0006607892660594285
-        nodes_walk_hhsize: 0.06453790677289208
-        nodes_walk_highinc_hhs: 0.0008454242188123035
-        parcels_total_units: 0.0002371797846496338
-        walk_nearest_library: 1.4370277530488347e-05
-        walk_nearest_urgentcare: 1.4461297905463643e-05
-        year_built: 3.2817956015745356e-05
-        zones_employment: 1.4813693414529855e-05
-        zones_ln_empden_15: 0.048191839870749195
+        Intercept: 0.31559847544321584
+        b_ln_building_sqft: 0.027377721030608995
+        bldg_empratio_14: 0.06758186802298297
+        crime_other_rate: 8.644926226200611e-06
+        nodes_walk_ave_nonres_sqft_price: 0.0006635031446821267
+        nodes_walk_hhsize: 0.06495814692455303
+        nodes_walk_highinc_hhs: 0.0008486516218886908
+        parcels_total_units: 0.00023821282109491056
+        walk_nearest_library: 1.4424588515903241e-05
+        walk_nearest_urgentcare: 1.4517287097670563e-05
+        year_built: 3.302907754470354e-05
+        zones_employment: 1.5017279707293763e-05
+        zones_ln_empden_15: 0.04899580458986936
     T-Score:
-        Intercept: 17.14848618522887
-        b_ln_building_sqft: -2.5455919628463612
-        bldg_empratio_14: 5.627741348256858
-        crime_other_rate: -3.250278273768611
-        nodes_walk_ave_nonres_sqft_price: 5.232269745035226
-        nodes_walk_hhsize: -2.7138483547864682
-        nodes_walk_highinc_hhs: 3.541396378715049
-        parcels_total_units: -7.844150746895775
-        walk_nearest_library: -2.9260163290495314
-        walk_nearest_urgentcare: -2.9914265982587307
-        year_built: 2.790692769395748
-        zones_employment: -6.052237372781694
-        zones_ln_empden_15: -4.600655775071722
+        Intercept: 16.837080425027334
+        b_ln_building_sqft: -2.475997710560818
+        bldg_empratio_14: 5.580959227589374
+        crime_other_rate: -3.2279339397903457
+        nodes_walk_ave_nonres_sqft_price: 5.216342625367709
+        nodes_walk_hhsize: -2.706937100946978
+        nodes_walk_highinc_hhs: 3.5252048714406663
+        parcels_total_units: -7.803591829515839
+        walk_nearest_library: -2.9154518435177397
+        walk_nearest_urgentcare: -2.9763911513271477
+        year_built: 2.761075276624228
+        zones_employment: -5.953034229410589
+        zones_ln_empden_15: -4.502891023587655
 
-fit_rsquared_adj: 0.8066051393487461
+fit_rsquared_adj: 0.7866456023435344
 
-fit_rsquared: 0.8149531189452032
+fit_rsquared: 0.7959218805025112

@@ -2,24 +2,31 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 9984
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 9984
 
 predict_filters: hedonic_id == 9984
 
 model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
-    - walk_nearest_healthcenter
-    - b_is_pre_1945
-    - walk_nearest_grocery
-    - zones_households
     - parcels_pptytax
-    - b_ln_parcels_parcel_far
-    - nodes_walk_retail_jobs
-    - improvement_value
+    - b_is_pre_1945
+    - zones_logsum_pop_low_income
+    - zones_employment
+    - walk_nearest_library
+    - nodes_walk_industrial
+    - zones_households
+    - nodes_walk_percent_race4
+    - popden
+    - nodes_walk_lowinc_hhs
+    - drv_nearest_urgentcare
+    - nodes_drv_drv_20min_pop
     - nodes_drv_drv_30min_jobs
-    - nodes_walk_ave_income
-    - nodes_walk_percent_hh_with_children
+    - zones_transit_jobs_30min
 
 ytransform: np.exp
 
@@ -27,45 +34,54 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: -39.41477294700593
-        b_is_pre_1945: 1.3513386357208261
-        b_ln_parcels_parcel_far: 15.956305850823691
-        improvement_value: 3.6466396206004324e-05
-        nodes_drv_drv_30min_jobs: 1.4188478544608292
-        nodes_walk_ave_income: 1.586829595356253
-        nodes_walk_percent_hh_with_children: 20.37877990198359
-        nodes_walk_retail_jobs: 0.018955182340205802
-        parcels_pptytax: -0.016209991845492138
-        walk_nearest_grocery: 0.0005264634178991338
-        walk_nearest_healthcenter: -0.00044773505219023086
-        zones_households: -0.000327317374620115
+        Intercept: -10.87171459992437
+        b_is_pre_1945: 0.46315207473876485
+        drv_nearest_urgentcare: -0.06715602730985613
+        nodes_drv_drv_20min_pop: -3.80080167626114
+        nodes_drv_drv_30min_jobs: 5.266767756840773
+        nodes_walk_industrial: 0.0066835815584949535
+        nodes_walk_lowinc_hhs: 0.004126210864211527
+        nodes_walk_percent_race4: -10.11858354082886
+        parcels_pptytax: -0.011372359710934702
+        popden: 0.154201947224527
+        walk_nearest_library: 0.00011626967069274991
+        zones_employment: -5.1551626988450614e-05
+        zones_households: -0.0013259330724542898
+        zones_logsum_pop_low_income: -3.523478741593989e-06
+        zones_transit_jobs_30min: 0.00015168251914222881
     Std. Error:
-        Intercept: 0.728888612037539
-        b_is_pre_1945: 0.03495154790634838
-        b_ln_parcels_parcel_far: 0.38514971727209424
-        improvement_value: 1.153338132186428e-06
-        nodes_drv_drv_30min_jobs: 0.03470589020476276
-        nodes_walk_ave_income: 0.051607753090749456
-        nodes_walk_percent_hh_with_children: 0.2239862083500781
-        nodes_walk_retail_jobs: 0.0006256011929222266
-        parcels_pptytax: 0.002378613904698187
-        walk_nearest_grocery: 7.681633470261069e-06
-        walk_nearest_healthcenter: 1.3123341577260725e-05
-        zones_households: 2.6331938323892638e-05
+        Intercept: 0.16706114055009294
+        b_is_pre_1945: 0.010146700676843303
+        drv_nearest_urgentcare: 0.00233104409455589
+        nodes_drv_drv_20min_pop: 0.02940437647417726
+        nodes_drv_drv_30min_jobs: 0.03365392532140526
+        nodes_walk_industrial: 0.00017854089081870516
+        nodes_walk_lowinc_hhs: 7.570839323404731e-05
+        nodes_walk_percent_race4: 0.2031228753773689
+        parcels_pptytax: 0.0007205008736437307
+        popden: 0.0019299547425740957
+        walk_nearest_library: 5.156228795604169e-06
+        zones_employment: 6.790254356786098e-06
+        zones_households: 1.3513629769767027e-05
+        zones_logsum_pop_low_income: 2.6358491568066975e-08
+        zones_transit_jobs_30min: 1.558774512673449e-06
     T-Score:
-        Intercept: -54.075166350624784
-        b_is_pre_1945: 38.663198532485524
-        b_ln_parcels_parcel_far: 41.4288395791581
-        improvement_value: 31.618131047894476
-        nodes_drv_drv_30min_jobs: 40.882047574337044
-        nodes_walk_ave_income: 30.747891553540388
-        nodes_walk_percent_hh_with_children: 90.98229775885434
-        nodes_walk_retail_jobs: 30.29914673222541
-        parcels_pptytax: -6.814889887541022
-        walk_nearest_grocery: 68.53534732388648
-        walk_nearest_healthcenter: -34.11745777965859
-        zones_households: -12.430432222420908
+        Intercept: -65.07626228413369
+        b_is_pre_1945: 45.64558367191867
+        drv_nearest_urgentcare: -28.80941955010537
+        nodes_drv_drv_20min_pop: -129.25972702053315
+        nodes_drv_drv_30min_jobs: 156.497873770787
+        nodes_walk_industrial: 37.43445844728997
+        nodes_walk_lowinc_hhs: 54.50136620196956
+        nodes_walk_percent_race4: -49.81508617397325
+        parcels_pptytax: -15.783963804821205
+        popden: 79.89925557469739
+        walk_nearest_library: 22.54936219895306
+        zones_employment: -7.59200234331878
+        zones_households: -98.11820325436877
+        zones_logsum_pop_low_income: -133.67528003243726
+        zones_transit_jobs_30min: 97.30882684377397
 
-fit_rsquared_adj: 0.7551702689741597
+fit_rsquared_adj: 0.9251430715686236
 
-fit_rsquared: 0.7553808834295663
+fit_rsquared: 0.9252528094741774

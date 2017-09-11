@@ -2,20 +2,24 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 42
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 42
 
 predict_filters: hedonic_id == 42
 
 model_expression:
     left_side: np.log1p(sqft_price_nonres)
     right_side:
-    - zones_employment
-    - nodes_walk_race_2_hhs
-    - bldg_empratio_8
-    - zones_ln_empden_10
-    - crime_ucr_rate
-    - nodes_walk_sum_nonresidential_units
-    - parcel_sqft
+    - zones_logsum_job_low_income
+    - crime_other_rate
+    - nodes_walk_percent_high_income
+    - bldg_empratio_18
+    - nodes_walk_sum_residential_units
+    - zones_ln_empden_16
+    - building_sqft
 
 ytransform: np.exp
 
@@ -23,33 +27,33 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 3.6259101905934057
-        bldg_empratio_8: 101.76937132905577
-        crime_ucr_rate: -0.00011978610204437516
-        nodes_walk_race_2_hhs: -0.004625013544730097
-        nodes_walk_sum_nonresidential_units: 0.21145306069403874
-        parcel_sqft: 6.000368567945401e-08
-        zones_employment: 0.000676988976310132
-        zones_ln_empden_10: -2.1852452628212258
+        Intercept: 4.6256915391397895
+        bldg_empratio_18: -2.4538735015890882
+        building_sqft: -8.426875490811543e-07
+        crime_other_rate: -4.7883370456727525e-05
+        nodes_walk_percent_high_income: 2.0874652754774408
+        nodes_walk_sum_residential_units: -0.17317742445234385
+        zones_ln_empden_16: 0.855899405178933
+        zones_logsum_job_low_income: -3.2918985617691575e-07
     Std. Error:
-        Intercept: 0.3295247420130842
-        bldg_empratio_8: 2.9149041837480976
-        crime_ucr_rate: 4.641270007180318e-05
-        nodes_walk_race_2_hhs: 0.0021044063330896163
-        nodes_walk_sum_nonresidential_units: 0.07708662637438686
-        parcel_sqft: 1.0216379595130167e-08
-        zones_employment: 0.00014268722141957087
-        zones_ln_empden_10: 0.47967945401271417
+        Intercept: 0.24045814918340716
+        bldg_empratio_18: 0.7634163255661586
+        building_sqft: 2.885192049448385e-07
+        crime_other_rate: 2.418833950211419e-05
+        nodes_walk_percent_high_income: 0.6354611652184746
+        nodes_walk_sum_residential_units: 0.0647465072205149
+        zones_ln_empden_16: 0.34613874991337584
+        zones_logsum_job_low_income: 1.6487879856166158e-07
     T-Score:
-        Intercept: 11.003453544770348
-        bldg_empratio_8: 34.91345338089184
-        crime_ucr_rate: -2.580890615263904
-        nodes_walk_race_2_hhs: -2.19777591048199
-        nodes_walk_sum_nonresidential_units: 2.7430576565521756
-        parcel_sqft: 5.873282714363503
-        zones_employment: 4.744566258806388
-        zones_ln_empden_10: -4.555636570507155
+        Intercept: 19.236992195309575
+        bldg_empratio_18: -3.2143319698714414
+        building_sqft: -2.92073295170166
+        crime_other_rate: -1.9796055224271292
+        nodes_walk_percent_high_income: 3.28496120570918
+        nodes_walk_sum_residential_units: -2.674699097860721
+        zones_ln_empden_16: 2.4727061197081492
+        zones_logsum_job_low_income: -1.996556616427581
 
-fit_rsquared_adj: 0.9076229313059333
+fit_rsquared_adj: 0.38596757685171934
 
-fit_rsquared: 0.9115183498653217
+fit_rsquared: 0.4160251080547821

@@ -2,27 +2,30 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 581
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 581
 
 predict_filters: hedonic_id == 581
 
 model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
-    - nodes_walk_highinc_hhs
-    - nodes_walk_population
+    - walk_nearest_hospital
     - residential_units
     - zones_logsum_pop_high_income
     - nodes_drv_elem_school_perf
     - zones_employment
+    - nodes_walk_hhs_with_children
     - b_ln_parcel_sqft
-    - nodes_walk_race_1_hhs
-    - nodes_drv_drv_15min_retail_jobs
-    - stories
     - drv_nearest_healthcenter
+    - nodes_drv_drv_15min_retail_jobs
+    - nodes_walk_ave_nonres_sqft_price
     - year_built
     - nodes_drv_drv_20min_pop
-    - zones_transit_jobs_30min
+    - nodes_walk_ave_income
 
 ytransform: np.exp
 
@@ -30,54 +33,51 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 7.796124429760132
-        b_ln_parcel_sqft: 0.24048330571419407
-        drv_nearest_healthcenter: -0.021268054881600367
-        nodes_drv_drv_15min_retail_jobs: 0.8002751280605781
-        nodes_drv_drv_20min_pop: -1.046926242963908
-        nodes_drv_elem_school_perf: 2.5229363808623977
-        nodes_walk_highinc_hhs: 0.003999412844980167
-        nodes_walk_population: 0.00024412425459750957
-        nodes_walk_race_1_hhs: 0.000616802792721383
-        residential_units: -0.37931489812702796
-        stories: -0.11545193984374034
-        year_built: 2.524967829098058e-05
-        zones_employment: 5.946063642265266e-05
-        zones_logsum_pop_high_income: 7.768327380704813e-08
-        zones_transit_jobs_30min: 7.637259384385761e-07
+        Intercept: 6.652902052671124
+        b_ln_parcel_sqft: 0.09165588401986564
+        drv_nearest_healthcenter: -0.01936977771490416
+        nodes_drv_drv_15min_retail_jobs: 0.7391643752387337
+        nodes_drv_drv_20min_pop: -1.1139358209538708
+        nodes_drv_elem_school_perf: 3.1506450629988545
+        nodes_walk_ave_income: 0.4011054194730626
+        nodes_walk_ave_nonres_sqft_price: 0.0009616432156982675
+        nodes_walk_hhs_with_children: 0.000983786024458663
+        residential_units: -0.41150354119129984
+        walk_nearest_hospital: -1.832222233586081e-05
+        year_built: 2.0642154499011454e-05
+        zones_employment: 2.760073845602795e-05
+        zones_logsum_pop_high_income: 7.981229570071371e-08
     Std. Error:
-        Intercept: 0.24151137862727662
-        b_ln_parcel_sqft: 0.005734428864384669
-        drv_nearest_healthcenter: 0.0013823490360426248
-        nodes_drv_drv_15min_retail_jobs: 0.017222244675438696
-        nodes_drv_drv_20min_pop: 0.021322723376266048
-        nodes_drv_elem_school_perf: 0.10289592327296718
-        nodes_walk_highinc_hhs: 8.71554728069183e-05
-        nodes_walk_population: 1.2347540936041874e-05
-        nodes_walk_race_1_hhs: 3.350819678619195e-05
-        residential_units: 0.006460184935743349
-        stories: 0.005147060206109476
-        year_built: 7.438790543326631e-06
-        zones_employment: 3.5438943997308643e-06
-        zones_logsum_pop_high_income: 1.145716521085852e-08
-        zones_transit_jobs_30min: 1.1726565878054824e-07
+        Intercept: 0.059924069761704744
+        b_ln_parcel_sqft: 0.0013451578792824427
+        drv_nearest_healthcenter: 0.00032408799077242794
+        nodes_drv_drv_15min_retail_jobs: 0.003972829415910266
+        nodes_drv_drv_20min_pop: 0.004771707096549167
+        nodes_drv_elem_school_perf: 0.023253955643384484
+        nodes_walk_ave_income: 0.0017111526041352879
+        nodes_walk_ave_nonres_sqft_price: 1.8615548037969796e-05
+        nodes_walk_hhs_with_children: 6.451356236401406e-06
+        residential_units: 0.0013882800341348147
+        walk_nearest_hospital: 4.906668067007854e-07
+        year_built: 1.7258909549123022e-06
+        zones_employment: 8.463632211803026e-07
+        zones_logsum_pop_high_income: 2.672030887141889e-09
     T-Score:
-        Intercept: 32.28056778969348
-        b_ln_parcel_sqft: 41.936749308686224
-        drv_nearest_healthcenter: -15.385444867445594
-        nodes_drv_drv_15min_retail_jobs: 46.46752749958785
-        nodes_drv_drv_20min_pop: -49.099086664005746
-        nodes_drv_elem_school_perf: 24.519303589603183
-        nodes_walk_highinc_hhs: 45.88825826050362
-        nodes_walk_population: 19.771082830340955
-        nodes_walk_race_1_hhs: 18.407519708000372
-        residential_units: -58.71579558478717
-        stories: -22.43065657298914
-        year_built: 3.3943257501223996
-        zones_employment: 16.77833189024151
-        zones_logsum_pop_high_income: 6.780322390168893
-        zones_transit_jobs_30min: 6.512784274446607
+        Intercept: 111.02219991277607
+        b_ln_parcel_sqft: 68.1376405190135
+        drv_nearest_healthcenter: -59.767033232976125
+        nodes_drv_drv_15min_retail_jobs: 186.05489887850476
+        nodes_drv_drv_20min_pop: -233.44597612863828
+        nodes_drv_elem_school_perf: 135.48856423896987
+        nodes_walk_ave_income: 234.40657396875295
+        nodes_walk_ave_nonres_sqft_price: 51.65806635060226
+        nodes_walk_hhs_with_children: 152.4929004707114
+        residential_units: -296.4124896082306
+        walk_nearest_hospital: -37.34147508175324
+        year_built: 11.960288939610525
+        zones_employment: 32.610985171989306
+        zones_logsum_pop_high_income: 29.869525866927432
 
-fit_rsquared_adj: 0.11924408564161004
+fit_rsquared_adj: 0.7023633371394978
 
-fit_rsquared: 0.11929752331491039
+fit_rsquared: 0.7023801059108893

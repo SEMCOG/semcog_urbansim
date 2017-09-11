@@ -2,7 +2,11 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 522
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 522
 
 predict_filters: hedonic_id == 522
 
@@ -10,15 +14,15 @@ model_expression:
     left_side: np.log1p(sqft_price_nonres)
     right_side:
     - nodes_walk_highinc_hhs
+    - vacant_job_spaces
     - zones_logsum_pop_high_income
     - crime_other_rate
-    - walk_nearest_grocery
     - b_ln_building_sqft
     - b_ln_parcel_sqft
+    - drv_nearest_grocery
     - zones_ln_empden_16
     - nodes_walk_race_1_hhs
     - nodes_drv_drv_15min_retail_jobs
-    - improvement_value
     - building_age_le_10
     - nodes_walk_sum_nonresidential_units
     - parcels_total_units
@@ -32,60 +36,60 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 5.1030853966780425
-        b_ln_building_sqft: -0.711379309453282
-        b_ln_parcel_sqft: 0.3044548147204744
-        bldg_empratio_5: 0.4861605404785155
-        building_age_le_10: 0.6408330553271689
-        crime_other_rate: -1.093527249999601e-05
-        improvement_value: 1.5167848230817867e-06
-        nodes_drv_drv_15min_retail_jobs: 0.5214540550548783
-        nodes_drv_drv_20min_pop: -0.3211087713850138
-        nodes_walk_highinc_hhs: 0.0022006450243614037
-        nodes_walk_race_1_hhs: 0.0007215246130318218
-        nodes_walk_sum_nonresidential_units: -0.04324898554636388
-        parcels_total_units: -0.03751333766214918
-        walk_nearest_grocery: -2.3589511831535746e-05
-        zones_ln_empden_16: 0.38736423867644015
-        zones_logsum_pop_high_income: 1.0358004683121295e-07
-        zones_transit_jobs_30min: 1.1719816765963836e-06
+        Intercept: 4.246072587684983
+        b_ln_building_sqft: -0.6329012150630116
+        b_ln_parcel_sqft: 0.3775012099878114
+        bldg_empratio_5: 0.6055918991461942
+        building_age_le_10: 0.8008339529308688
+        crime_other_rate: -9.230987912570375e-06
+        drv_nearest_grocery: -0.07257305104570762
+        nodes_drv_drv_15min_retail_jobs: 0.5075523945660504
+        nodes_drv_drv_20min_pop: -0.3349806207801804
+        nodes_walk_highinc_hhs: 0.003570088313683157
+        nodes_walk_race_1_hhs: 0.0008117690938492958
+        nodes_walk_sum_nonresidential_units: -0.06053643102306878
+        parcels_total_units: -0.044273779860157486
+        vacant_job_spaces: -0.00512277373151683
+        zones_ln_empden_16: 0.5433648291741577
+        zones_logsum_pop_high_income: 1.1991843767317202e-07
+        zones_transit_jobs_30min: 1.5809429240530827e-06
     Std. Error:
-        Intercept: 0.6820199382622882
-        b_ln_building_sqft: 0.011570176320943823
-        b_ln_parcel_sqft: 0.010997794435971344
-        bldg_empratio_5: 0.022719009398513308
-        building_age_le_10: 0.07035997444724865
-        crime_other_rate: 2.700190323070824e-06
-        improvement_value: 6.74834430490658e-08
-        nodes_drv_drv_15min_retail_jobs: 0.06795337812956295
-        nodes_drv_drv_20min_pop: 0.08576342198838015
-        nodes_walk_highinc_hhs: 0.0005202966440340162
-        nodes_walk_race_1_hhs: 0.0001485827168039706
-        nodes_walk_sum_nonresidential_units: 0.010132081915585652
-        parcels_total_units: 0.005134234911670247
-        walk_nearest_grocery: 4.391795959892871e-06
-        zones_ln_empden_16: 0.0448167111443628
-        zones_logsum_pop_high_income: 5.0261785274890426e-08
-        zones_transit_jobs_30min: 4.999558145396546e-07
+        Intercept: 0.7662549508843045
+        b_ln_building_sqft: 0.015399164538116942
+        b_ln_parcel_sqft: 0.011737733467886056
+        bldg_empratio_5: 0.02453240046831173
+        building_age_le_10: 0.07794630557815416
+        crime_other_rate: 3.0242816728447045e-06
+        drv_nearest_grocery: 0.012903445066734994
+        nodes_drv_drv_15min_retail_jobs: 0.07589516866091557
+        nodes_drv_drv_20min_pop: 0.0960519815828255
+        nodes_walk_highinc_hhs: 0.000573788999163455
+        nodes_walk_race_1_hhs: 0.00016521030240758918
+        nodes_walk_sum_nonresidential_units: 0.011259491550959256
+        parcels_total_units: 0.0057074423997873465
+        vacant_job_spaces: 0.0010258018713017714
+        zones_ln_empden_16: 0.04917475611200021
+        zones_logsum_pop_high_income: 5.595403791599078e-08
+        zones_transit_jobs_30min: 5.558531683467521e-07
     T-Score:
-        Intercept: 7.482311161870345
-        b_ln_building_sqft: -61.483878008459946
-        b_ln_parcel_sqft: 27.683261084119767
-        bldg_empratio_5: 21.39884411114901
-        building_age_le_10: 9.107920523871481
-        crime_other_rate: -4.049815454326842
-        improvement_value: 22.47639946259061
-        nodes_drv_drv_15min_retail_jobs: 7.673703197810868
-        nodes_drv_drv_20min_pop: -3.744122656725614
-        nodes_walk_highinc_hhs: 4.229596807119765
-        nodes_walk_race_1_hhs: 4.856046709549332
-        nodes_walk_sum_nonresidential_units: -4.268519136213874
-        parcels_total_units: -7.306509793091158
-        walk_nearest_grocery: -5.371267710741089
-        zones_ln_empden_16: 8.643299090570686
-        zones_logsum_pop_high_income: 2.0608111364273216
-        zones_transit_jobs_30min: 2.3441705096989653
+        Intercept: 5.541331358165789
+        b_ln_building_sqft: -41.09971118864379
+        b_ln_parcel_sqft: 32.16133770805401
+        bldg_empratio_5: 24.685391057774044
+        building_age_le_10: 10.274174599948157
+        crime_other_rate: -3.052291059875884
+        drv_nearest_grocery: -5.6243158838875145
+        nodes_drv_drv_15min_retail_jobs: 6.687545512069325
+        nodes_drv_drv_20min_pop: -3.4874930767703844
+        nodes_walk_highinc_hhs: 6.221953224770954
+        nodes_walk_race_1_hhs: 4.91355007538565
+        nodes_walk_sum_nonresidential_units: -5.376479990156515
+        parcels_total_units: -7.757201345002988
+        vacant_job_spaces: -4.993921218934692
+        zones_ln_empden_16: 11.049670036727633
+        zones_logsum_pop_high_income: 2.14315967425295
+        zones_transit_jobs_30min: 2.844173630880268
 
-fit_rsquared_adj: 0.7855199011143785
+fit_rsquared_adj: 0.7342538460140737
 
-fit_rsquared: 0.7872734430572349
+fit_rsquared: 0.7364265279066515

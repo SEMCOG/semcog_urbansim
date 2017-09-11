@@ -2,7 +2,11 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 12583
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 12583
 
 predict_filters: hedonic_id == 12583
 
@@ -10,17 +14,17 @@ model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
     - walk_nearest_hospital
+    - drv_nearest_library
     - year_built
-    - zones_employment
+    - zones_logsum_pop_low_income
+    - zones_empden
+    - nodes_walk_hhs_with_children
     - zones_households
     - building_age_gt_50
-    - nodes_walk_percent_race2
-    - nodes_walk_quarter_mile_to_transit
-    - nodes_walk_population
+    - nodes_drv_drv_10min_pop
     - nodes_drv_drv_15min_retail_jobs
     - stories
     - crime_ucr_rate
-    - nodes_walk_percent_mid_income
 
 ytransform: np.exp
 
@@ -28,48 +32,48 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 3.057242634153899
-        building_age_gt_50: 0.06811775078972632
-        crime_ucr_rate: -0.00010098681348640783
-        nodes_drv_drv_15min_retail_jobs: 0.06714135393962656
-        nodes_walk_percent_mid_income: 0.16921220324206232
-        nodes_walk_percent_race2: -0.44337271201141976
-        nodes_walk_population: -0.0001288167316949369
-        nodes_walk_quarter_mile_to_transit: 0.004129555565002638
-        stories: -0.05869244490508979
-        walk_nearest_hospital: 4.11022315970733e-05
-        year_built: 0.0001022128475588293
-        zones_employment: 4.8598427765380976e-05
-        zones_households: 5.671114728545286e-05
+        Intercept: 3.6883976746586047
+        building_age_gt_50: 0.068072274806408
+        crime_ucr_rate: -0.000136977683269963
+        drv_nearest_library: -0.02015272218099568
+        nodes_drv_drv_10min_pop: -0.06867841543181723
+        nodes_drv_drv_15min_retail_jobs: 0.07589261742428582
+        nodes_walk_hhs_with_children: -0.0010830693125578929
+        stories: -0.05755247749545302
+        walk_nearest_hospital: 5.00701862263172e-05
+        year_built: 0.00012023571992840654
+        zones_empden: 0.002898945014354113
+        zones_households: 9.521110913181579e-05
+        zones_logsum_pop_low_income: 4.167111509470051e-08
     Std. Error:
-        Intercept: 0.07159498434894086
-        building_age_gt_50: 0.012935088862364254
-        crime_ucr_rate: 5.326257003118333e-06
-        nodes_drv_drv_15min_retail_jobs: 0.006831834469351467
-        nodes_walk_percent_mid_income: 0.05134713791410848
-        nodes_walk_percent_race2: 0.026858674308341508
-        nodes_walk_population: 1.0885931556137129e-05
-        nodes_walk_quarter_mile_to_transit: 0.0019011140280203482
-        stories: 0.00447254938505374
-        walk_nearest_hospital: 3.2443142666592198e-06
-        year_built: 6.924560224970172e-06
-        zones_employment: 2.9583373414594234e-06
-        zones_households: 6.636608620859228e-06
+        Intercept: 0.07218214194850944
+        building_age_gt_50: 0.010373280232429026
+        crime_ucr_rate: 3.378158303117012e-06
+        drv_nearest_library: 0.0015173871864580812
+        nodes_drv_drv_10min_pop: 0.009572424215155601
+        nodes_drv_drv_15min_retail_jobs: 0.007459103138700008
+        nodes_walk_hhs_with_children: 4.694983352314857e-05
+        stories: 0.0034510712734345506
+        walk_nearest_hospital: 2.449244184018358e-06
+        year_built: 5.406426204389363e-06
+        zones_empden: 0.00045811720883234266
+        zones_households: 5.281506487017848e-06
+        zones_logsum_pop_low_income: 1.0906473691156115e-08
     T-Score:
-        Intercept: 42.70191078265284
-        building_age_gt_50: 5.2661215948752185
-        crime_ucr_rate: -18.960184126917582
-        nodes_drv_drv_15min_retail_jobs: 9.827719661656287
-        nodes_walk_percent_mid_income: 3.2954554063970227
-        nodes_walk_percent_race2: -16.507617126647286
-        nodes_walk_population: -11.83332184578308
-        nodes_walk_quarter_mile_to_transit: 2.1721766838482544
-        stories: -13.122816508460884
-        walk_nearest_hospital: 12.669004362329442
-        year_built: 14.760915384957835
-        zones_employment: 16.427615297383944
-        zones_households: 8.5451998942964
+        Intercept: 51.09847914030722
+        building_age_gt_50: 6.562270880680534
+        crime_ucr_rate: -40.548035639293246
+        drv_nearest_library: -13.281199657443143
+        nodes_drv_drv_10min_pop: -7.1746105153887445
+        nodes_drv_drv_15min_retail_jobs: 10.174496318536304
+        nodes_walk_hhs_with_children: -23.068650755148827
+        stories: -16.676699185692577
+        walk_nearest_hospital: 20.44311733106555
+        year_built: 22.239408323152492
+        zones_empden: 6.327954851866394
+        zones_households: 18.02726350253445
+        zones_logsum_pop_low_income: 3.820768863953796
 
-fit_rsquared_adj: 0.3294930717196063
+fit_rsquared_adj: 0.44655959468631534
 
-fit_rsquared: 0.33074071990372245
+fit_rsquared: 0.44759036992514256

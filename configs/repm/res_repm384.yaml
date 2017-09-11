@@ -2,7 +2,11 @@ name: RegressionModel
 
 model_type: regression
 
-fit_filters: hedonic_id == 384
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 384
 
 predict_filters: hedonic_id == 384
 
@@ -28,48 +32,48 @@ fitted: true
 
 fit_parameters:
     Coefficient:
-        Intercept: 5.9519623717658305
-        b_ln_parcels_parcel_far: 0.7552976264401048
-        building_age_gt_70: 0.28924106313043896
-        drv_nearest_library: 0.07030083828406176
-        improvement_value: -1.844805115533123e-05
-        nodes_drv_drv_10min_pop: -0.36770258063915046
-        nodes_walk_percent_low_income: 1.1025450042593254
-        nodes_walk_percent_race3: -2.639828765090736
-        nodes_walk_sum_nonresidential_units: 0.17230121473803234
-        year_built: 1.3655557680349178e-05
-        zones_empden: 0.19512388900879843
-        zones_households: -7.989933478791998e-05
-        zones_logsum_pop_low_income: 9.419359634263639e-08
+        Intercept: 5.955716277940236
+        b_ln_parcels_parcel_far: 0.7489798593526089
+        building_age_gt_70: 0.28837150051811145
+        drv_nearest_library: 0.0701031768556495
+        improvement_value: -1.849427002191003e-05
+        nodes_drv_drv_10min_pop: -0.368758928159955
+        nodes_walk_percent_low_income: 1.1090427097340652
+        nodes_walk_percent_race3: -2.6368144980777792
+        nodes_walk_sum_nonresidential_units: 0.1716227372940469
+        year_built: 1.3392644606510229e-05
+        zones_empden: 0.19477127189379886
+        zones_households: -8.114327355172511e-05
+        zones_logsum_pop_low_income: 1.0258135261559664e-07
     Std. Error:
-        Intercept: 0.12881361054161042
-        b_ln_parcels_parcel_far: 0.12655420949691185
-        building_age_gt_70: 0.02743651176389988
-        drv_nearest_library: 0.002692699884280075
-        improvement_value: 5.643975433911708e-07
-        nodes_drv_drv_10min_pop: 0.012637086210639133
-        nodes_walk_percent_low_income: 0.04775167760315038
-        nodes_walk_percent_race3: 0.0643712931251606
-        nodes_walk_sum_nonresidential_units: 0.005068840294891104
-        year_built: 4.886796569561777e-06
-        zones_empden: 0.006060850732539946
-        zones_households: 1.1841654634531532e-05
-        zones_logsum_pop_low_income: 1.7606166606942466e-08
+        Intercept: 0.12855263469101375
+        b_ln_parcels_parcel_far: 0.12629974728527535
+        building_age_gt_70: 0.027380965160468604
+        drv_nearest_library: 0.0026873583028773434
+        improvement_value: 5.632848572309571e-07
+        nodes_drv_drv_10min_pop: 0.012612205835310994
+        nodes_walk_percent_low_income: 0.047662788011633456
+        nodes_walk_percent_race3: 0.06424168243996713
+        nodes_walk_sum_nonresidential_units: 0.005059376382214793
+        year_built: 4.8769890106326716e-06
+        zones_empden: 0.006048714578619317
+        zones_households: 1.1818786628108128e-05
+        zones_logsum_pop_low_income: 1.7607529607707153e-08
     T-Score:
-        Intercept: 46.20600530285718
-        b_ln_parcels_parcel_far: 5.968174661614361
-        building_age_gt_70: 10.542195218526775
-        drv_nearest_library: 26.10793675688723
-        improvement_value: -32.68627117773494
-        nodes_drv_drv_10min_pop: -29.097101539877325
-        nodes_walk_percent_low_income: 23.089136541384796
-        nodes_walk_percent_race3: -41.009410203364624
-        nodes_walk_sum_nonresidential_units: 33.99223583976302
-        year_built: 2.794378175143423
-        zones_empden: 32.19414198096033
-        zones_households: -6.747311693665256
-        zones_logsum_pop_low_income: 5.350034362704142
+        Intercept: 46.32900984297415
+        b_ln_parcels_parcel_far: 5.93017702292686
+        building_age_gt_70: 10.531823799054722
+        drv_nearest_library: 26.086278402321835
+        improvement_value: -32.832890471839974
+        nodes_drv_drv_10min_pop: -29.238257999843537
+        nodes_walk_percent_low_income: 23.268523642875692
+        nodes_walk_percent_race3: -41.04522792568271
+        nodes_walk_sum_nonresidential_units: 33.92171768389315
+        year_built: 2.7460887398581315
+        zones_empden: 32.20044016992739
+        zones_households: -6.8656179441251135
+        zones_logsum_pop_low_income: 5.825993475580743
 
-fit_rsquared_adj: 0.4238001762801269
+fit_rsquared_adj: 0.4252881399163566
 
-fit_rsquared: 0.4243339829569306
+fit_rsquared: 0.4258206092122957
