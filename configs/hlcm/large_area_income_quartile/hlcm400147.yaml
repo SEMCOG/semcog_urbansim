@@ -20,12 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- ln_income:nodes_walk_ave_income
-- residential_units
-- has_children:nodes_walk_percent_hh_with_children
-- persons:sqft_per_unit
-- has_workers:zones_a_ln_emp_50min_transit
+model_expression: ln_income:nodes_walk_ave_income + residential_units + has_children:nodes_walk_percent_hh_with_children
+    + persons:sqft_per_unit + has_workers:zones_a_ln_emp_50min_transit
 
 fitted: true
 

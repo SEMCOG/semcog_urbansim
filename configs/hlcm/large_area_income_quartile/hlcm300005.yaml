@@ -20,14 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- residential_units
-- zones_logsum_pop_high_income
-- persons:nodes_walk_ln_popden
-- drv_nearest_urgentcare
-- ln_income:nodes_walk_ln_popden
-- nodes_walk_ave_unit_sqft
-- parcel_sqft
+model_expression: residential_units + zones_logsum_pop_high_income + persons:nodes_walk_ln_popden
+    + drv_nearest_urgentcare + ln_income:nodes_walk_ln_popden + nodes_walk_ave_unit_sqft
+    + parcel_sqft
 
 fitted: true
 

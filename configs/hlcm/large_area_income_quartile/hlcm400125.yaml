@@ -20,16 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_job_high_income
-- walk_nearest_healthcenter
-- has_children:nodes_walk_percent_hh_with_children
-- ln_income:nodes_walk_ave_income
-- persons:sqft_per_unit
-- building_age_le_10
-- is_young:zones_empden
-- is_race2:nodes_walk_percent_race2
-- parcels_total_units
+model_expression: zones_logsum_job_high_income + walk_nearest_healthcenter + has_children:nodes_walk_percent_hh_with_children
+    + ln_income:nodes_walk_ave_income + persons:sqft_per_unit + building_age_le_10
+    + is_young:zones_empden + is_race2:nodes_walk_percent_race2 + parcels_total_units
 
 fitted: true
 

@@ -20,12 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- ln_income:nodes_walk_ave_income
-- residential_units
-- nodes_walk_quarter_mile_to_transit
-- hhsize_gt_2:building_type_id_is_81
-- building_type_id_is_82
+model_expression: ln_income:nodes_walk_ave_income + residential_units + nodes_walk_quarter_mile_to_transit
+    + hhsize_gt_2:building_type_id_is_81 + building_type_id_is_82
 
 fitted: true
 

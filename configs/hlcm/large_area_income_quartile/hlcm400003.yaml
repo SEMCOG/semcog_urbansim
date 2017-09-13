@@ -20,13 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- has_children:nodes_drv_elem_school_perf
-- ln_income:nodes_walk_ave_income
-- is_race4:nodes_walk_percent_race4
-- persons:sqft_per_unit
-- nodes_walk_population
-- zones_a_ln_emp_26min_drive_alone
+model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ave_income
+    + is_race4:nodes_walk_percent_race4 + persons:sqft_per_unit + nodes_walk_population
+    + zones_a_ln_emp_26min_drive_alone
 
 fitted: true
 

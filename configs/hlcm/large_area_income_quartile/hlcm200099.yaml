@@ -20,17 +20,10 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_job_high_income
-- building_age_gt_100
-- nodes_drv_drv_45min_jobs
-- vacant_residential_units
-- persons:nodes_walk_ln_popden
-- is_young:zones_empden
-- is_race2:nodes_walk_percent_race2
-- has_workers:nodes_drv_drv_45min_jobs
-- ln_income:nodes_walk_ln_popden
-- parcels_total_units
+model_expression: zones_logsum_job_high_income + building_age_gt_100 + nodes_drv_drv_45min_jobs
+    + vacant_residential_units + persons:nodes_walk_ln_popden + is_young:zones_empden
+    + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_drv_45min_jobs + ln_income:nodes_walk_ln_popden
+    + parcels_total_units
 
 fitted: true
 
