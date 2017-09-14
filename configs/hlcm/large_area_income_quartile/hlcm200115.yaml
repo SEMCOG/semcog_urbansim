@@ -20,13 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_pop_low_income
-- persons:nodes_walk_ln_popden
-- has_workers:nodes_drv_drv_45min_jobs
-- ln_income:nodes_walk_ln_popden
-- crime_ucr_rate
-- zones_transit_jobs_30min
+model_expression: zones_logsum_pop_low_income + persons:nodes_walk_ln_popden + has_workers:nodes_drv_drv_45min_jobs
+    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + zones_transit_jobs_30min
 
 fitted: true
 

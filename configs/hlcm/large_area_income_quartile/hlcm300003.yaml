@@ -20,14 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_job_high_income
-- has_children:nodes_walk_percent_hh_with_children
-- is_race4:nodes_walk_percent_race4
-- nodes_walk_ave_lot_sqft
-- ln_income:sqft_price_res
-- ln_income:nodes_walk_ln_popden
-- crime_ucr_rate
+model_expression: zones_logsum_job_high_income + has_children:nodes_walk_percent_hh_with_children
+    + is_race4:nodes_walk_percent_race4 + nodes_walk_ave_lot_sqft + ln_income:sqft_price_res
+    + ln_income:nodes_walk_ln_popden + crime_ucr_rate
 
 fitted: true
 

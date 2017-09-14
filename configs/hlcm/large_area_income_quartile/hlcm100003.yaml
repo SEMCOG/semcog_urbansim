@@ -20,17 +20,10 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_job_high_income
-- walk_nearest_healthcenter
-- has_children:nodes_walk_percent_hh_with_children
-- popden
-- is_race4:nodes_walk_percent_race4
-- nodes_walk_sum_residential_units
-- ln_income:sqft_price_res
-- is_young:nodes_walk_retail_jobs
-- ln_income:nodes_walk_ln_popden
-- zones_transit_jobs_50min
+model_expression: zones_logsum_job_high_income + walk_nearest_healthcenter + has_children:nodes_walk_percent_hh_with_children
+    + popden + is_race4:nodes_walk_percent_race4 + nodes_walk_sum_residential_units
+    + ln_income:sqft_price_res + is_young:nodes_walk_retail_jobs + ln_income:nodes_walk_ln_popden
+    + zones_transit_jobs_50min
 
 fitted: true
 
