@@ -61,6 +61,16 @@ def make_indicators(tab, geo_id):
         buildings = buildings.to_frame([geo_id, 'residential_sqft'])
         return buildings.groupby(geo_id).residential_sqft.sum()
 
+    def make_building_sqft_type(i):
+        @orca.column(tab, 'building_sqft_type_' + str(i).zfill(2), cache=True, cache_scope='iteration')
+        def res_sqft_type(buildings):
+            buildings = buildings.to_frame([geo_id, 'building_type_id', 'building_sqft'])
+            return buildings[buildings.building_type_id == i].groupby(geo_id).building_sqft.sum()
+
+    for i in [11, 12, 13, 14, 21, 22, 23, 24, 25, 26, 31, 32, 33, 41, 42, 43, 51, 52, 53, 61, 62, 71, 81, 82, 83, 84,
+              99]:
+        make_building_sqft_type(i)
+
     @orca.column(tab, cache=True, cache_scope='iteration')
     def buildings(buildings):
         buildings = buildings.to_frame([geo_id])
@@ -265,11 +275,24 @@ def make_indicators(tab, geo_id):
         jobs = jobs.to_frame([geo_id, "home_based_status"])
         return jobs[jobs.home_based_status == 1].groupby(geo_id).size()
 
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def jobs_home_based_in_nonres(jobs, buildings):
+        jobs = jobs.to_frame(["building_id", "home_based_status"])
+        jobs_count = jobs[jobs.home_based_status == 1].groupby("building_id").size()
+        buildings = buildings.to_frame([geo_id, 'residential_sqft'])
+        buildings['jobs_count'] = jobs_count
+        return buildings[buildings.residential_sqft.fillna(0) <= 0].groupby(geo_id).jobs_count.sum().fillna(0)
+
     def make_job_sector_ind(i):
         @orca.column(tab, 'jobs_sec_' + str(i).zfill(2), cache=True, cache_scope='iteration')
         def jobs_sec_id(jobs):
             jobs = jobs.to_frame([geo_id, 'sector_id'])
             return jobs[jobs.sector_id == i].groupby(geo_id).size()
+
+        @orca.column(tab, 'jobs_sec_' + str(i).zfill(2) + '_home_based', cache=True, cache_scope='iteration')
+        def jobs_sec_id_home(jobs):
+            jobs = jobs.to_frame([geo_id, 'sector_id', 'home_based_status'])
+            return jobs[(jobs.sector_id == i) & (jobs.home_based_status == 1)].groupby(geo_id).size()
 
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]:
         make_job_sector_ind(i)
@@ -339,16 +362,19 @@ def main(run_name):
                         ('whatnots', 'whatnot_id')]:
         make_indicators(tab, geo_id)
 
-
-        # add more indicator
         # geo level: school district
-
-        # 4) pro forma changes by counts, and building types; trace relocating HHs
 
     years = range(2015, 2045 + 1)
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'housing_units', 'buildings', 'household_size', 'vacant_units', 'job_spaces',
                   'res_sqft', 'nonres_sqft',
+                  'building_sqft_type_11', 'building_sqft_type_12', 'building_sqft_type_13', 'building_sqft_type_14',
+                  'building_sqft_type_21', 'building_sqft_type_22', 'building_sqft_type_23', 'building_sqft_type_24',
+                  'building_sqft_type_25', 'building_sqft_type_26', 'building_sqft_type_31', 'building_sqft_type_32',
+                  'building_sqft_type_33', 'building_sqft_type_41', 'building_sqft_type_42', 'building_sqft_type_43',
+                  'building_sqft_type_51', 'building_sqft_type_52', 'building_sqft_type_53', 'building_sqft_type_61',
+                  'building_sqft_type_62', 'building_sqft_type_71', 'building_sqft_type_81', 'building_sqft_type_82',
+                  'building_sqft_type_83', 'building_sqft_type_84', 'building_sqft_type_99',
                   'res_vacancy_rate', 'nonres_vacancy_rate',
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
                   'pct_incomes_1', 'pct_incomes_2', 'pct_incomes_3', 'pct_incomes_4',
@@ -365,6 +391,12 @@ def main(run_name):
                   'jobs_sec_08', 'jobs_sec_09', 'jobs_sec_10', 'jobs_sec_11',
                   'jobs_sec_12', 'jobs_sec_13', 'jobs_sec_14', 'jobs_sec_15',
                   'jobs_sec_16', 'jobs_sec_17', 'jobs_sec_18',
+                  'jobs_home_based_in_nonres',
+                  'jobs_home_based', 'jobs_sec_01_home_based', 'jobs_sec_02_home_based', 'jobs_sec_03_home_based',
+                  'jobs_sec_04_home_based', 'jobs_sec_05_home_based', 'jobs_sec_06_home_based', 'jobs_sec_07_home_based',
+                  'jobs_sec_08_home_based', 'jobs_sec_09_home_based', 'jobs_sec_10_home_based', 'jobs_sec_11_home_based',
+                  'jobs_sec_12_home_based', 'jobs_sec_13_home_based', 'jobs_sec_14_home_based', 'jobs_sec_15_home_based',
+                  'jobs_sec_16_home_based', 'jobs_sec_17_home_based', 'jobs_sec_18_home_based',
                   ]
 
     geom = ['cities', 'large_areas', 'semmcds', 'zones', 'whatnots']
