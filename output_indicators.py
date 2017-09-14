@@ -96,9 +96,21 @@ def make_indicators(tab, geo_id):
         return households[households.income_quartile == 1].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_incomes_1():
+        df = orca.get_table(tab)
+        df = df.to_frame(['incomes_1', 'hh'])
+        return 1.0 * df.incomes_1 / df.hh
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_2(households):
         households = households.to_frame([geo_id, 'income_quartile'])
         return households[households.income_quartile == 2].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_incomes_2():
+        df = orca.get_table(tab)
+        df = df.to_frame(['incomes_2', 'hh'])
+        return 1.0 * df.incomes_2 / df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_3(households):
@@ -106,9 +118,21 @@ def make_indicators(tab, geo_id):
         return households[households.income_quartile == 3].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_incomes_3():
+        df = orca.get_table(tab)
+        df = df.to_frame(['incomes_3', 'hh'])
+        return 1.0 * df.incomes_3 / df.hh
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def incomes_4(households):
         households = households.to_frame([geo_id, 'income_quartile'])
         return households[households.income_quartile == 4].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_incomes_4():
+        df = orca.get_table(tab)
+        df = df.to_frame(['incomes_4', 'hh'])
+        return 1.0 * df.incomes_4 / df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def with_children(households):
@@ -327,6 +351,7 @@ def main(run_name):
                   'res_sqft', 'nonres_sqft',
                   'res_vacancy_rate', 'nonres_vacancy_rate',
                   'incomes_1', 'incomes_2', 'incomes_3', 'incomes_4',
+                  'pct_incomes_1', 'pct_incomes_2', 'pct_incomes_3', 'pct_incomes_4',
                   'with_children', 'without_children',
                   'with_seniors', 'without_seniors',
                   'pct_with_children', 'pct_with_seniors',
@@ -371,6 +396,11 @@ def main(run_name):
     del df['pct_hh_pop_race_2']
     del df['pct_hh_pop_race_3']
     del df['pct_hh_pop_race_4']
+    del df['pct_incomes_1']
+    del df['pct_incomes_2']
+    del df['pct_incomes_3']
+    del df['pct_incomes_4']
+
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print sumstd[sumstd > 0]
 
@@ -395,6 +425,10 @@ def main(run_name):
         del df['pct_hh_pop_race_2']
         del df['pct_hh_pop_race_3']
         del df['pct_hh_pop_race_4']
+        del df['pct_incomes_1']
+        del df['pct_incomes_2']
+        del df['pct_incomes_3']
+        del df['pct_incomes_4']
 
         df[whatnots_local.columns] = whatnots_local
 
