@@ -1,6 +1,5 @@
 import os
 import yaml
-import random
 import operator
 from multiprocessing import Pool
 
@@ -8,7 +7,6 @@ import numpy as np
 import orca
 import pandana as pdna
 import pandas as pd
-from urbansim.developer import sqftproforma
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
@@ -50,30 +48,8 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
     jobs = jobs.to_frame()
     households = households.to_frame()
     nodes = nodes.to_frame()
-    import pdb;
+    import pdb
     pdb.set_trace()
-
-
-@orca.step()
-def rsh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("rsh.yaml", buildings, nodes_walk)
-
-
-@orca.step()
-def rsh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("rsh.yaml", buildings, nodes_walk,
-                                  "sqft_price_res")
-
-
-@orca.step()
-def nrh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("nrh.yaml", buildings, nodes_walk)
-
-
-@orca.step()
-def nrh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("nrh.yaml", buildings, nodes_walk,
-                                  "sqft_price_nonres")
 
 
 def make_repm_func(model_name, yaml_file, dep_var):
@@ -88,6 +64,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
         return utils.hedonic_simulate(yaml_file, buildings,
                                       nodes_walk, dep_var)
     return func
+
 
 repm_step_names = []
 for repm_config in os.listdir('./configs/repm'):
