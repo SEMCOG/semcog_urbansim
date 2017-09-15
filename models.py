@@ -153,14 +153,13 @@ def households_relocation(households, annual_relocation_rates_for_households):
 
 @orca.step()
 def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
-    relocation_rates = annual_relocation_rates_for_jobs.to_frame()
-    relocation_rates.job_relocation_probability *= .05
+    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, 'job_relocation_probability')
+    _print_number_unplaced(jobs, 'building_id')
+    print "un-placing"
     j = jobs.to_frame(jobs.local_columns)
-    idx_reloc = reloc.find_movers(j)
-    j.loc[idx_reloc, "building_id"] = -1
-    # todo: use orca.update_col_from_series
-    orca.add_table("jobs", j)
+    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
+    jobs.update_col_from_series('building_id', pd.Series(-1, index=idx_reloc), cast=True)
     _print_number_unplaced(jobs, 'building_id')
 
 

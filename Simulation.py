@@ -26,7 +26,7 @@ orca.run([
     "feasibility",
     "residential_developer",
     "non_residential_developer"] +
-    orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
+    orca.get_injectable('repm_step_names') +  # In place of ['nrh_simulate', 'rsh_simulate']
     ["increase_property_values"] +  # Hack to make more feasibility
     orca.get_injectable('hlcm_step_names') +
     ["elcm_simulate",
@@ -34,7 +34,6 @@ orca.run([
     "refiner",
     # "gq_model", Fixme: we have new data so need new approach
     # "travel_model", Fixme: on hold
-    # "housing_value_update", Fixme: maybe we don't need
 ],
     iter_vars=range(2016, 2045 + 1),
     data_out=data_out,
