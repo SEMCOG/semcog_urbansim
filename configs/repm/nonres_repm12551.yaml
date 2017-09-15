@@ -1,0 +1,83 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 12551
+
+predict_filters: hedonic_id == 12551
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - bldg_empratio_14
+    - year_built
+    - zones_logsum_pop_low_income
+    - zones_empden
+    - nodes_walk_hhs_with_children
+    - b_ln_building_sqft
+    - nodes_walk_retail_jobs
+    - zones_ln_empden_10
+    - nodes_walk_ave_nonres_sqft_price
+    - parcels_total_units
+    - drv_nearest_park
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.813498250614917
+        b_ln_building_sqft: -0.09024467592499963
+        bldg_empratio_14: 0.3849570022557459
+        drv_nearest_park: -0.05113323919460879
+        nodes_walk_ave_nonres_sqft_price: 0.0034158332829449358
+        nodes_walk_hhs_with_children: -0.0023526663916378235
+        nodes_walk_highinc_hhs: 0.0031042333827932633
+        nodes_walk_retail_jobs: 0.0006787563432675942
+        nodes_walk_sum_nonresidential_units: 0.024516619815664737
+        parcels_total_units: -0.00972949629739733
+        year_built: 0.00014395041958229656
+        zones_empden: -0.00946611539652896
+        zones_ln_empden_10: 0.15837259421989658
+        zones_logsum_pop_low_income: -1.695815486459056e-07
+    Std. Error:
+        Intercept: 0.1349072368970076
+        b_ln_building_sqft: 0.012562140895974528
+        bldg_empratio_14: 0.030118857657908716
+        drv_nearest_park: 0.009967696607606706
+        nodes_walk_ave_nonres_sqft_price: 0.00030577430805207455
+        nodes_walk_hhs_with_children: 0.0003556027444133147
+        nodes_walk_highinc_hhs: 0.0003660705759474849
+        nodes_walk_retail_jobs: 0.00014541925126679455
+        nodes_walk_sum_nonresidential_units: 0.007312398666739191
+        parcels_total_units: 0.001581070849645436
+        year_built: 2.268435983196954e-05
+        zones_empden: 0.0011761408653212235
+        zones_ln_empden_10: 0.041864133571413255
+        zones_logsum_pop_low_income: 3.4128346787934364e-08
+    T-Score:
+        Intercept: 35.68005958264265
+        b_ln_building_sqft: -7.18386114853385
+        bldg_empratio_14: 12.781261714109617
+        drv_nearest_park: -5.129895221287853
+        nodes_walk_ave_nonres_sqft_price: 11.17109316575808
+        nodes_walk_hhs_with_children: -6.615996160320223
+        nodes_walk_highinc_hhs: 8.479876796321879
+        nodes_walk_retail_jobs: 4.66758243736456
+        nodes_walk_sum_nonresidential_units: 3.352746606551938
+        parcels_total_units: -6.153738334736374
+        year_built: 6.345800395011555
+        zones_empden: -8.048453782739372
+        zones_ln_empden_10: 3.7830137807519475
+        zones_logsum_pop_low_income: -4.968935345730223
+
+fit_rsquared_adj: 0.5384846172186382
+
+fit_rsquared: 0.5453257802473243

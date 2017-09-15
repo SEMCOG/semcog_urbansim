@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 9322
+
+predict_filters: hedonic_id == 9322
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - walk_nearest_hospital
+    - year_built
+    - zones_logsum_pop_low_income
+    - bldg_empratio_12
+    - b_ln_building_sqft
+    - nodes_walk_hhsize
+    - nodes_walk_retail_jobs
+    - b_total_jobs
+    - parcels_total_units
+    - nodes_drv_drv_30min_jobs
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -0.9895413721886119
+        b_ln_building_sqft: -0.43558945918710823
+        b_total_jobs: 0.005653803266129651
+        bldg_empratio_12: -3.085554321743618
+        nodes_drv_drv_30min_jobs: 0.9251552987661396
+        nodes_walk_hhsize: -0.23161904434832653
+        nodes_walk_retail_jobs: 0.0018103886561940115
+        nodes_walk_sum_nonresidential_units: -0.10718646761022436
+        parcels_total_units: -0.821944283407423
+        walk_nearest_hospital: 0.00020817323772349348
+        year_built: 0.00023062711073515
+        zones_logsum_job_high_income: -6.217649334462078e-06
+        zones_logsum_pop_low_income: 1.051047082340589e-06
+    Std. Error:
+        Intercept: 1.8090382749933285
+        b_ln_building_sqft: 0.05322913342052053
+        b_total_jobs: 0.0020317497600806345
+        bldg_empratio_12: 0.8664467887480034
+        nodes_drv_drv_30min_jobs: 0.18813407373740737
+        nodes_walk_hhsize: 0.07549327007916767
+        nodes_walk_retail_jobs: 0.0005233435097237144
+        nodes_walk_sum_nonresidential_units: 0.04981216164333095
+        parcels_total_units: 0.16130057007270707
+        walk_nearest_hospital: 6.651886292677737e-05
+        year_built: 4.558458494814495e-05
+        zones_logsum_job_high_income: 1.551652091325913e-06
+        zones_logsum_pop_low_income: 3.2375174609616186e-07
+    T-Score:
+        Intercept: -0.5469985825436785
+        b_ln_building_sqft: -8.183290450097441
+        b_total_jobs: 2.7827261886351926
+        bldg_empratio_12: -3.5611584713726927
+        nodes_drv_drv_30min_jobs: 4.917531845174666
+        nodes_walk_hhsize: -3.068075394077302
+        nodes_walk_retail_jobs: 3.4592741145290193
+        nodes_walk_sum_nonresidential_units: -2.1518132133616192
+        parcels_total_units: -5.0957308026681325
+        walk_nearest_hospital: 3.129536924776456
+        year_built: 5.059322378332531
+        zones_logsum_job_high_income: -4.007115621613987
+        zones_logsum_pop_low_income: 3.2464599651252644
+
+fit_rsquared_adj: 0.7036217646694449
+
+fit_rsquared: 0.7374935629929369

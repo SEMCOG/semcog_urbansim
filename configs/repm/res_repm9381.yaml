@@ -1,0 +1,95 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 9381
+
+predict_filters: hedonic_id == 9381
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - parcels_pptytax
+    - b_is_newerthan2010
+    - crime_other_rate
+    - zones_empden
+    - nodes_walk_hhs_with_children
+    - nodes_walk_ave_unit_sqft
+    - popden
+    - walk_nearest_park
+    - nodes_drv_drv_45min_jobs
+    - nodes_walk_ln_popden
+    - nodes_walk_ave_lot_sqft
+    - drv_nearest_healthcenter
+    - drv_nearest_hospital
+    - nodes_drv_drv_20min_pop
+    - zones_transit_jobs_50min
+    - nodes_walk_ave_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 0.1376874298495382
+        b_is_newerthan2010: 1.0502077392306324
+        crime_other_rate: -1.1435684518952468e-05
+        drv_nearest_healthcenter: -0.004961117110934451
+        drv_nearest_hospital: 0.006500137179071986
+        nodes_drv_drv_20min_pop: 0.020527030544760703
+        nodes_drv_drv_45min_jobs: 0.0745598386832941
+        nodes_walk_ave_income: 0.20876089367908568
+        nodes_walk_ave_lot_sqft: 0.17044536752968226
+        nodes_walk_ave_unit_sqft: 2.5413833578338346e-05
+        nodes_walk_hhs_with_children: -0.003509863617395135
+        nodes_walk_ln_popden: 0.23523722221025317
+        parcels_pptytax: -0.0026830587403120433
+        popden: 0.022525211828852316
+        walk_nearest_park: 1.3412551012875934e-06
+        zones_empden: -0.02396435143586062
+        zones_transit_jobs_50min: 1.2403647106138665e-06
+    Std. Error:
+        Intercept: 0.051775679013287064
+        b_is_newerthan2010: 0.008090522355648052
+        crime_other_rate: 1.6010193484613076e-06
+        drv_nearest_healthcenter: 0.00033146896892672967
+        drv_nearest_hospital: 0.000357906849941408
+        nodes_drv_drv_20min_pop: 0.005713762449719028
+        nodes_drv_drv_45min_jobs: 0.005427033192538308
+        nodes_walk_ave_income: 0.0035930803116965278
+        nodes_walk_ave_lot_sqft: 0.00395624089738293
+        nodes_walk_ave_unit_sqft: 2.5874280938960217e-06
+        nodes_walk_hhs_with_children: 8.252927955917564e-05
+        nodes_walk_ln_popden: 0.0024384457161547956
+        parcels_pptytax: 0.00044642934159679895
+        popden: 0.0013258114474868298
+        walk_nearest_park: 6.730060980136203e-07
+        zones_empden: 0.0009809000623237547
+        zones_transit_jobs_50min: 1.4849406798351382e-07
+    T-Score:
+        Intercept: 2.6593070815006365
+        b_is_newerthan2010: 129.80716115288587
+        crime_other_rate: -7.142752228411834
+        drv_nearest_healthcenter: -14.967063514265472
+        drv_nearest_hospital: 18.161533315543153
+        nodes_drv_drv_20min_pop: 3.592559320657461
+        nodes_drv_drv_45min_jobs: 13.738600085550852
+        nodes_walk_ave_income: 58.100814779872266
+        nodes_walk_ave_lot_sqft: 43.08265647888949
+        nodes_walk_ave_unit_sqft: 9.822044383877524
+        nodes_walk_hhs_with_children: -42.52870782518429
+        nodes_walk_ln_popden: 96.4701492642619
+        parcels_pptytax: -6.010041209915136
+        popden: 16.98975512057198
+        walk_nearest_park: 1.9929315726058234
+        zones_empden: -24.430981662993283
+        zones_transit_jobs_50min: 8.352957983153743
+
+fit_rsquared_adj: 0.5311443086529317
+
+fit_rsquared: 0.5312701442825812

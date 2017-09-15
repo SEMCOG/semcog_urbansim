@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 331
+
+predict_filters: hedonic_id == 331
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - nodes_walk_race_1_hhs
+    - year_built
+    - crime_other_rate
+    - b_ln_building_sqft
+    - b_ln_parcel_sqft
+    - walk_nearest_park
+    - vacant_job_spaces
+    - b_total_jobs
+    - nodes_walk_ln_popden
+    - zones_ln_empden_10
+    - zones_ln_empden_13
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.352355844332847
+        b_ln_building_sqft: -0.0954116607529032
+        b_ln_parcel_sqft: 0.012590803790347918
+        b_total_jobs: 0.00014719183907642812
+        crime_other_rate: -5.7980209232669145e-05
+        nodes_walk_highinc_hhs: 0.0019018942383281579
+        nodes_walk_ln_popden: -0.1601129417537813
+        nodes_walk_race_1_hhs: 0.0011983269885934918
+        vacant_job_spaces: -0.00019522601089556557
+        walk_nearest_park: 1.5607783253956046e-05
+        year_built: 0.00010364686015151904
+        zones_ln_empden_10: 0.2329915538224866
+        zones_ln_empden_13: -0.1327162782748651
+    Std. Error:
+        Intercept: 0.06173796386634819
+        b_ln_building_sqft: 0.0047969228350743295
+        b_ln_parcel_sqft: 0.00351881675997953
+        b_total_jobs: 2.8809012645226695e-05
+        crime_other_rate: 2.1822130477914744e-06
+        nodes_walk_highinc_hhs: 0.0005475646119218744
+        nodes_walk_ln_popden: 0.014819363087631114
+        nodes_walk_race_1_hhs: 0.00014869104791161432
+        vacant_job_spaces: 1.8388838267483186e-05
+        walk_nearest_park: 3.13429749510593e-06
+        year_built: 6.503940903379808e-06
+        zones_ln_empden_10: 0.015191829099271538
+        zones_ln_empden_13: 0.06141001596027447
+    T-Score:
+        Intercept: 70.4972365748072
+        b_ln_building_sqft: -19.890180441358876
+        b_ln_parcel_sqft: 3.5781356771817703
+        b_total_jobs: 5.109228868376926
+        crime_other_rate: -26.569454018867894
+        nodes_walk_highinc_hhs: 3.473369529219169
+        nodes_walk_ln_popden: -10.804306555348424
+        nodes_walk_race_1_hhs: 8.059173739267797
+        vacant_job_spaces: -10.61654945548039
+        walk_nearest_park: 4.979675119648637
+        year_built: 15.936008904640936
+        zones_ln_empden_10: 15.336636049549739
+        zones_ln_empden_13: -2.161150362845011
+
+fit_rsquared_adj: 0.5798656348921418
+
+fit_rsquared: 0.5821173599396159

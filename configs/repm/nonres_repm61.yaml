@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 61
+
+predict_filters: hedonic_id == 61
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - zones_ln_empden_6
+    - zones_logsum_pop_low_income
+    - zones_ln_empden_5
+    - b_ln_building_sqft
+    - nodes_walk_percent_race2
+    - b_total_jobs
+    - nodes_walk_population
+    - vacant_job_spaces
+    - parcels_total_units
+    - nodes_drv_drv_20min_pop
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.491693355976956
+        b_ln_building_sqft: -0.2595223292268424
+        b_total_jobs: 0.0006547667246539544
+        nodes_drv_drv_20min_pop: 0.249183762124561
+        nodes_walk_percent_race2: -1.2396073734909367
+        nodes_walk_population: -0.0005768693955822057
+        nodes_walk_sum_nonresidential_units: -0.04047820995852033
+        parcels_total_units: -0.002076060725978897
+        vacant_job_spaces: -0.0006547667256991675
+        zones_ln_empden_5: 0.8099996278495717
+        zones_ln_empden_6: -0.5198491110265053
+        zones_logsum_job_low_income: -1.4137284849536423e-06
+        zones_logsum_pop_low_income: 7.838304063830789e-07
+    Std. Error:
+        Intercept: 0.6148093620451611
+        b_ln_building_sqft: 0.027237374569317796
+        b_total_jobs: 0.00013253944906730684
+        nodes_drv_drv_20min_pop: 0.05336988738268024
+        nodes_walk_percent_race2: 0.25165461065677064
+        nodes_walk_population: 0.00024000362845036138
+        nodes_walk_sum_nonresidential_units: 0.0175103814583892
+        parcels_total_units: 0.00044636774139358734
+        vacant_job_spaces: 0.0001325394491016531
+        zones_ln_empden_5: 0.09926661685237538
+        zones_ln_empden_6: 0.12095430312524272
+        zones_logsum_job_low_income: 3.5301247664814055e-07
+        zones_logsum_pop_low_income: 2.3424051487237755e-07
+    T-Score:
+        Intercept: 5.679310647388079
+        b_ln_building_sqft: -9.528169778859215
+        b_total_jobs: 4.940164828370816
+        nodes_drv_drv_20min_pop: 4.668995464386662
+        nodes_walk_percent_race2: -4.925828182745381
+        nodes_walk_population: -2.4035861428716543
+        nodes_walk_sum_nonresidential_units: -2.3116692263221523
+        parcels_total_units: -4.651009769427577
+        vacant_job_spaces: -4.940164834976676
+        zones_ln_empden_5: 8.159839163796272
+        zones_ln_empden_6: -4.297896789072689
+        zones_logsum_job_low_income: -4.0047550114291095
+        zones_logsum_pop_low_income: 3.3462631637833327
+
+fit_rsquared_adj: 0.5223239775717271
+
+fit_rsquared: 0.5385413733949092

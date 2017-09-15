@@ -1,0 +1,99 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 12525
+
+predict_filters: hedonic_id == 12525
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - vacant_job_spaces
+    - parcels_pptytax
+    - zones_logsum_pop_high_income
+    - zones_employment
+    - zones_ln_empden_5
+    - walk_nearest_grocery
+    - nodes_walk_midinc_hhs
+    - building_age_gt_50
+    - b_ln_parcels_parcel_far
+    - nodes_walk_quarter_mile_to_transit
+    - nodes_walk_race_2_hhs
+    - nodes_drv_drv_10min_pop
+    - nodes_drv_drv_15min_retail_jobs
+    - building_age_le_10
+    - zones_ln_empden_12
+    - drv_nearest_healthcenter
+    - parcels_total_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.977802104814462
+        b_ln_parcels_parcel_far: 0.2164339742715596
+        building_age_gt_50: 0.411880460797499
+        building_age_le_10: 0.27583247424389257
+        drv_nearest_healthcenter: -0.01766465785318873
+        nodes_drv_drv_10min_pop: -0.15316150219462327
+        nodes_drv_drv_15min_retail_jobs: 0.2832841078050409
+        nodes_walk_midinc_hhs: 0.001479902977660841
+        nodes_walk_quarter_mile_to_transit: 0.02018961850222427
+        nodes_walk_race_2_hhs: -0.0008277612865989529
+        parcels_pptytax: -0.007390456315059692
+        parcels_total_units: -0.015315122906404329
+        vacant_job_spaces: -0.0017608212798093722
+        walk_nearest_grocery: -3.588336401944098e-05
+        zones_employment: 9.000939901127939e-05
+        zones_ln_empden_12: -0.24848233131790493
+        zones_ln_empden_5: 0.25473658185199477
+        zones_logsum_pop_high_income: -7.128114982286936e-07
+    Std. Error:
+        Intercept: 0.299558441407651
+        b_ln_parcels_parcel_far: 0.0972932629042505
+        building_age_gt_50: 0.03607434334130399
+        building_age_le_10: 0.07338460332193333
+        drv_nearest_healthcenter: 0.003916347092087254
+        nodes_drv_drv_10min_pop: 0.03652757379798207
+        nodes_drv_drv_15min_retail_jobs: 0.039530379711986294
+        nodes_walk_midinc_hhs: 0.0003295196272600817
+        nodes_walk_quarter_mile_to_transit: 0.00876928619500057
+        nodes_walk_race_2_hhs: 0.00028358800381351643
+        parcels_pptytax: 0.0019617618977000053
+        parcels_total_units: 0.0025537997220313156
+        vacant_job_spaces: 0.0002738000643616684
+        walk_nearest_grocery: 7.510929019075482e-06
+        zones_employment: 1.0513482421423009e-05
+        zones_ln_empden_12: 0.0505136120807604
+        zones_ln_empden_5: 0.04424032296639202
+        zones_logsum_pop_high_income: 1.3364690083907376e-07
+    T-Score:
+        Intercept: 13.278885035328754
+        b_ln_parcels_parcel_far: 2.224552531294581
+        building_age_gt_50: 11.417545619629031
+        building_age_le_10: 3.758724061419723
+        drv_nearest_healthcenter: -4.510493436314446
+        nodes_drv_drv_10min_pop: -4.193037923670817
+        nodes_drv_drv_15min_retail_jobs: 7.166237963536289
+        nodes_walk_midinc_hhs: 4.491092048039949
+        nodes_walk_quarter_mile_to_transit: 2.3023103652078896
+        nodes_walk_race_2_hhs: -2.918886819850382
+        parcels_pptytax: -3.7672544887961976
+        parcels_total_units: -5.9969945075499265
+        vacant_job_spaces: -6.4310477205858705
+        walk_nearest_grocery: -4.777486770053095
+        zones_employment: 8.561330623226223
+        zones_ln_empden_12: -4.919116275443441
+        zones_ln_empden_5: 5.758018133039176
+        zones_logsum_pop_high_income: -5.333543043298853
+
+fit_rsquared_adj: 0.6934085278953219
+
+fit_rsquared: 0.7039167033505226

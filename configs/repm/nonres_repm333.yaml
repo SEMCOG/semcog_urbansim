@@ -1,0 +1,95 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 333
+
+predict_filters: hedonic_id == 333
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - non_residential_units
+    - year_built
+    - nodes_walk_midinc_hhs
+    - drv_nearest_healthcenter
+    - parcels_pptytax
+    - bldg_empratio_18
+    - nodes_walk_sum_residential_units
+    - nodes_walk_race_2_hhs
+    - b_total_jobs
+    - zones_ln_empden_16
+    - walk_nearest_park
+    - nodes_walk_ave_nonres_sqft_price
+    - nodes_walk_sum_nonresidential_units
+    - zones_a_ln_retail_emp_15min_drive_alone
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.6051035616060165
+        b_total_jobs: 0.0014328827695874425
+        bldg_empratio_18: 0.5170966277303275
+        drv_nearest_healthcenter: 0.0072174374957500054
+        nodes_walk_ave_nonres_sqft_price: 0.0016546379627044644
+        nodes_walk_midinc_hhs: 0.0011437133276566045
+        nodes_walk_race_2_hhs: -0.0016916855326666942
+        nodes_walk_sum_nonresidential_units: -0.09156575448488886
+        nodes_walk_sum_residential_units: -0.061742509487609024
+        non_residential_units: -0.0003884070105999651
+        parcel_sqft: 2.3752502210087403e-09
+        parcels_pptytax: -0.003572146197899821
+        walk_nearest_park: 1.1119533150409268e-05
+        year_built: 0.00014561867075161246
+        zones_a_ln_retail_emp_15min_drive_alone: 0.025324742137810205
+        zones_ln_empden_16: 0.23874473746973154
+        zones_logsum_job_low_income: -9.088470353215115e-08
+    Std. Error:
+        Intercept: 0.1012876450483791
+        b_total_jobs: 0.00012451442151995769
+        bldg_empratio_18: 0.14447299636534547
+        drv_nearest_healthcenter: 0.0018129827132985314
+        nodes_walk_ave_nonres_sqft_price: 0.000240646171550539
+        nodes_walk_midinc_hhs: 0.00014518707432273632
+        nodes_walk_race_2_hhs: 0.000269190171845913
+        nodes_walk_sum_nonresidential_units: 0.006402235293879841
+        nodes_walk_sum_residential_units: 0.0059287763873429634
+        non_residential_units: 2.8134678297832065e-05
+        parcel_sqft: 3.9995248342360283e-10
+        parcels_pptytax: 0.0008723018247662522
+        walk_nearest_park: 3.137347789708314e-06
+        year_built: 7.416192348953437e-06
+        zones_a_ln_retail_emp_15min_drive_alone: 0.006982302693333387
+        zones_ln_empden_16: 0.031128239337349452
+        zones_logsum_job_low_income: 4.289146918015405e-08
+    T-Score:
+        Intercept: 35.59272762126192
+        b_total_jobs: 11.507765543108388
+        bldg_empratio_18: 3.579192241729976
+        drv_nearest_healthcenter: 3.9809742491248783
+        nodes_walk_ave_nonres_sqft_price: 6.875812534407877
+        nodes_walk_midinc_hhs: 7.877514806271558
+        nodes_walk_race_2_hhs: -6.284351026140104
+        nodes_walk_sum_nonresidential_units: -14.302153901219521
+        nodes_walk_sum_residential_units: -10.414039163193927
+        non_residential_units: -13.805276409714414
+        parcel_sqft: 5.93883103481829
+        parcels_pptytax: -4.095080505944186
+        walk_nearest_park: 3.5442462537578834
+        year_built: 19.635233809997114
+        zones_a_ln_retail_emp_15min_drive_alone: 3.626990013192917
+        zones_ln_empden_16: 7.669715427279945
+        zones_logsum_job_low_income: -2.1189459179030323
+
+fit_rsquared_adj: 0.4324795070147893
+
+fit_rsquared: 0.43762708518245563

@@ -1,0 +1,59 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 42
+
+predict_filters: hedonic_id == 42
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_low_income
+    - crime_other_rate
+    - nodes_walk_percent_high_income
+    - bldg_empratio_18
+    - nodes_walk_sum_residential_units
+    - zones_ln_empden_16
+    - building_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.6256915391397895
+        bldg_empratio_18: -2.4538735015890882
+        building_sqft: -8.426875490811543e-07
+        crime_other_rate: -4.7883370456727525e-05
+        nodes_walk_percent_high_income: 2.0874652754774408
+        nodes_walk_sum_residential_units: -0.17317742445234385
+        zones_ln_empden_16: 0.855899405178933
+        zones_logsum_job_low_income: -3.2918985617691575e-07
+    Std. Error:
+        Intercept: 0.24045814918340716
+        bldg_empratio_18: 0.7634163255661586
+        building_sqft: 2.885192049448385e-07
+        crime_other_rate: 2.418833950211419e-05
+        nodes_walk_percent_high_income: 0.6354611652184746
+        nodes_walk_sum_residential_units: 0.0647465072205149
+        zones_ln_empden_16: 0.34613874991337584
+        zones_logsum_job_low_income: 1.6487879856166158e-07
+    T-Score:
+        Intercept: 19.236992195309575
+        bldg_empratio_18: -3.2143319698714414
+        building_sqft: -2.92073295170166
+        crime_other_rate: -1.9796055224271292
+        nodes_walk_percent_high_income: 3.28496120570918
+        nodes_walk_sum_residential_units: -2.674699097860721
+        zones_ln_empden_16: 2.4727061197081492
+        zones_logsum_job_low_income: -1.996556616427581
+
+fit_rsquared_adj: 0.38596757685171934
+
+fit_rsquared: 0.4160251080547821
