@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1000003
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 3)
+
+alts_predict_filters: large_area_id == 3
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_high_income
+- b_ln_non_residential_sqft
+- zones_empden
+- parcels_pct_undev
+- b_ln_land_area
+- bldg_empratio_12
+- nodes_drv_drv_60min_jobs
+- building_type_id_is_11
+- nodes_walk_retail
+- building_type_id_is_23
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.3970693335973592
+        b_ln_non_residential_sqft: 0.8257155801599739
+        bldg_empratio_12: 2.5399512171181975
+        building_type_id_is_11: -1.5987478197159442
+        building_type_id_is_23: 2.191466638293673
+        nodes_drv_drv_60min_jobs: 3.0
+        nodes_walk_retail: -0.00034869382705673713
+        parcels_pct_undev: 0.004728540471005217
+        zones_empden: 0.0439133653694895
+        zones_logsum_job_high_income: -2.179017137480505e-06
+    Std. Error:
+        b_ln_land_area: 0.1371852508217697
+        b_ln_non_residential_sqft: 0.12583499479613494
+        bldg_empratio_12: 0.5787512840984919
+        building_type_id_is_11: 0.43790124300654987
+        building_type_id_is_23: 0.11739411274821349
+        nodes_drv_drv_60min_jobs: 0.04998501614044263
+        nodes_walk_retail: 0.0007373188515317061
+        parcels_pct_undev: 0.0013668869905496706
+        zones_empden: 0.009870491172831761
+        zones_logsum_job_high_income: 5.97822396538802e-07
+    T-Score:
+        b_ln_land_area: 2.8944025047796824
+        b_ln_non_residential_sqft: 6.561891479375148
+        bldg_empratio_12: 4.388674871062487
+        building_type_id_is_11: -3.6509323626012886
+        building_type_id_is_23: 18.66760254829749
+        nodes_drv_drv_60min_jobs: 60.01798602146924
+        nodes_walk_retail: -0.47292135055595097
+        parcels_pct_undev: 3.4593499709172844
+        zones_empden: 4.448954423905444
+        zones_logsum_job_high_income: -3.6449238939462756
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -804.4831211961167
+    'null': -3566.96968062451
+    ratio: 0.7744631456874995

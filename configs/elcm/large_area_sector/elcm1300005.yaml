@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1300005
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 5)
+
+alts_predict_filters: large_area_id == 5
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_non_residential_sqft
+- nodes_drv_drv_60min_jobs
+- b_ln_land_area
+- zones_ln_empden_13
+- building_type_id_is_31
+- stories
+- building_type_id_is_11
+- year_built
+- sqft_price_nonres
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.8300997550470177
+        b_ln_non_residential_sqft: 0.3578387506691873
+        building_type_id_is_11: 3.0
+        building_type_id_is_31: -3.0
+        nodes_drv_drv_60min_jobs: 3.0
+        sqft_price_nonres: -0.012502601457188347
+        stories: 0.057285079338839306
+        year_built: -0.00025118754166446566
+        zones_ln_empden_13: 0.5795380784300372
+    Std. Error:
+        b_ln_land_area: 0.17683511081993158
+        b_ln_non_residential_sqft: 0.15070267917665897
+        building_type_id_is_11: 0.18293653192697545
+        building_type_id_is_31: 2.683205751527097
+        nodes_drv_drv_60min_jobs: 0.049968858037409025
+        sqft_price_nonres: 0.004930554110623138
+        stories: 0.032854817518315683
+        year_built: 9.634039310973163e-05
+        zones_ln_empden_13: 0.09439254066008457
+    T-Score:
+        b_ln_land_area: 4.6942021366576645
+        b_ln_non_residential_sqft: 2.37446840775615
+        building_type_id_is_11: 16.399130170443698
+        building_type_id_is_31: -1.118065581922894
+        nodes_drv_drv_60min_jobs: 60.03739364533926
+        sqft_price_nonres: -2.535739630207249
+        stories: 1.7435823317814627
+        year_built: -2.6072920563897144
+        zones_ln_empden_13: 6.139659705918949
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -447.53322089603563
+    'null': -4263.711915537648
+    ratio: 0.8950367121978497

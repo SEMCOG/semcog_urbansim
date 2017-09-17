@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1600099
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+
+alts_predict_filters: large_area_id == 99
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_total_jobs
+- b_is_pre_1945
+- nodes_walk_office
+- b_ln_building_sqft
+- nodes_drv_drv_45min_jobs
+- building_type_id_is_31
+- nodes_walk_ave_lot_sqft
+- building_type_id_is_26
+- parcels_land_cost
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: -0.29600100517505523
+        b_ln_building_sqft: 1.077276550869481
+        b_total_jobs: 0.0005722918764476242
+        building_type_id_is_26: 3.0
+        building_type_id_is_31: -2.0572615093532876
+        nodes_drv_drv_45min_jobs: 0.07611004907775358
+        nodes_walk_ave_lot_sqft: 0.053285444902740835
+        nodes_walk_office: 0.0038973235741880997
+        parcels_land_cost: -1.8432108086852125e-08
+    Std. Error:
+        b_is_pre_1945: 0.09833970314037153
+        b_ln_building_sqft: 0.044157193922323784
+        b_total_jobs: 0.00023454796435736283
+        building_type_id_is_26: 0.10739648269565034
+        building_type_id_is_31: 0.26646644742196307
+        nodes_drv_drv_45min_jobs: 0.032885058010581406
+        nodes_walk_ave_lot_sqft: 0.04220919111434592
+        nodes_walk_office: 0.0005479417034388334
+        parcels_land_cost: 2.184523071663658e-09
+    T-Score:
+        b_is_pre_1945: -3.0099847337604735
+        b_ln_building_sqft: 24.39639966172898
+        b_total_jobs: 2.4399780147981445
+        building_type_id_is_26: 27.933875716411173
+        building_type_id_is_31: -7.720527403195008
+        nodes_drv_drv_45min_jobs: 2.314426480660721
+        nodes_walk_ave_lot_sqft: 1.2624133155830686
+        nodes_walk_office: 7.112660981503769
+        parcels_land_cost: -8.437589113130704
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1477.6266317471307
+    'null': -4167.307329574824
+    ratio: 0.6454241276469792

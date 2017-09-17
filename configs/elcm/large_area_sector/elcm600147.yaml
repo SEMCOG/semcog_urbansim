@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 600147
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_sqft_price_nonres
+- zones_employment
+- b_ln_building_sqft
+- nodes_drv_drv_15min_retail_jobs
+- building_type_id_is_33
+- building_type_id_is_11
+- nodes_walk_ave_income
+- bldg_empratio_6
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.8083020560282587
+        b_ln_sqft_price_nonres: -0.10367111101657081
+        bldg_empratio_6: 3.0
+        building_type_id_is_11: -2.8436671524525434
+        building_type_id_is_33: 1.4527350962242451
+        nodes_drv_drv_15min_retail_jobs: 0.32693107203031624
+        nodes_walk_ave_income: -0.07922453444524413
+        zones_employment: 0.0006011984007505832
+    Std. Error:
+        b_ln_building_sqft: 0.04337034406652459
+        b_ln_sqft_price_nonres: 0.036571237263393
+        bldg_empratio_6: 0.18097241372717707
+        building_type_id_is_11: 1.0023793700649746
+        building_type_id_is_33: 0.1866173158233057
+        nodes_drv_drv_15min_retail_jobs: 0.054570534908556075
+        nodes_walk_ave_income: 0.020631546139098886
+        zones_employment: 0.0001678973502762905
+    T-Score:
+        b_ln_building_sqft: 18.637206446608452
+        b_ln_sqft_price_nonres: -2.8347717707747146
+        bldg_empratio_6: 16.577112158776952
+        building_type_id_is_11: -2.836917076882993
+        building_type_id_is_33: 7.7845675242684
+        nodes_drv_drv_15min_retail_jobs: 5.99098162732242
+        nodes_walk_ave_income: -3.8399707860529926
+        zones_employment: 3.5807497840868603
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -543.3897421237249
+    'null': -2655.5081406123554
+    ratio: 0.7953725941135996

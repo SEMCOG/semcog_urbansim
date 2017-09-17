@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 700147
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- vacant_job_spaces
+- zones_ln_empden_7
+- nodes_drv_drv_60min_jobs
+- b_ln_building_sqft
+- zones_households
+- b_total_jobs
+- building_type_id_is_31
+- b_ln_land_area
+- building_type_id_is_41
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.4608007173999633
+        b_ln_land_area: 0.7347361795075005
+        b_total_jobs: 0.009006010042637616
+        building_type_id_is_31: -2.383044567946903
+        building_type_id_is_41: 3.0
+        nodes_drv_drv_60min_jobs: 1.1409129244362552
+        vacant_job_spaces: -0.0006692958517069629
+        zones_households: -0.002353500261301722
+        zones_ln_empden_7: 3.0
+    Std. Error:
+        b_ln_building_sqft: 0.22430476101995112
+        b_ln_land_area: 0.2601215604186507
+        b_total_jobs: 0.0012098504147008905
+        building_type_id_is_31: 0.5938997640044753
+        building_type_id_is_41: 0.29549493832798823
+        nodes_drv_drv_60min_jobs: 0.10781059993696736
+        vacant_job_spaces: 0.00017497541326567609
+        zones_households: 0.0005403114166764509
+        zones_ln_empden_7: 0.667101543897276
+    T-Score:
+        b_ln_building_sqft: 2.054351032517659
+        b_ln_land_area: 2.8245877747503316
+        b_total_jobs: 7.443903753063686
+        building_type_id_is_31: -4.012536647394501
+        building_type_id_is_41: 10.152458167219478
+        nodes_drv_drv_60min_jobs: 10.582567253157876
+        vacant_job_spaces: -3.825085131764937
+        zones_households: -4.355821825454864
+        zones_ln_empden_7: 4.497066492266965
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -181.20945674365308
+    'null': -4290.004075345691
+    ratio: 0.9577600735194987

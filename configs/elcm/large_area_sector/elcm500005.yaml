@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 500005
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 5)
+
+alts_predict_filters: large_area_id == 5
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_non_residential_sqft
+- zones_ln_empden_5
+- nodes_walk_hhsize
+- nodes_drv_drv_45min_jobs
+- building_type_id_is_11
+- building_age
+- zones_logsum_pop_high_income
+- building_type_id_is_22
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.9898913072870793
+        building_age: -0.0007254980936621529
+        building_type_id_is_11: -3.0
+        building_type_id_is_22: 2.2024424507900218
+        nodes_drv_drv_45min_jobs: 0.36219144225095273
+        nodes_walk_hhsize: 0.7028155437584361
+        zones_ln_empden_5: 1.7991427422500883
+        zones_logsum_pop_high_income: 6.79780315605815e-08
+    Std. Error:
+        b_ln_non_residential_sqft: 0.027641849339813025
+        building_age: 0.00012622128808844116
+        building_type_id_is_11: 0.5177474859086124
+        building_type_id_is_22: 0.10890259211370773
+        nodes_drv_drv_45min_jobs: 0.03474074751550709
+        nodes_walk_hhsize: 0.090255058329222
+        zones_ln_empden_5: 0.12800233121847998
+        zones_logsum_pop_high_income: 2.1130652514099004e-07
+    T-Score:
+        b_ln_non_residential_sqft: 35.811327061294776
+        building_age: -5.747826730731891
+        building_type_id_is_11: -5.794330405555132
+        building_type_id_is_22: 20.223967198966214
+        nodes_drv_drv_45min_jobs: 10.425551208686075
+        nodes_walk_hhsize: 7.78699340257237
+        zones_ln_empden_5: 14.055546685155544
+        zones_logsum_pop_high_income: 0.32170341883775017
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1940.9663450183925
+    'null': -3488.0932012003814
+    ratio: 0.44354515975936815

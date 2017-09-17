@@ -1,0 +1,83 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 900161
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
+
+alts_predict_filters: large_area_id == 161
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_high_income
+- vacant_job_spaces
+- zones_empden
+- b_ln_building_sqft
+- nodes_drv_drv_10min_pop
+- nodes_drv_drv_15min_retail_jobs
+- nodes_walk_ave_lot_sqft
+- zones_ln_empden_11
+- building_type_id_is_11
+- nodes_walk_max_office_far
+- building_type_id_is_24
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.841141282003845
+        building_type_id_is_11: -3.0
+        building_type_id_is_24: 3.0
+        nodes_drv_drv_10min_pop: 1.1439322212064764
+        nodes_drv_drv_15min_retail_jobs: 0.3021899320315461
+        nodes_walk_ave_lot_sqft: 0.22654561017411062
+        nodes_walk_max_office_far: -0.020534861136448736
+        vacant_job_spaces: -0.0018976190478131047
+        zones_empden: 0.0021753673588908607
+        zones_ln_empden_11: 2.101498963107299
+        zones_logsum_job_high_income: -3.856685707262292e-06
+    Std. Error:
+        b_ln_building_sqft: 0.04571977354854494
+        building_type_id_is_11: 0.5903003801293536
+        building_type_id_is_24: 0.15868551464413252
+        nodes_drv_drv_10min_pop: 0.12230886236725748
+        nodes_drv_drv_15min_retail_jobs: 0.15942581828963331
+        nodes_walk_ave_lot_sqft: 0.06228825630534915
+        nodes_walk_max_office_far: 0.009081126680992929
+        vacant_job_spaces: 0.00025465797056016347
+        zones_empden: 0.0015971534954792737
+        zones_ln_empden_11: 0.6437521902695573
+        zones_logsum_job_high_income: 1.0291623708815132e-06
+    T-Score:
+        b_ln_building_sqft: 18.397756959813613
+        building_type_id_is_11: -5.082158340034619
+        building_type_id_is_24: 18.905317266845607
+        nodes_drv_drv_10min_pop: 9.352815479319766
+        nodes_drv_drv_15min_retail_jobs: 1.8954892957334504
+        nodes_walk_ave_lot_sqft: 3.6370517271111265
+        nodes_walk_max_office_far: -2.2612679965613536
+        vacant_job_spaces: -7.451638146801254
+        zones_empden: 1.3620277356235424
+        zones_ln_empden_11: 3.264453301863473
+        zones_logsum_job_high_income: -3.747402563852881
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1216.1636131941789
+    'null': -2506.5192350334455
+    ratio: 0.5147998083573648

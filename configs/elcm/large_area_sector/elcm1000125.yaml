@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1000125
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 125)
+
+alts_predict_filters: large_area_id == 125
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_total_jobs
+- b_ln_non_residential_sqft
+- zones_ln_empden_14
+- b_ln_land_area
+- nodes_drv_drv_45min_jobs
+- building_type_id_is_11
+- building_age
+- building_type_id_is_23
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.33071296834276126
+        b_ln_non_residential_sqft: 0.717230578154214
+        b_total_jobs: 0.0023643573273158395
+        building_age: -0.0004545186277438201
+        building_type_id_is_11: -3.0
+        building_type_id_is_23: 2.18423117974976
+        nodes_drv_drv_45min_jobs: 0.20089743731114967
+        zones_ln_empden_14: 0.5821477224174548
+    Std. Error:
+        b_ln_land_area: 0.09745571354460354
+        b_ln_non_residential_sqft: 0.08414558933256137
+        b_total_jobs: 6.673142449225239e-05
+        building_age: 0.0008150131087308253
+        building_type_id_is_11: 6.391801473225191
+        building_type_id_is_23: 0.11435347321542268
+        nodes_drv_drv_45min_jobs: 0.03808959344822949
+        zones_ln_empden_14: 0.11999500431394346
+    T-Score:
+        b_ln_land_area: 3.393469262234692
+        b_ln_non_residential_sqft: 8.523685957199316
+        b_total_jobs: 35.430943446896514
+        building_age: -0.5576825978316063
+        building_type_id_is_11: -0.4693512482461776
+        building_type_id_is_23: 19.10069819772799
+        nodes_drv_drv_45min_jobs: 5.274339238726842
+        zones_ln_empden_14: 4.851432988779926
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -918.8582048789425
+    'null': -3891.239651590373
+    ratio: 0.7638649152582007

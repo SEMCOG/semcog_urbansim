@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1600093
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
+
+alts_predict_filters: large_area_id == 93
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_non_residential_sqft
+- zones_population
+- zones_empden
+- nodes_drv_drv_60min_jobs
+- popden
+- building_type_id_is_31
+- nodes_walk_ave_lot_sqft
+- zones_ln_empden_11
+- building_age
+- building_type_id_is_26
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 1.0568061442693308
+        building_age: -0.008620898792683079
+        building_type_id_is_26: 3.0
+        building_type_id_is_31: -3.0
+        nodes_drv_drv_60min_jobs: 1.1548259281522844
+        nodes_walk_ave_lot_sqft: 0.05155513270102261
+        popden: 0.042212578644780056
+        zones_empden: 0.1733498688758741
+        zones_ln_empden_11: 2.6461507995507785
+        zones_population: 7.888536961154358e-05
+    Std. Error:
+        b_ln_non_residential_sqft: 0.045196573933693716
+        building_age: 0.0017744327051186634
+        building_type_id_is_26: 0.10270779728086718
+        building_type_id_is_31: 0.3941703015407685
+        nodes_drv_drv_60min_jobs: 0.035304160718534046
+        nodes_walk_ave_lot_sqft: 0.05219632294955353
+        popden: 0.031245066146584156
+        zones_empden: 0.017218321553833515
+        zones_ln_empden_11: 0.8105749132211691
+        zones_population: 3.4669647230854296e-05
+    T-Score:
+        b_ln_non_residential_sqft: 23.382439249039837
+        building_age: -4.858397147333105
+        building_type_id_is_26: 29.209077396491416
+        building_type_id_is_31: -7.610923472096525
+        nodes_drv_drv_60min_jobs: 32.71075999679612
+        nodes_walk_ave_lot_sqft: 0.9877157965868475
+        popden: 1.3510158194814677
+        zones_empden: 10.06775650773459
+        zones_ln_empden_11: 3.264535771326991
+        zones_population: 2.2753438789345237
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1572.7560444707347
+    'null': -4084.048823516021
+    ratio: 0.6149027319617779

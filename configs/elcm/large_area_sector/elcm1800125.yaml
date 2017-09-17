@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1800125
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 125)
+
+alts_predict_filters: large_area_id == 125
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- nodes_walk_population
+- b_ln_building_sqft
+- b_ln_parcel_sqft
+- building_type_id_is_23
+- b_total_jobs
+- building_type_id_is_12
+- zones_transit_jobs_50min
+- sqft_price_nonres
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.6154390193828624
+        b_ln_parcel_sqft: -0.06259345068721826
+        b_total_jobs: 0.006949985131535722
+        building_type_id_is_12: 0.6582841094747405
+        building_type_id_is_23: -0.8633398481605482
+        nodes_walk_population: -0.0016858233254483832
+        sqft_price_nonres: -0.04428931647933999
+        zones_transit_jobs_50min: 1.5054754127097236e-06
+    Std. Error:
+        b_ln_building_sqft: 0.040435976081504024
+        b_ln_parcel_sqft: 0.030898839982289136
+        b_total_jobs: 0.00015393393773158932
+        building_type_id_is_12: 0.3465859910681241
+        building_type_id_is_23: 0.16484453851644995
+        nodes_walk_population: 0.000525301666184681
+        sqft_price_nonres: 0.0011740593038510154
+        zones_transit_jobs_50min: 9.767882665460359e-07
+    T-Score:
+        b_ln_building_sqft: 15.220085652003656
+        b_ln_parcel_sqft: -2.0257540646540813
+        b_total_jobs: 45.14914146907769
+        building_type_id_is_12: 1.8993384800291877
+        building_type_id_is_23: -5.237297249459041
+        nodes_walk_population: -3.2092480073263197
+        sqft_price_nonres: -37.723236240339155
+        zones_transit_jobs_50min: 1.5412505087035366
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1322.664817051305
+    'null': -4298.768128615038
+    ratio: 0.69231538490134

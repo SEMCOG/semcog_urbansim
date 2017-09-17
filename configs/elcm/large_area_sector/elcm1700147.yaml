@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1700147
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_low_income
+- bldg_empratio_17
+- b_ln_non_residential_sqft
+- zones_empden
+- b_ln_parcels_parcel_far
+- nodes_drv_drv_15min_retail_jobs
+- building_type_id_is_13
+- building_type_id_is_41
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.9295418420840016
+        b_ln_parcels_parcel_far: 1.386870487430671
+        bldg_empratio_17: 3.0
+        building_type_id_is_13: 0.4509245015916984
+        building_type_id_is_41: -1.8415459187843928
+        nodes_drv_drv_15min_retail_jobs: 0.41698437414257195
+        zones_empden: 0.006119099624952867
+        zones_logsum_job_low_income: -3.620793949193477e-07
+    Std. Error:
+        b_ln_non_residential_sqft: 0.035695904731790226
+        b_ln_parcels_parcel_far: 0.3114492587323314
+        bldg_empratio_17: 0.14429714049142153
+        building_type_id_is_13: 0.16432629661092776
+        building_type_id_is_41: 0.5335664750210466
+        nodes_drv_drv_15min_retail_jobs: 0.04508167865607631
+        zones_empden: 0.011218548622056734
+        zones_logsum_job_low_income: 3.788769936066811e-07
+    T-Score:
+        b_ln_non_residential_sqft: 26.04057381563342
+        b_ln_parcels_parcel_far: 4.452958061533188
+        bldg_empratio_17: 20.790432781849546
+        building_type_id_is_13: 2.7440799853193534
+        building_type_id_is_41: -3.4513898548662616
+        nodes_drv_drv_15min_retail_jobs: 9.2495307755442
+        zones_empden: 0.5454448548649274
+        zones_logsum_job_low_income: -0.9556647699100693
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -839.3923709509562
+    'null': -3168.2052568691925
+    ratio: 0.735057452754674

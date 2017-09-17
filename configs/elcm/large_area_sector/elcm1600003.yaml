@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1600003
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 3)
+
+alts_predict_filters: large_area_id == 3
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_logsum_job_high_income
+- b_ln_building_sqft
+- zones_ln_empden_9
+- nodes_walk_industrial
+- b_total_jobs
+- building_type_id_is_33
+- nodes_walk_ave_lot_sqft
+- building_type_id_is_26
+- nodes_drv_drv_30min_jobs
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.9020449815453343
+        b_total_jobs: 0.0007684887137214453
+        building_type_id_is_26: 3.0
+        building_type_id_is_33: -2.4991946739607633
+        nodes_drv_drv_30min_jobs: 0.43640097508517794
+        nodes_walk_ave_lot_sqft: 0.0943656063318587
+        nodes_walk_industrial: -0.006851742275463219
+        zones_ln_empden_9: 0.7732716217771268
+        zones_logsum_job_high_income: -1.4553286919084918e-06
+    Std. Error:
+        b_ln_building_sqft: 0.038576465886900155
+        b_total_jobs: 0.00014137340309233436
+        building_type_id_is_26: 0.10024283340888746
+        building_type_id_is_33: 0.3947307307940626
+        nodes_drv_drv_30min_jobs: 0.04577227634879468
+        nodes_walk_ave_lot_sqft: 0.04235687341549609
+        nodes_walk_industrial: 0.0015148840553569844
+        zones_ln_empden_9: 0.1656639918057149
+        zones_logsum_job_high_income: 5.004953232488873e-07
+    T-Score:
+        b_ln_building_sqft: 23.38329758329811
+        b_total_jobs: 5.4358790049039625
+        building_type_id_is_26: 29.927326452985337
+        building_type_id_is_33: -6.331391196558834
+        nodes_drv_drv_30min_jobs: 9.534176796445687
+        nodes_walk_ave_lot_sqft: 2.227869970622889
+        nodes_walk_industrial: -4.522948308310366
+        zones_ln_empden_9: 4.6677109089825235
+        zones_logsum_job_high_income: -2.9077768049088903
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1468.89880524865
+    'null': -4119.105036593412
+    ratio: 0.6433937002821708

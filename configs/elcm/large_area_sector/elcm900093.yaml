@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 900093
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
+
+alts_predict_filters: large_area_id == 93
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_population
+- zones_empden
+- b_ln_building_sqft
+- bldg_empratio_12
+- popden
+- b_ln_parcels_parcel_far
+- building_type_id_is_31
+- nodes_drv_drv_15min_retail_jobs
+- building_type_id_is_23
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.8651990210472369
+        b_ln_parcels_parcel_far: 0.47008571701397395
+        bldg_empratio_12: 2.3169648447143443
+        building_type_id_is_23: 2.691872633608612
+        building_type_id_is_31: -1.228334293529571
+        nodes_drv_drv_15min_retail_jobs: 1.1897753385276524
+        popden: 0.16866980119863914
+        zones_empden: 0.1394524924737147
+        zones_population: 1.9076689052424936e-05
+    Std. Error:
+        b_ln_building_sqft: 0.055646428525626755
+        b_ln_parcels_parcel_far: 0.32163892572858116
+        bldg_empratio_12: 0.40441745055027634
+        building_type_id_is_23: 0.13501445370461215
+        building_type_id_is_31: 0.3881850398897209
+        nodes_drv_drv_15min_retail_jobs: 0.06025050867588772
+        popden: 0.0422748989870418
+        zones_empden: 0.028170750664210733
+        zones_population: 5.635336728569162e-05
+    T-Score:
+        b_ln_building_sqft: 15.548150060498282
+        b_ln_parcels_parcel_far: 1.4615324185315224
+        bldg_empratio_12: 5.729141612365473
+        building_type_id_is_23: 19.937662670531225
+        building_type_id_is_31: -3.16430095780746
+        nodes_drv_drv_15min_retail_jobs: 19.747141803033458
+        popden: 3.989833334677871
+        zones_empden: 4.9502583064242165
+        zones_population: 0.33851906232528883
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -585.8475207319935
+    'null': -1687.080254349441
+    ratio: 0.6527447231857363

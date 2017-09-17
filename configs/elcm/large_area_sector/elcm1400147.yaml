@@ -1,0 +1,87 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1400147
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_sqft_price_nonres
+- nodes_drv_drv_20min_pop
+- b_ln_non_residential_sqft
+- zones_employment
+- b_ln_parcels_parcel_far
+- building_type_id_is_31
+- zones_ln_empden_16
+- nodes_walk_residential
+- zones_logsum_pop_high_income
+- b_is_pre_1945
+- building_type_id_is_51
+- zones_transit_jobs_50min
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: -0.32846864803389264
+        b_ln_non_residential_sqft: 1.1381949944450978
+        b_ln_parcels_parcel_far: 0.3645146208303225
+        b_ln_sqft_price_nonres: -0.13577314379142927
+        building_type_id_is_31: -3.0
+        building_type_id_is_51: 3.0
+        nodes_drv_drv_20min_pop: 0.4564200267623063
+        nodes_walk_residential: 0.004717442692944437
+        zones_employment: 0.0009029921002008031
+        zones_ln_empden_16: 0.5935011639070474
+        zones_logsum_pop_high_income: -8.424663688533099e-07
+        zones_transit_jobs_50min: 3.4962544676043494e-05
+    Std. Error:
+        b_is_pre_1945: 0.10579123469861183
+        b_ln_non_residential_sqft: 0.03611235742501364
+        b_ln_parcels_parcel_far: 0.24690193451371403
+        b_ln_sqft_price_nonres: 0.023145420063494928
+        building_type_id_is_31: 0.5021382962940784
+        building_type_id_is_51: 0.11560908501707495
+        nodes_drv_drv_20min_pop: 0.04069861575638824
+        nodes_walk_residential: 0.0012701758447615803
+        zones_employment: 8.735380110816375e-05
+        zones_ln_empden_16: 0.1843132452054609
+        zones_logsum_pop_high_income: 3.402175685443472e-07
+        zones_transit_jobs_50min: 5.338974962588315e-06
+    T-Score:
+        b_is_pre_1945: -3.1048758337083924
+        b_ln_non_residential_sqft: 31.518158204114194
+        b_ln_parcels_parcel_far: 1.4763538469159938
+        b_ln_sqft_price_nonres: -5.866091149737712
+        building_type_id_is_31: -5.974449712640606
+        building_type_id_is_51: 25.949517717893134
+        nodes_drv_drv_20min_pop: 11.214632691547122
+        nodes_walk_residential: 3.714007562338685
+        zones_employment: 10.337181539274917
+        zones_ln_empden_16: 3.2200678971576315
+        zones_logsum_pop_high_income: -2.4762576855095446
+        zones_transit_jobs_50min: 6.548550034610723
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1154.8279671155021
+    'null': -3759.7788525501583
+    ratio: 0.6928468369004701
