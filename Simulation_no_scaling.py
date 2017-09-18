@@ -29,8 +29,8 @@ orca.run([
     orca.get_injectable('repm_step_names') +  # In place of ['nrh_simulate', 'rsh_simulate']
     # ["increase_property_values"] +  # Hack to make more feasibility
     orca.get_injectable('hlcm_step_names') +
-    ["elcm_simulate",
-    "government_jobs_scaling_model",
+    orca.get_injectable('elcm_step_names') +
+    ["government_jobs_scaling_model",
     "refiner",
     # "gq_model", Fixme: we have new data so need new approach
     # "travel_model", Fixme: on hold
