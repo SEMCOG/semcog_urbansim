@@ -141,8 +141,9 @@ def elcm_simulate(jobs, buildings, nodes_drv):
 def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = annual_relocation_rates_for_households.to_frame()
     relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
-    relocation_rates.probability_of_relocating *= .05
     reloc = relocation.RelocationModel(relocation_rates, 'probability_of_relocating')
+    _print_number_unplaced(households, 'building_id')
+    print "un-placing"
     hh = households.to_frame(households.local_columns)
     idx_reloc = reloc.find_movers(hh)
     households.update_col_from_series('building_id',
@@ -159,7 +160,9 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     print "un-placing"
     j = jobs.to_frame(jobs.local_columns)
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
-    jobs.update_col_from_series('building_id', pd.Series(-1, index=idx_reloc), cast=True)
+    jobs.update_col_from_series('building_id',
+                                pd.Series(-1, index=idx_reloc),
+                                cast=True)
     _print_number_unplaced(jobs, 'building_id')
 
 
