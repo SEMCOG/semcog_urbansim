@@ -1,5 +1,5 @@
 import os
-import random
+import yaml
 import operator
 from multiprocessing import Pool
 
@@ -7,7 +7,6 @@ import numpy as np
 import orca
 import pandana as pdna
 import pandas as pd
-from urbansim.developer import sqftproforma
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
@@ -49,30 +48,36 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
     jobs = jobs.to_frame()
     households = households.to_frame()
     nodes = nodes.to_frame()
-    import pdb;
+    import pdb
     pdb.set_trace()
 
 
-@orca.step()
-def rsh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("rsh.yaml", buildings, nodes_walk)
+def make_repm_func(model_name, yaml_file, dep_var):
+    """
+    Generator function for single-model REPMs.
+    """
+    @orca.step(model_name)
+    def func():
+        buildings = orca.get_table('buildings')
+        nodes_walk = orca.get_table('nodes_walk')
+        print yaml_file
+        return utils.hedonic_simulate(yaml_file, buildings,
+                                      nodes_walk, dep_var)
+    return func
 
 
-@orca.step()
-def rsh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("rsh.yaml", buildings, nodes_walk,
-                                  "sqft_price_res")
+repm_step_names = []
+for repm_config in os.listdir('./configs/repm'):
+    model_name = repm_config.split('.')[0]
 
+    if repm_config.startswith('res'):
+        dep_var = 'sqft_price_res'
+    elif repm_config.startswith('nonres'):
+        dep_var = 'sqft_price_nonres'
 
-@orca.step()
-def nrh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("nrh.yaml", buildings, nodes_walk)
-
-
-@orca.step()
-def nrh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("nrh.yaml", buildings, nodes_walk,
-                                  "sqft_price_nonres")
+    make_repm_func(model_name, "repm/" + repm_config, dep_var)
+    repm_step_names.append(model_name)
+orca.add_injectable('repm_step_names', repm_step_names)
 
 
 @orca.step()
@@ -148,14 +153,13 @@ def households_relocation(households, annual_relocation_rates_for_households):
 
 @orca.step()
 def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
-    relocation_rates = annual_relocation_rates_for_jobs.to_frame()
-    relocation_rates.job_relocation_probability *= .05
+    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, 'job_relocation_probability')
+    _print_number_unplaced(jobs, 'building_id')
+    print "un-placing"
     j = jobs.to_frame(jobs.local_columns)
-    idx_reloc = reloc.find_movers(j)
-    j.loc[idx_reloc, "building_id"] = -1
-    # todo: use orca.update_col_from_series
-    orca.add_table("jobs", j)
+    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
+    jobs.update_col_from_series('building_id', pd.Series(-1, index=idx_reloc), cast=True)
     _print_number_unplaced(jobs, 'building_id')
 
 
@@ -557,12 +561,33 @@ def parcel_average_price(use):
                         parcels_wrapper.nodeid_walk)
 
 
+@orca.injectable('cost_shifters')
+def shifters():
+    with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
+        cfg = yaml.load(f)
+        return cfg
+
+
+def cost_shifter_callback(self, form, df, costs):
+    shifter_cfg = orca.get_injectable('cost_shifters')['calibration']
+    geography = shifter_cfg['calibration_geography_id']
+    shift_type = 'residential' if form == 'residential' else 'non_residential'
+    shifters = shifter_cfg['proforma_cost_shifters'][shift_type]
+
+    for geo, geo_df in df.reset_index().groupby(geography):
+        shifter = shifters[geo]
+        costs[:, geo_df.index] *= shifter
+    return costs
+
+
 @orca.step('feasibility')
 def feasibility(parcels):
     parcel_utils.run_feasibility(parcels,
                                  parcel_average_price,
                                  variables.parcel_is_allowed,
-                                 cfg='proforma.yaml')
+                                 cfg='proforma.yaml',
+                                 modify_costs=cost_shifter_callback
+                                 )
     feasibility = orca.get_table('feasibility').to_frame()
     for lid, df in parcels.large_area_id.to_frame().groupby('large_area_id'):
         orca.add_table('feasibility_' + str(lid), feasibility[feasibility.index.isin(df.index)])

@@ -20,13 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- zones_logsum_pop_high_income
-- nodes_walk_sum_residential_units
-- stories
-- hhsize_gt_2:building_type_id_is_81
-- nodes_walk_ave_lot_sqft
-- ln_income:nodes_walk_ln_popden
+model_expression: zones_logsum_pop_high_income + nodes_walk_sum_residential_units
+    + stories + hhsize_gt_2:building_type_id_is_81 + nodes_walk_ave_lot_sqft + ln_income:nodes_walk_ln_popden
 
 fitted: true
 

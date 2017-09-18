@@ -1,0 +1,55 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 43
+
+predict_filters: hedonic_id == 43
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - b_is_pre_1945
+    - zones_ln_empden_5
+    - walk_nearest_park
+    - building_sqft
+    - zones_ln_empden_13
+    - parcels_total_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.426687800558402
+        b_is_pre_1945: 0.2960085527791791
+        building_sqft: -5.452139984991895e-07
+        parcels_total_units: -0.00189580447041369
+        walk_nearest_park: 6.484509410490501e-05
+        zones_ln_empden_13: -0.35841381824048946
+        zones_ln_empden_5: 0.5407060167203505
+    Std. Error:
+        Intercept: 0.15214322130884966
+        b_is_pre_1945: 0.12669061094079548
+        building_sqft: 2.778584973753856e-07
+        parcels_total_units: 0.00047414274677225904
+        walk_nearest_park: 2.8357313795138128e-05
+        zones_ln_empden_13: 0.07796859200362803
+        zones_ln_empden_5: 0.09829341542978724
+    T-Score:
+        Intercept: 22.522776703946935
+        b_is_pre_1945: 2.3364679559206527
+        building_sqft: -1.9622001977596812
+        parcels_total_units: -3.9983833630682653
+        walk_nearest_park: 2.28671497495728
+        zones_ln_empden_13: -4.59689996997524
+        zones_ln_empden_5: 5.500938331994237
+
+fit_rsquared_adj: 0.2705191479841904
+
+fit_rsquared: 0.28728882274317447

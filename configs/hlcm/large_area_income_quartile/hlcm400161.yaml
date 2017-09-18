@@ -20,19 +20,11 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- building_type_id_is_84
-- year_built
-- has_children:nodes_walk_percent_hh_with_children
-- has_workers:zones_a_ln_emp_50min_transit
-- ln_income:nodes_walk_ave_income
-- b_ln_parcel_sqft
-- is_race4:nodes_walk_percent_race4
-- persons:sqft_per_unit
-- vacant_job_spaces
-- nodes_walk_sum_residential_units
-- is_young:zones_empden
-- nodes_walk_race_4_hhs
+model_expression: building_type_id_is_84 + year_built + has_children:nodes_walk_percent_hh_with_children
+    + has_workers:zones_a_ln_emp_50min_transit + ln_income:nodes_walk_ave_income +
+    b_ln_parcel_sqft + is_race4:nodes_walk_percent_race4 + persons:sqft_per_unit +
+    vacant_job_spaces + nodes_walk_sum_residential_units + is_young:zones_empden +
+    nodes_walk_race_4_hhs
 
 fitted: true
 

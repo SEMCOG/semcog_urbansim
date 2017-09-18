@@ -20,18 +20,10 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- residential_units
-- b_is_pre_1945
-- has_children:nodes_walk_percent_hh_with_children
-- has_workers:zones_a_ln_emp_50min_transit
-- b_ln_parcel_sqft
-- nodes_walk_lowinc_hhs
-- persons:nodes_walk_ln_popden
-- is_race2:nodes_walk_percent_race2
-- is_young:nodes_walk_retail_jobs
-- ln_income:nodes_walk_ln_popden
-- zones_a_ln_retail_emp_15min_drive_alone
+model_expression: residential_units + b_is_pre_1945 + has_children:nodes_walk_percent_hh_with_children
+    + has_workers:zones_a_ln_emp_50min_transit + b_ln_parcel_sqft + nodes_walk_lowinc_hhs
+    + persons:nodes_walk_ln_popden + is_race2:nodes_walk_percent_race2 + is_young:nodes_walk_retail_jobs
+    + ln_income:nodes_walk_ln_popden + zones_a_ln_retail_emp_15min_drive_alone
 
 fitted: true
 

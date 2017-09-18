@@ -20,12 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- has_children:nodes_drv_elem_school_perf
-- ln_income:nodes_walk_ln_popden
-- stories
-- ln_income:sqft_price_res
-- nodes_walk_percent_mid_income
+model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ln_popden
+    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income
 
 fitted: true
 
