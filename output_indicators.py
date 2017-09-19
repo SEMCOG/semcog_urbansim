@@ -192,6 +192,17 @@ def make_indicators(tab, geo_id):
         return households[households.persons >= 3].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def hh_no_car_or_lt_workers(households):
+        households = households.to_frame([geo_id, 'cars', 'workers'])
+        return households[(households.cars == 0) | (households.cars < households.workers)].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_no_car_or_lt_workers():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_no_car_or_lt_workers', 'hh'])
+        return 1.0 * df.hh_no_car_or_lt_workers / df.hh
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_race_1(persons):
         persons = persons.to_frame([geo_id, 'race_id'])
         return persons[persons.race_id == 1].groupby(geo_id).size()
@@ -246,6 +257,12 @@ def make_indicators(tab, geo_id):
         return persons[(persons.age >= 5) & (persons.age <= 17)].groupby(geo_id).size()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_age_05_17():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_age_05_17', 'hh_pop'])
+        return 1.0 * df.hh_pop_age_05_17 / df.hh_pop
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_pop_age_18_24(persons):
         persons = persons.to_frame([geo_id, 'age'])
         return persons[(persons.age >= 18) & (persons.age <= 24)].groupby(geo_id).size()
@@ -264,6 +281,12 @@ def make_indicators(tab, geo_id):
     def hh_pop_age_65_inf(persons):
         persons = persons.to_frame([geo_id, 'age'])
         return persons[persons.age >= 65].groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pct_hh_pop_age_65_inf():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop_age_65_inf', 'hh_pop'])
+        return 1.0 * df.hh_pop_age_65_inf / df.hh_pop
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def jobs_total(jobs):
@@ -384,8 +407,10 @@ def main(run_name):
                   'hh_size_1', 'hh_size_2', 'hh_size_3p',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
                   'pct_hh_pop_race_1', 'pct_hh_pop_race_2', 'pct_hh_pop_race_3', 'pct_hh_pop_race_4',
+                  'hh_no_car_or_lt_workers', 'pct_hh_no_car_or_lt_workers',
                   'hh_pop_age_00_04', 'hh_pop_age_05_17', 'hh_pop_age_18_24', 'hh_pop_age_25_34',
                   'hh_pop_age_35_64', 'hh_pop_age_65_inf',
+                  'pct_hh_pop_age_05_17', 'pct_hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
                   'jobs_sec_04', 'jobs_sec_05', 'jobs_sec_06', 'jobs_sec_07',
                   'jobs_sec_08', 'jobs_sec_09', 'jobs_sec_10', 'jobs_sec_11',
@@ -432,6 +457,10 @@ def main(run_name):
     del df['pct_incomes_2']
     del df['pct_incomes_3']
     del df['pct_incomes_4']
+    del df['pct_hh_pop_age_05_17']
+    del df['pct_hh_pop_age_65_inf']
+    del df['hh_no_car_or_lt_workers']
+    del df['pct_hh_no_car_or_lt_workers']
 
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print sumstd[sumstd > 0]
@@ -461,6 +490,10 @@ def main(run_name):
         del df['pct_incomes_2']
         del df['pct_incomes_3']
         del df['pct_incomes_4']
+        del df['pct_hh_pop_age_05_17']
+        del df['pct_hh_pop_age_65_inf']
+        del df['hh_no_car_or_lt_workers']
+        del df['pct_hh_no_car_or_lt_workers']
 
         df[whatnots_local.columns] = whatnots_local
 
