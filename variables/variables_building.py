@@ -8,9 +8,9 @@ from urbansim.utils import misc
 # BUILDINGS VARIABLES
 #####################
 
-##@orca.column('buildings', 'school_district_id', cache=True)
-##def school_district_id(buildings, parcels):
-##    return misc.reindex(parcels.school_district_id, buildings.parcel_id)
+# @orca.column('buildings', 'school_district_id', cache=True)
+# def school_district_id(buildings, parcels):
+#     return misc.reindex(parcels.school_district_id, buildings.parcel_id)
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def hedonic_id(buildings):
@@ -26,9 +26,9 @@ def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
 
 
-##@orca.column('buildings', cache=True, cache_scope='iteration')
-##def _node_id(buildings, parcels):
-##    return misc.reindex(parcels._node_id, buildings.parcel_id)
+# @orca.column('buildings', cache=True, cache_scope='iteration')
+# def _node_id(buildings, parcels):
+#     return misc.reindex(parcels._node_id, buildings.parcel_id)
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def nodeid_walk(buildings, parcels):
@@ -206,11 +206,6 @@ def walk_nearest_library(buildings, parcels):
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def walk_nearest_park(buildings, parcels):
     return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
-
-
-@orca.column('buildings', cache=True, cache_scope='iteration')
-def hedonic_sector_id(buildings):
-    return buildings.large_area_id * 100 + buildings.building_type_id
 
 
 @orca.column('buildings', 'building_age', cache=True, cache_scope='iteration')

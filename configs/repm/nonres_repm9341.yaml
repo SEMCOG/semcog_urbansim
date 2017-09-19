@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 9341
+
+predict_filters: hedonic_id == 9341
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_ln_empden_7
+    - zones_empden
+    - walk_nearest_library
+    - b_ln_building_sqft
+    - popden
+    - nodes_walk_industrial
+    - bldg_empratio_8
+    - stories
+    - crime_ucr_rate
+    - nodes_walk_percent_hh_with_children
+    - nodes_walk_percent_mid_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 7.198816636136996
+        b_ln_building_sqft: -0.3433578020348449
+        bldg_empratio_8: 1.1883804840884407
+        crime_ucr_rate: -0.00030461715060142475
+        nodes_walk_industrial: -0.002343125527186773
+        nodes_walk_percent_hh_with_children: -0.5650064654019581
+        nodes_walk_percent_mid_income: 0.45615871382621165
+        popden: 0.07276170921546901
+        stories: 0.47920676482856306
+        walk_nearest_library: -0.00011048959050708406
+        zones_empden: 0.10678654736282014
+        zones_ln_empden_7: -60.260011647672954
+    Std. Error:
+        Intercept: 0.25590465216674513
+        b_ln_building_sqft: 0.02068408573401739
+        bldg_empratio_8: 0.35866439347735096
+        crime_ucr_rate: 6.348709408786593e-05
+        nodes_walk_industrial: 0.0009791657418281887
+        nodes_walk_percent_hh_with_children: 0.18897264333247266
+        nodes_walk_percent_mid_income: 0.13888064979487602
+        popden: 0.03282275277094628
+        stories: 0.09732497092829007
+        walk_nearest_library: 2.2706468931938343e-05
+        zones_empden: 0.023526491669790484
+        zones_ln_empden_7: 17.60605422135943
+    T-Score:
+        Intercept: 28.130854891400386
+        b_ln_building_sqft: -16.600095670177627
+        bldg_empratio_8: 3.3133494868747957
+        crime_ucr_rate: -4.798095659880662
+        nodes_walk_industrial: -2.392981522016846
+        nodes_walk_percent_hh_with_children: -2.9898849666187033
+        nodes_walk_percent_mid_income: 3.284537583169067
+        popden: 2.2168070339266452
+        stories: 4.923780200064452
+        walk_nearest_library: -4.865996154588008
+        zones_empden: 4.538991570083562
+        zones_ln_empden_7: -3.422686928600181
+
+fit_rsquared_adj: 0.7158254813022646
+
+fit_rsquared: 0.734656322902717

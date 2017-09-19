@@ -1,0 +1,55 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 52
+
+predict_filters: hedonic_id == 52
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_hhsize
+    - zones_ln_empden_14
+    - zones_ln_empden_16
+    - nodes_walk_ave_nonres_sqft_price
+    - parcels_total_units
+    - nodes_walk_percent_high_income
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.097536601238025
+        nodes_walk_ave_nonres_sqft_price: 0.008812427029728068
+        nodes_walk_hhsize: -0.7846537085713284
+        nodes_walk_percent_high_income: 1.4609693516166156
+        parcels_total_units: -0.01043755639295915
+        zones_ln_empden_14: -0.3618144861026753
+        zones_ln_empden_16: 1.5035504850268002
+    Std. Error:
+        Intercept: 0.2662273734736875
+        nodes_walk_ave_nonres_sqft_price: 0.002239804277739774
+        nodes_walk_hhsize: 0.17886944111516148
+        nodes_walk_percent_high_income: 0.7384577453847085
+        parcels_total_units: 0.003506452253385579
+        zones_ln_empden_14: 0.11745848115945103
+        zones_ln_empden_16: 0.31357328214105085
+    T-Score:
+        Intercept: 11.634929048887487
+        nodes_walk_ave_nonres_sqft_price: 3.934462987373541
+        nodes_walk_hhsize: -4.386739868360996
+        nodes_walk_percent_high_income: 1.978406158981386
+        parcels_total_units: -2.9766714726776597
+        zones_ln_empden_14: -3.080360673245116
+        zones_ln_empden_16: 4.794893476767821
+
+fit_rsquared_adj: 0.5056674989694524
+
+fit_rsquared: 0.5386229990381556

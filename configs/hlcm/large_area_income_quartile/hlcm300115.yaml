@@ -20,12 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- walk_nearest_library
-- is_race1:nodes_walk_percent_race1
-- residential_units
-- ln_income:sqft_per_unit
-- nodes_walk_percent_mid_income
+model_expression: walk_nearest_library + is_race1:nodes_walk_percent_race1 + residential_units
+    + ln_income:sqft_per_unit + nodes_walk_percent_mid_income
 
 fitted: true
 

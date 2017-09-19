@@ -1,0 +1,63 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 11551
+
+predict_filters: hedonic_id == 11551
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_logsum_job_high_income
+    - bldg_empratio_14
+    - drv_nearest_urgentcare
+    - zones_empden
+    - building_age_gt_50
+    - bldg_empratio_18
+    - drv_nearest_healthcenter
+    - nodes_walk_households
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.075662532151938
+        bldg_empratio_14: 0.3807606086489377
+        bldg_empratio_18: -1.5143960269701269
+        building_age_gt_50: 0.19523272788213952
+        drv_nearest_healthcenter: 0.036066713172573456
+        drv_nearest_urgentcare: 0.06886907942309373
+        nodes_walk_households: 0.003617147452654875
+        zones_empden: -0.05902708366569216
+        zones_logsum_job_high_income: -1.6630332260593792e-06
+    Std. Error:
+        Intercept: 0.30780883169676976
+        bldg_empratio_14: 0.09650399608658512
+        bldg_empratio_18: 0.4926026756547194
+        building_age_gt_50: 0.09701420941608721
+        drv_nearest_healthcenter: 0.013785741659298476
+        drv_nearest_urgentcare: 0.015433892603036084
+        nodes_walk_households: 0.0005993172430746837
+        zones_empden: 0.01820603676673652
+        zones_logsum_job_high_income: 5.605747099290358e-07
+    T-Score:
+        Intercept: 13.240888864965953
+        bldg_empratio_14: 3.945542403314702
+        bldg_empratio_18: -3.074274870629437
+        building_age_gt_50: 2.012413738742125
+        drv_nearest_healthcenter: 2.616233066303435
+        drv_nearest_urgentcare: 4.462197657740997
+        nodes_walk_households: 6.035446993144707
+        zones_empden: -3.242170958016412
+        zones_logsum_job_high_income: -2.9666576044251185
+
+fit_rsquared_adj: 0.5838458719236839
+
+fit_rsquared: 0.6174744883338912

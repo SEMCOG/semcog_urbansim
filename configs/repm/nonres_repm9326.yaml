@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 9326
+
+predict_filters: hedonic_id == 9326
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - non_residential_units
+    - year_built
+    - walk_nearest_grocery
+    - zones_transit_jobs_50min
+    - popden
+    - nodes_walk_sum_residential_units
+    - nodes_walk_race_2_hhs
+    - nodes_walk_ave_lot_sqft
+    - walk_nearest_park
+    - nodes_drv_drv_30min_jobs
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -0.894115551570202
+        nodes_drv_drv_30min_jobs: 0.2930161426421065
+        nodes_walk_ave_lot_sqft: 0.34258907902891256
+        nodes_walk_race_2_hhs: 0.0712154651455264
+        nodes_walk_sum_nonresidential_units: -0.18743308424895103
+        nodes_walk_sum_residential_units: -0.11354621315370593
+        non_residential_units: -0.007914486969625309
+        popden: 0.11452819757434246
+        walk_nearest_grocery: -5.630545953057069e-05
+        walk_nearest_park: 4.42377358039222e-05
+        year_built: 0.00023898624929786784
+        zones_transit_jobs_50min: 1.4195697854240305e-05
+    Std. Error:
+        Intercept: 0.6128324536086809
+        nodes_drv_drv_30min_jobs: 0.050653773137992596
+        nodes_walk_ave_lot_sqft: 0.05027477490716509
+        nodes_walk_race_2_hhs: 0.03416187712997229
+        nodes_walk_sum_nonresidential_units: 0.03708388237285068
+        nodes_walk_sum_residential_units: 0.03082635703376992
+        non_residential_units: 0.001741859822895848
+        popden: 0.020701776296495954
+        walk_nearest_grocery: 1.3815362434249185e-05
+        walk_nearest_park: 1.5457848530715043e-05
+        year_built: 3.1304315050976264e-05
+        zones_transit_jobs_50min: 4.240084179475542e-06
+    T-Score:
+        Intercept: -1.4589885804923968
+        nodes_drv_drv_30min_jobs: 5.784685414132186
+        nodes_walk_ave_lot_sqft: 6.814333423899373
+        nodes_walk_race_2_hhs: 2.084647306545247
+        nodes_walk_sum_nonresidential_units: -5.054300473840675
+        nodes_walk_sum_residential_units: -3.683413289131679
+        non_residential_units: -4.543699134450123
+        popden: 5.532288434288986
+        walk_nearest_grocery: -4.075568758948067
+        walk_nearest_park: 2.861830073960226
+        year_built: 7.634290956652468
+        zones_transit_jobs_50min: 3.3479754772218175
+
+fit_rsquared_adj: 0.6654641794218383
+
+fit_rsquared: 0.6798951363879552

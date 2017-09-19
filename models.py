@@ -1,6 +1,5 @@
 import os
 import yaml
-import random
 import operator
 from multiprocessing import Pool
 
@@ -8,7 +7,6 @@ import numpy as np
 import orca
 import pandana as pdna
 import pandas as pd
-from urbansim.developer import sqftproforma
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
@@ -50,30 +48,36 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
     jobs = jobs.to_frame()
     households = households.to_frame()
     nodes = nodes.to_frame()
-    import pdb;
+    import pdb
     pdb.set_trace()
 
 
-@orca.step()
-def rsh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("rsh.yaml", buildings, nodes_walk)
+def make_repm_func(model_name, yaml_file, dep_var):
+    """
+    Generator function for single-model REPMs.
+    """
+    @orca.step(model_name)
+    def func():
+        buildings = orca.get_table('buildings')
+        nodes_walk = orca.get_table('nodes_walk')
+        print yaml_file
+        return utils.hedonic_simulate(yaml_file, buildings,
+                                      nodes_walk, dep_var)
+    return func
 
 
-@orca.step()
-def rsh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("rsh.yaml", buildings, nodes_walk,
-                                  "sqft_price_res")
+repm_step_names = []
+for repm_config in os.listdir('./configs/repm'):
+    model_name = repm_config.split('.')[0]
 
+    if repm_config.startswith('res'):
+        dep_var = 'sqft_price_res'
+    elif repm_config.startswith('nonres'):
+        dep_var = 'sqft_price_nonres'
 
-@orca.step()
-def nrh_estimate(buildings, nodes_walk):
-    return utils.hedonic_estimate("nrh.yaml", buildings, nodes_walk)
-
-
-@orca.step()
-def nrh_simulate(buildings, nodes_walk):
-    return utils.hedonic_simulate("nrh.yaml", buildings, nodes_walk,
-                                  "sqft_price_nonres")
+    make_repm_func(model_name, "repm/" + repm_config, dep_var)
+    repm_step_names.append(model_name)
+orca.add_injectable('repm_step_names', repm_step_names)
 
 
 @orca.step()
@@ -137,8 +141,9 @@ def elcm_simulate(jobs, buildings, nodes_drv):
 def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = annual_relocation_rates_for_households.to_frame()
     relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
-    relocation_rates.probability_of_relocating *= .05
     reloc = relocation.RelocationModel(relocation_rates, 'probability_of_relocating')
+    _print_number_unplaced(households, 'building_id')
+    print "un-placing"
     hh = households.to_frame(households.local_columns)
     idx_reloc = reloc.find_movers(hh)
     households.update_col_from_series('building_id',
@@ -149,14 +154,15 @@ def households_relocation(households, annual_relocation_rates_for_households):
 
 @orca.step()
 def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
-    relocation_rates = annual_relocation_rates_for_jobs.to_frame()
-    relocation_rates.job_relocation_probability *= .05
+    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, 'job_relocation_probability')
+    _print_number_unplaced(jobs, 'building_id')
+    print "un-placing"
     j = jobs.to_frame(jobs.local_columns)
-    idx_reloc = reloc.find_movers(j)
-    j.loc[idx_reloc, "building_id"] = -1
-    # todo: use orca.update_col_from_series
-    orca.add_table("jobs", j)
+    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
+    jobs.update_col_from_series('building_id',
+                                pd.Series(-1, index=idx_reloc),
+                                cast=True)
     _print_number_unplaced(jobs, 'building_id')
 
 

@@ -1,0 +1,83 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 14723
+
+predict_filters: hedonic_id == 14723
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - bldg_empratio_9
+    - year_built
+    - drv_nearest_library
+    - bldg_empratio_14
+    - walk_nearest_grocery
+    - b_ln_building_sqft
+    - nodes_walk_percent_race1
+    - b_total_jobs
+    - nodes_walk_ave_lot_sqft
+    - nodes_walk_retail_jobs
+    - parcels_total_units
+    - zones_transit_jobs_30min
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 4.5266000662915715
+        b_ln_building_sqft: -0.18235197707510287
+        b_total_jobs: 0.0033880527897444993
+        bldg_empratio_14: 0.3300415104096937
+        bldg_empratio_9: 0.47676100848154856
+        drv_nearest_library: -0.021379483641073938
+        nodes_walk_ave_lot_sqft: 0.06225383423940639
+        nodes_walk_highinc_hhs: 0.00787387539146822
+        nodes_walk_percent_race1: 0.41547014367579427
+        nodes_walk_retail_jobs: 0.001018609867625163
+        parcels_total_units: -0.0032353377174751327
+        walk_nearest_grocery: -2.060637312694002e-05
+        year_built: 0.00011413883534181933
+        zones_transit_jobs_30min: 1.4612203547995558e-05
+    Std. Error:
+        Intercept: 0.28809809005404236
+        b_ln_building_sqft: 0.02245801344371921
+        b_total_jobs: 0.000975398162799301
+        bldg_empratio_14: 0.07003503284782524
+        bldg_empratio_9: 0.055884904191987377
+        drv_nearest_library: 0.006286628112105454
+        nodes_walk_ave_lot_sqft: 0.02772921794607986
+        nodes_walk_highinc_hhs: 0.0018781082285823615
+        nodes_walk_percent_race1: 0.15641151801029915
+        nodes_walk_retail_jobs: 0.0002343377016783913
+        parcels_total_units: 0.00026877658722433386
+        walk_nearest_grocery: 7.973588553334544e-06
+        year_built: 1.7600755956064197e-05
+        zones_transit_jobs_30min: 5.636490825260549e-06
+    T-Score:
+        Intercept: 15.712009980498161
+        b_ln_building_sqft: -8.11968420680151
+        b_total_jobs: 3.4735074546594453
+        bldg_empratio_14: 4.7125202486421385
+        bldg_empratio_9: 8.531123303775928
+        drv_nearest_library: -3.400787076923775
+        nodes_walk_ave_lot_sqft: 2.245062747909461
+        nodes_walk_highinc_hhs: 4.192450292074807
+        nodes_walk_percent_race1: 2.656263099808526
+        nodes_walk_retail_jobs: 4.346760509852227
+        parcels_total_units: -12.03727508741215
+        walk_nearest_grocery: -2.58432862306677
+        year_built: 6.48488255997287
+        zones_transit_jobs_30min: 2.592429226090349
+
+fit_rsquared_adj: 0.49413276292626285
+
+fit_rsquared: 0.5044404025531571

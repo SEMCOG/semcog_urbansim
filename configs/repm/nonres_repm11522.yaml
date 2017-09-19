@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 11522
+
+predict_filters: hedonic_id == 11522
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - walk_nearest_urgentcare
+    - zones_logsum_job_low_income
+    - bldg_empratio_17
+    - residential_units
+    - year_built
+    - b_total_jobs
+    - nodes_walk_lowinc_hhs
+    - nodes_walk_ave_lot_sqft
+    - building_sqft
+    - zones_transit_jobs_50min
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.896690035986646
+        b_total_jobs: 0.004045209298274446
+        bldg_empratio_17: -0.3637506226079761
+        building_sqft: -8.21840323508965e-06
+        nodes_walk_ave_lot_sqft: 0.13183202609128122
+        nodes_walk_lowinc_hhs: 0.004218996965593457
+        residential_units: -1.1263630918400376
+        walk_nearest_urgentcare: -8.996376226435475e-05
+        year_built: 0.00021748851323666882
+        zones_logsum_job_low_income: -5.909360996905325e-07
+        zones_transit_jobs_50min: 1.3537976490698288e-05
+    Std. Error:
+        Intercept: 0.4373807280676076
+        b_total_jobs: 0.0014298867484611765
+        bldg_empratio_17: 0.08633677524679481
+        building_sqft: 1.7538149362737827e-06
+        nodes_walk_ave_lot_sqft: 0.048249529186212836
+        nodes_walk_lowinc_hhs: 0.0009486679758205758
+        residential_units: 0.5094672826442556
+        walk_nearest_urgentcare: 1.813486683418549e-05
+        year_built: 3.558363290505925e-05
+        zones_logsum_job_low_income: 2.788801977354742e-07
+        zones_transit_jobs_50min: 5.056518254415577e-06
+    T-Score:
+        Intercept: 8.90914890832666
+        b_total_jobs: 2.8290417423812353
+        bldg_empratio_17: -4.213159705909679
+        building_sqft: -4.686015077822726
+        nodes_walk_ave_lot_sqft: 2.7322966320042736
+        nodes_walk_lowinc_hhs: 4.447285112522242
+        residential_units: -2.2108644268459146
+        walk_nearest_urgentcare: -4.960817362869562
+        year_built: 6.112037908466241
+        zones_logsum_job_low_income: -2.118960415579783
+        zones_transit_jobs_50min: 2.677331675580588
+
+fit_rsquared_adj: 0.38018315585628004
+
+fit_rsquared: 0.40622588040013374

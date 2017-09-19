@@ -1,0 +1,87 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 541
+
+predict_filters: hedonic_id == 541
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_ln_empden_3
+    - crime_other_rate
+    - zones_empden
+    - b_ln_building_sqft
+    - walk_nearest_urgentcare
+    - zones_ln_empden_15
+    - nodes_drv_drv_15min_retail_jobs
+    - nodes_walk_lowinc_hhs
+    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_ave_nonres_sqft_price
+    - parcels_total_units
+    - nodes_drv_drv_20min_pop
+    - nodes_walk_percent_hh_with_children
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 9.04447273299655
+        b_ln_building_sqft: -0.2437114169622392
+        crime_other_rate: -2.9655621773474128e-05
+        nodes_drv_drv_15min_retail_jobs: 1.3386192329917759
+        nodes_drv_drv_20min_pop: -1.2686023614658737
+        nodes_walk_ave_nonres_sqft_price: 0.002393433715090257
+        nodes_walk_lowinc_hhs: 0.0012284798247552563
+        nodes_walk_percent_hh_with_children: -1.0068835016924134
+        nodes_walk_sum_nonresidential_units: -0.10541174532499316
+        parcel_sqft: 3.1007757994723876e-08
+        parcels_total_units: -0.0064359489774711625
+        walk_nearest_urgentcare: -5.656914951657067e-05
+        zones_empden: 0.005881355633506434
+        zones_ln_empden_15: -0.4068486092205189
+        zones_ln_empden_3: 0.27093195483211907
+    Std. Error:
+        Intercept: 2.0771335918371783
+        b_ln_building_sqft: 0.019438551325352636
+        crime_other_rate: 4.533307742024655e-06
+        nodes_drv_drv_15min_retail_jobs: 0.20795150294455964
+        nodes_drv_drv_20min_pop: 0.28064222355284146
+        nodes_walk_ave_nonres_sqft_price: 0.0008759614216732875
+        nodes_walk_lowinc_hhs: 0.00028888177308570467
+        nodes_walk_percent_hh_with_children: 0.260229048862817
+        nodes_walk_sum_nonresidential_units: 0.015540018199919046
+        parcel_sqft: 6.936262477771801e-09
+        parcels_total_units: 0.0011397954676765066
+        walk_nearest_urgentcare: 1.8991332758289966e-05
+        zones_empden: 0.0008421048510677718
+        zones_ln_empden_15: 0.05462593373819074
+        zones_ln_empden_3: 0.06903052589128948
+    T-Score:
+        Intercept: 4.354304782581131
+        b_ln_building_sqft: -12.537529823242526
+        crime_other_rate: -6.5417182024861615
+        nodes_drv_drv_15min_retail_jobs: 6.437170273054747
+        nodes_drv_drv_20min_pop: -4.520354583162043
+        nodes_walk_ave_nonres_sqft_price: 2.7323505988634165
+        nodes_walk_lowinc_hhs: 4.252534909465521
+        nodes_walk_percent_hh_with_children: -3.869220235375047
+        nodes_walk_sum_nonresidential_units: -6.783244650610659
+        parcel_sqft: 4.470384172180979
+        parcels_total_units: -5.646582356210768
+        walk_nearest_urgentcare: -2.978682446174163
+        zones_empden: 6.984113232513737
+        zones_ln_empden_15: -7.447902147914737
+        zones_ln_empden_3: 3.924813715873867
+
+fit_rsquared_adj: 0.4723507658495164
+
+fit_rsquared: 0.48631501779300745

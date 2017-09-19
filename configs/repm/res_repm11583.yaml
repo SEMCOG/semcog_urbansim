@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 11583
+
+predict_filters: hedonic_id == 11583
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - zones_logsum_job_low_income
+    - residential_units
+    - zones_employment
+    - crime_other_rate
+    - nodes_walk_hhsize
+    - building_age_gt_50
+    - walk_nearest_urgentcare
+    - nodes_walk_percent_mid_income
+    - nodes_walk_ave_unit_sqft
+    - zones_a_ln_emp_26min_drive_alone
+    - parcel_sqft
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -0.39585430828966045
+        building_age_gt_50: 0.36277554006866236
+        crime_other_rate: -1.946939339435013e-05
+        nodes_walk_ave_unit_sqft: 0.00016814737119639993
+        nodes_walk_hhsize: 0.6822733426079155
+        nodes_walk_percent_mid_income: 0.6167148104613513
+        parcel_sqft: 3.0473433038864205e-07
+        residential_units: -0.007800083721257475
+        walk_nearest_urgentcare: -5.0159385927891036e-05
+        zones_a_ln_emp_26min_drive_alone: 0.3863962904531447
+        zones_employment: -0.00012455120844242498
+        zones_logsum_job_low_income: -1.3895589470317873e-06
+    Std. Error:
+        Intercept: 0.48884805176624074
+        building_age_gt_50: 0.050585100079547154
+        crime_other_rate: 8.407228975279071e-06
+        nodes_walk_ave_unit_sqft: 5.150232505539787e-05
+        nodes_walk_hhsize: 0.16436390017934394
+        nodes_walk_percent_mid_income: 0.30362375656960455
+        parcel_sqft: 5.501470144904043e-08
+        residential_units: 0.0012697467208929252
+        walk_nearest_urgentcare: 1.6232253236706334e-05
+        zones_a_ln_emp_26min_drive_alone: 0.046086648145456315
+        zones_employment: 3.9385510550390894e-05
+        zones_logsum_job_low_income: 2.3695835917405844e-07
+    T-Score:
+        Intercept: -0.8097696346736216
+        building_age_gt_50: 7.171588857157204
+        crime_other_rate: -2.315791975167877
+        nodes_walk_ave_unit_sqft: 3.2648501017290807
+        nodes_walk_hhsize: 4.150992656316017
+        nodes_walk_percent_mid_income: 2.0311810163641524
+        parcel_sqft: 5.539143580937441
+        residential_units: -6.143023323401233
+        walk_nearest_urgentcare: -3.0901061729658434
+        zones_a_ln_emp_26min_drive_alone: 8.384126552957824
+        zones_employment: -3.1623611501257747
+        zones_logsum_job_low_income: -5.864148248980247
+
+fit_rsquared_adj: 0.2730999093778843
+
+fit_rsquared: 0.28622946766498336

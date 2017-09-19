@@ -1,0 +1,67 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 11525
+
+predict_filters: hedonic_id == 11525
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - zones_ln_empden_14
+    - walk_nearest_library
+    - zones_ln_empden_8
+    - popden
+    - nodes_walk_retail_jobs
+    - b_total_jobs
+    - walk_nearest_grocery
+    - nodes_walk_ave_lot_sqft
+    - nodes_drv_drv_30min_jobs
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.5188211023283844
+        b_total_jobs: 0.003294369577938528
+        nodes_drv_drv_30min_jobs: 0.13792877400850811
+        nodes_walk_ave_lot_sqft: 0.048621243208512244
+        nodes_walk_retail_jobs: 0.004832235434788585
+        popden: -0.15396779707983882
+        walk_nearest_grocery: 4.0315391848575624e-05
+        walk_nearest_library: -8.724168994030445e-05
+        zones_ln_empden_14: 2.6201324581570784
+        zones_ln_empden_8: -7.809141157257133
+    Std. Error:
+        Intercept: 0.25729336156028887
+        b_total_jobs: 0.001325494545822481
+        nodes_drv_drv_30min_jobs: 0.018177458895171854
+        nodes_walk_ave_lot_sqft: 0.023507689249059303
+        nodes_walk_retail_jobs: 0.0005495035374565619
+        popden: 0.01829665279778786
+        walk_nearest_grocery: 1.4533744389450604e-05
+        walk_nearest_library: 1.6836183517078842e-05
+        zones_ln_empden_14: 0.4329115649772702
+        zones_ln_empden_8: 1.8200028915596471
+    T-Score:
+        Intercept: 9.789685544367126
+        b_total_jobs: 2.4853890107064474
+        nodes_drv_drv_30min_jobs: 7.587901851624795
+        nodes_walk_ave_lot_sqft: 2.0683123165947883
+        nodes_walk_retail_jobs: 8.793820431357227
+        popden: -8.415080002963938
+        walk_nearest_grocery: 2.7739163954086576
+        walk_nearest_library: -5.1817972791639715
+        zones_ln_empden_14: 6.052350341563749
+        zones_ln_empden_8: -4.290730082612731
+
+fit_rsquared_adj: 0.7901403598731362
+
+fit_rsquared: 0.805621808734954

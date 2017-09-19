@@ -20,15 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- residential_units
-- has_children:nodes_walk_percent_hh_with_children
-- nodes_drv_drv_60min_jobs
-- ln_income:nodes_walk_ave_income
-- nodes_walk_sum_residential_units
-- is_race1:nodes_walk_percent_race1
-- persons:sqft_per_unit
-- zones_logsum_pop_low_income
+model_expression: residential_units + has_children:nodes_walk_percent_hh_with_children
+    + nodes_drv_drv_60min_jobs + ln_income:nodes_walk_ave_income + nodes_walk_sum_residential_units
+    + is_race1:nodes_walk_percent_race1 + persons:sqft_per_unit + zones_logsum_pop_low_income
 
 fitted: true
 

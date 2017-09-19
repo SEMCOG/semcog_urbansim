@@ -1,0 +1,71 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 600
+- hedonic_id == 11582
+
+predict_filters: hedonic_id == 11582
+
+model_expression:
+    left_side: np.log1p(sqft_price_res)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - walk_nearest_healthcenter
+    - zones_logsum_pop_high_income
+    - zones_population
+    - zones_employment
+    - nodes_walk_quarter_mile_to_transit
+    - improvement_value
+    - nodes_walk_ave_lot_sqft
+    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_race_3_hhs
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 6.42450818995246
+        improvement_value: 1.4479857493118676e-06
+        nodes_walk_ave_lot_sqft: 0.4646815293157053
+        nodes_walk_highinc_hhs: 0.017159881023509425
+        nodes_walk_quarter_mile_to_transit: 0.31856369235914134
+        nodes_walk_race_3_hhs: 0.10778047222115725
+        nodes_walk_sum_nonresidential_units: 0.2082511699197197
+        walk_nearest_healthcenter: -0.0006281650923576233
+        zones_employment: -0.0006886327445071404
+        zones_logsum_pop_high_income: -2.9587670512098617e-06
+        zones_population: 0.0002779211750196497
+    Std. Error:
+        Intercept: 1.0980489164412477
+        improvement_value: 2.1408862625536069e-07
+        nodes_walk_ave_lot_sqft: 0.09845088928086454
+        nodes_walk_highinc_hhs: 0.003526691772257877
+        nodes_walk_quarter_mile_to_transit: 0.1154721684914222
+        nodes_walk_race_3_hhs: 0.017271385639801417
+        nodes_walk_sum_nonresidential_units: 0.03065815619208615
+        walk_nearest_healthcenter: 0.00012038450296498875
+        zones_employment: 8.904761054984056e-05
+        zones_logsum_pop_high_income: 2.229769571566668e-07
+        zones_population: 4.458735112751212e-05
+    T-Score:
+        Intercept: 5.850839697355332
+        improvement_value: 6.76348750813478
+        nodes_walk_ave_lot_sqft: 4.7199322698857875
+        nodes_walk_highinc_hhs: 4.865716124809863
+        nodes_walk_quarter_mile_to_transit: 2.758791980102164
+        nodes_walk_race_3_hhs: 6.2404067901060705
+        nodes_walk_sum_nonresidential_units: 6.792684094077255
+        walk_nearest_healthcenter: -5.217989665499649
+        zones_employment: -7.733309633521361
+        zones_logsum_pop_high_income: -13.269384823163541
+        zones_population: 6.2331842549884415
+
+fit_rsquared_adj: 0.724909485967397
+
+fit_rsquared: 0.7338700890303483

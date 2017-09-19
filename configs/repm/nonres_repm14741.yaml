@@ -1,0 +1,75 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 14741
+
+predict_filters: hedonic_id == 14741
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_percent_race4
+    - year_built
+    - zones_ln_empden_5
+    - nodes_walk_midinc_hhs
+    - zones_empden
+    - bldg_empratio_18
+    - nodes_walk_population
+    - zones_a_ln_emp_50min_transit
+    - nodes_walk_ave_nonres_sqft_price
+    - drv_nearest_hospital
+    - nodes_walk_sum_nonresidential_units
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 3.545737750161475
+        bldg_empratio_18: -1.3389247697456002
+        drv_nearest_hospital: 0.02461549711811417
+        nodes_walk_ave_nonres_sqft_price: 0.0019507221940026276
+        nodes_walk_midinc_hhs: 0.00580898451167135
+        nodes_walk_percent_race4: 6.774188116238021
+        nodes_walk_population: -0.005224168241823545
+        nodes_walk_sum_nonresidential_units: -0.07602504486574684
+        year_built: 0.0003789902677897887
+        zones_a_ln_emp_50min_transit: 0.03436180424061305
+        zones_empden: -0.049849788056501095
+        zones_ln_empden_5: 1.891478040729176
+    Std. Error:
+        Intercept: 0.10572178746362788
+        bldg_empratio_18: 0.18749591755112247
+        drv_nearest_hospital: 0.006639985952513888
+        nodes_walk_ave_nonres_sqft_price: 0.0005487929495616207
+        nodes_walk_midinc_hhs: 0.002061833031980889
+        nodes_walk_percent_race4: 2.0544875805669065
+        nodes_walk_population: 0.0010819594647533397
+        nodes_walk_sum_nonresidential_units: 0.019137914518860766
+        year_built: 5.162510560201735e-05
+        zones_a_ln_emp_50min_transit: 0.008552021207964467
+        zones_empden: 0.012937238924548924
+        zones_ln_empden_5: 0.32321681529101354
+    T-Score:
+        Intercept: 33.53838253426558
+        bldg_empratio_18: -7.141087588643257
+        drv_nearest_hospital: 3.7071610232540904
+        nodes_walk_ave_nonres_sqft_price: 3.5545686138294537
+        nodes_walk_midinc_hhs: 2.817388421646546
+        nodes_walk_percent_race4: 3.297264086828298
+        nodes_walk_population: -4.828432498637579
+        nodes_walk_sum_nonresidential_units: -3.9724832499812224
+        year_built: 7.3412008241001825
+        zones_a_ln_emp_50min_transit: 4.017974629039978
+        zones_empden: -3.8532014711353244
+        zones_ln_empden_5: 5.852040955932794
+
+fit_rsquared_adj: 0.3279266233772855
+
+fit_rsquared: 0.34439167269320947

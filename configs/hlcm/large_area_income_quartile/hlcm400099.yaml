@@ -20,17 +20,10 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression:
-- building_type_id_is_84
-- residential_units
-- ln_income:nodes_walk_ave_income
-- is_race4:nodes_walk_percent_race4
-- building_type_id_is_83
-- nodes_walk_population
-- has_children:sqft_per_unit
-- persons:nodes_walk_ln_popden
-- is_young:zones_empden
-- crime_ucr_rate
+model_expression: building_type_id_is_84 + residential_units + ln_income:nodes_walk_ave_income
+    + is_race4:nodes_walk_percent_race4 + building_type_id_is_83 + nodes_walk_population
+    + has_children:sqft_per_unit + persons:nodes_walk_ln_popden + is_young:zones_empden
+    + crime_ucr_rate
 
 fitted: true
 

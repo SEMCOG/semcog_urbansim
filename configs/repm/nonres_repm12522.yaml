@@ -1,0 +1,91 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 12522
+
+predict_filters: hedonic_id == 12522
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_highinc_hhs
+    - vacant_job_spaces
+    - year_built
+    - zones_employment
+    - nodes_drv_drv_60min_jobs
+    - b_ln_building_sqft
+    - drv_nearest_grocery
+    - nodes_walk_percent_race1
+    - walk_nearest_park
+    - nodes_drv_drv_10min_pop
+    - nodes_walk_ln_popden
+    - nodes_walk_quarter_mile_to_transit
+    - zones_ln_empden_6
+    - crime_ucr_rate
+    - bldg_empratio_5
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: 2.1291614234578002
+        b_ln_building_sqft: -0.39538043742032675
+        bldg_empratio_5: 0.6707288274488994
+        crime_ucr_rate: -0.00015852956802735326
+        drv_nearest_grocery: -0.045115736611612674
+        nodes_drv_drv_10min_pop: -0.15224890192837956
+        nodes_drv_drv_60min_jobs: 0.5201932880726473
+        nodes_walk_highinc_hhs: 0.002816703339906453
+        nodes_walk_ln_popden: -0.1599150393418765
+        nodes_walk_percent_race1: 0.22276596250994996
+        nodes_walk_quarter_mile_to_transit: 0.02083494753173312
+        vacant_job_spaces: -0.000698414822758358
+        walk_nearest_park: 3.0085780077869312e-05
+        year_built: 0.00012698713018753004
+        zones_employment: 4.995015933473171e-05
+        zones_ln_empden_6: -0.2556336454199569
+    Std. Error:
+        Intercept: 0.851602087182054
+        b_ln_building_sqft: 0.011750960878424059
+        bldg_empratio_5: 0.029005252451636147
+        crime_ucr_rate: 1.73584142477594e-05
+        drv_nearest_grocery: 0.009530917693598573
+        nodes_drv_drv_10min_pop: 0.04623169103271487
+        nodes_drv_drv_60min_jobs: 0.08370078493175474
+        nodes_walk_highinc_hhs: 0.0005411826988422422
+        nodes_walk_ln_popden: 0.024040475369324833
+        nodes_walk_percent_race1: 0.0741401207973399
+        nodes_walk_quarter_mile_to_transit: 0.005083128019365498
+        vacant_job_spaces: 0.00025889135029213614
+        walk_nearest_park: 6.920442299276738e-06
+        year_built: 2.174166450343218e-05
+        zones_employment: 1.1798504073121998e-05
+        zones_ln_empden_6: 0.08931700894339088
+    T-Score:
+        Intercept: 2.5001834254577537
+        b_ln_building_sqft: -33.646647411301046
+        bldg_empratio_5: 23.124391989598575
+        crime_ucr_rate: -9.132721789250768
+        drv_nearest_grocery: -4.733619370348208
+        nodes_drv_drv_10min_pop: -3.293171816290342
+        nodes_drv_drv_60min_jobs: 6.214915290182593
+        nodes_walk_highinc_hhs: 5.204718011001194
+        nodes_walk_ln_popden: -6.651908370577601
+        nodes_walk_percent_race1: 3.00466144530402
+        nodes_walk_quarter_mile_to_transit: 4.098843753758899
+        vacant_job_spaces: -2.6977140100287564
+        walk_nearest_park: 4.3473782132413135
+        year_built: 5.8407271516623585
+        zones_employment: 4.2336010586734
+        zones_ln_empden_6: -2.8620936643991013
+
+fit_rsquared_adj: 0.6979732747976963
+
+fit_rsquared: 0.7023845706867271

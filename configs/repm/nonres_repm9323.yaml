@@ -1,0 +1,79 @@
+name: RegressionModel
+
+model_type: regression
+
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 9323
+
+predict_filters: hedonic_id == 9323
+
+model_expression:
+    left_side: np.log1p(sqft_price_nonres)
+    right_side:
+    - nodes_walk_race_1_hhs
+    - zones_logsum_pop_low_income
+    - building_age_gt_70
+    - drv_nearest_grocery
+    - walk_nearest_park
+    - vacant_job_spaces
+    - b_total_jobs
+    - nodes_walk_ln_popden
+    - nodes_walk_ave_lot_sqft
+    - building_age_le_10
+    - nodes_drv_drv_20min_pop
+    - zones_transit_jobs_30min
+
+ytransform: np.exp
+
+fitted: true
+
+fit_parameters:
+    Coefficient:
+        Intercept: -1.5347503778256044
+        b_total_jobs: -0.011569923869653657
+        building_age_gt_70: 0.3041877769259736
+        building_age_le_10: 0.3603991401231122
+        drv_nearest_grocery: -0.08679018662845492
+        nodes_drv_drv_20min_pop: 0.38005536626940933
+        nodes_walk_ave_lot_sqft: 0.18941681894915718
+        nodes_walk_ln_popden: 0.46500306141496933
+        nodes_walk_race_1_hhs: -0.00319306544791802
+        vacant_job_spaces: -0.01380632257909562
+        walk_nearest_park: -3.869629992627788e-05
+        zones_logsum_pop_low_income: 4.64763880136638e-07
+        zones_transit_jobs_30min: 3.621990801933523e-05
+    Std. Error:
+        Intercept: 0.9138055719400746
+        b_total_jobs: 0.0028620580648734506
+        building_age_gt_70: 0.0935315795962316
+        building_age_le_10: 0.17068725620370087
+        drv_nearest_grocery: 0.016259029765167327
+        nodes_drv_drv_20min_pop: 0.08563120085481904
+        nodes_walk_ave_lot_sqft: 0.03502266050847842
+        nodes_walk_ln_popden: 0.06907811670817156
+        nodes_walk_race_1_hhs: 0.0006623855372730632
+        vacant_job_spaces: 0.0032041918600070017
+        walk_nearest_park: 1.1447818583972339e-05
+        zones_logsum_pop_low_income: 1.055173687861192e-07
+        zones_transit_jobs_30min: 1.7286460109299158e-05
+    T-Score:
+        Intercept: -1.6795152327285765
+        b_total_jobs: -4.042518917297101
+        building_age_gt_70: 3.2522467624210782
+        building_age_le_10: 2.1114589814075293
+        drv_nearest_grocery: -5.337968370928912
+        nodes_drv_drv_20min_pop: 4.438281402987251
+        nodes_walk_ave_lot_sqft: 5.408407476733597
+        nodes_walk_ln_popden: 6.731553834616369
+        nodes_walk_race_1_hhs: -4.820554296918026
+        vacant_job_spaces: -4.308831425302182
+        walk_nearest_park: -3.380233504089165
+        zones_logsum_pop_low_income: 4.404619689472182
+        zones_transit_jobs_30min: 2.095276175129165
+
+fit_rsquared_adj: 0.3306249335036435
+
+fit_rsquared: 0.3432150601462083
