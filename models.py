@@ -46,6 +46,24 @@ for name, model in location_choice_models.items():
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
 
+@orca.step()
+def elcm_home_based(jobs, households):
+    wrap_jobs = jobs
+    _print_number_unplaced(wrap_jobs, 'building_id')
+    jobs = wrap_jobs.to_frame('building_id', 'home_based_status', 'large_area_id')
+    jobs = jobs[(jobs.home_based_status >= 1) & (jobs.building_id == -1)]
+    hh = households.to_frame('building_id', 'large_area_id')
+    hh = hh[hh.building_id > 0]
+
+    for la, la_job in jobs.groupby('large_area_id'):
+        la_hh = hh[hh.large_area_id == la]
+        la_job['building_id'] = la_hh.sample(len(la_job), replace=True).building_id.values
+        wrap_jobs.update_col_from_series('building_id',
+                                         la_job['building_id'],
+                                         cast=True)
+
+    _print_number_unplaced(wrap_jobs, 'building_id')
+
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):

@@ -2,9 +2,9 @@ name: MNLDiscreteChoiceModel
 
 model_type: discretechoice
 
-choosers_fit_filters: building_id>0
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
 
-choosers_predict_filters: slid == 1400003
+choosers_predict_filters: (slid == 1400003) & (home_based_status == 0)
 
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 3)
 
