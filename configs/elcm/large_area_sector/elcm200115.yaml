@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 200115
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 115)
+
+alts_predict_filters: large_area_id == 115
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_total_jobs
+- zones_logsum_job_low_income
+- b_ln_building_sqft
+- popden
+- nodes_drv_drv_10min_pop
+- nodes_walk_lowinc_hhs
+- b_ln_land_area
+- building_type_id_is_41
+- building_type_id_is_21
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.12720770560806302
+        b_ln_land_area: 0.9336554134527488
+        b_total_jobs: 0.0174626894351157
+        building_type_id_is_21: 1.3796800224980807
+        building_type_id_is_41: -0.7062548155644381
+        nodes_drv_drv_10min_pop: 0.4131753637833746
+        nodes_walk_lowinc_hhs: -0.014774158305780227
+        popden: 0.12237819737506438
+        zones_logsum_job_low_income: -2.850060180143506e-06
+    Std. Error:
+        b_ln_building_sqft: 0.1722304056701922
+        b_ln_land_area: 0.17869092277007617
+        b_total_jobs: 0.0006506912922839138
+        building_type_id_is_21: 0.139699170542843
+        building_type_id_is_41: 0.46553021382735543
+        nodes_drv_drv_10min_pop: 0.050740883416473356
+        nodes_walk_lowinc_hhs: 0.0030408142532969877
+        popden: 0.022720949947322502
+        zones_logsum_job_low_income: 5.309120686710007e-07
+    T-Score:
+        b_ln_building_sqft: 0.7385902919584121
+        b_ln_land_area: 5.2249739325264715
+        b_total_jobs: 26.83713404834726
+        building_type_id_is_21: 9.876078842393412
+        building_type_id_is_41: -1.5170976976079942
+        nodes_drv_drv_10min_pop: 8.142849236425288
+        nodes_walk_lowinc_hhs: -4.858619131294001
+        popden: 5.386139120890311
+        zones_logsum_job_low_income: -5.368233928601181
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -862.6048971273244
+    'null': -1704.6083608881363
+    ratio: 0.4939571358913848

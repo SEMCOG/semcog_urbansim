@@ -1,0 +1,83 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 700125
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 125)
+
+alts_predict_filters: large_area_id == 125
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_sqft_price_nonres
+- b_ln_non_residential_sqft
+- zones_ln_empden_7
+- parcels_pct_undev
+- zones_logsum_pop_high_income
+- b_total_jobs
+- nodes_drv_drv_15min_retail_jobs
+- building_type_id_is_41
+- b_is_pre_1945
+- building_type_id_is_21
+- zones_population
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: -1.384030414281881
+        b_ln_non_residential_sqft: 0.7131255874333088
+        b_ln_sqft_price_nonres: -0.4090840812987043
+        b_total_jobs: 0.0003515715926084291
+        building_type_id_is_21: -1.3078293138737935
+        building_type_id_is_41: 3.0
+        nodes_drv_drv_15min_retail_jobs: 2.123211719216114
+        parcels_pct_undev: 0.019937630179566474
+        zones_ln_empden_7: 3.0
+        zones_logsum_pop_high_income: -2.587554428706675e-06
+        zones_population: -0.00031953939825438355
+    Std. Error:
+        b_is_pre_1945: 0.2845617193542278
+        b_ln_non_residential_sqft: 0.05394250132888549
+        b_ln_sqft_price_nonres: 0.06880994845343691
+        b_total_jobs: 6.727185555739073e-05
+        building_type_id_is_21: 0.3121737502496237
+        building_type_id_is_41: 0.3080601263283538
+        nodes_drv_drv_15min_retail_jobs: 0.12031907645745643
+        parcels_pct_undev: 0.002452309306024097
+        zones_ln_empden_7: 0.4234719032692699
+        zones_logsum_pop_high_income: 7.011074425701422e-07
+        zones_population: 6.599769768628448e-05
+    T-Score:
+        b_is_pre_1945: -4.863726636958549
+        b_ln_non_residential_sqft: 13.220106036340578
+        b_ln_sqft_price_nonres: -5.945129890273468
+        b_total_jobs: 5.2261319343049415
+        building_type_id_is_21: -4.189427563425859
+        building_type_id_is_41: 9.738358663147379
+        nodes_drv_drv_15min_retail_jobs: 17.646509445797314
+        parcels_pct_undev: 8.130144974204393
+        zones_ln_empden_7: 7.084295266910335
+        zones_logsum_pop_high_income: -3.6906674663460066
+        zones_population: -4.841674928923917
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -568.9373930273315
+    'null': -4048.9926104386304
+    ratio: 0.8594866803262211

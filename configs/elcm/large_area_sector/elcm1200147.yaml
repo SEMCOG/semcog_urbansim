@@ -1,0 +1,75 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1200147
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
+
+alts_predict_filters: large_area_id == 147
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_ln_non_residential_sqft
+- zones_ln_empden_4
+- b_ln_land_area
+- zones_households
+- popden
+- nodes_drv_drv_10min_pop
+- building_type_id_is_31
+- zones_transit_jobs_50min
+- building_type_id_is_21
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_land_area: 0.9854692680569789
+        b_ln_non_residential_sqft: 0.17371498007956795
+        building_type_id_is_21: 1.1019887862662838
+        building_type_id_is_31: -0.4077985895796919
+        nodes_drv_drv_10min_pop: 0.6318393494689758
+        popden: -0.1213250555697584
+        zones_households: -0.0019457242050144813
+        zones_ln_empden_4: -0.6935442634236489
+        zones_transit_jobs_50min: 1.8697576018256704e-05
+    Std. Error:
+        b_ln_land_area: 0.15310271886400773
+        b_ln_non_residential_sqft: 0.1385035274983763
+        building_type_id_is_21: 0.1228513930751017
+        building_type_id_is_31: 0.1678163178165017
+        nodes_drv_drv_10min_pop: 0.03910356211619312
+        popden: 0.02071097669889516
+        zones_households: 0.00023140581341981754
+        zones_ln_empden_4: 0.5428784924357367
+        zones_transit_jobs_50min: 5.364526121642476e-06
+    T-Score:
+        b_ln_land_area: 6.436654263026603
+        b_ln_non_residential_sqft: 1.254227839659928
+        building_type_id_is_21: 8.970095972722216
+        building_type_id_is_31: -2.430029420771812
+        nodes_drv_drv_10min_pop: 16.15810210823033
+        popden: -5.858007438936019
+        zones_households: -8.408277113957112
+        zones_ln_empden_4: -1.2775312949163247
+        zones_transit_jobs_50min: 3.485410564564835
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -1063.501013935471
+    'null': -2410.1146490706215
+    ratio: 0.5587342642203457

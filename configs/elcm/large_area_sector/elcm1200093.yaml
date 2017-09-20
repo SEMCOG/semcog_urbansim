@@ -1,0 +1,79 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1200093
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
+
+alts_predict_filters: large_area_id == 93
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- b_total_jobs
+- b_is_pre_1945
+- b_ln_building_sqft
+- popden
+- nodes_drv_drv_45min_jobs
+- building_type_id_is_31
+- zones_ln_empden_17
+- nodes_walk_ave_lot_sqft
+- nodes_walk_residential
+- building_type_id_is_24
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: 0.325993079635299
+        b_ln_building_sqft: 0.9320544013090681
+        b_total_jobs: 0.008912742412140788
+        building_type_id_is_24: 1.3731863020355008
+        building_type_id_is_31: -0.6001937059865929
+        nodes_drv_drv_45min_jobs: 0.85540018824191
+        nodes_walk_ave_lot_sqft: 0.2546683158709572
+        nodes_walk_residential: -0.00033502815650774244
+        popden: 0.10904863923460618
+        zones_ln_empden_17: 2.01766657757817
+    Std. Error:
+        b_is_pre_1945: 0.1124375855858758
+        b_ln_building_sqft: 0.060771359215313604
+        b_total_jobs: 0.0005713160788300098
+        building_type_id_is_24: 0.4890325101055671
+        building_type_id_is_31: 0.16509072512372142
+        nodes_drv_drv_45min_jobs: 0.05000807999072877
+        nodes_walk_ave_lot_sqft: 0.0753393750192246
+        nodes_walk_residential: 0.0007659507200091355
+        popden: 0.040596117008401975
+        zones_ln_empden_17: 0.46652915667478795
+    T-Score:
+        b_is_pre_1945: 2.8993247937213766
+        b_ln_building_sqft: 15.337066890453922
+        b_total_jobs: 15.600370342093415
+        building_type_id_is_24: 2.807965265415733
+        building_type_id_is_31: -3.6355386139154633
+        nodes_drv_drv_45min_jobs: 17.105239561296827
+        nodes_walk_ave_lot_sqft: 3.3802817690745726
+        nodes_walk_residential: -0.4374017123500407
+        popden: 2.686183981882724
+        zones_ln_empden_17: 4.324845615136251
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -926.791622648532
+    'null': -2173.485210798235
+    ratio: 0.5735919351813035

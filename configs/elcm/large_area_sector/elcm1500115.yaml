@@ -1,0 +1,71 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 1500115
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 115)
+
+alts_predict_filters: large_area_id == 115
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- bldg_empratio_14
+- b_ln_non_residential_sqft
+- zones_logsum_pop_low_income
+- nodes_drv_drv_10min_pop
+- improvement_value
+- building_type_id_is_52
+- year_built
+- zones_transit_jobs_50min
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 1.3307472667861897
+        bldg_empratio_14: 1.841318842652958
+        building_type_id_is_52: 2.7777606931311585
+        improvement_value: -2.1613288968522497e-07
+        nodes_drv_drv_10min_pop: 0.8291278638536013
+        year_built: -0.0006732472305741831
+        zones_logsum_pop_low_income: -2.405328770129526e-06
+        zones_transit_jobs_50min: 4.05183044236498e-05
+    Std. Error:
+        b_ln_non_residential_sqft: 0.11603816781906155
+        bldg_empratio_14: 0.551734185343867
+        building_type_id_is_52: 1.1873073123737685
+        improvement_value: 1.8985164236021375e-07
+        nodes_drv_drv_10min_pop: 0.10662477889429792
+        year_built: 0.00020870625170415225
+        zones_logsum_pop_low_income: 1.3074619869103984e-06
+        zones_transit_jobs_50min: 1.2561637756488942e-05
+    T-Score:
+        b_ln_non_residential_sqft: 11.468185785742717
+        bldg_empratio_14: 3.337329626413054
+        building_type_id_is_52: 2.3395465219342553
+        improvement_value: -1.1384304449426181
+        nodes_drv_drv_10min_pop: 7.776127392259863
+        year_built: -3.2258124760370497
+        zones_logsum_pop_low_income: -1.8396930803422018
+        zones_transit_jobs_50min: 3.2255590560012237
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -216.69926131858975
+    'null': -4368.880554769819
+    ratio: 0.9503993623533599

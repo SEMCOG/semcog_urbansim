@@ -1,0 +1,67 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: building_id>0
+
+choosers_predict_filters: slid == 100099
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+
+alts_predict_filters: large_area_id == 99
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
+model_expression:
+- zones_ln_empden_6
+- building_type_id_is_71
+- b_ln_building_sqft
+- nodes_walk_ave_nonres_sqft_price
+- building_age
+- nodes_walk_max_office_far
+- building_type_id_is_21
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.9800131682242602
+        building_age: 0.020913983602021336
+        building_type_id_is_21: -0.821182235363338
+        building_type_id_is_71: 3.0
+        nodes_walk_ave_nonres_sqft_price: -0.004143154737920126
+        nodes_walk_max_office_far: 0.14769647023242308
+        zones_ln_empden_6: 1.0085438956314494
+    Std. Error:
+        b_ln_building_sqft: 0.020729898159178594
+        building_age: 0.0020069168307261147
+        building_type_id_is_21: 0.31770114262887605
+        building_type_id_is_71: 0.22463370319459708
+        nodes_walk_ave_nonres_sqft_price: 0.001817961539960089
+        nodes_walk_max_office_far: 0.07272345419905739
+        zones_ln_empden_6: 0.41230700971296963
+    T-Score:
+        b_ln_building_sqft: 47.27534890422696
+        building_age: 10.420951821134775
+        building_type_id_is_21: -2.584763241857791
+        building_type_id_is_71: 13.355075206150795
+        nodes_walk_ave_nonres_sqft_price: -2.279011214951821
+        nodes_walk_max_office_far: 2.0309330993567887
+        zones_ln_empden_6: 2.4460993188875304
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -603.2404110374893
+    'null': -1481.1250025197714
+    ratio: 0.5927147202219776
