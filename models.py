@@ -310,6 +310,7 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
 
 @orca.step()
 def government_jobs_scaling_model(jobs):
+    wrap_jobs = jobs
     jobs = jobs.to_frame(jobs.local_columns+['large_area_id'])
     government_sectors = [18]
 
@@ -319,20 +320,17 @@ def government_jobs_scaling_model(jobs):
             alternative_ids, size=len(chooser_ids), replace=True, p=probabilities), index=chooser_ids)
 
     jobs_to_place = jobs[jobs.building_id.isnull() | (jobs.building_id == -1)]
+    jobs_to_place = jobs_to_place[jobs_to_place.sector_id.isin(government_sectors)]
 
     if len(jobs_to_place) > 0:
-        for name, segment in jobs_to_place.groupby(['large_area_id', 'sector_id']):
-            large_area_id = int(name[0])
-            sector = int(name[1])
-            if sector in government_sectors:
-                jobs_to_place = segment.index.values
-                counts_by_bid = jobs[(jobs.sector_id == sector) & (jobs.large_area_id == large_area_id)].groupby(
-                    ['building_id']).size()
-                prop_by_bid = counts_by_bid / counts_by_bid.sum()
-                choices = random_choice(jobs_to_place, prop_by_bid.index.values, prop_by_bid.values)
-                # todo: use orca.update_col_from_series
-                jobs.loc[choices.index, 'building_id'] = choices.values
-        orca.add_table("jobs", jobs)
+        for (large_area_id, sector), segment in jobs_to_place.groupby(['large_area_id', 'sector_id']):
+            counts_by_bid = jobs[(jobs.sector_id == sector) & (jobs.large_area_id == large_area_id)].groupby(
+                ['building_id']).size()
+            prop_by_bid = counts_by_bid / counts_by_bid.sum()
+            choices = random_choice(segment.index.values, prop_by_bid.index.values, prop_by_bid.values)
+            wrap_jobs.update_col_from_series('building_id',
+                                             choices,
+                                             cast=True)
 
 
 @orca.step()
