@@ -9,6 +9,11 @@ from urbansim.utils import misc
 #####################
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
+def slid(jobs):
+    return (jobs.sector_id*100000 + jobs.large_area_id).fillna(0).astype('int')
+
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
 def zone_id(jobs, buildings):
     return misc.reindex(buildings.zone_id, jobs.building_id)
 

@@ -20,6 +20,7 @@ import variables
 # Register as injectable to be used throughout simulation
 location_choice_models = {}
 hlcm_step_names = []
+elcm_step_names = []
 model_configs = lcm_utils.get_model_category_configs()
 for model_category_name, model_category_attributes in model_configs.items():
     if model_category_attributes['model_type'] == 'location_choice':
@@ -29,11 +30,16 @@ for model_category_name, model_category_attributes in model_configs.items():
             model = lcm_utils.create_lcm_from_config(model_config,
                                                      model_category_attributes)
             location_choice_models[model.name] = model
+
             if model_category_name == 'hlcm':
                 hlcm_step_names.append(model.name)
 
+            if model_category_name == 'elcm':
+                elcm_step_names.append(model.name)
+
 orca.add_injectable('location_choice_models', location_choice_models)
 orca.add_injectable('hlcm_step_names', hlcm_step_names)
+orca.add_injectable('elcm_step_names', elcm_step_names)
 
 for name, model in location_choice_models.items():
     lcm_utils.register_choice_model_step(model.name,
