@@ -109,12 +109,6 @@ def yaml_to_class(cfg):
     }[model_type]
 
 
-def hedonic_estimate(cfg, tbl, nodes):
-    cfg = misc.config(cfg)
-    df = to_frame([tbl, nodes], cfg)
-    return yaml_to_class(cfg).fit_from_cfg(df, cfg)
-
-
 def hedonic_simulate(cfg, tbl, nodes, out_fname):
     cfg = misc.config(cfg)
     df = to_frame([tbl, nodes], cfg)
@@ -126,16 +120,6 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     price_or_rent[price_or_rent > 700] = 700
     price_or_rent[price_or_rent < 1] = 1
     tbl.update_col_from_series(out_fname, price_or_rent)
-
-
-def lcm_estimate(cfg, choosers, chosen_fname, buildings, nodes):
-    cfg = misc.config(cfg)
-    choosers = to_frame([choosers], cfg, additional_columns=[chosen_fname])
-    alternatives = to_frame([buildings, nodes], cfg)
-    return yaml_to_class(cfg).fit_from_cfg(choosers,
-                                           chosen_fname,
-                                           alternatives,
-                                           cfg)
 
 
 def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
