@@ -100,50 +100,6 @@ def increase_property_values(buildings, income_growth_rates):
 
 
 @orca.step()
-def elcm_estimate(jobs, buildings, nodes_drv):
-    utils.lcm_estimate("elcm3.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm5.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm93.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm99.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm115.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm125.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm147.yaml", jobs, "building_id", buildings, nodes_drv)
-    utils.lcm_estimate("elcm161.yaml", jobs, "building_id", buildings, nodes_drv)
-
-
-@orca.step()
-def elcm_simulate(jobs, buildings, nodes_drv):
-    jobs_df = jobs.to_frame()
-    buildings = buildings.to_frame()
-
-    idx_invalid_building_id = np.in1d(jobs_df.building_id, buildings.index.values) == False
-    if idx_invalid_building_id.sum() > 0:
-        print("we have jobs with bad building id's there are #", idx_invalid_building_id.sum())
-        jobs_df.loc[idx_invalid_building_id, 'building_id'] = -1
-
-    def register_broadcast_simulate_segment(jobs_df_name, jobs_in_la, buildings_df_name, buildings_in_la, yaml_name):
-        orca.add_table(jobs_df_name, jobs_in_la)
-        orca.add_table(buildings_df_name, buildings_in_la)
-        orca.broadcast('nodes_drv', buildings_df_name, cast_index=True, onto_on='nodeid_drv')
-        orca.broadcast('parcels', buildings_df_name, cast_index=True, onto_on='parcel_id')
-        orca.broadcast(buildings_df_name, jobs_df_name, cast_index=True, onto_on='building_id')
-        jobs_in_la = orca.get_table(jobs_df_name)
-        buildings_in_la = orca.get_table(buildings_df_name)
-        utils.lcm_simulate(yaml_name, jobs_in_la, buildings_in_la, nodes_drv,
-                           "building_id", "job_spaces",
-                           "vacant_job_spaces")
-        jobs.update_col_from_series('building_id', jobs_in_la.building_id, cast=True)
-
-    for large_area_id in [3, 5, 93, 99, 115, 125, 147, 161]:
-        str_id = str(large_area_id)
-        register_broadcast_simulate_segment(jobs_df_name='jobs' + str_id,
-                                            jobs_in_la=jobs_df[jobs_df.large_area_id == large_area_id],
-                                            buildings_df_name='buildings' + str_id,
-                                            buildings_in_la=buildings[buildings.large_area_id == large_area_id],
-                                            yaml_name='elcm' + str_id + '.yaml')
-
-
-@orca.step()
 def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = annual_relocation_rates_for_households.to_frame()
     relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
@@ -1129,9 +1085,7 @@ def post_access_variables():
     geographic_levels = [('nodes_walk', 'nodeid_walk'),
                          ('nodes_drv', 'nodeid_drv')]
 
-    for geography in geographic_levels:
-        geography_name = geography[0]
-        geography_id = geography[1]
+    for (geography_name, geography_id) in geographic_levels:
         if geography_name != 'buildings':
             building_vars = orca.get_table('buildings').columns
             for var in orca.get_table(geography_name).columns:
