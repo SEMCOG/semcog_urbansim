@@ -53,6 +53,12 @@ orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", inde
 orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 
 
+@orca.injectable(cache=True)
+def base_job_space(buildings):
+    df = buildings.jobs_non_home_based
+    return df[df > 0]
+
+
 # these are dummy returns that last until accessibility runs
 for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
     empty_df = pd.DataFrame()

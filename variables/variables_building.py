@@ -96,11 +96,14 @@ def building_sqft_per_job(buildings, building_sqft_per_job):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
-def job_spaces(buildings):
+def job_spaces(buildings, base_job_space):
     job_spaces = buildings.non_residential_sqft / buildings.building_sqft_per_job
     job_spaces[np.isinf(job_spaces)] = np.nan
     job_spaces[job_spaces < 0] = 0
     job_spaces = job_spaces.fillna(0).round().astype('int')
+    base_job_space = base_job_space.reindex(job_spaces.index).fillna(0).round().astype('int')
+    base_job_space = base_job_space[base_job_space > job_spaces]
+    job_spaces.loc[base_job_space.index] = base_job_space
     return job_spaces
 
 
@@ -260,6 +263,18 @@ def b_is_newerthan2010(buildings):
 def b_total_jobs(jobs, buildings):
     jobs_by_b = jobs.building_id.groupby(jobs.building_id).size()
     return pd.Series(index=buildings.index, data=jobs_by_b).fillna(0)
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def jobs_home_based(jobs):
+    jobs = jobs.to_frame(["building_id", "home_based_status"])
+    return jobs[jobs.home_based_status == 1].groupby("building_id").size()
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def jobs_non_home_based(jobs):
+    jobs = jobs.to_frame(["building_id", "home_based_status"])
+    return jobs[jobs.home_based_status == 0].groupby("building_id").size()
 
 
 ### Variable generation functions
