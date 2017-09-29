@@ -630,4 +630,31 @@ def main(run_name):
     end = time.clock()
     print "runtime:", end - start
 
+    start = time.clock()
+    print "parcels_land_ues"
+    orca_year_dataset(store_la, 2015)
+    index = orca.get_table('parcels').index
+    land_ues = pd.DataFrame(index=index)
+    buildings = orca.get_table('buildings').to_frame(["parcel_id", "building_type_id", "year_built"])
+    buildings = buildings[buildings.year_built <= 2015]
+    buildings = buildings[buildings.year_built >= 0]
+    land_ues["newest_building_in_yr2015"] = (
+    buildings[buildings.building_type_id != 99].groupby("parcel_id").year_built.max().reindex(index, fill_value=-1))
+
+    orca_year_dataset(store_la, 2045)
+    buildings = orca.get_table('buildings').to_frame(["parcel_id", "building_type_id", "year_built"])
+    buildings = buildings[buildings.year_built <= 2045]
+    buildings = buildings[buildings.year_built >= 0]
+    land_ues["newest_building_in_yr2045"] = (
+    buildings[buildings.building_type_id != 99].groupby("parcel_id").year_built.max().reindex(index, fill_value=-1))
+
+    land_ues["dev"] = "Unchanged"
+    land_ues[land_ues.newest_building_in_yr2015 != land_ues.newest_building_in_yr2045] = "Redev"
+    land_ues[(land_ues.newest_building_in_yr2015 == -1) & (land_ues.newest_building_in_yr2045 != -1)] = "Dev"
+    land_ues[(land_ues.newest_building_in_yr2015 != -1) & (land_ues.newest_building_in_yr2045 == -1)] = "Demo"
+
+    land_ues.to_csv(os.path.join(outdir, "parcels_land_ues.csv"))
+    end = time.clock()
+    print "runtime:", end - start
+
     store_la.close()
