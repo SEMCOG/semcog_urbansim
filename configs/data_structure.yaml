@@ -89,20 +89,6 @@ columns:
   other_crime_rate: float64
   ucr_crime_rate: float64
 ---
-name: employment_events
-indexs:
-- None
-columns:
-  action: object
-  agent_dataset: object
-  agent_expression: object
-  amount: int32
-  location_capacity_attribute: object
-  location_expression: object
-  refinement_id: int32
-  transaction_id: int8
-  year: int32
----
 name: employment_sectors
 indexs:
 - sector_id
@@ -160,8 +146,8 @@ indexs:
 - job_id
 columns:
   building_id: int32
-  home_based_status: int32
-  sector_id: int32
+  home_based_status: int8
+  sector_id: int8
   semcog_id: int32
   sqft: int32
 ---
@@ -283,19 +269,6 @@ columns:
   point_x: float64
   point_y: float64
 ---
-name: refinements
-indexs:
-- refinement_id
-columns:
-  action: object
-  agent_dataset: object
-  agent_expression: object
-  amount: int32
-  location_capacity_attribute: object
-  location_expression: object
-  transaction_id: int32
-  year: int32
----
 name: refiner_events
 indexs:
 - refinement_id
@@ -373,14 +346,6 @@ indexs:
 - semmcd_id
 columns:
   city_name: object
----
-name: target_vacancies
-indexs:
-- building_type_id
-- year
-columns:
-  large_area_id: int32
-  target_vacancy_rate: float32
 ---
 name: transit_stops
 indexs:
