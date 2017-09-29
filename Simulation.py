@@ -8,6 +8,7 @@ from urbansim.utils import misc, networks
 import output_indicators
 
 data_out = utils.get_run_filename()
+print data_out
 
 orca.run(['build_networks',
           "neighborhood_vars"] +

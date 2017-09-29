@@ -1,4 +1,5 @@
 import os
+import random
 import pandas as pd
 from urbansim.utils import misc
 import orca
@@ -56,7 +57,6 @@ orca.add_injectable("building_type_map", {
     99: "Others",
 })
 
-
 ###
 
 ##current building types
@@ -87,6 +87,12 @@ orca.add_injectable("form_to_btype", {
     'mixedoffice': [21, 22, 81, 83],
 })
 
+seed = 314159265
+random.seed(seed)
+print "random stat:", random.getstate()
+pd.np.random.seed(seed)
+print "np.random stat:", pd.np.random.get_state()
+
 
 def verify():
     hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "all_semcog_data_09-08-17.h5"), mode="r")
@@ -96,5 +102,6 @@ def verify():
         out.write(new)
 
     return hdf_store
+
 
 orca.add_injectable("store", verify())
