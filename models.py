@@ -38,8 +38,8 @@ for model_category_name, model_category_attributes in model_configs.items():
                 elcm_step_names.append(model.name)
 
 orca.add_injectable('location_choice_models', location_choice_models)
-orca.add_injectable('hlcm_step_names', hlcm_step_names)
-orca.add_injectable('elcm_step_names', elcm_step_names)
+orca.add_injectable('hlcm_step_names', sorted(hlcm_step_names, reverse=True))
+orca.add_injectable('elcm_step_names', sorted(elcm_step_names, reverse=True))
 
 for name, model in location_choice_models.items():
     lcm_utils.register_choice_model_step(model.name,
