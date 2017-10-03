@@ -87,7 +87,7 @@ orca.add_injectable("form_to_btype", {
     'mixedoffice': [21, 22, 81, 83],
 })
 
-seed = 314159265
+seed = 271828
 random.seed(seed)
 print "random stat:", random.getstate()
 pd.np.random.seed(seed)
