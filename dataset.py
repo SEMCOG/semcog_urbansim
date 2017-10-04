@@ -49,6 +49,13 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
+# TODO: add to dataset
+r = orca.get_table("refiner_events").to_frame()
+r = r.append(pd.read_csv("data/pop_refine_base.csv", index_col='refinement_id'), ignore_index=False)
+r['amount'] = r.amount.astype(int)
+r.index.name = 'refinement_id'
+orca.add_table("refiner_events", r)
+
 orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
 orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 

@@ -356,14 +356,15 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + ['zone_id', 'large_area_id'])
     households_columns = households.local_columns
-    households = households.to_frame(households_columns + ['zone_id', 'large_area_id'])
+    households = households.to_frame(households_columns + ['zone_id', 'city_id', 'large_area_id'])
     households["household_id_old"] = households.index.values
-    buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'large_area_id'])
+    buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'city_id', 'large_area_id'])
     dic_agent = {'jobs': jobs, 'households': households}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
-    assert refinements.action.isin({'clone', 'subtract', 'add', 'target_pop', 'target'}).all(), "Unknown action"
+    assert refinements.action.isin(
+        {'clone', 'subtract_pop', 'subtract', 'add_pop', 'add', 'target_pop', 'target'}).all(), "Unknown action"
     assert refinements.agents.isin({'jobs', 'households'}).all(), "Unknown agents"
 
     def add_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
@@ -491,6 +492,14 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
                                         record.location_expression,
                                         record.amount)
 
+        for _, record in trecords[trecords.action == 'subtract_pop'].iterrows():
+            print record
+            agents, pool = subtract_pop_agents(agents,
+                                               pool,
+                                               record.agent_expression,
+                                               record.location_expression,
+                                               record.amount)
+
         for _, record in trecords[trecords.action == 'subtract'].iterrows():
             print record
             agents, pool = subtract_agents(agents,
@@ -498,6 +507,14 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
                                            record.agent_expression,
                                            record.location_expression,
                                            record.amount)
+
+        for _, record in trecords[trecords.action == 'add_pop'].iterrows():
+            print record
+            agents, pool = add_pop_agents(agents,
+                                          pool,
+                                          record.agent_expression,
+                                          record.location_expression,
+                                          record.amount)
 
         for _, record in trecords[trecords.action == 'add'].iterrows():
             print record
