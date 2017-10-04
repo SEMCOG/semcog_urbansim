@@ -363,7 +363,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
-    assert refinements.action.isin({'subtract', 'add', 'target'}).all(), "Unknown action"
+    assert refinements.action.isin({'clone', 'subtract', 'add', 'target_pop', 'target'}).all(), "Unknown action"
     assert refinements.agents.isin({'jobs', 'households'}).all(), "Unknown agents"
 
     def add_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
@@ -391,14 +391,65 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
         agents = agents.append(agents_sample)
         return agents, agents_pool
 
+    def add_pop_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+        """Move from pool to data"""
+        bselect = buildings.query(location_expression)
+        if len(bselect) <= 0:
+            print("We can't fined a building to place these agents")
+            return agents, agents_pool
+
+        if len(agents_pool) > 0:
+            available_agents = agents_pool.query(agent_expression)
+            available_agents = available_agents[available_agents.persons <= number_of_agents]
+            while len(available_agents) > 0 and number_of_agents > 0:
+                available_agents = available_agents[available_agents.persons <= number_of_agents]
+
+                if len(available_agents) >= number_of_agents:
+                    agents_sample = available_agents.sample(number_of_agents, replace=False)
+                else:
+                    agents_sample = available_agents.sample(number_of_agents, replace=True)
+
+                agents_sample = agents_sample[agents_sample.persons.cumsum() <= number_of_agents]
+                agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
+                agents_sample.building_id = bselect.sample(len(agents_sample), replace=True).index.values
+                agents = agents.append(agents_sample)
+                number_of_agents -= agents_sample.persons.sum()
+        else:
+            available_agents = agents.query(agent_expression)
+            available_agents = available_agents[available_agents.persons <= number_of_agents]
+            while len(available_agents) > 0 and number_of_agents > 0:
+                available_agents = available_agents[available_agents.persons <= number_of_agents]
+                agents_sample = available_agents.sample(number_of_agents, replace=True)
+                agents_sample = agents_sample[agents_sample.persons.cumsum() <= number_of_agents]
+                agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
+                agents_sample.building_id = bselect.sample(len(agents_sample), replace=True).index.values
+                agents = agents.append(agents_sample)
+                number_of_agents -= agents_sample.persons.sum()
+        return agents, agents_pool
+
     def subtract_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
         """Move from data to pool"""
         # TODO: Share code with clone_agents then call drop
         available_agents = agents.query(agent_expression)
         bselect = buildings.query(location_expression)
         local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
-        if len(local_agents) > 0:
+        if len(local_agents) > 0 and number_of_agents > 0:
             selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
+            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents.drop(selected_agents.index, inplace=True)
+        return agents, agents_pool
+
+    def subtract_pop_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+        """Move from data to pool"""
+        available_agents = agents.query(agent_expression)
+        bselect = buildings.query(location_expression)
+        local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
+        local_agents = local_agents[local_agents.persons <= number_of_agents]
+        while len(local_agents) > 0 and number_of_agents > 0:
+            local_agents = local_agents[local_agents.persons <= number_of_agents]
+            selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
+            selected_agents = selected_agents[selected_agents.persons.cumsum() <= number_of_agents]
+            number_of_agents -= selected_agents.persons.sum()
             agents_pool = agents_pool.append(selected_agents, ignore_index=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
@@ -413,13 +464,15 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
             agents_pool = agents_pool.append(selected_agents, ignore_index=True)
         return agents, agents_pool
 
-    def target_agents(agents, agent_expression, location_expression, number_of_agents):
+    def target_agents(agents, agent_expression, location_expression, number_of_agents, by_pop=False):
         """Determine whether to add or subtract based on data"""
         #  use for employment event model
         exist_agents = agents.query(agent_expression)
         bselect = buildings.query(location_expression)
         local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect.index.values)]
 
+        if by_pop:
+            return local_agents.persons.sum() - number_of_agents
         return len(local_agents) - number_of_agents
 
     for tid, trecords in refinements.groupby("transaction_id"):
@@ -453,6 +506,26 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
                                       record.agent_expression,
                                       record.location_expression,
                                       record.amount)
+
+        for _, record in trecords[trecords.action == 'target_pop'].iterrows():
+            print record
+            diff = target_agents(dic_agent[record.agents],
+                                 record.agent_expression,
+                                 record.location_expression,
+                                 record.amount,
+                                 by_pop=True)
+            if diff < 0:
+                agents, pool = add_pop_agents(agents,
+                                              pool,
+                                              record.agents_expression,
+                                              record.location_expression,
+                                              abs(diff))
+            elif diff > 0:
+                agents, pool = subtract_pop_agents(agents,
+                                                   pool,
+                                                   record.agent_expression,
+                                                   record.location_expression,
+                                                   diff)
 
         for _, record in trecords[trecords.action == 'target'].iterrows():
             print record
