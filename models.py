@@ -357,10 +357,9 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     jobs = jobs.to_frame(jobs_columns + ['zone_id', 'large_area_id'])
     households_columns = households.local_columns
     households = households.to_frame(households_columns + ['zone_id', 'large_area_id'])
-    persons_columns = persons.local_columns
-    persons = persons.to_frame(persons_columns)
+    households["household_id_old"] = households.index.values
     buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'large_area_id'])
-    dic_agent = {'jobs': [jobs, []], 'households': [households, [(persons, 'household_id')]]}
+    dic_agent = {'jobs': jobs, 'households': households}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
@@ -368,6 +367,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     assert refinements.agents.isin({'jobs', 'households'}).all(), "Unknown agents"
 
     def add_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+        """Move from pool to data"""
         bselect = buildings.query(location_expression)
         if len(bselect) <= 0:
             print("We can't fined a building to place these agents")
@@ -375,47 +375,48 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
         new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
         # maybe use job reallocation instead of random
 
-        if len(agents_pool[0]) > 0:
-            agents_sub_pool = agents_pool[0].query(agent_expression)
+        if len(agents_pool) > 0:
+            agents_sub_pool = agents_pool.query(agent_expression)
             if len(agents_sub_pool) >= number_of_agents:
                 agents_sample = agents_sub_pool.sample(number_of_agents, replace=False)
             else:
                 agents_sample = agents_sub_pool.sample(number_of_agents, replace=True)
             agents_sample.building_id = new_building_ids
-            agents_pool[0].drop(agents_sample.index, inplace=True)
-            new_index = agents[0].index.values.max() + 1 + np.arange(len(agents_sample))
-            index_look_up = pd.Series(agents_sample.index, new_index)
-            # Todo fix linked
-            agents_sample.index = new_index
+            agents_pool.drop(agents_sample.index, inplace=True)
+            agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
         else:
-            agents_sample = agents[0].query(agent_expression).sample(number_of_agents, replace=True)
-            new_index = agents[0].index.values.max() + 1 + np.arange(len(agents_sample))
-            index_look_up = pd.Series(agents_sample.index, new_index)
-            # Todo fix linked
-            agents_sample.index = new_index
+            agents_sample = agents.query(agent_expression).sample(number_of_agents, replace=True)
+            agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
             agents_sample.building_id = new_building_ids
-        agents[0] = agents[0].append(agents_sample)
+        agents = agents.append(agents_sample)
         return agents, agents_pool
 
     def subtract_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
-        available_agents = agents[0].query(agent_expression)
+        """Move from data to pool"""
+        # TODO: Share code with clone_agents then call drop
+        available_agents = agents.query(agent_expression)
         bselect = buildings.query(location_expression)
         local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
         if len(local_agents) > 0:
             selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
+            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents.drop(selected_agents.index, inplace=True)
+        return agents, agents_pool
 
-            agents_pool[0] = agents_pool[0].append(selected_agents)
-            agents[0].drop(selected_agents.index, inplace=True)
-            for i, (linked, linked_name) in enumerate(agents[1]):
-                l = linked[linked[linked_name].isin(selected_agents.index)]
-                agents_pool[1][i] = agents_pool[1][i].append(l)
-                linked.drop(l.index, inplace=True)
-
+    def clone_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
+        """Copy from data to pool. Don't remove from data!"""
+        available_agents = agents.query(agent_expression)
+        bselect = buildings.query(location_expression)
+        local_agents = available_agents.loc[available_agents.building_id.isin(bselect.index.values)]
+        if len(local_agents) > 0:
+            selected_agents = local_agents.sample(min(len(local_agents), number_of_agents))
+            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
         return agents, agents_pool
 
     def target_agents(agents, agent_expression, location_expression, number_of_agents):
+        """Determine whether to add or subtract based on data"""
         #  use for employment event model
-        exist_agents = agents[0].query(agent_expression)
+        exist_agents = agents.query(agent_expression)
         bselect = buildings.query(location_expression)
         local_agents = exist_agents.loc[exist_agents.building_id.isin(bselect.index.values)]
 
@@ -427,8 +428,15 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
         assert len(agent_types) == 1, "different agents in same transaction_id"
         agent_type = agent_types.iloc[0]
         agents = dic_agent[agent_type]
-        pool = [pd.DataFrame(data=None, columns=agents[0].columns),
-                [pd.DataFrame(data=None, columns=_.columns) for _ in agents[1]]]
+        pool = pd.DataFrame(data=None, columns=agents.columns)
+
+        for _, record in trecords[trecords.action == 'clone'].iterrows():
+            print record
+            agents, pool = clone_agents(agents,
+                                        pool,
+                                        record.agent_expression,
+                                        record.location_expression,
+                                        record.amount)
 
         for _, record in trecords[trecords.action == 'subtract'].iterrows():
             print record
@@ -463,21 +471,32 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
                                                pool,
                                                record.agent_expression,
                                                record.location_expression,
-                                              diff)
+                                               diff)
         dic_agent[agent_type] = agents
 
-    jobs = dic_agent['jobs'][0]
+    jobs = dic_agent['jobs']
     assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
     orca.add_table('jobs', jobs[jobs_columns])
 
-    households = dic_agent['households'][0]
+    households = dic_agent['households']
     assert households.index.duplicated().sum() == 0, "duplicated index in households"
     orca.add_table('households', households[households_columns])
 
-    persons = dic_agent['households'][1][0][0]
+    persons_columns = persons.local_columns
+    persons = persons.to_frame(persons_columns)
+    pidmax = persons.index.values.max() + 1
+
+    hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
+    p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
+    new_p = (p.household_id_x != p.household_id_y).sum()
+    p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+    p['household_id'] = p['household_id_y']
+    persons = p.set_index('person_id')
+
+    assert persons.household_id.isin(households.index).all(), "persons.household_id not in households"
+    assert len(persons.groupby('household_id').size()) == len(households.persons), "households with no persons"
     assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
     orca.add_table('persons', persons[persons_columns])
-
 
 @orca.step()
 def scheduled_development_events(buildings, iter_var, events_addition):
