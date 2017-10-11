@@ -34,8 +34,8 @@ orca.run([
     orca.get_injectable('elcm_step_names') +
     ["elcm_home_based",
     "government_jobs_scaling_model",
+    "gq_pop_scaling_model",
     "refiner",
-    # "gq_model", Fixme: we have new data so need new approach
     # "travel_model", Fixme: on hold
 ],
     iter_vars=range(2016, 2045 + 1),
