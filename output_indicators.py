@@ -384,6 +384,10 @@ def main(run_name):
     def whatnot_id(households, persons):
         return misc.reindex(households.whatnot_id, persons.household_id)
 
+    @orca.column('group_quarters', cache=True, cache_scope='iteration')
+    def whatnot_id(group_quarters, buildings):
+        return misc.reindex(buildings.whatnot_id, group_quarters.building_id)
+
     for tab, geo_id in [('cities', 'city_id'),
                         ('semmcds', 'semmcd'),
                         ('zones', 'zone_id'),
