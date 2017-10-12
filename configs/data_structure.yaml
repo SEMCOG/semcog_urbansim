@@ -115,6 +115,24 @@ columns:
   building_id: int32
   year_built: int32
 ---
+name: group_quarters
+indexs:
+- personid
+columns:
+  age: int8
+  building_id: int32
+  gq_code: int32
+  race_id: int8
+  type: object
+---
+name: group_quarters_control_totals
+indexs:
+- None
+columns:
+  city_id: int32
+  count: int32
+  year: int32
+---
 name: households
 indexs:
 - household_id

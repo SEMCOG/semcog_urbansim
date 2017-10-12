@@ -177,3 +177,27 @@ def large_area_id(households, persons):
 ##@orca.column('persons', 'school_district_id', cache=True)
 ##def school_district_id(persons, households):
 ##    return misc.reindex(households.school_district_id, persons.household_id)
+
+
+#####################
+# GQ VARIABLES
+#####################
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
+def zone_id(group_quarters, buildings):
+    return misc.reindex(buildings.zone_id, group_quarters.building_id)
+
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
+def city_id(group_quarters, buildings):
+    return misc.reindex(buildings.city_id, group_quarters.building_id)
+
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
+def semmcd(group_quarters, buildings):
+    return misc.reindex(buildings.semmcd, group_quarters.building_id)
+
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
+def large_area_id(group_quarters, buildings):
+    return misc.reindex(buildings.large_area_id, group_quarters.building_id)

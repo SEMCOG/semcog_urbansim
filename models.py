@@ -334,21 +334,23 @@ def government_jobs_scaling_model(jobs):
 
 
 @orca.step()
-def gq_pop_scaling_model(jobs):
-    gqpop = gqpop.to_frame(gqpop.local_columns+['large_area_id']) # add gq pop table to database
-    target_gq = gq_pop_forecast.to_frame()
+def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
+    gqpop = group_quarters.to_frame(group_quarters.local_columns + ['city_id'])
+    target_gq = group_quarters_control_totals.to_frame()
+    target_gq = target_gq[target_gq.year == year].set_index('city_id')
 
-    diff_gq = target_gq - exist_gq  # by large area and age group
-    gqpop_lab = gqpop.grouby(['large_area_id', 'age_group', 'building_id']).size()
+    for city_id, local_gqpop in gqpop.grouby('city_id'):
+        diff = target_gq.loc[city_id] - len(local_gqpop)
+        if diff > 0:
+            newgq = local_gqpop.sample(diff, replace=True)
+            newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
+            gqpop = gqpop.append(newgq)
 
-    for id, row in diff_gq.iterrows():
-        local_gqpop =gqpop.loc[(
-            gqpop.large_area_id==row.large_area_id) & (gqpop.age_group==row.age_group)]
-        if row.diff >=0:
-            newgq = local_gqpop.sample(gqpop_lab.building_id, row.diff)  # add some updates
-        else:
-            removegq = local_gqpop.sample(gqpop_lab.building_id, abs(row.diff))
-            gqpop.drop(removegq.index, inplace = True)
+        elif diff < 0:
+            removegq = local_gqpop.sample(min(len(local_gqpop), abs(diff)))
+            gqpop.drop(removegq.index, inplace=True)
+
+    orca.add_table('group_quarters', gqpop[group_quarters.local_columns])
 
 
 @orca.step()
@@ -915,83 +917,6 @@ def neighborhood_vars(jobs, households, buildings):
     orca.add_table("nodes_drv", nodes)
 
     post_access_variables()
-
-
-@orca.step('gq_model')  # group quarters
-def gq_model(iter_var, tazcounts2015gq, tazcounts2020gq, tazcounts2025gq, tazcounts2030gq, tazcounts2035gq,
-             tazcounts2040gq):
-    # Configuration
-    max_iterations = 500
-    convergence_criteria = .000001
-    first_year_to_run = 2015
-
-    # Function used to allocate aggregate GQ from large area controls to TAZ (to form the row marginal)
-    def random_choice(chooser_ids, alternative_ids, probabilities):
-        choices = pd.Series([np.nan] * len(chooser_ids), index=chooser_ids)
-        chosen = np.random.choice(
-            alternative_ids, size=len(chooser_ids), replace=True, p=probabilities)
-        choices[chooser_ids] = chosen
-        return choices
-
-    tazcounts = pd.read_csv('gq/tazcounts.csv').set_index('tazce10')
-    gqcontrols = pd.read_csv('gq/largearea_gq_controls.csv')
-
-    # Determine years to run from the control totals
-    years = []
-    for col in gqcontrols.columns:
-        try:
-            if int(col) >= first_year_to_run:
-                years.append(col)
-        except:
-            pass
-
-    if iter_var == np.array([int(yr) for yr in years]).min():
-        for year in years:
-            print year
-            for lid in np.unique(gqcontrols.largearea_id):
-                print 'Large area id %s' % lid
-                gq_lid = gqcontrols[['age_grp', year]][gqcontrols.largearea_id == lid]
-                gq_lid = gq_lid.set_index('age_grp')
-                tazcounts_lid = tazcounts[['gq04', 'gq517', 'gq1834', 'gq3564', 'gq65plus']][
-                    tazcounts.largearea_id == lid]
-                taz_sum = tazcounts_lid.gq04 + tazcounts_lid.gq517 + tazcounts_lid.gq1834 + tazcounts_lid.gq3564 + tazcounts_lid.gq65plus
-                diff = gq_lid.sum().values[0] - taz_sum.sum()
-                # print 'GQ change is %s' % diff
-                if diff != 0:
-                    ##Allocation of GQ total to TAZ to prepare the row marginal
-                    if diff > 0:
-                        taz_probs = taz_sum / taz_sum.sum()
-                        chosen_taz = random_choice(np.arange(diff), taz_probs.index.values, taz_probs.values)
-                        for taz in chosen_taz:
-                            taz_sum[taz_sum.index.values == int(taz)] += 1
-                    if diff < 0:
-                        taz_probs = taz_sum / taz_sum.sum()
-                        chosen_taz = random_choice(np.arange(abs(diff)), taz_probs.index.values, taz_probs.values)
-                        for taz in chosen_taz:
-                            taz_sum[taz_sum.index.values == int(taz)] -= 1
-                    ##IPF procedure
-                    marginal1 = taz_sum[taz_sum > 0]
-                    marginal2 = gq_lid[year]
-                    tazes_to_fit = marginal1.index.values
-                    seed = tazcounts_lid[np.in1d(tazcounts_lid.index.values, tazes_to_fit)]
-                    i = 0
-                    while 1:
-                        i += 1
-                        axis1_adj = marginal1 / seed.sum(axis=1)
-                        axis1_adj_mult = np.reshape(np.repeat(axis1_adj.values, seed.shape[1]), seed.shape)
-                        seed = seed * axis1_adj_mult
-                        axis2_adj = marginal2 / seed.sum()
-                        axis2_adj_mult = np.tile(axis2_adj.values, len(seed)).reshape(seed.shape)
-                        seed = seed * axis2_adj_mult
-                        if ((np.abs(axis1_adj - 1).max() < convergence_criteria) and (
-                            np.abs(axis2_adj - 1).max() < convergence_criteria)) or (i >= max_iterations):
-                            rounded = np.round(seed)
-                            rounding_error = marginal2.sum() - rounded.sum().sum()
-                            for col in rounded.columns:
-                                tazcounts.loc[rounded.index, col] = rounded[col].values
-                            break
-            tazcounts.to_csv('gq/tazcounts%s.csv' % year)
-            orca.add_table('tazcounts%sgq' % year, tazcounts.copy())
 
 
 @orca.step()

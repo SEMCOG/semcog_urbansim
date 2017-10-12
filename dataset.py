@@ -44,6 +44,7 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
              'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
              'workers_employment_rates_by_large_area',
              'transit_stops', 'crime_rates', 'schools', 'poi',
+             'group_quarters', 'group_quarters_control_totals',
              'annual_household_control_totals',
              'events_addition', 'events_deletion', 'refiner_events', 'income_growth_rates']:
     store = orca.get_injectable("store")

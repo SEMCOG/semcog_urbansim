@@ -42,6 +42,17 @@ def make_indicators(tab, geo_id):
         return households.groupby(geo_id).persons.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def gq_pop(group_quarters):
+        group_quarters = group_quarters.to_frame([geo_id])
+        return group_quarters.groupby(geo_id).size()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def pop():
+        df = orca.get_table(tab)
+        df = df.to_frame(['hh_pop', 'gq_pop'])
+        return df.hh_pop + df.gq_pop
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def housing_units(buildings):
         buildings = buildings.to_frame([geo_id, 'residential_units'])
         return buildings.groupby(geo_id).residential_units.sum()
@@ -202,64 +213,74 @@ def make_indicators(tab, geo_id):
         df = df.to_frame(['hh_no_car_or_lt_workers', 'hh'])
         return 1.0 * df.hh_no_car_or_lt_workers / df.hh
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_car_lt_workers(households):
-        households = households.to_frame([geo_id, 'cars', 'workers'])
-        return households[households.cars < households.workers].groupby(geo_id).size()
+    def make_pop_race(r):
+        hh_name = 'hh_pop_race_' + str(r).zfill(1)
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_pop_race_1(persons):
-        persons = persons.to_frame([geo_id, 'race_id'])
-        return persons[persons.race_id == 1].groupby(geo_id).size()
+        @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
+        def hh_pop_race(persons):
+            persons = persons.to_frame([geo_id, 'race_id'])
+            return persons[persons.race_id == r].groupby(geo_id).size()
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def pct_hh_pop_race_1():
-        df = orca.get_table(tab)
-        df = df.to_frame(['hh_pop_race_1', 'hh_pop'])
-        return 1.0 * df.hh_pop_race_1 / df.hh_pop
+        @orca.column(tab, 'pct_' + hh_name, cache=True, cache_scope='iteration')
+        def pct_hh_pop_race():
+            df = orca.get_table(tab)
+            df = df.to_frame([hh_name, 'hh_pop'])
+            return 1.0 * df[hh_name] / df.hh_pop
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_pop_race_2(persons):
-        persons = persons.to_frame([geo_id, 'race_id'])
-        return persons[persons.race_id == 2].groupby(geo_id).size()
+        gq_name = 'gq_pop_race_' + str(r).zfill(1)
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def pct_hh_pop_race_2():
-        df = orca.get_table(tab)
-        df = df.to_frame(['hh_pop_race_2', 'hh_pop'])
-        return 1.0 * df.hh_pop_race_2 / df.hh_pop
+        @orca.column(tab, gq_name, cache=True, cache_scope='iteration')
+        def gq_pop_race(group_quarters):
+            group_quarters = group_quarters.to_frame([geo_id, 'race_id'])
+            return group_quarters[group_quarters.race_id == r].groupby(geo_id).size()
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_pop_race_3(persons):
-        persons = persons.to_frame([geo_id, 'race_id'])
-        return persons[persons.race_id == 3].groupby(geo_id).size()
+        @orca.column(tab, 'pct_' + gq_name, cache=True, cache_scope='iteration')
+        def pct_gq_pop_race():
+            df = orca.get_table(tab)
+            df = df.to_frame([gq_name, 'hh_pop'])
+            return 1.0 * df[gq_name] / df.gq_pop
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def pct_hh_pop_race_3():
-        df = orca.get_table(tab)
-        df = df.to_frame(['hh_pop_race_3', 'hh_pop'])
-        return 1.0 * df.hh_pop_race_3 / df.hh_pop
+        name = 'pop_race_' + str(r).zfill(1)
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_pop_race_4(persons):
-        persons = persons.to_frame([geo_id, 'race_id'])
-        return persons[persons.race_id == 4].groupby(geo_id).size()
+        @orca.column(tab, name, cache=True, cache_scope='iteration')
+        def pop_race():
+            df = orca.get_table(tab)
+            df = df.to_frame([gq_name, hh_name])
+            return df[gq_name] + df[hh_name]
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def pct_hh_pop_race_4():
-        df = orca.get_table(tab)
-        df = df.to_frame(['hh_pop_race_4', 'hh_pop'])
-        return 1.0 * df.hh_pop_race_4 / df.hh_pop
+        @orca.column(tab, 'pct_' + name, cache=True, cache_scope='iteration')
+        def pct_pop_race():
+            df = orca.get_table(tab)
+            df = df.to_frame([name, 'pop'])
+            return 1.0 * df[name] / df.pop
 
-    def make_hh_pop_age(a, b):
-        @orca.column(tab, 'hh_pop_age_' + str(a).zfill(2) + '_' + str(b).zfill(2), cache=True, cache_scope='iteration')
+    for r in [1, 2, 3, 4]:
+        make_pop_race(r)
+
+    def make_pop_age(a, b):
+        hh_name = 'hh_pop_age_' + str(a).zfill(2) + '_' + str(b).zfill(2)
+
+        @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
         def hh_pop_age(persons):
             persons = persons.to_frame([geo_id, 'age'])
             return persons[(persons.age >= a) & (persons.age <= b)].groupby(geo_id).size()
 
+        gq_name = 'gq_pop_age_' + str(a).zfill(2) + '_' + str(b).zfill(2)
+
+        @orca.column(tab, gq_name, cache=True, cache_scope='iteration')
+        def gq_pop_age(group_quarters):
+            group_quarters = group_quarters.to_frame([geo_id, 'age'])
+            return group_quarters[(group_quarters.age >= a) & (group_quarters.age <= b)].groupby(geo_id).size()
+
+        @orca.column(tab, 'pop_age_' + str(a).zfill(2) + '_' + str(b).zfill(2), cache=True, cache_scope='iteration')
+        def pop_age():
+            df = orca.get_table(tab)
+            df = df.to_frame([hh_name, gq_name])
+            return df[hh_name] + df[gq_name]
+
     for (a, b) in [(00, 04), (05, 17), (18, 24), (25, 34), (35, 64), (65, pd.np.inf),
                    (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf)]:
-        make_hh_pop_age(a, b)
+        make_pop_age(a, b)
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def pct_hh_pop_age_05_17():
@@ -363,6 +384,10 @@ def main(run_name):
     def whatnot_id(households, persons):
         return misc.reindex(households.whatnot_id, persons.household_id)
 
+    @orca.column('group_quarters', cache=True, cache_scope='iteration')
+    def whatnot_id(group_quarters, buildings):
+        return misc.reindex(buildings.whatnot_id, group_quarters.building_id)
+
     for tab, geo_id in [('cities', 'city_id'),
                         ('semmcds', 'semmcd'),
                         ('zones', 'zone_id'),
@@ -374,7 +399,8 @@ def main(run_name):
 
     years = range(2015, 2045 + 1)
     year_names = ["yr" + str(i) for i in years]
-    indicators = ['hh', 'hh_pop', 'housing_units', 'buildings', 'household_size', 'vacant_units', 'job_spaces',
+    indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
+                  'housing_units', 'buildings', 'household_size', 'vacant_units', 'job_spaces',
                   'res_sqft', 'nonres_sqft',
                   'building_sqft_type_11', 'building_sqft_type_12', 'building_sqft_type_13', 'building_sqft_type_14',
                   'building_sqft_type_21', 'building_sqft_type_22', 'building_sqft_type_23', 'building_sqft_type_24',
@@ -392,11 +418,20 @@ def main(run_name):
                   'hh_size_1', 'hh_size_2', 'hh_size_3p',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
                   'pct_hh_pop_race_1', 'pct_hh_pop_race_2', 'pct_hh_pop_race_3', 'pct_hh_pop_race_4',
+                  'gq_pop_race_1', 'gq_pop_race_2', 'gq_pop_race_3', 'gq_pop_race_4',
+                  'pct_gq_pop_race_1', 'pct_gq_pop_race_2', 'pct_gq_pop_race_3', 'pct_gq_pop_race_4',
+                  'pop_race_1', 'pop_race_2', 'pop_race_3', 'pop_race_4',
+                  'pct_pop_race_1', 'pct_pop_race_2', 'pct_pop_race_3', 'pct_pop_race_4',
                   'hh_no_car_or_lt_workers', 'pct_hh_no_car_or_lt_workers',
-                  'hh_car_lt_workers',
                   'hh_pop_age_00_04', 'hh_pop_age_05_17', 'hh_pop_age_18_24', 'hh_pop_age_25_34',
                   'hh_pop_age_35_64', 'hh_pop_age_65_inf',
                   'hh_pop_age_00_17', 'hh_pop_age_25_44', 'hh_pop_age_45_64', 'hh_pop_age_65_84', 'hh_pop_age_85_inf',
+                  'gq_pop_age_00_04', 'gq_pop_age_05_17', 'gq_pop_age_18_24', 'gq_pop_age_25_34',
+                  'gq_pop_age_35_64', 'gq_pop_age_65_inf',
+                  'gq_pop_age_00_17', 'gq_pop_age_25_44', 'gq_pop_age_45_64', 'gq_pop_age_65_84', 'gq_pop_age_85_inf',
+                  'pop_age_00_04', 'pop_age_05_17', 'pop_age_18_24', 'pop_age_25_34',
+                  'pop_age_35_64', 'pop_age_65_inf',
+                  'pop_age_00_17', 'pop_age_25_44', 'pop_age_45_64', 'pop_age_65_84', 'pop_age_85_inf',
                   'pct_hh_pop_age_05_17', 'pct_hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
                   'jobs_sec_04', 'jobs_sec_05', 'jobs_sec_06', 'jobs_sec_07',
@@ -434,19 +469,7 @@ def main(run_name):
     del df['res_vacancy_rate']
     del df['nonres_vacancy_rate']
     del df['household_size']
-    del df['pct_with_children']
-    del df['pct_with_seniors']
-    del df['pct_hh_pop_race_1']
-    del df['pct_hh_pop_race_2']
-    del df['pct_hh_pop_race_3']
-    del df['pct_hh_pop_race_4']
-    del df['pct_incomes_1']
-    del df['pct_incomes_2']
-    del df['pct_incomes_3']
-    del df['pct_incomes_4']
-    del df['pct_hh_pop_age_05_17']
-    del df['pct_hh_pop_age_65_inf']
-    del df['pct_hh_no_car_or_lt_workers']
+    df = df[df.columns[~df.columns.str.startswith('pct_')]]
 
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print sumstd[sumstd > 0]
@@ -466,19 +489,7 @@ def main(run_name):
         del df['res_vacancy_rate']
         del df['nonres_vacancy_rate']
         del df['household_size']
-        del df['pct_with_children']
-        del df['pct_with_seniors']
-        del df['pct_hh_pop_race_1']
-        del df['pct_hh_pop_race_2']
-        del df['pct_hh_pop_race_3']
-        del df['pct_hh_pop_race_4']
-        del df['pct_incomes_1']
-        del df['pct_incomes_2']
-        del df['pct_incomes_3']
-        del df['pct_incomes_4']
-        del df['pct_hh_pop_age_05_17']
-        del df['pct_hh_pop_age_65_inf']
-        del df['pct_hh_no_car_or_lt_workers']
+        df = df[df.columns[~(df.columns.str.startswith('pct_'))]]
 
         df[whatnots_local.columns] = whatnots_local
 
