@@ -339,8 +339,8 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
     target_gq = group_quarters_control_totals.to_frame()
     target_gq = target_gq[target_gq.year == year].set_index('city_id')
 
-    for city_id, local_gqpop in gqpop.grouby('city_id'):
-        diff = target_gq.loc[city_id] - len(local_gqpop)
+    for city_id, local_gqpop in gqpop.groupby('city_id'):
+        diff = target_gq.loc[city_id]['count'] - len(local_gqpop)
         if diff > 0:
             newgq = local_gqpop.sample(diff, replace=True)
             newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
