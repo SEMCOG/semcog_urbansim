@@ -312,7 +312,7 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
 def government_jobs_scaling_model(jobs):
     wrap_jobs = jobs
     jobs = jobs.to_frame(jobs.local_columns+['large_area_id'])
-    government_sectors = [18]
+    government_sectors = {1, 7, 13, 15, 18}
 
     # todo: use .sample
     def random_choice(chooser_ids, alternative_ids, probabilities):
