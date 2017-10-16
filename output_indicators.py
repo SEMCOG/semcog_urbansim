@@ -237,7 +237,7 @@ def make_indicators(tab, geo_id):
         @orca.column(tab, 'pct_' + gq_name, cache=True, cache_scope='iteration')
         def pct_gq_pop_race():
             df = orca.get_table(tab)
-            df = df.to_frame([gq_name, 'hh_pop'])
+            df = df.to_frame([gq_name, 'gq_pop'])
             return 1.0 * df[gq_name] / df.gq_pop
 
         name = 'pop_race_' + str(r).zfill(1)
@@ -252,7 +252,7 @@ def make_indicators(tab, geo_id):
         def pct_pop_race():
             df = orca.get_table(tab)
             df = df.to_frame([name, 'pop'])
-            return 1.0 * df[name] / df.pop
+            return 1.0 * df[name] / df['pop']
 
     for r in [1, 2, 3, 4]:
         make_pop_race(r)
