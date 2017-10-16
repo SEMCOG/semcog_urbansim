@@ -454,6 +454,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
             selected_agents = selected_agents[selected_agents.persons.cumsum() <= number_of_agents]
             number_of_agents -= selected_agents.persons.sum()
             agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            local_agents.drop(selected_agents.index, inplace=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
 
