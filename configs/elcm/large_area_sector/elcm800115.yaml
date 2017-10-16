@@ -1,42 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 800115) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 115)
-
-alts_predict_filters: large_area_id == 115
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 115) & ((building_type_id == 12)|(building_type_id
+    == 23)|(building_type_id == 21)|(building_type_id == 31))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: null
-
-prediction_sample_size: null
-
-model_expression:
-- zones_logsum_job_high_income
-- b_ln_sqft_price_nonres
-- b_ln_non_residential_sqft
-- bldg_empratio_12
-- parcels_pct_undev
-- b_ln_land_area
-- nodes_drv_drv_10min_pop
-- building_type_id_is_12
-- building_type_id_is_11
-- nodes_walk_retail
-- zones_transit_jobs_50min
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 800115) & (home_based_status == 0)
+estimation_sample_size: null
 fit_parameters:
     Coefficient:
         b_ln_land_area: 0.807780954554942
@@ -74,10 +43,26 @@ fit_parameters:
         parcels_pct_undev: 5.279741224569905
         zones_logsum_job_high_income: -3.287945662260591
         zones_transit_jobs_50min: 3.287752701485544
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -564.3500658374768
     'null': -1840.4511865630247
     ratio: 0.6933631981343771
+model_expression:
+- zones_logsum_job_high_income
+- b_ln_sqft_price_nonres
+- b_ln_non_residential_sqft
+- bldg_empratio_12
+- parcels_pct_undev
+- b_ln_land_area
+- nodes_drv_drv_10min_pop
+- building_type_id_is_12
+- building_type_id_is_11
+- nodes_walk_retail
+- zones_transit_jobs_50min
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

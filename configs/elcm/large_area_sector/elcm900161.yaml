@@ -1,42 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 900161) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
-
-alts_predict_filters: large_area_id == 161
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 161) & ((building_type_id == 23)|(building_type_id
+    == 24)|(building_type_id == 21)|(building_type_id == 33))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- zones_logsum_job_high_income
-- vacant_job_spaces
-- zones_empden
-- b_ln_building_sqft
-- nodes_drv_drv_10min_pop
-- nodes_drv_drv_15min_retail_jobs
-- nodes_walk_ave_lot_sqft
-- zones_ln_empden_11
-- building_type_id_is_11
-- nodes_walk_max_office_far
-- building_type_id_is_24
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 900161) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_ln_building_sqft: 0.841141282003845
@@ -74,10 +43,26 @@ fit_parameters:
         zones_empden: 1.3620277356235424
         zones_ln_empden_11: 3.264453301863473
         zones_logsum_job_high_income: -3.747402563852881
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -1216.1636131941789
     'null': -2506.5192350334455
     ratio: 0.5147998083573648
+model_expression:
+- zones_logsum_job_high_income
+- vacant_job_spaces
+- zones_empden
+- b_ln_building_sqft
+- nodes_drv_drv_10min_pop
+- nodes_drv_drv_15min_retail_jobs
+- nodes_walk_ave_lot_sqft
+- zones_ln_empden_11
+- building_type_id_is_11
+- nodes_walk_max_office_far
+- building_type_id_is_24
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

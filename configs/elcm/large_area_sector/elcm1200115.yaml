@@ -1,42 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 1200115) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 115)
-
-alts_predict_filters: large_area_id == 115
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 115) & ((building_type_id == 41)|(building_type_id
+    == 21)|(building_type_id == 23)|(building_type_id == 31))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- b_total_jobs
-- b_ln_non_residential_sqft
-- b_is_newerthan2010
-- bldg_empratio_12
-- zones_logsum_job_low_income
-- nodes_drv_drv_10min_pop
-- building_type_id_is_31
-- stories
-- building_type_id_is_41
-- nodes_walk_population
-- zones_transit_jobs_50min
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 1200115) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_is_newerthan2010: -3.0
@@ -74,10 +43,26 @@ fit_parameters:
         stories: -2.489944692469736
         zones_logsum_job_low_income: -5.624372318469124
         zones_transit_jobs_50min: 5.449011351943203
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -371.23781806624163
     'null': -1836.069159928351
     ratio: 0.7978083690046139
+model_expression:
+- b_total_jobs
+- b_ln_non_residential_sqft
+- b_is_newerthan2010
+- bldg_empratio_12
+- zones_logsum_job_low_income
+- nodes_drv_drv_10min_pop
+- building_type_id_is_31
+- stories
+- building_type_id_is_41
+- nodes_walk_population
+- zones_transit_jobs_50min
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

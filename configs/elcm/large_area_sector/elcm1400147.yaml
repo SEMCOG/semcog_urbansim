@@ -1,43 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 1400147) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 147)
-
-alts_predict_filters: large_area_id == 147
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 147) & ((building_type_id == 51)|(building_type_id
+    == 23)|(building_type_id == 53)|(building_type_id == 52))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- b_ln_sqft_price_nonres
-- nodes_drv_drv_20min_pop
-- b_ln_non_residential_sqft
-- zones_employment
-- b_ln_parcels_parcel_far
-- building_type_id_is_31
-- zones_ln_empden_16
-- nodes_walk_residential
-- zones_logsum_pop_high_income
-- b_is_pre_1945
-- building_type_id_is_51
-- zones_transit_jobs_50min
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 1400147) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_is_pre_1945: -0.32846864803389264
@@ -78,10 +46,27 @@ fit_parameters:
         zones_ln_empden_16: 3.2200678971576315
         zones_logsum_pop_high_income: -2.4762576855095446
         zones_transit_jobs_50min: 6.548550034610723
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -1154.8279671155021
     'null': -3759.7788525501583
     ratio: 0.6928468369004701
+model_expression:
+- b_ln_sqft_price_nonres
+- nodes_drv_drv_20min_pop
+- b_ln_non_residential_sqft
+- zones_employment
+- b_ln_parcels_parcel_far
+- building_type_id_is_31
+- zones_ln_empden_16
+- nodes_walk_residential
+- zones_logsum_pop_high_income
+- b_is_pre_1945
+- building_type_id_is_51
+- zones_transit_jobs_50min
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

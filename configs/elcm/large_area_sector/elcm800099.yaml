@@ -1,42 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 800099) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
-
-alts_predict_filters: large_area_id == 99
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 99) & ((building_type_id == 31)|(building_type_id
+    == 23)|(building_type_id == 21)|(building_type_id == 12))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- zones_logsum_job_low_income
-- b_ln_sqft_price_nonres
-- b_ln_non_residential_sqft
-- parcels_pct_undev
-- zones_ln_empden_13
-- b_total_jobs
-- nodes_drv_drv_15min_retail_jobs
-- building_type_id_is_11
-- building_age
-- nodes_walk_residential
-- building_type_id_is_23
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 800099) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_ln_non_residential_sqft: 1.0152773372703014
@@ -74,10 +43,26 @@ fit_parameters:
         parcels_pct_undev: 8.889209037086886
         zones_ln_empden_13: 4.005958068971484
         zones_logsum_job_low_income: -0.07940663665846714
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -1259.9373297544125
     'null': -3453.036988122991
     ratio: 0.6351219711552258
+model_expression:
+- zones_logsum_job_low_income
+- b_ln_sqft_price_nonres
+- b_ln_non_residential_sqft
+- parcels_pct_undev
+- zones_ln_empden_13
+- b_total_jobs
+- nodes_drv_drv_15min_retail_jobs
+- building_type_id_is_11
+- building_age
+- nodes_walk_residential
+- building_type_id_is_23
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

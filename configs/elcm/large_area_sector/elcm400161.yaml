@@ -1,40 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 400161) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
-
-alts_predict_filters: large_area_id == 161
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 161) & ((building_type_id == 32)|(building_type_id
+    == 23)|(building_type_id == 31)|(building_type_id == 33))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- zones_logsum_job_high_income
-- vacant_job_spaces
-- b_is_pre_1945
-- nodes_drv_drv_45min_jobs
-- building_type_id_is_32
-- zones_ln_empden_17
-- b_ln_non_residential_sqft
-- building_type_id_is_25
-- nodes_walk_ave_income
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 400161) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_is_pre_1945: -0.30239042025739826
@@ -66,10 +37,24 @@ fit_parameters:
         vacant_job_spaces: -11.641139721907
         zones_ln_empden_17: 6.800569387155788
         zones_logsum_job_high_income: -10.27240933375036
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -1437.5885757325398
     'null': -3676.5203464913557
     ratio: 0.6089811995452479
+model_expression:
+- zones_logsum_job_high_income
+- vacant_job_spaces
+- b_is_pre_1945
+- nodes_drv_drv_45min_jobs
+- building_type_id_is_32
+- zones_ln_empden_17
+- b_ln_non_residential_sqft
+- building_type_id_is_25
+- nodes_walk_ave_income
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

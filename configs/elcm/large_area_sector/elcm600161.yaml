@@ -1,39 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 600161) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
-
-alts_predict_filters: large_area_id == 161
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 161) & ((building_type_id == 41)|(building_type_id
+    == 33)|(building_type_id == 31)|(building_type_id == 23))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- zones_logsum_job_high_income
-- b_ln_non_residential_sqft
-- nodes_drv_drv_15min_retail_jobs
-- nodes_walk_ave_lot_sqft
-- building_type_id_is_41
-- zones_ln_empden_10
-- nodes_walk_max_office_far
-- nodes_drv_drv_20min_pop
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 600161) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_ln_non_residential_sqft: 0.9857634224774849
@@ -62,10 +34,23 @@ fit_parameters:
         nodes_walk_max_office_far: -4.747545790265346
         zones_ln_empden_10: 8.0148863475088
         zones_logsum_job_high_income: -3.5593342779035697
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -939.1771382297949
     'null': -3006.070271386261
     ratio: 0.687573125894795
+model_expression:
+- zones_logsum_job_high_income
+- b_ln_non_residential_sqft
+- nodes_drv_drv_15min_retail_jobs
+- nodes_walk_ave_lot_sqft
+- building_type_id_is_41
+- zones_ln_empden_10
+- nodes_walk_max_office_far
+- nodes_drv_drv_20min_pop
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80

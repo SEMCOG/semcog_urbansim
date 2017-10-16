@@ -1,39 +1,11 @@
-name: MNLDiscreteChoiceModel
-
-model_type: discretechoice
-
-choosers_fit_filters: (building_id>0) & (home_based_status == 0)
-
-choosers_predict_filters: (slid == 1200099) & (home_based_status == 0)
-
 alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
-
-alts_predict_filters: large_area_id == 99
-
-interaction_predict_filters: null
-
+alts_predict_filters: (large_area_id == 99) & ((building_type_id == 31)|(building_type_id
+    == 23)|(building_type_id == 21)|(building_type_id == 33))
 choice_column: building_id
-
-sample_size: 80
-
-estimation_sample_size: 1000
-
-prediction_sample_size: null
-
-model_expression:
-- nodes_walk_office
-- b_ln_building_sqft
-- building_type_id_is_23
-- zones_ln_empden_16
-- building_type_id_is_13
-- zones_z_total_jobs
-- b_ln_land_area
-- nodes_drv_drv_30min_jobs
-
-fitted: true
-
 choice_mode: aggregate
-
+choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+choosers_predict_filters: (slid == 1200099) & (home_based_status == 0)
+estimation_sample_size: 1000
 fit_parameters:
     Coefficient:
         b_ln_building_sqft: 0.7621372422790574
@@ -62,10 +34,23 @@ fit_parameters:
         nodes_walk_office: 3.303852570089632
         zones_ln_empden_16: 0.6143270178501093
         zones_z_total_jobs: 3.074234779834441
-
-probability_mode: single_chooser
-
+fitted: true
+interaction_predict_filters: null
 log_likelihoods:
     convergence: -1058.9635595948873
     'null': -2335.6201962811665
     ratio: 0.5466028418143516
+model_expression:
+- nodes_walk_office
+- b_ln_building_sqft
+- building_type_id_is_23
+- zones_ln_empden_16
+- building_type_id_is_13
+- zones_z_total_jobs
+- b_ln_land_area
+- nodes_drv_drv_30min_jobs
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 80
