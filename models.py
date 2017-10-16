@@ -595,10 +595,10 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        sched_dev["sqft_price_res"] = 0
-        sched_dev["sqft_price_nonres"] = 0
         sched_dev["stories"] = 0
         sched_dev = add_extra_columns_res(sched_dev)
+        sched_dev['b_zone_id'] = sched_dev['zone_id']
+        del sched_dev['zone_id']
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
@@ -687,7 +687,7 @@ def feasibility(parcels):
 
 def add_extra_columns_nonres(df):
     for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res', 'sqft_per_unit']:
+                'sqft_price_res', 'sqft_per_unit', 'b_zone_id']:
         df[col] = 0
     df['year_built'] = orca.get_injectable('year')
     return df.fillna(0)

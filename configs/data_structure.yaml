@@ -75,6 +75,7 @@ columns:
   sqft_per_unit: int32
   stories: float64
   year_built: int32
+  zone_id: int32
 ---
 name: counties
 indexs:
@@ -107,6 +108,7 @@ columns:
   parcel_id: int32
   residential_units: int32
   year_built: int32
+  zone_id: int32
 ---
 name: events_deletion
 indexs:
