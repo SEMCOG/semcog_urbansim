@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 @orca.table(cache=True)
 def buildings(store):
     df = store['buildings']
-    df.rename(columns={'zone_id', 'b_zone_id'}, inplace=True)
+    df.rename(columns={'zone_id': 'b_zone_id'}, inplace=True)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.improvement_value < 0, 'improvement_value'] = 0
     df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
