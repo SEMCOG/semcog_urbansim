@@ -12,7 +12,7 @@ def orca_year_dataset(hdf, year):
     orca.add_injectable("jobs_large_area_lookup", [])
     orca.add_injectable("households_large_area_lookup", [])
     orca.add_injectable("year", int(year if str(year) != 'base' else 2015))
-    for tbl in ['households', 'persons', 'jobs', 'buildings', 'parcels', 'dropped_buildings']:
+    for tbl in ['households', 'persons', 'group_quarters', 'jobs', 'buildings', 'parcels', 'dropped_buildings']:
         name = str(year) + '/' + tbl
         if name in hdf:
             df = hdf[name]
@@ -21,7 +21,7 @@ def orca_year_dataset(hdf, year):
             print "No table named " + name + ". Using the structuer from " + stub_name + "."
             df = hdf[stub_name].iloc[0:0]
         orca.add_table(tbl, df)
-        orca.clear_cache()
+    orca.clear_cache()
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -49,7 +49,7 @@ def make_indicators(tab, geo_id):
     @orca.column(tab, cache=True, cache_scope='iteration')
     def pop():
         df = orca.get_table(tab)
-        df = df.to_frame(['hh_pop', 'gq_pop'])
+        df = df.to_frame(['hh_pop', 'gq_pop']).fillna(0)
         return df.hh_pop + df.gq_pop
 
     @orca.column(tab, cache=True, cache_scope='iteration')
@@ -96,19 +96,19 @@ def make_indicators(tab, geo_id):
     @orca.column(tab, cache=True, cache_scope='iteration')
     def vacant_units():
         df = orca.get_table(tab)
-        df = df.to_frame(['hh', 'housing_units'])
+        df = df.to_frame(['hh', 'housing_units']).fillna(0)
         return df.housing_units - df.hh
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def res_vacancy_rate():
         df = orca.get_table(tab)
-        df = df.to_frame(['vacant_units', 'housing_units'])
+        df = df.to_frame(['vacant_units', 'housing_units']).fillna(0)
         return df.vacant_units / df.housing_units
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def nonres_vacancy_rate():
         df = orca.get_table(tab)
-        df = df.to_frame(['jobs_total', 'jobs_home_based', 'job_spaces'])
+        df = df.to_frame(['jobs_total', 'jobs_home_based', 'job_spaces']).fillna(0)
         return 1.0 - (df.jobs_total - df.jobs_home_based) / df.job_spaces
 
     @orca.column(tab, cache=True, cache_scope='iteration')
@@ -214,7 +214,7 @@ def make_indicators(tab, geo_id):
         return 1.0 * df.hh_no_car_or_lt_workers / df.hh
 
     def make_pop_race(r):
-        hh_name = 'hh_pop_race_' + str(r).zfill(1)
+        hh_name = 'hh_pop_race_' + str(r)
 
         @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
         def hh_pop_race(persons):
@@ -227,7 +227,7 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, 'hh_pop'])
             return 1.0 * df[hh_name] / df.hh_pop
 
-        gq_name = 'gq_pop_race_' + str(r).zfill(1)
+        gq_name = 'gq_pop_race_' + str(r)
 
         @orca.column(tab, gq_name, cache=True, cache_scope='iteration')
         def gq_pop_race(group_quarters):
@@ -240,12 +240,12 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([gq_name, 'gq_pop'])
             return 1.0 * df[gq_name] / df.gq_pop
 
-        name = 'pop_race_' + str(r).zfill(1)
+        name = 'pop_race_' + str(r)
 
         @orca.column(tab, name, cache=True, cache_scope='iteration')
         def pop_race():
             df = orca.get_table(tab)
-            df = df.to_frame([gq_name, hh_name])
+            df = df.to_frame([gq_name, hh_name]).fillna(0)
             return df[gq_name] + df[hh_name]
 
         @orca.column(tab, 'pct_' + name, cache=True, cache_scope='iteration')
@@ -275,7 +275,7 @@ def make_indicators(tab, geo_id):
         @orca.column(tab, 'pop_age_' + str(a).zfill(2) + '_' + str(b).zfill(2), cache=True, cache_scope='iteration')
         def pop_age():
             df = orca.get_table(tab)
-            df = df.to_frame([hh_name, gq_name])
+            df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
     for (a, b) in [(00, 04), (05, 17), (18, 24), (25, 34), (35, 64), (65, pd.np.inf),
