@@ -370,17 +370,18 @@ def main(run_name):
     orca.add_table('cities', cities)
 
     p = orca.get_table('parcels')
-    p = p.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id'])
-    whatnot = p.drop_duplicates(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index(drop=True)
+    # TODO: add school_id back in at some point
+    p = p.to_frame(['large_area_id', 'city_id', 'zone_id'])
+    whatnot = p.drop_duplicates(['large_area_id', 'city_id', 'zone_id']).reset_index(drop=True)
     whatnot.index.name = "whatnot_id"
 
     orca.add_table('whatnots', whatnot)
 
     @orca.column('parcels', cache=True)
     def whatnot_id(parcels, whatnots):
-        parcels = parcels.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index()
-        whatnots = whatnots.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id']).reset_index()
-        m = pd.merge(parcels, whatnots, 'left', ['large_area_id', 'city_id', 'school_id', 'zone_id'])
+        parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id']).reset_index()
+        whatnots = whatnots.to_frame(['large_area_id', 'city_id', 'zone_id']).reset_index()
+        m = pd.merge(parcels, whatnots, 'left', ['large_area_id', 'city_id', 'zone_id'])
         return m.set_index('parcel_id').whatnot_id
 
     @orca.column('buildings', cache=True, cache_scope='iteration')
@@ -510,10 +511,7 @@ def main(run_name):
 
         df[whatnots_local.columns] = whatnots_local
 
-        df.set_index('large_area_id', append=True, inplace=True)
-        df.set_index('city_id', append=True, inplace=True)
-        df.set_index('school_id', append=True, inplace=True)
-        df.set_index('zone_id', append=True, inplace=True)
+        df.set_index(['large_area_id', 'city_id', 'zone_id'], inplace=True)
 
         df = df.fillna(0)
         df = df.sort_index().sort_index(1)
@@ -524,11 +522,14 @@ def main(run_name):
         df.set_index('year', append=True, inplace=True)
         whatnots_ouput.append(df)
 
-    whatnots_ouput = pd.concat(whatnots_ouput).unstack()
+    whatnots_ouput = pd.concat(whatnots_ouput).unstack(fill_value=0)
     whatnots_ouput.columns = year_names
     whatnots_ouput[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_ouput.csv"))
     whatnots_ouput.to_csv(os.path.join(out_annual, "whatnots_ouput.csv"))
+    end = time.clock()
+    print "runtime whatnots:", end - start
 
+    start = time.clock()
     geom = ['cities', 'large_areas', 'semmcds', 'zones']
     for tab in geom:
         print tab
@@ -561,13 +562,13 @@ def main(run_name):
             df.columns = year_names[::5]
             if tab == 'cities':
                 df["large_area_id"] = la_id
-                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+                df.set_index("large_area_id", append=True, inplace=True)
             if tab == 'semmcds':
                 df["large_area_id"] = la_id
-                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+                df.set_index("large_area_id", append=True, inplace=True)
             if tab == 'large_areas':
                 df["large_area_name"] = name
-                df.set_index("large_area_name", drop=True, append=True, inplace=True)
+                df.set_index("large_area_name", append=True, inplace=True)
             if len(df.columns) > 0:
                 print "saving:", ind
                 df = df.fillna(0)
@@ -590,13 +591,13 @@ def main(run_name):
             df.columns = year_names
             if tab == 'cities':
                 df["large_area_id"] = la_id
-                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+                df.set_index("large_area_id", append=True, inplace=True)
             if tab == 'semmcds':
                 df["large_area_id"] = la_id
-                df.set_index("large_area_id", drop=True, append=True, inplace=True)
+                df.set_index("large_area_id", append=True, inplace=True)
             if tab == 'large_areas':
                 df["large_area_name"] = name
-                df.set_index("large_area_name", drop=True, append=True, inplace=True)
+                df.set_index("large_area_name", append=True, inplace=True)
             if len(df.columns) > 0:
                 print "saving:", ind
                 df = df.fillna(0)
@@ -606,7 +607,7 @@ def main(run_name):
                 print "somtning is wrong with:", ind
         writer.save()
     end = time.clock()
-    print "runtime:", end - start
+    print "runtime geom:", end - start
 
     start = time.clock()
     for year in [2015, 2030, 2045]:
