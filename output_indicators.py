@@ -187,20 +187,35 @@ def make_indicators(tab, geo_id):
         households = households.to_frame([geo_id, 'seniors'])
         return households[households.seniors.fillna(0) == 0].groupby(geo_id).size()
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_size_1(households):
-        households = households.to_frame([geo_id, 'persons'])
-        return households[households.persons == 1].groupby(geo_id).size()
+    def make_hh_size(r, plus=False):
+        hh_name = 'hh_size_' + str(r)
+        if plus:
+            hh_name += 'p'
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_size_2(households):
-        households = households.to_frame([geo_id, 'persons'])
-        return households[households.persons == 2].groupby(geo_id).size()
+        @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
+        def hh_size(households):
+            households = households.to_frame([geo_id, 'persons'])
+            return households[(households.persons == r) | (plus & households.persons > r)].groupby(geo_id).size()
 
-    @orca.column(tab, cache=True, cache_scope='iteration')
-    def hh_size_3p(households):
-        households = households.to_frame([geo_id, 'persons'])
-        return households[households.persons >= 3].groupby(geo_id).size()
+        w_child = "with_children_" + hh_name
+
+        @orca.column(tab, w_child, cache=True, cache_scope='iteration')
+        def hh_size(households):
+            households = households.to_frame([geo_id, 'persons', 'children'])
+            return households[((households.persons == r) | (plus & households.persons > r)) & (
+                households.children > 0)].groupby(geo_id).size()
+
+        wo_child = "without_children_" + hh_name
+
+        @orca.column(tab, wo_child, cache=True, cache_scope='iteration')
+        def hh_size(households):
+            households = households.to_frame([geo_id, 'persons', 'children'])
+            return households[((households.persons == r) | (plus & households.persons > r)) & (
+            households.children.fillna(0) == 0)].groupby(geo_id).size()
+
+    make_hh_size(1)
+    make_hh_size(2)
+    make_hh_size(3, True)
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_no_car_or_lt_workers(households):
@@ -416,6 +431,8 @@ def main(run_name):
                   'with_seniors', 'without_seniors',
                   'pct_with_children', 'pct_with_seniors',
                   'hh_size_1', 'hh_size_2', 'hh_size_3p',
+                  'with_children_hh_size_1', 'with_children_hh_size_2', 'with_children_hh_size_3p',
+                  'without_children_hh_size_1', 'without_children_hh_size_2', 'without_children_hh_size_3p',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
                   'pct_hh_pop_race_1', 'pct_hh_pop_race_2', 'pct_hh_pop_race_3', 'pct_hh_pop_race_4',
                   'gq_pop_race_1', 'gq_pop_race_2', 'gq_pop_race_3', 'gq_pop_race_4',
