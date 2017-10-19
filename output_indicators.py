@@ -528,7 +528,8 @@ def main(run_name):
         df.set_index('year', append=True, inplace=True)
         whatnots_ouput.append(df)
 
-    whatnots_ouput = pd.concat(whatnots_ouput).unstack(fill_value=0).rename(columns={'b_zone_id': 'zone_id'})
+    whatnots_ouput = pd.concat(whatnots_ouput).unstack(fill_value=0)
+    whatnots_ouput.index.rename('zone_id', 2, True)
     whatnots_ouput.columns = year_names
     whatnots_ouput[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_ouput.csv"))
     whatnots_ouput.to_csv(os.path.join(out_annual, "whatnots_ouput.csv"))
