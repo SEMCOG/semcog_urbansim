@@ -697,7 +697,7 @@ def add_extra_columns_nonres(df):
     df['year_built'] = orca.get_injectable('year')
     p = orca.get_table('parcels').to_frame(['zone_id', 'city_id'])
     for col in ['zone_id', 'city_id']:
-        df['b_' + col] = p.loc[df.parcel_id, col]
+        df['b_' + col] = misc.reindex(p[col], df.parcel_id)
     return df.fillna(0)
 
 
