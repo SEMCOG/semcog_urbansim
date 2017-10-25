@@ -690,14 +690,19 @@ def feasibility(parcels):
 
 
 def add_extra_columns_nonres(df):
+    # type: (pd.DataFrame) -> pd.DataFrame
     for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res', 'sqft_per_unit', 'b_zone_id', 'b_city_id']:
+                'sqft_price_res', 'sqft_per_unit']:
         df[col] = 0
     df['year_built'] = orca.get_injectable('year')
+    p = orca.get_table('parcels').to_frame(['zone_id', 'city_id'])
+    for col in ['zone_id', 'city_id']:
+        df['b_' + col] = p.loc[df.parcel_id, col]
     return df.fillna(0)
 
 
 def add_extra_columns_res(df):
+    # type: (pd.DataFrame) -> pd.DataFrame
     df = add_extra_columns_nonres(df)
     df['sqft_per_unit'] = 1500
     return df
