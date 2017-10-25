@@ -195,14 +195,14 @@ def make_indicators(tab, geo_id):
         @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
         def hh_size(households):
             households = households.to_frame([geo_id, 'persons'])
-            return households[(households.persons == r) | (plus & households.persons > r)].groupby(geo_id).size()
+            return households[(households.persons == r) | (plus & (households.persons > r))].groupby(geo_id).size()
 
         w_child = "with_children_" + hh_name
 
         @orca.column(tab, w_child, cache=True, cache_scope='iteration')
         def hh_size(households):
             households = households.to_frame([geo_id, 'persons', 'children'])
-            return households[((households.persons == r) | (plus & households.persons > r)) & (
+            return households[((households.persons == r) | (plus & (households.persons > r))) & (
                 households.children > 0)].groupby(geo_id).size()
 
         wo_child = "without_children_" + hh_name
@@ -210,7 +210,7 @@ def make_indicators(tab, geo_id):
         @orca.column(tab, wo_child, cache=True, cache_scope='iteration')
         def hh_size(households):
             households = households.to_frame([geo_id, 'persons', 'children'])
-            return households[((households.persons == r) | (plus & households.persons > r)) & (
+            return households[((households.persons == r) | (plus & (households.persons > r))) & (
             households.children.fillna(0) == 0)].groupby(geo_id).size()
 
     make_hh_size(1)
