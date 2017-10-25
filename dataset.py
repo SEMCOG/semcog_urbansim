@@ -12,7 +12,6 @@ warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
 @orca.table(cache=True)
 def buildings(store):
     df = store['buildings']
-    df.rename(columns={'zone_id': 'b_zone_id'}, inplace=True)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.improvement_value < 0, 'improvement_value'] = 0
     df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
@@ -53,7 +52,7 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
 
 orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
 orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
-
+# orca.add_table('refiner_events', pd.read_csv("data/add_pop_10252017.csv"))
 
 @orca.injectable(cache=True)
 def base_job_space(buildings):

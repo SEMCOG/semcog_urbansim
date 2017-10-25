@@ -66,6 +66,8 @@ name: buildings
 indexs:
 - building_id
 columns:
+  b_city_id: int32
+  b_zone_id: int32
   building_type_id: int8
   improvement_value: float64
   land_area: int32
@@ -75,7 +77,6 @@ columns:
   sqft_per_unit: int32
   stories: float64
   year_built: int32
-  zone_id: int32
 ---
 name: counties
 indexs:
@@ -103,12 +104,13 @@ name: events_addition
 indexs:
 - objectid
 columns:
+  b_city_id: int32
+  b_zone_id: int32
   building_type_id: int8
   non_residential_sqft: int32
   parcel_id: int32
   residential_units: int32
   year_built: int32
-  zone_id: int32
 ---
 name: events_deletion
 indexs:

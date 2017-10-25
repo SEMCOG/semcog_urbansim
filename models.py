@@ -580,6 +580,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     pidmax = persons.index.values.max() + 1
 
     hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
+    # hh_index_lookup.columns = ['household_id']
     p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
     new_p = (p.household_id_x != p.household_id_y).sum()
     p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
@@ -597,9 +598,11 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
         sched_dev["stories"] = 0
+        zone = sched_dev.b_zone_id
+        city = sched_dev.b_city_id
         sched_dev = add_extra_columns_res(sched_dev)
-        sched_dev['b_zone_id'] = sched_dev['zone_id']
-        del sched_dev['zone_id']
+        sched_dev['b_zone_id'] = zone
+        sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
@@ -688,7 +691,7 @@ def feasibility(parcels):
 
 def add_extra_columns_nonres(df):
     for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res', 'sqft_per_unit', 'b_zone_id']:
+                'sqft_price_res', 'sqft_per_unit', 'b_zone_id', 'b_city_id']:
         df[col] = 0
     df['year_built'] = orca.get_injectable('year')
     return df.fillna(0)
