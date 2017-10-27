@@ -373,17 +373,14 @@ def main(run_name):
     p = orca.get_table('parcels')
     p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(columns={'zone_id': 'b_zone_id'})
     whatnot = p.drop_duplicates(['large_area_id', 'city_id', 'b_zone_id'])
-    print "whatnot len after parcels", len(whatnot.drop_duplicates(['large_area_id', 'city_id', 'b_zone_id']))
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_zone_id'])
     e['parcel_id'] = e.parcel_id.astype(p.index.dtype)
     e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
     e['city_id'] = p.loc[e.parcel_id].city_id.values
     e = e[['large_area_id', 'city_id', 'b_zone_id']]
-    whatnot.append(e, ignore_index=True)
-    print "whatnot len after events_addition", len(whatnot.drop_duplicates(['large_area_id', 'city_id', 'b_zone_id']))
+    whatnot = whatnot.append(e, ignore_index=True)
     b = orca.get_table('buildings').to_frame(['large_area_id', 'city_id', 'b_zone_id'])
-    whatnot.append(b, ignore_index=True)
-    print "whatnot len after buildings", len(whatnot.drop_duplicates(['large_area_id', 'city_id', 'b_zone_id']))
+    whatnot = whatnot.append(b, ignore_index=True)
     whatnot = whatnot.drop_duplicates(['large_area_id', 'city_id', 'b_zone_id']).reset_index(drop=True)
     whatnot.index.name = "whatnot_id"
     orca.add_table('whatnots', whatnot)
