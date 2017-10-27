@@ -580,7 +580,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     pidmax = persons.index.values.max() + 1
 
     hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
-    # hh_index_lookup.columns = ['household_id']
+    hh_index_lookup.columns = ['household_id']
     p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
     new_p = (p.household_id_x != p.household_id_y).sum()
     p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
