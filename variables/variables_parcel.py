@@ -60,6 +60,12 @@ def parcel_is_allowed(form):
         ].parcel_id
     )
 
+    gq = index.isin(
+        buildings[
+            buildings.index.isin(orca.get_table('group_quarters').building_id)
+        ].parcel_id
+    )
+
     parcel_refin = set()
     refinements = orca.get_table('refiner_events').to_frame()
 
@@ -70,7 +76,7 @@ def parcel_is_allowed(form):
 
     refiner = index.isin(parcel_refin)
 
-    protected = new_building | development | demolition | refiner
+    protected = new_building | development | demolition | refiner | gq
 
     columns = ['type%d' % typ for typ in form_to_btype[form]]
     allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=0)
