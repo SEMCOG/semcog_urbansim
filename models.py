@@ -356,11 +356,11 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 @orca.step()
 def refiner(jobs, households, buildings, persons, year, refiner_events):
     jobs_columns = jobs.local_columns
-    jobs = jobs.to_frame(jobs_columns + ['zone_id', 'large_area_id'])
+    jobs = jobs.to_frame(jobs_columns + ['b_zone_id', 'zone_id', 'large_area_id'])
     households_columns = households.local_columns
-    households = households.to_frame(households_columns + ['zone_id', 'city_id', 'large_area_id'])
+    households = households.to_frame(households_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
     households["household_id_old"] = households.index.values
-    buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'city_id', 'large_area_id'])
+    buildings = buildings.to_frame(buildings.local_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
     dic_agent = {'jobs': jobs, 'households': households}
 
     refinements = refiner_events.to_frame()
