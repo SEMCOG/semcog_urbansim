@@ -11,21 +11,21 @@ name: annual_household_control_totals
 indexs:
 - year
 columns:
-  age_of_head_max: int8
-  age_of_head_min: int8
-  cars_max: int8
-  cars_min: int8
-  children_max: int8
-  children_min: int8
-  income_max: int32
-  income_min: int32
-  large_area_id: int32
-  persons_max: int8
-  persons_min: int8
-  race_id: int8
-  total_number_of_households: int32
-  workers_max: int8
-  workers_min: int8
+  age_of_head_max: int64
+  age_of_head_min: int64
+  cars_max: int64
+  cars_min: int64
+  children_max: int64
+  children_min: int64
+  income_max: int64
+  income_min: int64
+  large_area_id: int64
+  persons_max: int64
+  persons_min: int64
+  race_id: int64
+  total_number_of_households: int64
+  workers_max: int64
+  workers_min: int64
 ---
 name: annual_relocation_rates_for_households
 indexs:
@@ -117,7 +117,7 @@ indexs:
 - objectid
 columns:
   building_id: int32
-  year_built: int32
+  year_built: float16
 ---
 name: group_quarters
 indexs:
@@ -141,14 +141,14 @@ name: households
 indexs:
 - household_id
 columns:
-  age_of_head: int8
-  building_id: int32
-  cars: int8
-  children: int8
+  age_of_head: int64
+  building_id: int64
+  cars: int64
+  children: int64
   income: float64
-  persons: int8
-  race_id: int8
-  workers: int8
+  persons: float64
+  race_id: int64
+  workers: int64
 ---
 name: income_growth_rates
 indexs:
@@ -274,13 +274,13 @@ name: persons
 indexs:
 - person_id
 columns:
-  age: int8
-  household_id: int32
-  member_id: int8
-  race_id: int8
-  relate: int8
-  sex: int8
-  worker: int8
+  age: int64
+  household_id: int64
+  member_id: int64
+  race_id: int64
+  relate: int64
+  sex: int64
+  worker: int64
 ---
 name: poi
 indexs:
