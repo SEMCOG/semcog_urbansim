@@ -52,7 +52,7 @@ for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'empl
 
 orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
 orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
-# orca.add_table('refiner_events', pd.read_csv("data/add_pop_10252017.csv"))
+
 
 @orca.injectable(cache=True)
 def base_job_space(buildings):
@@ -65,11 +65,6 @@ for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
     empty_df = pd.DataFrame()
     orca.add_table(node_tbl, empty_df)
 
-# GQ placeholders
-# for gq_tbl in ['tazcounts2040gq', 'tazcounts2015gq', 'tazcounts2020gq', 'tazcounts2035gq', 'tazcounts2025gq',
-#                'tazcounts2030gq']:
-#     empty_df = pd.DataFrame()
-#     orca.add_table(gq_tbl, empty_df)
 
 # this specifies the relationships between tables
 orca.broadcast('nodes_walk', 'buildings', cast_index=True, onto_on='nodeid_walk')

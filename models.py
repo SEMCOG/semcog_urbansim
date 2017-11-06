@@ -358,11 +358,11 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 @orca.step()
 def refiner(jobs, households, buildings, persons, year, refiner_events):
     jobs_columns = jobs.local_columns
-    jobs = jobs.to_frame(jobs_columns + ['zone_id', 'large_area_id'])
+    jobs = jobs.to_frame(jobs_columns + ['b_zone_id', 'zone_id', 'large_area_id'])
     households_columns = households.local_columns
-    households = households.to_frame(households_columns + ['zone_id', 'city_id', 'large_area_id'])
+    households = households.to_frame(households_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
     households["household_id_old"] = households.index.values
-    buildings = buildings.to_frame(buildings.local_columns + ['zone_id', 'city_id', 'large_area_id'])
+    buildings = buildings.to_frame(buildings.local_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
     dic_agent = {'jobs': jobs, 'households': households}
 
     refinements = refiner_events.to_frame()
@@ -582,7 +582,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     pidmax = persons.index.values.max() + 1
 
     hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
-    # hh_index_lookup.columns = ['household_id']
+    hh_index_lookup.columns = ['household_id']
     p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
     new_p = (p.household_id_x != p.household_id_y).sum()
     p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)

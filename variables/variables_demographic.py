@@ -31,8 +31,18 @@ def zone_id(households, buildings):
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
+def b_zone_id(households, buildings):
+    return misc.reindex(buildings.b_zone_id, households.building_id)
+
+
+@orca.column('households', cache=True, cache_scope='iteration')
 def city_id(households, buildings):
     return misc.reindex(buildings.city_id, households.building_id)
+
+
+@orca.column('households', cache=True, cache_scope='iteration')
+def b_city_id(households, buildings):
+    return misc.reindex(buildings.b_city_id, households.building_id)
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -161,8 +171,18 @@ def zone_id(persons, households):
 
 
 @orca.column('persons', cache=True, cache_scope='iteration')
+def b_zone_id(persons, households):
+    return misc.reindex(households.b_zone_id, persons.household_id)
+
+
+@orca.column('persons', cache=True, cache_scope='iteration')
 def city_id(households, persons):
     return misc.reindex(households.city_id, persons.household_id)
+
+
+@orca.column('persons', cache=True, cache_scope='iteration')
+def b_city_id(households, persons):
+    return misc.reindex(households.b_city_id, persons.household_id)
 
 
 @orca.column('persons', cache=True, cache_scope='iteration')
@@ -189,8 +209,18 @@ def zone_id(group_quarters, buildings):
 
 
 @orca.column('group_quarters', cache=True, cache_scope='iteration')
+def b_zone_id(group_quarters, buildings):
+    return misc.reindex(buildings.b_zone_id, group_quarters.building_id)
+
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
 def city_id(group_quarters, buildings):
     return misc.reindex(buildings.city_id, group_quarters.building_id)
+
+
+@orca.column('group_quarters', cache=True, cache_scope='iteration')
+def b_city_id(group_quarters, buildings):
+    return misc.reindex(buildings.b_city_id, group_quarters.building_id)
 
 
 @orca.column('group_quarters', cache=True, cache_scope='iteration')
