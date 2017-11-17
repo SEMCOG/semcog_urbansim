@@ -706,8 +706,10 @@ def add_extra_columns_nonres(df):
 def add_extra_columns_res(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     df = add_extra_columns_nonres(df)
-    # TODO: use ave_unit_size and default to the 2000
-    df['sqft_per_unit'] = 1500
+    if 'ave_unit_size' in df.columns:
+        df['sqft_per_unit'] = df['ave_unit_size']
+    else:
+        df['sqft_per_unit'] = 2000
     return df
 
 
