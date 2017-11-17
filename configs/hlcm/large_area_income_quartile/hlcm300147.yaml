@@ -6,7 +6,7 @@ choosers_fit_filters: (building_id>1) & (qlid == 300147)
 
 choosers_predict_filters: qlid == 300147
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 147)
+alts_fit_filters: (residential_units>0) & (large_area_id == 147)  & (hu_filter == 1 )
 
 alts_predict_filters: large_area_id == 147
 
