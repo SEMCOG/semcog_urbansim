@@ -358,7 +358,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 @orca.step()
 def refiner(jobs, households, buildings, persons, year, refiner_events):
     jobs_columns = jobs.local_columns
-    jobs = jobs.to_frame(jobs_columns + ['b_zone_id', 'zone_id', 'large_area_id'])
+    jobs = jobs.to_frame(jobs_columns + ['b_zone_id', 'zone_id', 'b_city_id', 'city_id', 'large_area_id'])
     households_columns = households.local_columns
     households = households.to_frame(households_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
     households["household_id_old"] = households.index.values
@@ -375,7 +375,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
         """Move from pool to data"""
         bselect = buildings.query(location_expression)
         if len(bselect) <= 0:
-            print("We can't fined a building to place these agents")
+            print("We can't find a building to place these agents")
             return agents, agents_pool
         new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
         # maybe use job reallocation instead of random
@@ -556,12 +556,14 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
                                  record.location_expression,
                                  record.amount)
             if diff < 0:
+                print 'add: ', abs(diff)
                 agents, pool = add_agents(agents,
                                           pool,
-                                          record.agents_expression,
+                                          record.agent_expression,
                                           record.location_expression,
                                           abs(diff))
             elif diff > 0:
+                print 'subtract: ', abs(diff)
                 agents, pool = subtract_agents(agents,
                                                pool,
                                                record.agent_expression,
