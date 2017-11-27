@@ -899,12 +899,9 @@ def build_networks(parcels):
 @orca.step()
 def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(['large_area_id'])
-    j = jobs.to_frame()
-    # j = jobs.to_frame(jobs.local_columns)
+    j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
     idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
-    # print j.large_area_id.head()
-    # print b.large_area_id.head()
 
     if idx_invalid_building_id.sum() > 0:
         print("we have jobs with bad building id's there are #", idx_invalid_building_id.sum())
