@@ -658,22 +658,22 @@ def random_demolition_events(buildings, households, jobs, iter_var, demolition_r
     b = b[b.parcel_id.isin(allowed[allowed].index)]
     buildings_idx = []
 
-    def sample(targets, type_b, weights=None):
+    def sample(targets, type_b, accounting, weights=None):
         for b_city_id, target in targets[targets > 0].iterrows():
             rel_b = type_b[type_b.b_city_id == b_city_id]
-            rel_b = rel_b[rel_b.non_residential_sqft <= target]
+            rel_b = rel_b[rel_b[accounting] <= target]
             rel_b = rel_b.smaple(min(len(rel_b), int(target)), weights=weights)
-            rel_b = rel_b[rel_b.cumsum() <= int(target)]
+            rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
             buildings_idx.append(rel_b.copy())
 
     b['wj'] = 1.0 / (1.0 + np.log1p(b.b_total_jobs))
-    sample(demolition_rates.typenonsqft, b[b.non_residential_sqft > 0], b.wj)
+    sample(demolition_rates.typenonsqft, b[b.non_residential_sqft > 0], 'non_residential_sqft', b.wj)
     b = b[b.non_residential_sqft == 0]
     b['wh'] = 1.0 / (1.0 + np.log1p(b.b_total_households))
-    sample(demolition_rates.type81units, b[b.building_type_id == 81], b.wh)
-    sample(demolition_rates.type82units, b[b.building_type_id == 82], b.wh)
-    sample(demolition_rates.type83units, b[b.building_type_id == 83], b.wh)
-    sample(demolition_rates.type84units, b[b.building_type_id == 84], b.wh)
+    sample(demolition_rates.type81units, b[b.building_type_id == 81], 'residential_units', b.wh)
+    sample(demolition_rates.type82units, b[b.building_type_id == 82], 'residential_units', b.wh)
+    sample(demolition_rates.type83units, b[b.building_type_id == 83], 'residential_units', b.wh)
+    sample(demolition_rates.type84units, b[b.building_type_id == 84], 'residential_units', b.wh)
 
     drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep='first')]
