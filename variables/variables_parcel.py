@@ -37,7 +37,7 @@ def parcel_average_price(use, parcels):
                         orca.get_table('parcels').nodeid_walk)
 
 
-def parcel_is_allowed(form):
+def parcel_is_allowed(form=None):
     index = orca.get_table('parcels').index
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
@@ -78,7 +78,11 @@ def parcel_is_allowed(form):
 
     protected = new_building | development | demolition | refiner | gq
 
-    columns = ['type%d' % typ for typ in form_to_btype[form]]
+    if form:
+        columns = ['type%d' % typ for typ in form_to_btype[form]]
+    else:
+        columns = ['type%d' % typ for typ in set(item for sublist in form_to_btype.values() for item in sublist)]
+
     allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=0)
 
     # if form == 'residential':

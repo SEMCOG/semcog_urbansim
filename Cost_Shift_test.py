@@ -24,6 +24,7 @@ orca.run([
     "jobs_transition",
     "jobs_relocation",
     "scheduled_demolition_events",
+    "random_demolition_events",
     "scheduled_development_events",
     "feasibility",
     "residential_developer",

@@ -277,6 +277,12 @@ def b_total_jobs(jobs, buildings):
     return pd.Series(index=buildings.index, data=jobs_by_b).fillna(0)
 
 
+@orca.column('buildings', 'b_total_jobs', cache=True, cache_scope='iteration')
+def b_total_households(households, buildings):
+    hh_by_b = households.building_id.groupby(households.building_id).size()
+    return pd.Series(index=buildings.index, data=hh_by_b).fillna(0)
+
+
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def jobs_home_based(jobs):
     jobs = jobs.to_frame(["building_id", "home_based_status"])

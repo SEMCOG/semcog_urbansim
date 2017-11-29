@@ -590,6 +590,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
     orca.add_table('persons', persons[persons_columns])
 
+
 @orca.step()
 def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = events_addition.to_frame()
@@ -643,6 +644,61 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
         jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
         # Todo: parcel use need to be updated
+
+
+@orca.step()
+def random_demolition_events(buildings, households, jobs, iter_var, demolition_rates):
+    demolition_rates = demolition_rates.to_frame()
+    buildings_columns = buildings.local_columns
+    buildings = buildings.to_frame(buildings.local_columns + ['b_total_jobs', 'b_total_households'])
+    b = buildings.copy()
+    allowed = variables.parcel_is_allowed()
+    b = b[b.parcel_id.isin(allowed[allowed].index)]
+    buildings_idx = []
+
+    def sample(targets, type_b, weights=None):
+        for b_city_id, target in targets[targets > 0].iterrows():
+            rel_b = type_b[type_b.b_city_id == b_city_id]
+            rel_b = rel_b[rel_b.non_residential_sqft <= target]
+            rel_b = rel_b.smaple(min(len(rel_b), int(target)), weights=weights)
+            rel_b = rel_b[rel_b.cumsum() <= int(target)]
+            buildings_idx.append(rel_b.copy())
+
+    b['wj'] = 1.0 / (1.0 + np.log1p(b.b_total_jobs))
+    sample(demolition_rates.typenonsqft, b[b.non_residential_sqft > 0], b.wj)
+    b = b[b.non_residential_sqft == 0]
+    b['wh'] = 1.0 / (1.0 + np.log1p(b.b_total_households))
+    sample(demolition_rates.type81units, b[b.building_type_id == 81], b.wh)
+    sample(demolition_rates.type82units, b[b.building_type_id == 82], b.wh)
+    sample(demolition_rates.type83units, b[b.building_type_id == 83], b.wh)
+    sample(demolition_rates.type84units, b[b.building_type_id == 84], b.wh)
+
+    drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
+    drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep='first')]
+    buildings_idx = drop_buildings.index
+    drop_buildings['year_demo'] = iter_var
+
+    if orca.is_table("dropped_buildings"):
+        prev_drops = orca.get_table("dropped_buildings").to_frame()
+        orca.add_table("dropped_buildings",
+                       pd.concat([drop_buildings, prev_drops]))
+    else:
+        orca.add_table("dropped_buildings", drop_buildings)
+
+    orca.add_table("buildings", buildings[buildings_columns].drop(buildings_idx))
+
+    # unplace HH
+    # todo: use orca.update_col_from_series
+    households = households.to_frame(households.local_columns)
+    households.loc[households.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("households", households)
+
+    # unplace jobs
+    # todo: use orca.update_col_from_series
+    jobs = jobs.to_frame(jobs.local_columns)
+    jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("jobs", jobs)
+    # Todo: parcel use need to be updated
 
 
 def parcel_average_price(use):
