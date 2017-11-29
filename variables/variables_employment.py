@@ -54,16 +54,6 @@ def y(jobs, buildings):
 
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
-def large_area_id(jobs, buildings):
-    job_la = "jobs_large_area_lookup"
-    if (not orca.is_injectable(job_la)) or (len(orca.get_injectable(job_la)) == 0):
-        orca.add_injectable(job_la,
-                            misc.reindex(buildings.large_area_id, jobs.building_id),
-                            autocall=False, cache=True)
-    return orca.get_injectable(job_la).loc[jobs.index]
-
-
-@orca.column('jobs', cache=True, cache_scope='iteration')
 def nodeid_walk(jobs, buildings):
     return misc.reindex(buildings.nodeid_walk, jobs.building_id)
 

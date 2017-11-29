@@ -208,7 +208,6 @@ def households_transition(households, persons, annual_household_control_totals, 
     out_p_fixed = []
     hhidmax = region_hh.index.values.max() + 1
     pidmax = region_p.index.values.max() + 1
-    hh_la_lookup = orca.get_injectable("households_large_area_lookup")
     for hh, p in out:
         hh.index.name = 'household_id'
         hh = hh.reset_index()
@@ -225,14 +224,9 @@ def households_transition(households, persons, annual_household_control_totals, 
         p['household_id'] = p['household_id_y']
 
         new_hh_df = hh.set_index('household_id')
-        hh_la_lookup = hh_la_lookup.append(new_hh_df[new_hh_df.building_id == -1].large_area_id,
-                                           verify_integrity=True)
         out_hh_fixed.append(new_hh_df[households.local_columns])
         out_p_fixed.append(p.set_index('person_id')[persons.local_columns])
 
-    orca.add_injectable("households_large_area_lookup",
-                        hh_la_lookup,
-                        autocall=False, cache=True)
     orca.add_table("households", pd.concat(out_hh_fixed, verify_integrity=True))
     orca.add_table("persons", pd.concat(out_p_fixed, verify_integrity=True))
 
@@ -571,10 +565,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
 
     jobs = dic_agent['jobs']
     assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
+    jobs['large_area_id'] = misc.reindex(buildings.large_area_id, jobs.building_id)
     orca.add_table('jobs', jobs[jobs_columns])
 
     households = dic_agent['households']
     assert households.index.duplicated().sum() == 0, "duplicated index in households"
+    households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
     orca.add_table('households', households[households_columns])
 
     persons_columns = persons.local_columns
@@ -908,6 +904,8 @@ def neighborhood_vars(jobs, households, buildings):
         j.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
             b.index.values,
             idx_invalid_building_id.sum())
+        # TODO: keep LA the same
+        j['large_area_id'] = misc.reindex(b.large_area_id, j.building_id)
         orca.add_table("jobs", j)
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
@@ -915,6 +913,8 @@ def neighborhood_vars(jobs, households, buildings):
         h.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
             b.index.values,
             idx_invalid_building_id.sum())
+        # TODO: keep LA the same
+        j['large_area_id'] = misc.reindex(b.large_area_id, h.building_id)
         orca.add_table("households", h)
 
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")

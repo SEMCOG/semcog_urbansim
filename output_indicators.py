@@ -9,8 +9,6 @@ from urbansim.utils import misc
 def orca_year_dataset(hdf, year):
     if str(year) == '2015':
         year = 'base'
-    orca.add_injectable("jobs_large_area_lookup", [])
-    orca.add_injectable("households_large_area_lookup", [])
     orca.add_injectable("year", int(year if str(year) != 'base' else 2015))
     for tbl in ['households', 'persons', 'group_quarters', 'jobs', 'buildings', 'parcels', 'dropped_buildings']:
         name = str(year) + '/' + tbl

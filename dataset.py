@@ -3,10 +3,29 @@ import warnings
 import numpy as np
 import orca
 import pandas as pd
+from urbansim.utils import misc
 
 import assumptions
 
 warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
+
+
+for name in ['persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_sectors',
+             'building_sqft_per_job',
+             'annual_relocation_rates_for_households',
+             'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
+             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
+             'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
+             'workers_employment_rates_by_large_area',
+             'transit_stops', 'crime_rates', 'schools', 'poi',
+             'group_quarters', 'group_quarters_control_totals',
+             'annual_household_control_totals',
+             'events_addition', 'events_deletion', 'refiner_events', 'income_growth_rates']:
+    store = orca.get_injectable("store")
+    orca.add_table(name, store[name])
+
+orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
+orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 
 
 @orca.table(cache=True)
@@ -26,32 +45,31 @@ def buildings(store):
 
 
 @orca.table(cache=True)
-def households(store):
+def households(store, buildings):
     df = store['households']
-    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(store.buildings.index.values,
+    b = buildings.to_frame(['large_area_id'])
+    b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
+    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(b.index.values,
                                                                    (df.building_id == -1).sum())
-    idx_invalid_building_id = np.in1d(df.building_id, store.buildings.index.values) == False
-    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(store.buildings.index.values,
+    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
                                                                       idx_invalid_building_id.sum())
+    df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
     return df
 
 
-for name in ['jobs', 'persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_sectors',
-             'building_sqft_per_job',
-             'annual_relocation_rates_for_households',
-             'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
-             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
-             'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
-             'workers_employment_rates_by_large_area',
-             'transit_stops', 'crime_rates', 'schools', 'poi',
-             'group_quarters', 'group_quarters_control_totals',
-             'annual_household_control_totals',
-             'events_addition', 'events_deletion', 'refiner_events', 'income_growth_rates']:
-    store = orca.get_injectable("store")
-    orca.add_table(name, store[name])
-
-orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
-orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
+@orca.table(cache=True)
+def jobs(store, buildings):
+    df = store['jobs']
+    b = buildings.to_frame(['large_area_id'])
+    b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
+    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(b.index.values,
+                                                                   (df.building_id == -1).sum())
+    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
+                                                                      idx_invalid_building_id.sum())
+    df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
+    return df
 
 
 @orca.injectable(cache=True)
