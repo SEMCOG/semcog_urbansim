@@ -16,6 +16,5 @@ for i in xrange(start_num, 1, -1):
         print "runnum:", i
         break
 
+# data_out = '/home/da/semcog/semcog_urbansim/runs/run592_hh_job_mon_refined.h5'
 output_indicators.main(data_out)
-
-dir_out = data_out.replace('.h5', '')
