@@ -127,62 +127,62 @@ def walk_nearest_urgentcare(poi):
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
 
 
-@orca.column('nodes_walk', 'node_r1500_acre', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def node_r1500_acre(nodes_walk):
     return nodes_walk['node_r1500_sqft'] / 43560
 
 
-@orca.column('nodes_walk', 'ln_empden', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def ln_empden(nodes_walk):
     return np.log1p(nodes_walk.jobs / nodes_walk.node_r1500_acre).fillna(0)
 
 
-@orca.column('nodes_walk', 'ln_popden', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def ln_popden(nodes_walk):
     return np.log1p(nodes_walk.population / nodes_walk.node_r1500_acre).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_high_income', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_high_income(nodes_walk):
     return np.log1p(nodes_walk.highinc_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_mid_income', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_mid_income(nodes_walk):
     return np.log1p(nodes_walk.midinc_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_low_income', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_low_income(nodes_walk):
     return np.log1p(nodes_walk.lowinc_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_race1', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_race1(nodes_walk):
     return np.log1p(nodes_walk.race_1_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_race2', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_race2(nodes_walk):
     return np.log1p(nodes_walk.race_2_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_race3', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_race3(nodes_walk):
     return np.log1p(nodes_walk.race_3_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_race4', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_race4(nodes_walk):
     return np.log1p(nodes_walk.race_4_hhs / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'percent_hh_with_children', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def percent_hh_with_children(nodes_walk):
     return np.log1p(nodes_walk.hhs_with_children / nodes_walk.households).fillna(0)
 
 
-@orca.column('nodes_walk', 'housing_cost', cache=True, cache_scope='iteration')
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def housing_cost(nodes_walk):
     return (nodes_walk.residential * nodes_walk.ave_unit_sqft) / 5.0
 

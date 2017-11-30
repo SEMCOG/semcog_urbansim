@@ -12,7 +12,7 @@ def popden(parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
 
-@orca.column('zones', 'jobs_within_30_min', cache=True)
+@orca.column('zones', cache=True)
 def jobs_within_30_min(jobs, travel_data):
     from urbansim.utils import misc
     j = pd.DataFrame({'zone_id': jobs.zone_id})
@@ -120,12 +120,12 @@ def logsum_job_low_income(zones, travel_data):
     return logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var)
 
 
-@orca.column('zones', 'z_total_jobs', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def z_total_jobs(jobs):
     return jobs.zone_id.value_counts()
 
 
-@orca.column('zones', 'transit_jobs_50min', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def transit_jobs_50min(zones, travel_data):
     td = travel_data.to_frame(['am_transit_total_time']).reset_index()
     zemp = zones.to_frame(['employment'])
@@ -134,7 +134,7 @@ def transit_jobs_50min(zones, travel_data):
     return transit_jobs_50min
 
 
-@orca.column('zones', 'transit_jobs_30min', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def transit_jobs_30min(zones, travel_data):
     td = travel_data.to_frame(['am_transit_total_time']).reset_index()
     zemp = zones.to_frame(['employment'])
@@ -143,7 +143,7 @@ def transit_jobs_30min(zones, travel_data):
     return transit_jobs_30min
 
 
-@orca.column('zones', 'a_ln_emp_26min_drive_alone', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def a_ln_emp_26min_drive_alone(zones, travel_data):
     drvtime = travel_data.to_frame(['am_auto_total_time']).reset_index()
     zemp = zones.to_frame(['employment'])
@@ -151,7 +151,7 @@ def a_ln_emp_26min_drive_alone(zones, travel_data):
     return np.log1p(temp[temp.am_auto_total_time <=26].groupby('from_zone_id').employment.sum().fillna(0))
 
 
-@orca.column('zones', 'a_ln_emp_50min_transit', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def a_ln_emp_50min_transit(zones, travel_data):
     transittime = travel_data.to_frame(['am_transit_total_time']).reset_index()
     zemp = zones.to_frame(['employment'])
@@ -159,7 +159,7 @@ def a_ln_emp_50min_transit(zones, travel_data):
     return np.log1p(temp[temp.am_transit_total_time <=50].groupby('from_zone_id').employment.sum().fillna(0))
 
 
-@orca.column('zones', 'a_ln_retail_emp_15min_drive_alone', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
     drvtime = travel_data.to_frame(['midday_auto_total_time']).reset_index()
     zemp = zones.to_frame(['employment'])
@@ -167,7 +167,7 @@ def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
     return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
 
 
-@orca.column('zones', 'percent_vacant_job_spaces', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def percent_vacant_job_spaces(buildings):
     buildings = buildings.to_frame(buildings.local_columns + ['job_spaces', 'vacant_job_spaces', 'zone_id'])
     job_spaces = buildings.groupby('zone_id').job_spaces.sum()
@@ -176,7 +176,7 @@ def percent_vacant_job_spaces(buildings):
     return (vacant_job_spaces*1.0 / job_spaces).replace([np.inf, -np.inf], np.nan).fillna(0)
 
 
-@orca.column('zones', 'percent_vacant_residential_units', cache=True, cache_scope='iteration')
+@orca.column('zones', cache=True, cache_scope='iteration')
 def percent_vacant_residential_units(buildings):
     buildings = buildings.to_frame(buildings.local_columns + ['vacant_residential_units', 'zone_id'])
     du = buildings.groupby('zone_id').residential_units.sum()

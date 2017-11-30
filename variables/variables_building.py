@@ -8,7 +8,7 @@ from urbansim.utils import misc
 # BUILDINGS VARIABLES
 #####################
 
-# @orca.column('buildings', 'school_district_id', cache=True)
+# @orca.column('buildings', cache=True)
 # def school_district_id(buildings, parcels):
 #     return misc.reindex(parcels.school_district_id, buildings.parcel_id)
 
@@ -223,7 +223,7 @@ def walk_nearest_park(buildings, parcels):
     return misc.reindex(parcels.walk_nearest_park, buildings.parcel_id)
 
 
-@orca.column('buildings', 'building_age', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age(buildings, year):
     year_built = buildings.year_built
     year_built[year_built < 1600] = year_built[year_built > 1600].mean()
@@ -231,53 +231,53 @@ def building_age(buildings, year):
     return age
 
 
-@orca.column('buildings', 'building_age_gt_50', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_gt_50(buildings):
     return (buildings.building_age > 50).astype('int32')
 
 
-@orca.column('buildings', 'building_age_gt_70', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_gt_70(buildings):
     return (buildings.building_age > 70).astype('int32')
 
 
-@orca.column('buildings', 'building_age_gt_80', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_gt_80(buildings):
     return (buildings.building_age > 80).astype('int32')
 
 
-@orca.column('buildings', 'building_age_gt_90', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_gt_90(buildings):
     return (buildings.building_age > 90).astype('int32')
 
 
-@orca.column('buildings', 'building_age_gt_100', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_gt_100(buildings):
     return (buildings.building_age > 100).astype('int32')
 
 
-@orca.column('buildings', 'building_age_le_10', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def building_age_le_10(buildings):
     return (buildings.building_age < 10).astype('int32')
 
 
-@orca.column('buildings', 'b_is_pre_1945', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def b_is_pre_1945(buildings):
     return (buildings.year_built < 1945).astype('int32')
 
 
-@orca.column('buildings', 'b_is_newerthan2010', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def b_is_newerthan2010(buildings):
     return (buildings.year_built > 2010).astype('int32')
 
 
-@orca.column('buildings', 'b_total_jobs', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def b_total_jobs(jobs, buildings):
     jobs_by_b = jobs.building_id.groupby(jobs.building_id).size()
     return pd.Series(index=buildings.index, data=jobs_by_b).fillna(0)
 
 
-@orca.column('buildings', 'b_total_jobs', cache=True, cache_scope='iteration')
+@orca.column('buildings', cache=True, cache_scope='iteration')
 def b_total_households(households, buildings):
     hh_by_b = households.building_id.groupby(households.building_id).size()
     return pd.Series(index=buildings.index, data=hh_by_b).fillna(0)
