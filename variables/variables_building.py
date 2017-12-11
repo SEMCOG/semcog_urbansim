@@ -113,9 +113,18 @@ def job_spaces(buildings, base_job_space):
     job_spaces[np.isinf(job_spaces)] = np.nan
     job_spaces[job_spaces < 0] = 0
     job_spaces = job_spaces.fillna(0).round().astype('int')
-    base_job_space = base_job_space.reindex(job_spaces.index).fillna(0).round().astype('int')
+
+    jobs = buildings.jobs_non_home_based
+    jobs = jobs.reindex(job_spaces.index).fillna(0).round().astype('int')
+    jobs = jobs[jobs > job_spaces]
+    job_spaces.loc[jobs.index] = jobs
+
+    base_job_space = base_job_space.base_job_space.reindex(job_spaces.index).fillna(0).round().astype('int')
     base_job_space = base_job_space[base_job_space > job_spaces]
     job_spaces.loc[base_job_space.index] = base_job_space
+
+    orca.add_table("base_job_space", job_spaces.to_frame("base_job_space"))
+
     return job_spaces
 
 

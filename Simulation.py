@@ -41,7 +41,7 @@ orca.run([
 ],
     iter_vars=range(2016, 2045 + 1),
     data_out=data_out,
-    out_base_tables=['jobs', 'employment_sectors', 'annual_relocation_rates_for_jobs',
+    out_base_tables=['jobs', 'base_job_space', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',
                      'buildings', 'parcels', 'zones', 'semmcds', 'counties',
                      'target_vacancies', 'building_sqft_per_job',
@@ -53,7 +53,7 @@ orca.run([
                      'group_quarters', 'group_quarters_control_totals',
                      'annual_household_control_totals',
                      'events_addition', 'events_deletion', 'refiner_events'],
-    out_run_tables=['buildings', 'jobs', 'parcels', 'households', 'persons', 'group_quarters', 'dropped_buildings'],
+    out_run_tables=['buildings', 'jobs', 'base_job_space', 'parcels', 'households', 'persons', 'group_quarters', 'dropped_buildings'],
     out_interval=1,
     compress=True)
 

@@ -73,10 +73,9 @@ def jobs(store, buildings):
     return df
 
 
-@orca.injectable(cache=True)
+@orca.table(cache=True)
 def base_job_space(buildings):
-    df = buildings.jobs_non_home_based
-    return df[df > 0]
+    return buildings.jobs_non_home_based.to_frame("base_job_space")
 
 
 # these are dummy returns that last until accessibility runs
