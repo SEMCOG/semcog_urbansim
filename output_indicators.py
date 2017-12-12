@@ -215,6 +215,25 @@ def make_indicators(tab, geo_id):
     make_hh_size(2)
     make_hh_size(3, True)
 
+    def make_hh_size_age(r, a, b, plus=False):
+        hh_name = 'hh_size_' + str(r)
+        if plus:
+            hh_name += 'p'
+        hh_name += '_age_' + str(a).zfill(2) + '_' + str(b).zfill(2)
+
+        @orca.column(tab, hh_name, cache=True, cache_scope='iteration')
+        def hh_size(households):
+            households = households.to_frame([geo_id, 'persons', 'age_of_head'])
+            return households[((households.persons == r) | (plus & (households.persons > r))) & (
+                    (households.age_of_head >= a) & (households.age_of_head <= b))].groupby(geo_id).size()
+
+    make_hh_size_age(1, 15, 34)
+    make_hh_size_age(1, 35, 44)
+    make_hh_size_age(1, 65, pd.np.inf)
+    make_hh_size_age(2, 15, 34, True)
+    make_hh_size_age(2, 35, 44, True)
+    make_hh_size_age(2, 65, pd.np.inf, True)
+
     @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_no_car_or_lt_workers(households):
         households = households.to_frame([geo_id, 'cars', 'workers'])
@@ -294,6 +313,11 @@ def make_indicators(tab, geo_id):
     for (a, b) in [(00, 04), (05, 17), (18, 24), (25, 34), (35, 64), (65, pd.np.inf),
                    (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf)]:
         make_pop_age(a, b)
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def hh_pop_age_median(persons):
+        persons = persons.to_frame([geo_id, 'age'])
+        return persons.groupby(geo_id).median()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def pct_hh_pop_age_05_17():
@@ -442,6 +466,8 @@ def main(run_name):
                   'hh_size_1', 'hh_size_2', 'hh_size_3p',
                   'with_children_hh_size_1', 'with_children_hh_size_2', 'with_children_hh_size_3p',
                   'without_children_hh_size_1', 'without_children_hh_size_2', 'without_children_hh_size_3p',
+                  'hh_size_1_age_15_34', 'hh_size_1_age_35_44', 'hh_size_1_age_65_inf',
+                  'hh_size_2p_age_15_34', 'hh_size_2p_age_35_44', 'hh_size_2p_age_65_inf',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
                   'pct_hh_pop_race_1', 'pct_hh_pop_race_2', 'pct_hh_pop_race_3', 'pct_hh_pop_race_4',
                   'gq_pop_race_1', 'gq_pop_race_2', 'gq_pop_race_3', 'gq_pop_race_4',
@@ -458,6 +484,7 @@ def main(run_name):
                   'pop_age_00_04', 'pop_age_05_17', 'pop_age_18_24', 'pop_age_25_34',
                   'pop_age_35_64', 'pop_age_65_inf',
                   'pop_age_00_17', 'pop_age_25_44', 'pop_age_45_64', 'pop_age_65_84', 'pop_age_85_inf',
+                  'hh_pop_age_median',
                   'pct_hh_pop_age_05_17', 'pct_hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
                   'jobs_sec_04', 'jobs_sec_05', 'jobs_sec_06', 'jobs_sec_07',
@@ -495,6 +522,7 @@ def main(run_name):
     del df['res_vacancy_rate']
     del df['nonres_vacancy_rate']
     del df['household_size']
+    del df['hh_pop_age_median']
     df = df[df.columns[~df.columns.str.startswith('pct_')]]
 
     sumstd = df.groupby(level=0).std().sum().sort_values()
@@ -515,6 +543,7 @@ def main(run_name):
         del df['res_vacancy_rate']
         del df['nonres_vacancy_rate']
         del df['household_size']
+        del df['hh_pop_age_median']
         df = df[df.columns[~(df.columns.str.startswith('pct_'))]]
 
         df[whatnots_local.columns] = whatnots_local
