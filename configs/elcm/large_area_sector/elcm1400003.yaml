@@ -1,51 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 3)
-alts_predict_filters: (large_area_id == 3) & ((building_type_id == 51)|(building_type_id
-    == 23)|(building_type_id == 53)|(building_type_id == 21))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 1400003) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_building_sqft: 0.6494172959517227
-        b_ln_land_area: 0.569980533030308
-        b_total_jobs: 0.0005676154132082954
-        building_type_id_is_31: -1.0228414103729788
-        building_type_id_is_51: 3.0
-        improvement_value: -1.0036233898168618e-07
-        nodes_drv_drv_60min_jobs: 0.7598831133009912
-        nodes_walk_medical: 0.003921520787933756
-        zones_ln_empden_14: 2.700249061895098
-        zones_logsum_job_low_income: -8.878356893592379e-07
-    Std. Error:
-        b_ln_building_sqft: 0.10565822496083783
-        b_ln_land_area: 0.11792856599216939
-        b_total_jobs: 0.0001201490198389732
-        building_type_id_is_31: 0.31016532467043867
-        building_type_id_is_51: 0.1273473669898816
-        improvement_value: 1.9387778892114813e-08
-        nodes_drv_drv_60min_jobs: 0.04037813711685879
-        nodes_walk_medical: 0.0006591035131551109
-        zones_ln_empden_14: 0.17179815356125752
-        zones_logsum_job_low_income: 3.294921013178845e-07
-    T-Score:
-        b_ln_building_sqft: 6.146396044344194
-        b_ln_land_area: 4.833269430819294
-        b_total_jobs: 4.724261704082382
-        building_type_id_is_31: -3.297729723526584
-        building_type_id_is_51: 23.5576130933148
-        improvement_value: -5.176577448100796
-        nodes_drv_drv_60min_jobs: 18.81917214510926
-        nodes_walk_medical: 5.949779829213078
-        zones_ln_empden_14: 15.717567423868026
-        zones_logsum_job_low_income: -2.6945583393596424
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 3)
+
+alts_predict_filters: large_area_id == 3
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -1115.0152655424579
-    'null': -3597.643867067227
-    ratio: 0.6900706943927137
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - zones_ln_empden_14
 - nodes_drv_drv_60min_jobs
@@ -57,8 +31,49 @@ model_expression:
 - improvement_value
 - b_ln_land_area
 - building_type_id_is_51
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.28595200098888107
+        b_ln_land_area: 0.26583576101745315
+        b_total_jobs: 0.0013204104064804107
+        building_type_id_is_31: 0.003153841131123046
+        building_type_id_is_51: 0.00218247743444257
+        improvement_value: -2.352061032679117e-10
+        nodes_drv_drv_60min_jobs: 0.001136199020266174
+        nodes_walk_medical: -0.0004572507906591595
+        zones_ln_empden_14: 3.4466785584737986e-05
+        zones_logsum_job_low_income: 6.721946987322134e-07
+    Std. Error:
+        b_ln_building_sqft: 0.15776237665410622
+        b_ln_land_area: 0.1629610782777524
+        b_total_jobs: 0.00014124058464139508
+        building_type_id_is_31: 0.22175317400528086
+        building_type_id_is_51: 0.3781127674866555
+        improvement_value: 1.078789904404285e-08
+        nodes_drv_drv_60min_jobs: 0.04986412334065048
+        nodes_walk_medical: 0.00124483890809533
+        zones_ln_empden_14: 0.2866196023404273
+        zones_logsum_job_low_income: 4.249432530130493e-07
+    T-Score:
+        b_ln_building_sqft: 1.812548765133213
+        b_ln_land_area: 1.631283763134901
+        b_total_jobs: 9.34866143348873
+        building_type_id_is_31: 0.014222304349284941
+        building_type_id_is_51: 0.005772027876629674
+        improvement_value: -0.021802772004785684
+        nodes_drv_drv_60min_jobs: 0.022785901849795804
+        nodes_walk_medical: -0.36731723895004026
+        zones_ln_empden_14: 0.00012025271580622973
+        zones_logsum_job_low_income: 1.5818457969764999
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -772.4007837627589
+    'null': -1021.0122058790201
+    ratio: 0.2434950539129198

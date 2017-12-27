@@ -1,48 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
-alts_predict_filters: (large_area_id == 99) & ((building_type_id == 26)|(building_type_id
-    == 21)|(building_type_id == 62)|(building_type_id == 25))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 1600099) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_is_pre_1945: -0.29600100517505523
-        b_ln_building_sqft: 1.077276550869481
-        b_total_jobs: 0.0005722918764476242
-        building_type_id_is_26: 3.0
-        building_type_id_is_31: -2.0572615093532876
-        nodes_drv_drv_45min_jobs: 0.07611004907775358
-        nodes_walk_ave_lot_sqft: 0.053285444902740835
-        nodes_walk_office: 0.0038973235741880997
-        parcels_land_cost: -1.8432108086852125e-08
-    Std. Error:
-        b_is_pre_1945: 0.09833970314037153
-        b_ln_building_sqft: 0.044157193922323784
-        b_total_jobs: 0.00023454796435736283
-        building_type_id_is_26: 0.10739648269565034
-        building_type_id_is_31: 0.26646644742196307
-        nodes_drv_drv_45min_jobs: 0.032885058010581406
-        nodes_walk_ave_lot_sqft: 0.04220919111434592
-        nodes_walk_office: 0.0005479417034388334
-        parcels_land_cost: 2.184523071663658e-09
-    T-Score:
-        b_is_pre_1945: -3.0099847337604735
-        b_ln_building_sqft: 24.39639966172898
-        b_total_jobs: 2.4399780147981445
-        building_type_id_is_26: 27.933875716411173
-        building_type_id_is_31: -7.720527403195008
-        nodes_drv_drv_45min_jobs: 2.314426480660721
-        nodes_walk_ave_lot_sqft: 1.2624133155830686
-        nodes_walk_office: 7.112660981503769
-        parcels_land_cost: -8.437589113130704
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+
+alts_predict_filters: large_area_id == 99
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -1477.6266317471307
-    'null': -4167.307329574824
-    ratio: 0.6454241276469792
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - b_total_jobs
 - b_is_pre_1945
@@ -53,8 +30,46 @@ model_expression:
 - nodes_walk_ave_lot_sqft
 - building_type_id_is_26
 - parcels_land_cost
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_is_pre_1945: -4.566983257935647e-05
+        b_ln_building_sqft: 0.0010601613042768732
+        b_total_jobs: 0.004734719137745596
+        building_type_id_is_26: -3.3558473437060117e-06
+        building_type_id_is_31: 3.679703227382684e-05
+        nodes_drv_drv_45min_jobs: 5.9118021726515856e-05
+        nodes_walk_ave_lot_sqft: 0.0005025790919533273
+        nodes_walk_office: 0.0035087133477077702
+        parcels_land_cost: 1.41685623256245e-10
+    Std. Error:
+        b_is_pre_1945: 0.21741279190956533
+        b_ln_building_sqft: 0.08745441792782659
+        b_total_jobs: 0.0002575702698823418
+        building_type_id_is_26: 0.3926787355574703
+        building_type_id_is_31: 0.21366418436156578
+        nodes_drv_drv_45min_jobs: 0.06121413665002569
+        nodes_walk_ave_lot_sqft: 0.10081051725346249
+        nodes_walk_office: 0.00118120158992579
+        parcels_land_cost: 1.953580471522383e-09
+    T-Score:
+        b_is_pre_1945: -0.00021006046690368255
+        b_ln_building_sqft: 0.012122444233198046
+        b_total_jobs: 18.38224240673591
+        building_type_id_is_26: -8.546037867168564e-06
+        building_type_id_is_31: 0.00017221900050201367
+        nodes_drv_drv_45min_jobs: 0.0009657576658232759
+        nodes_walk_ave_lot_sqft: 0.00498538352590454
+        nodes_walk_office: 2.9704610776287628
+        parcels_land_cost: 0.0725261259116869
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -547.2709228191511
+    'null': -666.0680484704314
+    ratio: 0.1783558390529133

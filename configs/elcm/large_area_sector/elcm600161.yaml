@@ -1,45 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
-alts_predict_filters: (large_area_id == 161) & ((building_type_id == 41)|(building_type_id
-    == 33)|(building_type_id == 31)|(building_type_id == 23))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 600161) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_non_residential_sqft: 0.9857634224774849
-        building_type_id_is_41: 2.7966282727910814
-        nodes_drv_drv_15min_retail_jobs: -0.09252046199796597
-        nodes_drv_drv_20min_pop: 1.2676690219939184
-        nodes_walk_ave_lot_sqft: 0.3339835424971171
-        nodes_walk_max_office_far: -0.041057781201019904
-        zones_ln_empden_10: 0.7359987168214988
-        zones_logsum_job_high_income: -3.4473014011684095e-06
-    Std. Error:
-        b_ln_non_residential_sqft: 0.0434808616632336
-        building_type_id_is_41: 0.17860596992736488
-        nodes_drv_drv_15min_retail_jobs: 0.20402894078959014
-        nodes_drv_drv_20min_pop: 0.18036250340083604
-        nodes_walk_ave_lot_sqft: 0.06441508461858075
-        nodes_walk_max_office_far: 0.008648211731882028
-        zones_ln_empden_10: 0.09182896486738869
-        zones_logsum_job_high_income: 9.685242048124946e-07
-    T-Score:
-        b_ln_non_residential_sqft: 22.67120256522017
-        building_type_id_is_41: 15.658089558419624
-        nodes_drv_drv_15min_retail_jobs: -0.4534673445831392
-        nodes_drv_drv_20min_pop: 7.02845102552531
-        nodes_walk_ave_lot_sqft: 5.1848653847887425
-        nodes_walk_max_office_far: -4.747545790265346
-        zones_ln_empden_10: 8.0148863475088
-        zones_logsum_job_high_income: -3.5593342779035697
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 161)
+
+alts_predict_filters: large_area_id == 161
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -939.1771382297949
-    'null': -3006.070271386261
-    ratio: 0.687573125894795
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - zones_logsum_job_high_income
 - b_ln_non_residential_sqft
@@ -49,8 +29,43 @@ model_expression:
 - zones_ln_empden_10
 - nodes_walk_max_office_far
 - nodes_drv_drv_20min_pop
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.9601327497632434
+        building_type_id_is_41: -0.9908391747003564
+        nodes_drv_drv_15min_retail_jobs: -0.490569106088612
+        nodes_drv_drv_20min_pop: 1.0242207990591254
+        nodes_walk_ave_lot_sqft: 0.13203772358791727
+        nodes_walk_max_office_far: 0.024973576465778233
+        zones_ln_empden_10: -0.12318281325914009
+        zones_logsum_job_high_income: 1.131396840591046e-06
+    Std. Error:
+        b_ln_non_residential_sqft: 0.11527517976376646
+        building_type_id_is_41: 1.1308273612380835
+        nodes_drv_drv_15min_retail_jobs: 0.5213190805515554
+        nodes_drv_drv_20min_pop: 0.42033380247322394
+        nodes_walk_ave_lot_sqft: 0.15648945944380369
+        nodes_walk_max_office_far: 0.01070672195018809
+        zones_ln_empden_10: 0.18827611590002136
+        zones_logsum_job_high_income: 2.6842178647706654e-06
+    T-Score:
+        b_ln_non_residential_sqft: 8.329050119295797
+        building_type_id_is_41: -0.8762072873931337
+        nodes_drv_drv_15min_retail_jobs: -0.9410150604301497
+        nodes_drv_drv_20min_pop: 2.4366843518952304
+        nodes_walk_ave_lot_sqft: 0.8437483524910048
+        nodes_walk_max_office_far: 2.332513777976602
+        zones_ln_empden_10: -0.654266807397667
+        zones_logsum_job_high_income: 0.42149963139736074
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -275.0038571334993
+    'null': -411.91050365934456
+    ratio: 0.332369884500612

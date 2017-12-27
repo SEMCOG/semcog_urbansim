@@ -1,48 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
-alts_predict_filters: (large_area_id == 99) & ((building_type_id == 31)|(building_type_id
-    == 33)|(building_type_id == 32)|(building_type_id == 23))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 400099) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_non_residential_sqft: 1.0215114697835652
-        building_type_id_is_21: -0.5460168319023001
-        building_type_id_is_32: 2.663123246286628
-        nodes_drv_drv_15min_retail_jobs: 0.44591378833001466
-        nodes_walk_ave_lot_sqft: 0.22698652970187047
-        nodes_walk_medical: -0.0013452647967366245
-        stories: -0.2445817373272882
-        zones_employment: -2.41583859117334e-06
-        zones_ln_empden_17: 1.0084098729119355
-    Std. Error:
-        b_ln_non_residential_sqft: 0.03510022264370696
-        building_type_id_is_21: 0.12765668178711537
-        building_type_id_is_32: 0.2081772846392543
-        nodes_drv_drv_15min_retail_jobs: 0.03520288063404032
-        nodes_walk_ave_lot_sqft: 0.044299535232484435
-        nodes_walk_medical: 0.0007520919733143006
-        stories: 0.0378106837079011
-        zones_employment: 4.085879059651827e-05
-        zones_ln_empden_17: 0.28933796084983077
-    T-Score:
-        b_ln_non_residential_sqft: 29.102706274904772
-        building_type_id_is_21: -4.277228769057748
-        building_type_id_is_32: 12.792573651354392
-        nodes_drv_drv_15min_retail_jobs: 12.666968733769673
-        nodes_walk_ave_lot_sqft: 5.1239031856800015
-        nodes_walk_medical: -1.7886971866065056
-        stories: -6.468588064070877
-        zones_employment: -0.05912653203639372
-        zones_ln_empden_17: 3.485231837364438
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+
+alts_predict_filters: large_area_id == 99
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -1756.5743778473818
-    'null': -3759.7788525501583
-    ratio: 0.532798484502368
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - b_ln_non_residential_sqft
 - zones_employment
@@ -53,8 +30,46 @@ model_expression:
 - nodes_walk_ave_lot_sqft
 - stories
 - building_type_id_is_21
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.9033292305770397
+        building_type_id_is_21: -0.09569346022375513
+        building_type_id_is_32: 0.5300138771607389
+        nodes_drv_drv_15min_retail_jobs: -0.036320781984433725
+        nodes_walk_ave_lot_sqft: -0.1475651383825322
+        nodes_walk_medical: 0.002566582761548625
+        stories: 0.17063228524078825
+        zones_employment: 0.00015533059838970003
+        zones_ln_empden_17: 0.6594933854860058
+    Std. Error:
+        b_ln_non_residential_sqft: 0.06670838428709744
+        building_type_id_is_21: 0.23676622614708837
+        building_type_id_is_32: 0.679939179405854
+        nodes_drv_drv_15min_retail_jobs: 0.07296622864665243
+        nodes_walk_ave_lot_sqft: 0.09274499995142381
+        nodes_walk_medical: 0.0013508088470735814
+        stories: 0.09705046203795356
+        zones_employment: 6.28772476984966e-05
+        zones_ln_empden_17: 0.5807312817106043
+    T-Score:
+        b_ln_non_residential_sqft: 13.54146469339326
+        building_type_id_is_21: -0.4041685411850364
+        building_type_id_is_32: 0.7795018925426195
+        nodes_drv_drv_15min_retail_jobs: -0.49777524010897417
+        nodes_walk_ave_lot_sqft: -1.591084570163578
+        nodes_walk_medical: 1.900034018217248
+        stories: 1.7581810705245176
+        zones_employment: 2.4703784608150716
+        zones_ln_empden_17: 1.135625729585979
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -543.8580086800092
+    'null': -696.742234913149
+    ratio: 0.21942724091097654

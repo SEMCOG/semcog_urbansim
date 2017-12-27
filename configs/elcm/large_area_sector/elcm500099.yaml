@@ -1,42 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
-alts_predict_filters: (large_area_id == 99) & ((building_type_id == 21)|(building_type_id
-    == 22)|(building_type_id == 31)|(building_type_id == 23))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 500099) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_building_sqft: 0.09664852534091102
-        b_ln_land_area: 1.2882441409324643
-        building_type_id_is_11: -3.0
-        nodes_drv_drv_20min_pop: 0.16822909911301367
-        nodes_walk_retail: 0.004679963437716548
-        zones_ln_empden_9: 1.210704396009996
-        zones_transit_jobs_50min: 2.890116969812848e-06
-    Std. Error:
-        b_ln_building_sqft: 0.14312905702130815
-        b_ln_land_area: 0.14984326924543473
-        building_type_id_is_11: 1.1651672435907554
-        nodes_drv_drv_20min_pop: 0.026099948261967428
-        nodes_walk_retail: 0.0005905321298127532
-        zones_ln_empden_9: 0.31377478733805236
-        zones_transit_jobs_50min: 1.622104792452647e-06
-    T-Score:
-        b_ln_building_sqft: 0.675254398738354
-        b_ln_land_area: 8.597277324631738
-        building_type_id_is_11: -2.5747376752154025
-        nodes_drv_drv_20min_pop: 6.445572130047299
-        nodes_walk_retail: 7.924993749621174
-        zones_ln_empden_9: 3.8585139560802766
-        zones_transit_jobs_50min: 1.781707928649263
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+
+alts_predict_filters: large_area_id == 99
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -1336.133145491509
-    'null': -3987.644237553197
-    ratio: 0.6649317075709454
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - building_type_id_is_11
 - b_ln_land_area
@@ -45,8 +28,40 @@ model_expression:
 - nodes_walk_retail
 - nodes_drv_drv_20min_pop
 - zones_transit_jobs_50min
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 1.280245581255955
+        b_ln_land_area: -0.47481801360541415
+        building_type_id_is_11: 0.09001358284169664
+        nodes_drv_drv_20min_pop: 0.23517474224245077
+        nodes_walk_retail: 0.0017762086895007371
+        zones_ln_empden_9: 0.7750923103502428
+        zones_transit_jobs_50min: -1.6197495481413646e-06
+    Std. Error:
+        b_ln_building_sqft: 0.19668616836051883
+        b_ln_land_area: 0.21812232216499666
+        building_type_id_is_11: 0.30408832302360017
+        nodes_drv_drv_20min_pop: 0.050620660555986394
+        nodes_walk_retail: 0.0012455209093393707
+        zones_ln_empden_9: 0.5549461714858515
+        zones_transit_jobs_50min: 3.256979393204643e-06
+    T-Score:
+        b_ln_building_sqft: 6.509077846843352
+        b_ln_land_area: -2.176842832464631
+        building_type_id_is_11: 0.2960113099598064
+        nodes_drv_drv_20min_pop: 4.645825235376923
+        nodes_walk_retail: 1.4260769740452173
+        zones_ln_empden_9: 1.3966981847535893
+        zones_transit_jobs_50min: -0.4973164864109388
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -606.2326147432781
+    'null': -758.0906077985841
+    ratio: 0.20031641533758837

@@ -1,51 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
-alts_predict_filters: (large_area_id == 93) & ((building_type_id == 21)|(building_type_id
-    == 33)|(building_type_id == 23)|(building_type_id == 41))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 600093) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_building_sqft: 0.9556041962114764
-        b_ln_sqft_price_nonres: -0.10810283573269708
-        building_type_id_is_13: -1.6287043267162484
-        building_type_id_is_42: 3.0
-        nodes_drv_drv_45min_jobs: 0.3800741858312728
-        nodes_walk_ave_lot_sqft: 0.42659701210559253
-        nodes_walk_office: 0.0036140282671404044
-        vacant_job_spaces: -0.0058200452553934055
-        zones_ln_empden_6: 3.0
-        zones_z_total_jobs: 0.00046941828940572604
-    Std. Error:
-        b_ln_building_sqft: 0.06295990358821896
-        b_ln_sqft_price_nonres: 0.03237704802259617
-        building_type_id_is_13: 0.5736070638832086
-        building_type_id_is_42: 0.41798170772765153
-        nodes_drv_drv_45min_jobs: 0.04670242773632365
-        nodes_walk_ave_lot_sqft: 0.07011108961006278
-        nodes_walk_office: 0.0006701140393804133
-        vacant_job_spaces: 0.0005410921715734326
-        zones_ln_empden_6: 0.5727093409216133
-        zones_z_total_jobs: 6.451912610258405e-05
-    T-Score:
-        b_ln_building_sqft: 15.177980615432341
-        b_ln_sqft_price_nonres: -3.3388725141727362
-        building_type_id_is_13: -2.839407722231027
-        building_type_id_is_42: 7.177347583724261
-        nodes_drv_drv_45min_jobs: 8.1382104582898
-        nodes_walk_ave_lot_sqft: 6.084586824683504
-        nodes_walk_office: 5.393154082373697
-        vacant_job_spaces: -10.756106928084721
-        zones_ln_empden_6: 5.23825924538327
-        zones_z_total_jobs: 7.2756454986597445
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
+
+alts_predict_filters: large_area_id == 93
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -841.8966430581897
-    'null': -2361.9123560892094
-    ratio: 0.6435529705885533
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - vacant_job_spaces
 - b_ln_sqft_price_nonres
@@ -57,8 +31,49 @@ model_expression:
 - building_type_id_is_13
 - zones_z_total_jobs
 - building_type_id_is_42
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 1.2397525529577798
+        b_ln_sqft_price_nonres: 0.22790773199725617
+        building_type_id_is_13: -57.7899756431455
+        building_type_id_is_42: -17.157276244160315
+        nodes_drv_drv_45min_jobs: 0.11664421724914513
+        nodes_walk_ave_lot_sqft: -0.1754895744639249
+        nodes_walk_office: 0.0031844961092055923
+        vacant_job_spaces: -0.010332454022847496
+        zones_ln_empden_6: 1.1496276782448909
+        zones_z_total_jobs: 0.00041698863617416903
+    Std. Error:
+        b_ln_building_sqft: 0.23828526392820212
+        b_ln_sqft_price_nonres: 0.1734190819734589
+        building_type_id_is_13: 1.3554542072976984e+26
+        building_type_id_is_42: 1342050623.6415868
+        nodes_drv_drv_45min_jobs: 0.16235208334965992
+        nodes_walk_ave_lot_sqft: 0.23348873772289297
+        nodes_walk_office: 0.002692785850668722
+        vacant_job_spaces: 0.004100273979101872
+        zones_ln_empden_6: 3.4121060537128005
+        zones_z_total_jobs: 0.0002990057695678964
+    T-Score:
+        b_ln_building_sqft: 5.202808316889165
+        b_ln_sqft_price_nonres: 1.3142021593225626
+        building_type_id_is_13: -4.263513686556663e-25
+        building_type_id_is_42: -1.2784373362611993e-08
+        nodes_drv_drv_45min_jobs: 0.7184645545812114
+        nodes_walk_ave_lot_sqft: -0.751597598134253
+        nodes_walk_office: 1.182602808320149
+        vacant_job_spaces: -2.519942344221282
+        zones_ln_empden_6: 0.3369261271917241
+        zones_z_total_jobs: 1.3945839131357691
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -90.47200918705957
+    'null': -131.46079904021636
+    ratio: 0.3117947719199359

@@ -1,48 +1,25 @@
-alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
-alts_predict_filters: (large_area_id == 93) & ((building_type_id == 31)|(building_type_id
-    == 33)|(building_type_id == 23)|(building_type_id == 21))
-choice_column: building_id
-choice_mode: aggregate
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
 choosers_fit_filters: (building_id>0) & (home_based_status == 0)
+
 choosers_predict_filters: (slid == 400093) & (home_based_status == 0)
-estimation_sample_size: 1000
-fit_parameters:
-    Coefficient:
-        b_ln_building_sqft: 1.1937651690424156
-        b_ln_parcels_parcel_far: 1.299992516512656
-        b_total_jobs: 0.002172389180284271
-        building_type_id_is_11: -3.0
-        building_type_id_is_33: 0.8150339020008351
-        nodes_drv_drv_20min_pop: 0.6528916032840394
-        nodes_drv_drv_45min_jobs: 0.8039452338236966
-        nodes_walk_residential: 0.0013966002133602132
-        stories: -0.4195169957618899
-    Std. Error:
-        b_ln_building_sqft: 0.0427583381678592
-        b_ln_parcels_parcel_far: 0.3084242756221279
-        b_total_jobs: 0.000548483308985816
-        building_type_id_is_11: 0.874243192765883
-        building_type_id_is_33: 0.13654878566231438
-        nodes_drv_drv_20min_pop: 0.2154673176952272
-        nodes_drv_drv_45min_jobs: 0.1884260639583562
-        nodes_walk_residential: 0.0006034986164587437
-        stories: 0.10849332672946249
-    T-Score:
-        b_ln_building_sqft: 27.918886004315084
-        b_ln_parcels_parcel_far: 4.214948754894273
-        b_total_jobs: 3.960720672250119
-        building_type_id_is_11: -3.4315394444293736
-        building_type_id_is_33: 5.968811059341215
-        nodes_drv_drv_20min_pop: 3.030118953852376
-        nodes_drv_drv_45min_jobs: 4.266634970422008
-        nodes_walk_residential: 2.314173015930497
-        stories: -3.8667539138881035
-fitted: true
+
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 93)
+
+alts_predict_filters: large_area_id == 93
+
 interaction_predict_filters: null
-log_likelihoods:
-    convergence: -1347.9699979847157
-    'null': -3435.5088815842955
-    ratio: 0.6076360025699904
+
+choice_column: building_id
+
+sample_size: 80
+
+estimation_sample_size: 1000
+
+prediction_sample_size: null
+
 model_expression:
 - b_total_jobs
 - nodes_walk_residential
@@ -53,8 +30,46 @@ model_expression:
 - stories
 - building_type_id_is_11
 - nodes_drv_drv_20min_pop
-model_type: discretechoice
-name: MNLDiscreteChoiceModel
-prediction_sample_size: null
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_building_sqft: 0.3118178958703027
+        b_ln_parcels_parcel_far: -0.018040691833023637
+        b_total_jobs: 0.00549677722637037
+        building_type_id_is_11: -0.34130524688345576
+        building_type_id_is_33: 0.5213541215390661
+        nodes_drv_drv_20min_pop: 4.909891636617118
+        nodes_drv_drv_45min_jobs: -3.202248131456703
+        nodes_walk_residential: -0.0064565376453938565
+        stories: -0.47728259097810377
+    Std. Error:
+        b_ln_building_sqft: 0.1551824759320774
+        b_ln_parcels_parcel_far: 1.0958806958963712
+        b_total_jobs: 0.0013970864562938873
+        building_type_id_is_11: 1.0906553631067557
+        building_type_id_is_33: 0.5599428474211913
+        nodes_drv_drv_20min_pop: 1.5704580160242836
+        nodes_drv_drv_45min_jobs: 1.3523018859871834
+        nodes_walk_residential: 0.0019470515753230596
+        stories: 0.5185968104185208
+    T-Score:
+        b_ln_building_sqft: 2.0093628097980845
+        b_ln_parcels_parcel_far: -0.01646227723563223
+        b_total_jobs: 3.934457457237051
+        building_type_id_is_11: -0.3129359268094004
+        building_type_id_is_33: 0.9310845275373282
+        nodes_drv_drv_20min_pop: 3.126407447075107
+        nodes_drv_drv_45min_jobs: -2.3679979778472724
+        nodes_walk_residential: -3.31605886933045
+        stories: -0.9203346055925886
+
 probability_mode: single_chooser
-sample_size: 80
+
+log_likelihoods:
+    convergence: -121.12647660895765
+    'null': -162.1349854829335
+    ratio: 0.25292819283776635
