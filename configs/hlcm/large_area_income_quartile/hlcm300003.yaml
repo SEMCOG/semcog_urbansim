@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: zones_logsum_job_high_income + has_children:nodes_walk_percent_hh_with_children
     + is_race4:nodes_walk_percent_race4 + nodes_walk_ave_lot_sqft + ln_income:sqft_price_res
-    + ln_income:nodes_walk_ln_popden + crime_ucr_rate
+    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + persons:city_id_is_1025
 
 fitted: true
 
@@ -30,33 +30,36 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        crime_ucr_rate: -5.379588473172512e-05
-        has_children:nodes_walk_percent_hh_with_children: 2.315126437870914
-        is_race4:nodes_walk_percent_race4: 10.846979782637897
-        ln_income:nodes_walk_ln_popden: 0.020102585530332107
-        ln_income:sqft_price_res: -0.0002722691503458712
-        nodes_walk_ave_lot_sqft: 0.6879969417973952
-        zones_logsum_job_high_income: -6.188743836229359e-07
+        crime_ucr_rate: -7.47991459894143e-05
+        has_children:nodes_walk_percent_hh_with_children: 2.452718638235079
+        is_race4:nodes_walk_percent_race4: 0.908971432590004
+        ln_income:nodes_walk_ln_popden: 0.029224794918936616
+        ln_income:sqft_price_res: -0.0002210909958982878
+        nodes_walk_ave_lot_sqft: 0.7913110930061058
+        persons:city_id_is_1025: -0.08832124677503476
+        zones_logsum_job_high_income: -4.962169306385723e-07
     Std. Error:
-        crime_ucr_rate: 2.378095169007159e-05
-        has_children:nodes_walk_percent_hh_with_children: 0.15244897961577814
-        is_race4:nodes_walk_percent_race4: 0.8045457716582017
-        ln_income:nodes_walk_ln_popden: 0.0032576036089731206
-        ln_income:sqft_price_res: 3.22803136294317e-05
-        nodes_walk_ave_lot_sqft: 0.019374750364995683
-        zones_logsum_job_high_income: 2.1099554147918435e-07
+        crime_ucr_rate: 2.48659242130517e-05
+        has_children:nodes_walk_percent_hh_with_children: 0.15610107979182217
+        is_race4:nodes_walk_percent_race4: 1.0224343583168563
+        ln_income:nodes_walk_ln_popden: 0.003410126919202169
+        ln_income:sqft_price_res: 3.171225003277649e-05
+        nodes_walk_ave_lot_sqft: 0.019530225022216702
+        persons:city_id_is_1025: 0.027685070494473114
+        zones_logsum_job_high_income: 2.1274437974539952e-07
     T-Score:
-        crime_ucr_rate: -2.26214179452644
-        has_children:nodes_walk_percent_hh_with_children: 15.18623767575092
-        is_race4:nodes_walk_percent_race4: 13.482116449735145
-        ln_income:nodes_walk_ln_popden: 6.170973495657734
-        ln_income:sqft_price_res: -8.434526178135664
-        nodes_walk_ave_lot_sqft: 35.509977100938436
-        zones_logsum_job_high_income: -2.933115928821608
+        crime_ucr_rate: -3.0080983658010787
+        has_children:nodes_walk_percent_hh_with_children: 15.712374581303648
+        is_race4:nodes_walk_percent_race4: 0.8890266892892408
+        ln_income:nodes_walk_ln_popden: 8.570002117626176
+        ln_income:sqft_price_res: -6.971785214539403
+        nodes_walk_ave_lot_sqft: 40.51725426132807
+        persons:city_id_is_1025: -3.190212096178939
+        zones_logsum_job_high_income: -2.332456120497363
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8977.342347638925
-    'null': -9210.340371976195
-    ratio: 0.02529743906600901
+    convergence: -8967.351166036433
+    'null': -9201.130031604218
+    ratio: 0.025407625450873605

@@ -21,7 +21,7 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ln_popden
-    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income
+    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income + persons:city_id_is_1025
 
 fitted: true
 
@@ -29,27 +29,30 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_drv_elem_school_perf: 0.25075990804056325
-        ln_income:nodes_walk_ln_popden: 0.01111324177891874
-        ln_income:sqft_price_res: -0.0005083600618294995
-        nodes_walk_percent_mid_income: 3.591460283886
-        stories: 0.8392071096612762
+        has_children:nodes_drv_elem_school_perf: 0.7324878307032698
+        ln_income:nodes_walk_ln_popden: 0.006647776288112363
+        ln_income:sqft_price_res: -0.0005369222823585684
+        nodes_walk_percent_mid_income: 3.5210890566639126
+        persons:city_id_is_1025: 0.03269554758866906
+        stories: 0.8353218595878475
     Std. Error:
-        has_children:nodes_drv_elem_school_perf: 0.18422095060745652
-        ln_income:nodes_walk_ln_popden: 0.00302703815816609
-        ln_income:sqft_price_res: 3.371846627830462e-05
-        nodes_walk_percent_mid_income: 0.17866584194380827
-        stories: 0.021463366557217943
+        has_children:nodes_drv_elem_school_perf: 0.19246894967462158
+        ln_income:nodes_walk_ln_popden: 0.0030957492088570966
+        ln_income:sqft_price_res: 3.378693140934261e-05
+        nodes_walk_percent_mid_income: 0.18782036452447495
+        persons:city_id_is_1025: 0.026637910725044046
+        stories: 0.021125230807796776
     T-Score:
-        has_children:nodes_drv_elem_school_perf: 1.3611910437640176
-        ln_income:nodes_walk_ln_popden: 3.6713253015784972
-        ln_income:sqft_price_res: -15.076606914253162
-        nodes_walk_percent_mid_income: 20.101549601269284
-        stories: 39.09950973553392
+        has_children:nodes_drv_elem_school_perf: 3.805745456301275
+        ln_income:nodes_walk_ln_popden: 2.1473885123164163
+        ln_income:sqft_price_res: -15.891418958813794
+        nodes_walk_percent_mid_income: 18.747110120772223
+        persons:city_id_is_1025: 1.2274066058014765
+        stories: 39.5414311534789
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8678.342482966369
-    'null': -9210.340371976195
-    ratio: 0.0577609368952865
+    convergence: -8674.642799905376
+    'null': -9205.735201790207
+    ratio: 0.05769147061513902
