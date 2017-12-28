@@ -26,6 +26,7 @@ model_expression:
 - b_is_pre_1945
 - building_type_id_is_23
 - nodes_drv_drv_60min_jobs
+- bldg_empratio_11
 
 fitted: true
 
@@ -33,27 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_is_pre_1945: -0.3264616750005724
-        b_ln_building_sqft: 0.7905011808378285
-        building_type_id_is_23: 0.25274487704723353
-        nodes_drv_drv_10min_pop: 0.5173492843549486
-        nodes_drv_drv_60min_jobs: -0.3762195572764506
+        b_is_pre_1945: -0.3230470005563647
+        b_ln_building_sqft: 0.788792657173975
+        bldg_empratio_11: 3.6750998546698543
+        building_type_id_is_23: 0.2438967218108322
+        nodes_drv_drv_10min_pop: 0.5120100945711401
+        nodes_drv_drv_60min_jobs: -0.38017004373987506
     Std. Error:
-        b_is_pre_1945: 0.011517347581497627
-        b_ln_building_sqft: 0.00295820384000661
-        building_type_id_is_23: 0.01582878377185284
-        nodes_drv_drv_10min_pop: 0.007552879176932144
-        nodes_drv_drv_60min_jobs: 0.006196013633091515
+        b_is_pre_1945: 0.01149450935628441
+        b_ln_building_sqft: 0.002955517275936907
+        bldg_empratio_11: 0.45526236451273955
+        building_type_id_is_23: 0.01577994544115168
+        nodes_drv_drv_10min_pop: 0.007511688043685965
+        nodes_drv_drv_60min_jobs: 0.006159643491871982
     T-Score:
-        b_is_pre_1945: -28.345213400091016
-        b_ln_building_sqft: 267.2233637679485
-        building_type_id_is_23: 15.967422430564191
-        nodes_drv_drv_10min_pop: 68.49696284498059
-        nodes_drv_drv_60min_jobs: -60.719614183407636
+        b_is_pre_1945: -28.10446192553184
+        b_ln_building_sqft: 266.88819029958995
+        bldg_empratio_11: 8.072487737050828
+        building_type_id_is_23: 15.456119460006933
+        nodes_drv_drv_10min_pop: 68.16178888066524
+        nodes_drv_drv_60min_jobs: -61.71948818816092
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -159376.8579913574
-    'null': -195482.20817279918
-    ratio: 0.18469890696920077
+    convergence: -160519.22794341235
+    'null': -196761.75995012393
+    ratio: 0.1841949981332679

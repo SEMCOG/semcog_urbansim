@@ -23,7 +23,6 @@ prediction_sample_size: null
 model_expression:
 - vacant_job_spaces
 - b_ln_non_residential_sqft
-- bldg_empratio_12
 - nodes_drv_drv_45min_jobs
 - building_type_id_is_51
 - building_type_id_is_23
@@ -35,33 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.7113986085345855
-        bldg_empratio_12: -0.7758198306817176
-        building_type_id_is_23: 0.3700080746580122
-        building_type_id_is_51: 0.41515031875296166
-        nodes_drv_drv_45min_jobs: 1.65725584625562
-        nodes_walk_sum_nonresidential_units: 0.27759177959870757
-        vacant_job_spaces: -0.000125017222363927
+        b_ln_non_residential_sqft: 0.7682365822419674
+        building_type_id_is_23: 0.4757294349407328
+        building_type_id_is_51: 0.2925503009792906
+        nodes_drv_drv_45min_jobs: -1.5717049516471178
+        nodes_walk_sum_nonresidential_units: 0.28009826238092234
+        vacant_job_spaces: -0.00010630902123807501
     Std. Error:
-        b_ln_non_residential_sqft: 0.0796020472757748
-        bldg_empratio_12: 2.98067026294244
-        building_type_id_is_23: 0.30216913182009364
-        building_type_id_is_51: 0.5812021653881078
-        nodes_drv_drv_45min_jobs: 0.04519460889924227
-        nodes_walk_sum_nonresidential_units: 0.08303881470565104
-        vacant_job_spaces: 0.000208231023353268
+        b_ln_non_residential_sqft: 0.07953702242005929
+        building_type_id_is_23: 0.3187270556969338
+        building_type_id_is_51: 0.4782571640605057
+        nodes_drv_drv_45min_jobs: 0.04150280458258278
+        nodes_walk_sum_nonresidential_units: 0.08610447193563966
+        vacant_job_spaces: 0.0002144446012559861
     T-Score:
-        b_ln_non_residential_sqft: 8.936938594933407
-        bldg_empratio_12: -0.2602836819379841
-        building_type_id_is_23: 1.2245065286096422
-        building_type_id_is_51: 0.7142958913027069
-        nodes_drv_drv_45min_jobs: 36.66932597979414
-        nodes_walk_sum_nonresidential_units: 3.3429159674628233
-        vacant_job_spaces: -0.6003775054778118
+        b_ln_non_residential_sqft: 9.658855195567613
+        building_type_id_is_23: 1.4925919417179536
+        building_type_id_is_51: 0.6117008232463804
+        nodes_drv_drv_45min_jobs: -37.869849217532284
+        nodes_walk_sum_nonresidential_units: 3.2530048217505687
+        vacant_job_spaces: -0.49574118730632977
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -342.6220735193379
-    'null': -503.933062987496
-    ratio: 0.3201040005429464
+    convergence: -362.9474568967313
+    'null': -578.4275157769528
+    ratio: 0.3725273314337153

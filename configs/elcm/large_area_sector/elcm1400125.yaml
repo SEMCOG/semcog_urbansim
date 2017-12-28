@@ -28,6 +28,7 @@ model_expression:
 - building_type_id_is_13
 - building_type_id_is_51
 - nodes_drv_drv_30min_jobs
+- bldg_empratio_14
 
 fitted: true
 
@@ -35,33 +36,36 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_building_sqft: 0.679034950185795
-        b_total_jobs: 0.0011416349182622866
-        building_type_id_is_13: -1.2556990388561438
-        building_type_id_is_51: 0.5038699876206881
-        nodes_drv_drv_30min_jobs: 0.16913800587973785
-        nodes_walk_quarter_mile_to_transit: 0.015833298087950382
-        vacant_job_spaces: -0.002539124189188896
+        b_ln_building_sqft: 0.8122046508195959
+        b_total_jobs: 0.0010839069957586328
+        bldg_empratio_14: 0.9554582524045664
+        building_type_id_is_13: -0.8270205741565854
+        building_type_id_is_51: 0.19247703420983675
+        nodes_drv_drv_30min_jobs: 0.09258470343436127
+        nodes_walk_quarter_mile_to_transit: 0.05333960800497592
+        vacant_job_spaces: -0.0025397060727568995
     Std. Error:
-        b_ln_building_sqft: 0.03963809235304181
-        b_total_jobs: 8.911876063821669e-05
-        building_type_id_is_13: 0.5058378121966863
-        building_type_id_is_51: 0.25932884205420137
-        nodes_drv_drv_30min_jobs: 0.032800127863212354
-        nodes_walk_quarter_mile_to_transit: 0.021113381890295414
-        vacant_job_spaces: 0.00022328954512229116
+        b_ln_building_sqft: 0.040141838200445076
+        b_total_jobs: 8.805502118450142e-05
+        bldg_empratio_14: 0.2750045974549193
+        building_type_id_is_13: 0.41595780644922
+        building_type_id_is_51: 0.30225377468156867
+        nodes_drv_drv_30min_jobs: 0.03394322583827738
+        nodes_walk_quarter_mile_to_transit: 0.01935898835484718
+        vacant_job_spaces: 0.0002323618026686909
     T-Score:
-        b_ln_building_sqft: 17.130868562944002
-        b_total_jobs: 12.810264753308527
-        building_type_id_is_13: -2.4824143402863816
-        building_type_id_is_51: 1.9429770465537963
-        nodes_drv_drv_30min_jobs: 5.156626418808507
-        nodes_walk_quarter_mile_to_transit: 0.7499176669194821
-        vacant_job_spaces: -11.371442347640007
+        b_ln_building_sqft: 20.233369651980475
+        b_total_jobs: 12.309428595645056
+        bldg_empratio_14: 3.4743355611034534
+        building_type_id_is_13: -1.9882318863452988
+        building_type_id_is_51: 0.6368060561447603
+        nodes_drv_drv_30min_jobs: 2.727634193505397
+        nodes_walk_quarter_mile_to_transit: 2.7552890175493356
+        vacant_job_spaces: -10.929963718598344
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1242.1207481711745
-    'null': -1564.383508578574
-    ratio: 0.20599984507648839
+    convergence: -1192.1108095934276
+    'null': -1581.9116151172693
+    ratio: 0.24641124181577312

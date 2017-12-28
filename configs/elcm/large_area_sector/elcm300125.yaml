@@ -29,7 +29,6 @@ model_expression:
 - building_type_id_is_31
 - nodes_drv_drv_15min_retail_jobs
 - building_type_id_is_11
-- bldg_empratio_3
 
 fitted: true
 
@@ -37,39 +36,36 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_building_sqft: 0.8213857227543058
-        bldg_empratio_3: -1.3990572010246022e-05
-        building_type_id_is_11: 0.004103471233814762
-        building_type_id_is_31: -0.017932191274668996
-        nodes_drv_drv_15min_retail_jobs: 0.06870686981541331
-        nodes_walk_population: 0.0008874055143677812
-        year_built: 0.00032748249164856537
-        zones_employment: 9.764933453103337e-05
-        zones_logsum_pop_low_income: -1.3743482820276738e-07
+        b_ln_building_sqft: 0.7601582186789714
+        building_type_id_is_11: -0.04152985640487114
+        building_type_id_is_31: -0.6644434759310173
+        nodes_drv_drv_15min_retail_jobs: -0.04361346905903075
+        nodes_walk_population: -0.0005218154674362402
+        year_built: 0.00025774346550929767
+        zones_employment: 6.989318634838346e-05
+        zones_logsum_pop_low_income: -3.1776844032218163e-09
     Std. Error:
-        b_ln_building_sqft: 0.0369505339847174
-        bldg_empratio_3: 0.3333287722942506
-        building_type_id_is_11: 0.3590896525092346
-        building_type_id_is_31: 0.19283959147459878
-        nodes_drv_drv_15min_retail_jobs: 0.050655306482580924
-        nodes_walk_population: 0.00040269927581842183
-        year_built: 9.06001834602036e-05
-        zones_employment: 2.6859512172189674e-05
-        zones_logsum_pop_low_income: 2.0574121738137233e-07
+        b_ln_building_sqft: 0.03870251529500165
+        building_type_id_is_11: 0.28111479655374705
+        building_type_id_is_31: 0.1814446688596564
+        nodes_drv_drv_15min_retail_jobs: 0.0541848609634961
+        nodes_walk_population: 0.0004953305896608816
+        year_built: 8.788467460506175e-05
+        zones_employment: 2.8646497334152474e-05
+        zones_logsum_pop_low_income: 1.9075422208171944e-07
     T-Score:
-        b_ln_building_sqft: 22.22933295345685
-        bldg_empratio_3: -4.1972290342507995e-05
-        building_type_id_is_11: 0.011427428234538822
-        building_type_id_is_31: -0.0929901953097171
-        nodes_drv_drv_15min_retail_jobs: 1.3563607563807725
-        nodes_walk_population: 2.2036431840218027
-        year_built: 3.6145897187108127
-        zones_employment: 3.63555875121736
-        zones_logsum_pop_low_income: -0.6679985175163575
+        b_ln_building_sqft: 19.641054667502303
+        building_type_id_is_11: -0.14773273023688363
+        building_type_id_is_31: -3.6619619639800502
+        nodes_drv_drv_15min_retail_jobs: -0.8049013743601333
+        nodes_walk_population: -1.0534690938298217
+        year_built: 2.9327464278334237
+        zones_employment: 2.439851041232064
+        zones_logsum_pop_low_income: -0.016658527232285798
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1153.3837920604133
-    'null': -1463.5968959810762
-    ratio: 0.21195255659019507
+    convergence: -1165.9116902489632
+    'null': -1432.9227095383594
+    ratio: 0.18634014068729388

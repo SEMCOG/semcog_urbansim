@@ -23,10 +23,10 @@ prediction_sample_size: null
 model_expression:
 - b_ln_non_residential_sqft
 - nodes_walk_quarter_mile_to_transit
-- bldg_empratio_9
 - building_type_id_is_31
 - building_age
 - zones_transit_jobs_50min
+- bldg_empratio_9
 
 fitted: true
 
@@ -34,30 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.8614086430007172
-        bldg_empratio_9: 0.7123238370658778
-        building_age: -0.014422644818790515
-        building_type_id_is_31: -0.17402885258573478
-        nodes_walk_quarter_mile_to_transit: 0.027453488153586128
-        zones_transit_jobs_50min: 1.3229615281143008e-06
+        b_ln_non_residential_sqft: 0.8913269589485666
+        bldg_empratio_9: 0.9856077087582926
+        building_age: -0.0061542213404767055
+        building_type_id_is_31: -0.08723467402252874
+        nodes_walk_quarter_mile_to_transit: 0.04198650363386273
+        zones_transit_jobs_50min: 7.135742491208905e-08
     Std. Error:
-        b_ln_non_residential_sqft: 0.01298793574562571
-        bldg_empratio_9: 0.26567712789024345
-        building_age: 0.0033194316440418184
-        building_type_id_is_31: 0.15889473993777964
-        nodes_walk_quarter_mile_to_transit: 0.025615228413429385
-        zones_transit_jobs_50min: 1.3767509874130908e-06
+        b_ln_non_residential_sqft: 0.01208657728174795
+        bldg_empratio_9: 0.2443208418792345
+        building_age: 0.0029439148136097253
+        building_type_id_is_31: 0.1479933423823188
+        nodes_walk_quarter_mile_to_transit: 0.023832913725125516
+        zones_transit_jobs_50min: 1.4246794900307446e-06
     T-Score:
-        b_ln_non_residential_sqft: 66.32375304835001
-        bldg_empratio_9: 2.6811635714465907
-        building_age: -4.344913938709448
-        building_type_id_is_31: -1.0952461526031723
-        nodes_walk_quarter_mile_to_transit: 1.071764331376916
-        zones_transit_jobs_50min: 0.9609301465620445
+        b_ln_non_residential_sqft: 73.74519172558202
+        bldg_empratio_9: 4.034071351331825
+        building_age: -2.090488933995551
+        building_type_id_is_31: -0.5894499888864658
+        nodes_walk_quarter_mile_to_transit: 1.761702497567431
+        zones_transit_jobs_50min: 0.05008665135661436
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1155.6607385566938
-    'null': -1498.6531090584667
-    ratio: 0.22886708633811792
+    convergence: -1230.8618716603225
+    'null': -1568.7655352132479
+    ratio: 0.21539462460653358

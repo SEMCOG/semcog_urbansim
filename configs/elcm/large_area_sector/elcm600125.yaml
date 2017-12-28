@@ -23,7 +23,6 @@ prediction_sample_size: null
 model_expression:
 - building_type_id_is_62
 - b_ln_non_residential_sqft
-- parcels_pct_undev
 - nodes_drv_drv_15min_retail_jobs
 - b_is_pre_1945
 - building_type_id_is_42
@@ -34,30 +33,27 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_is_pre_1945: -0.4320446379754357
-        b_ln_non_residential_sqft: 0.7958579197501271
-        building_type_id_is_42: 0.694333086602649
-        building_type_id_is_62: -0.08433452836940578
-        nodes_drv_drv_15min_retail_jobs: 0.2916772854121578
-        parcels_pct_undev: -0.0018477538640825884
+        b_is_pre_1945: -0.6074742880017462
+        b_ln_non_residential_sqft: 0.8611807422508944
+        building_type_id_is_42: -0.3037680667414119
+        building_type_id_is_62: 0.32435755563301566
+        nodes_drv_drv_15min_retail_jobs: 0.09354328214438114
     Std. Error:
-        b_is_pre_1945: 0.13932501452831608
-        b_ln_non_residential_sqft: 0.03364832173514689
-        building_type_id_is_42: 0.9808306193463813
-        building_type_id_is_62: 0.4583892277369113
-        nodes_drv_drv_15min_retail_jobs: 0.03636966191979941
-        parcels_pct_undev: 0.001446882878491967
+        b_is_pre_1945: 0.1500441756548611
+        b_ln_non_residential_sqft: 0.03513025140123954
+        building_type_id_is_42: 1.0997462644980787
+        building_type_id_is_62: 0.383675025683265
+        nodes_drv_drv_15min_retail_jobs: 0.03701294315245085
     T-Score:
-        b_is_pre_1945: -3.1009839793530256
-        b_ln_non_residential_sqft: 23.652232227642568
-        building_type_id_is_42: 0.7079031515812055
-        building_type_id_is_62: -0.18398017070725944
-        nodes_drv_drv_15min_retail_jobs: 8.019796446152021
-        parcels_pct_undev: -1.2770583518193501
+        b_is_pre_1945: -4.048636245628674
+        b_ln_non_residential_sqft: 24.513936220237476
+        building_type_id_is_42: -0.27621650243117746
+        building_type_id_is_62: 0.8453965828382647
+        nodes_drv_drv_15min_retail_jobs: 2.5273127229869337
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1296.1489987443108
-    'null': -1590.675668386617
-    ratio: 0.1851582164081489
+    convergence: -1177.459738791356
+    'null': -1481.1250025197714
+    ratio: 0.2050233864203247

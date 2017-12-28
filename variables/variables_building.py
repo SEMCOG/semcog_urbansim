@@ -350,8 +350,6 @@ def make_employment_proportion_variable(sector_id):
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
         return (jobs_sector / total_jobs).fillna(0)
 
-    return func
-
 
 def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog_id_name, name_based_on_geography=True):
     """

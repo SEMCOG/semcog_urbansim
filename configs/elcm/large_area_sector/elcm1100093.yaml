@@ -27,6 +27,7 @@ model_expression:
 - nodes_drv_drv_15min_retail_jobs
 - year_built
 - bldg_empratio_2
+- bldg_empratio_11
 
 fitted: true
 
@@ -34,30 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.5257474517520999
-        b_total_jobs: 0.00515357075298452
-        bldg_empratio_2: 0.6541873261086056
-        building_type_id_is_31: -0.09115418786162013
-        nodes_drv_drv_15min_retail_jobs: 0.48625041833101124
-        year_built: 0.00014640058476146091
+        b_ln_non_residential_sqft: 0.5245063745701549
+        b_total_jobs: 0.005110081298536811
+        bldg_empratio_11: 1.924085660441437
+        bldg_empratio_2: 0.6738963602788982
+        building_type_id_is_31: -0.08098827610610387
+        nodes_drv_drv_15min_retail_jobs: 0.4886009475995929
+        year_built: 0.0001439692449880178
     Std. Error:
-        b_ln_non_residential_sqft: 0.003477642543468036
-        b_total_jobs: 3.06254660882621e-05
-        bldg_empratio_2: 0.02587073375433983
-        building_type_id_is_31: 0.011697222248017647
-        nodes_drv_drv_15min_retail_jobs: 0.003758546514959649
-        year_built: 4.342244548517961e-06
+        b_ln_non_residential_sqft: 0.003458357784034297
+        b_total_jobs: 3.0493168103073044e-05
+        bldg_empratio_11: 0.11533738925819191
+        bldg_empratio_2: 0.025334447387081047
+        building_type_id_is_31: 0.011624933036957084
+        nodes_drv_drv_15min_retail_jobs: 0.003738690080839379
+        year_built: 4.322183618815934e-06
     T-Score:
-        b_ln_non_residential_sqft: 151.17926732855204
-        b_total_jobs: 168.277300274615
-        bldg_empratio_2: 25.286771234266418
-        building_type_id_is_31: -7.792806354266563
-        nodes_drv_drv_15min_retail_jobs: 129.37193045121367
-        year_built: 33.71541679093788
+        b_ln_non_residential_sqft: 151.6634215787528
+        b_total_jobs: 167.58118675185563
+        bldg_empratio_11: 16.68223698157601
+        bldg_empratio_2: 26.600002359733427
+        building_type_id_is_31: -6.966773558921349
+        nodes_drv_drv_15min_retail_jobs: 130.68773742537556
+        year_built: 33.3093773159638
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -205700.6913560654
-    'null': -261536.87766387235
-    ratio: 0.21349259349791472
+    convergence: -208292.85715338742
+    'null': -264525.4198287357
+    ratio: 0.21257905085929163

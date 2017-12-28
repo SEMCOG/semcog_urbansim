@@ -36,36 +36,36 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_building_sqft: 0.9653258646411123
-        building_type_id_is_13: 0.23919025001873687
-        building_type_id_is_31: -0.8745471147550689
-        nodes_drv_drv_60min_jobs: -0.6336433801100769
-        nodes_walk_ave_lot_sqft: 0.02344734771886358
-        nodes_walk_quarter_mile_to_transit: 0.0027526373836035027
-        popden: -0.02423681421964281
-        zones_ln_empden_3: -0.08127328119612356
+        b_ln_building_sqft: 0.9480458561940214
+        building_type_id_is_13: -0.9842880413670707
+        building_type_id_is_31: -0.9612155101419876
+        nodes_drv_drv_60min_jobs: 0.865676022025827
+        nodes_walk_ave_lot_sqft: -0.08869741541737046
+        nodes_walk_quarter_mile_to_transit: 0.00694076835147034
+        popden: -4.474457229648543e-05
+        zones_ln_empden_3: 0.25296872932033393
     Std. Error:
-        b_ln_building_sqft: 0.0768192553672071
-        building_type_id_is_13: 0.3686901927132071
-        building_type_id_is_31: 0.4004143689013598
-        nodes_drv_drv_60min_jobs: 0.05970557797597406
-        nodes_walk_ave_lot_sqft: 0.11184180822816997
-        nodes_walk_quarter_mile_to_transit: 0.011509119096828417
-        popden: 0.016686723441368904
-        zones_ln_empden_3: 0.22425249227427
+        b_ln_building_sqft: 0.07090175594631777
+        building_type_id_is_13: 0.5926283351300352
+        building_type_id_is_31: 0.415392781261532
+        nodes_drv_drv_60min_jobs: 0.05018763917556441
+        nodes_walk_ave_lot_sqft: 0.10847975084091828
+        nodes_walk_quarter_mile_to_transit: 0.010775612788961345
+        popden: 0.010956108511062131
+        zones_ln_empden_3: 0.20553071479312915
     T-Score:
-        b_ln_building_sqft: 12.566196587388353
-        building_type_id_is_13: 0.6487567468462491
-        building_type_id_is_31: -2.1841052236826934
-        nodes_drv_drv_60min_jobs: -10.61280037126614
-        nodes_walk_ave_lot_sqft: 0.20964743051210627
-        nodes_walk_quarter_mile_to_transit: 0.23917011896784096
-        popden: -1.4524609522535799
-        zones_ln_empden_3: -0.36241863076697944
+        b_ln_building_sqft: 13.37126060618048
+        building_type_id_is_13: -1.6608858925908379
+        building_type_id_is_31: -2.3139918494077167
+        nodes_drv_drv_60min_jobs: 17.248789467812056
+        nodes_walk_ave_lot_sqft: -0.8176402944310047
+        nodes_walk_quarter_mile_to_transit: 0.6441182035216168
+        popden: -0.0040839840397078825
+        zones_ln_empden_3: 1.230807422505936
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -371.25600413939316
-    'null': -617.8657554890182
-    ratio: 0.39913160611149656
+    convergence: -378.50835195406955
+    'null': -591.5735956809746
+    ratio: 0.3601669264525583

@@ -28,6 +28,7 @@ model_expression:
 - nodes_walk_ave_lot_sqft
 - stories
 - nodes_drv_drv_20min_pop
+- bldg_empratio_11
 
 fitted: true
 
@@ -35,33 +36,36 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.8592494902625595
-        building_type_id_is_31: -0.2974242914169146
-        nodes_drv_drv_20min_pop: -0.12206950550217847
-        nodes_drv_drv_45min_jobs: 0.4966778021206499
-        nodes_walk_ave_lot_sqft: 0.09811915660383154
-        stories: 0.035713714978314874
-        zones_ln_empden_9: 0.3325912251898512
+        b_ln_non_residential_sqft: 0.6664805035586313
+        bldg_empratio_11: 1.3744130956179235
+        building_type_id_is_31: -0.13668396443292005
+        nodes_drv_drv_20min_pop: -0.20080697564184477
+        nodes_drv_drv_45min_jobs: 0.4470318635476112
+        nodes_walk_ave_lot_sqft: 0.08966276214137155
+        stories: 0.05459928560509123
+        zones_ln_empden_9: 0.26461412079419366
     Std. Error:
-        b_ln_non_residential_sqft: 0.056017316077606016
-        building_type_id_is_31: 0.16254952283592325
-        nodes_drv_drv_20min_pop: 0.20109701693264462
-        nodes_drv_drv_45min_jobs: 0.1915642060109244
-        nodes_walk_ave_lot_sqft: 0.0665634413815534
-        stories: 0.020459724632003774
-        zones_ln_empden_9: 0.10417094366760452
+        b_ln_non_residential_sqft: 0.054857871876109396
+        bldg_empratio_11: 0.5790753676648283
+        building_type_id_is_31: 0.16805764367462242
+        nodes_drv_drv_20min_pop: 0.20945841064038334
+        nodes_drv_drv_45min_jobs: 0.19781183492307539
+        nodes_walk_ave_lot_sqft: 0.07507063181578089
+        stories: 0.02237758060763387
+        zones_ln_empden_9: 0.11555411578553623
     T-Score:
-        b_ln_non_residential_sqft: 15.33899783902822
-        building_type_id_is_31: -1.8297457059725322
-        nodes_drv_drv_20min_pop: -0.607017982484864
-        nodes_drv_drv_45min_jobs: 2.592748470412712
-        nodes_walk_ave_lot_sqft: 1.4740697681388677
-        stories: 1.7455618597354094
-        zones_ln_empden_9: 3.192744670251861
+        b_ln_non_residential_sqft: 12.149222723473594
+        bldg_empratio_11: 2.373461508404966
+        building_type_id_is_31: -0.8133159637627363
+        nodes_drv_drv_20min_pop: -0.9586961680264436
+        nodes_drv_drv_45min_jobs: 2.259884317444666
+        nodes_walk_ave_lot_sqft: 1.1943786800862277
+        stories: 2.439910129804885
+        zones_ln_empden_9: 2.289958423335667
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1105.5443532619172
-    'null': -1520.5632422318358
-    ratio: 0.2729376045949702
+    convergence: -1143.192509760796
+    'null': -1397.8664964609688
+    ratio: 0.18218763189828258

@@ -24,14 +24,14 @@ model_expression:
 - zones_logsum_job_high_income
 - b_ln_sqft_price_nonres
 - b_ln_non_residential_sqft
-- bldg_empratio_12
-- parcels_pct_undev
 - b_ln_land_area
 - nodes_drv_drv_10min_pop
 - building_type_id_is_12
 - building_type_id_is_11
 - nodes_walk_retail
 - zones_transit_jobs_50min
+- bldg_empratio_12
+- bldg_empratio_8
 
 fitted: true
 
@@ -39,45 +39,45 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_land_area: 0.3375512552350647
-        b_ln_non_residential_sqft: 0.5013315581838192
-        b_ln_sqft_price_nonres: 0.12156709456671547
-        bldg_empratio_12: 1.148879316244317
-        building_type_id_is_11: 0.4544037596078817
-        building_type_id_is_12: 0.021446901106649523
-        nodes_drv_drv_10min_pop: 0.30160184772516835
-        nodes_walk_retail: 0.002929023864517056
-        parcels_pct_undev: 0.0013453338886073969
-        zones_logsum_job_high_income: -1.11889831855518e-06
-        zones_transit_jobs_50min: 5.48972885016496e-06
+        b_ln_land_area: 0.299251731731095
+        b_ln_non_residential_sqft: 0.54103321650687
+        b_ln_sqft_price_nonres: 0.12281642980383718
+        bldg_empratio_12: 1.177017065051682
+        bldg_empratio_8: 0.2166649682177966
+        building_type_id_is_11: 0.39216461592679036
+        building_type_id_is_12: 0.007950609237256077
+        nodes_drv_drv_10min_pop: 0.3124859950972171
+        nodes_walk_retail: 0.002932829527389169
+        zones_logsum_job_high_income: -1.15087367808874e-06
+        zones_transit_jobs_50min: 5.863259752088531e-06
     Std. Error:
-        b_ln_land_area: 0.012959793196866423
-        b_ln_non_residential_sqft: 0.012706473590477982
-        b_ln_sqft_price_nonres: 0.0030475718234831894
-        bldg_empratio_12: 0.04353545177358361
-        building_type_id_is_11: 0.01962964862897865
-        building_type_id_is_12: 0.0746109178760513
-        nodes_drv_drv_10min_pop: 0.004592696901865095
-        nodes_walk_retail: 8.343648049101765e-05
-        parcels_pct_undev: 0.00019776275530054087
-        zones_logsum_job_high_income: 6.058036276458156e-08
-        zones_transit_jobs_50min: 5.553632081190035e-07
+        b_ln_land_area: 0.012809275051938991
+        b_ln_non_residential_sqft: 0.01256943790683962
+        b_ln_sqft_price_nonres: 0.00303944150644736
+        bldg_empratio_12: 0.04310063576603255
+        bldg_empratio_8: 0.07745961393200311
+        building_type_id_is_11: 0.019490140637175232
+        building_type_id_is_12: 0.09612051015908787
+        nodes_drv_drv_10min_pop: 0.004416816943283445
+        nodes_walk_retail: 8.319201856808133e-05
+        zones_logsum_job_high_income: 6.004306773670728e-08
+        zones_transit_jobs_50min: 5.516136196475083e-07
     T-Score:
-        b_ln_land_area: 26.046037163361678
-        b_ln_non_residential_sqft: 39.45481447814984
-        b_ln_sqft_price_nonres: 39.88982101421704
-        bldg_empratio_12: 26.38951175284306
-        building_type_id_is_11: 23.148848366906545
-        building_type_id_is_12: 0.28744990300586526
-        nodes_drv_drv_10min_pop: 65.66987854188413
-        nodes_walk_retail: 35.1048348070288
-        parcels_pct_undev: 6.802766711875992
-        zones_logsum_job_high_income: -18.469653654985148
-        zones_transit_jobs_50min: 9.884934345504245
+        b_ln_land_area: 23.362113040565557
+        b_ln_non_residential_sqft: 43.04354900488179
+        b_ln_sqft_price_nonres: 40.407564857989556
+        bldg_empratio_12: 27.308577800128063
+        bldg_empratio_8: 2.7971346256385043
+        building_type_id_is_11: 20.121179381270387
+        building_type_id_is_12: 0.08271501289472061
+        nodes_drv_drv_10min_pop: 70.74913882777224
+        nodes_walk_retail: 35.25373681117075
+        zones_logsum_job_high_income: -19.167469642547164
+        zones_transit_jobs_50min: 10.629287499890351
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -157300.17562212583
-    'null': -195482.20817279918
-    ratio: 0.1953222899800775
+    convergence: -158336.21697738415
+    'null': -196761.75995012393
+    ratio: 0.1952896893302849

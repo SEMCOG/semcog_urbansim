@@ -21,7 +21,6 @@ estimation_sample_size: 1000
 prediction_sample_size: null
 
 model_expression:
-- bldg_empratio_14
 - b_is_pre_1945
 - b_ln_building_sqft
 - b_ln_parcels_parcel_far
@@ -36,36 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_is_pre_1945: -0.26585915568263807
-        b_ln_building_sqft: 0.6848087691560157
-        b_ln_parcels_parcel_far: -2.900314806948793
-        b_total_jobs: 0.006279165988106236
-        bldg_empratio_14: 1.1431181365727248
-        building_type_id_is_33: -22.177653275883742
-        building_type_id_is_51: -26.403276986781208
-        nodes_drv_drv_15min_retail_jobs: 0.933904327864666
+        b_is_pre_1945: -0.8936215357571853
+        b_ln_building_sqft: 0.5940253908022674
+        b_ln_parcels_parcel_far: 0.29659189182055473
+        b_total_jobs: 0.0032526969928069376
+        building_type_id_is_33: -1.207613719402634
+        building_type_id_is_51: -24.684207321890472
+        nodes_drv_drv_15min_retail_jobs: 1.0330730562800092
     Std. Error:
-        b_is_pre_1945: 0.448520999542645
-        b_ln_building_sqft: 0.20541828022556088
-        b_ln_parcels_parcel_far: 2.217342229749241
-        b_total_jobs: 0.0019133227769601968
-        bldg_empratio_14: 1.1752282671097891
-        building_type_id_is_33: 25396585724.149284
-        building_type_id_is_51: 769005885442.5637
-        nodes_drv_drv_15min_retail_jobs: 0.2123728344180099
+        b_is_pre_1945: 0.4476251451501038
+        b_ln_building_sqft: 0.16822586520901542
+        b_ln_parcels_parcel_far: 1.5959962726872468
+        b_total_jobs: 0.0013141185493321598
+        building_type_id_is_33: 1.3096724200425585
+        building_type_id_is_51: 291601555829.1578
+        nodes_drv_drv_15min_retail_jobs: 0.1852558450539127
     T-Score:
-        b_is_pre_1945: -0.5927462837943676
-        b_ln_building_sqft: 3.333728470533669
-        b_ln_parcels_parcel_far: -1.308014057566923
-        b_total_jobs: 3.2818121770767292
-        bldg_empratio_14: 0.9726775372617338
-        building_type_id_is_33: -8.732533387271542e-10
-        building_type_id_is_51: -3.4334297677820886e-11
-        nodes_drv_drv_15min_retail_jobs: 4.397475460663099
+        b_is_pre_1945: -1.9963613426084985
+        b_ln_building_sqft: 3.5311180600213246
+        b_ln_parcels_parcel_far: 0.18583495268517786
+        b_total_jobs: 2.4751929682903957
+        building_type_id_is_33: -0.9220731084521059
+        building_type_id_is_51: -8.465046508994742e-11
+        nodes_drv_drv_15min_retail_jobs: 5.576466728914096
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -70.10513309147709
-    'null': -109.55066586684697
-    ratio: 0.36006657251461927
+    convergence: -88.88430897146107
+    'null': -113.93269250152085
+    ratio: 0.21985246710223594
