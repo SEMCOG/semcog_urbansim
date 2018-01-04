@@ -359,9 +359,10 @@ def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog
         var_name = from_geog_name + '_' + var_to_disaggregate
     else:
         var_name = var_to_disaggregate
+
     @orca.column(to_geog_name, var_name, cache=True, cache_scope='iteration')
     def func():
-        print 'Disaggregating %s to %s from %s' % (var_to_disaggregate, to_geog_name, from_geog_name)
+        print 'Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name)
 
         from_geog = orca.get_table(from_geog_name)
         to_geog = orca.get_table(to_geog_name)

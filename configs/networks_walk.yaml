@@ -40,6 +40,12 @@ variable_definitions:
     varname: persons
     radius: 1500
 
+  - name: hhsize
+    dataframe: households
+    varname: persons
+    radius: 1500
+    aggregation: average
+
   - name: households
     dataframe: households
     radius: 1500

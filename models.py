@@ -977,17 +977,25 @@ def neighborhood_vars(jobs, households, buildings):
         j['large_area_id'] = misc.reindex(b.large_area_id, h.building_id)
         orca.add_table("households", h)
 
+    building_vars = set(orca.get_table('buildings').columns)
+
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_walk", nodes)
+    # Disaggregate nodal variables to building.
+    for var in orca.get_table('nodes_walk').columns:
+        if var not in building_vars:
+            variables.make_disagg_var('nodes_walk', 'buildings', var, 'nodeid_walk')
 
     nodes = networks.from_yaml(orca.get_injectable('net_drv'), "networks_drv.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_drv", nodes)
-
-    post_access_variables()
+    # Disaggregate nodal variables to building.
+    for var in orca.get_table('nodes_drv').columns:
+        if var not in building_vars:
+            variables.make_disagg_var('nodes_drv', 'buildings', var, 'nodeid_drv')
 
 
 @orca.step()
@@ -1196,19 +1204,3 @@ def _print_number_unplaced(df, fieldname="building_id"):
     """
     counts = (df[fieldname] == -1).sum()
     print "Total currently unplaced: %d" % counts
-
-
-def post_access_variables():
-    """
-    Disaggregate nodal variables to building.
-    """
-
-    geographic_levels = [('nodes_walk', 'nodeid_walk'),
-                         ('nodes_drv', 'nodeid_drv')]
-
-    for (geography_name, geography_id) in geographic_levels:
-        if geography_name != 'buildings':
-            building_vars = orca.get_table('buildings').columns
-            for var in orca.get_table(geography_name).columns:
-                if var not in building_vars:
-                    variables.make_disagg_var(geography_name, 'buildings', var, geography_id)
