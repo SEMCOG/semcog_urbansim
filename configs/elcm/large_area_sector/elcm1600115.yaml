@@ -35,33 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.8157304061182917
-        building_age: 0.006997290623483011
-        building_type_id_is_26: 1.4669132803124922
-        building_type_id_is_31: -0.7167039761353059
-        nodes_drv_log_sum_30min_jobs: -0.07462117030227658
-        zones_ln_empden_8: -1.226198704623577
-        zones_population: 0.00014410537295052867
+        b_ln_non_residential_sqft: 0.6736337681207845
+        building_age: -0.016193621246958282
+        building_type_id_is_26: 0.5705322660496943
+        building_type_id_is_31: -1.0449270697365383
+        nodes_drv_log_sum_30min_jobs: -0.09355635546045826
+        zones_ln_empden_8: 1.255714960694568
+        zones_population: -4.6482351025927224e-05
     Std. Error:
-        b_ln_non_residential_sqft: 0.17124890821276745
-        building_age: 0.028272670419916806
-        building_type_id_is_26: 1.0199905521961161
-        building_type_id_is_31: 0.8666041576942467
-        nodes_drv_log_sum_30min_jobs: 0.21808172286968316
-        zones_ln_empden_8: 13.362956533920679
-        zones_population: 0.0003112935206337637
+        b_ln_non_residential_sqft: 0.1911653939220598
+        building_age: 0.020555285235918687
+        building_type_id_is_26: 1.1144049952778536
+        building_type_id_is_31: 1.0895837022477832
+        nodes_drv_log_sum_30min_jobs: 0.13695163016969353
+        zones_ln_empden_8: 11.73707702346071
+        zones_population: 0.00026916489909506295
     T-Score:
-        b_ln_non_residential_sqft: 4.7634196015123855
-        building_age: 0.24749309207642936
-        building_type_id_is_26: 1.4381635958824501
-        building_type_id_is_31: -0.8270257761539286
-        nodes_drv_log_sum_30min_jobs: -0.3421706749211037
-        zones_ln_empden_8: -0.09176103368374958
-        zones_population: 0.462924421482156
+        b_ln_non_residential_sqft: 3.5238269558110096
+        building_age: -0.7878081506094232
+        building_type_id_is_26: 0.5119613322510673
+        building_type_id_is_31: -0.9590149591820073
+        nodes_drv_log_sum_30min_jobs: -0.683134295988553
+        zones_ln_empden_8: 0.10698702566103778
+        zones_population: -0.1726909830449724
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -73.97602604332508
-    'null': -87.64053269347758
-    ratio: 0.1559153764838932
+    convergence: -69.59306845841834
+    'null': -78.87647942412983
+    ratio: 0.11769555428296041

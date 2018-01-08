@@ -34,30 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.5144318350532945
-        b_total_jobs: 0.012654682923567846
-        building_type_id_is_21: 0.613443102844899
-        building_type_id_is_41: -26.16306152205932
-        nodes_drv_log_sum_30min_jobs: 0.14564466140947946
-        nodes_walk_lowinc_hhs: 0.008487463876865683
+        b_ln_non_residential_sqft: 0.515430753283474
+        b_total_jobs: 0.003971001833284741
+        building_type_id_is_21: -0.015350632771370488
+        building_type_id_is_41: -27.717202032041524
+        nodes_drv_log_sum_30min_jobs: 0.19783019298379878
+        nodes_walk_lowinc_hhs: -0.00807045312868919
     Std. Error:
-        b_ln_non_residential_sqft: 0.29021854452051266
-        b_total_jobs: 0.0013297809653631725
-        building_type_id_is_21: 0.8078746888406783
-        building_type_id_is_41: 6229738186359.883
-        nodes_drv_log_sum_30min_jobs: 0.2823057844011395
-        nodes_walk_lowinc_hhs: 0.008050821731565504
+        b_ln_non_residential_sqft: 0.23773992780827902
+        b_total_jobs: 0.0020072313425873846
+        building_type_id_is_21: 0.687356662516325
+        building_type_id_is_41: 2039677277441.9548
+        nodes_drv_log_sum_30min_jobs: 0.19532608462038356
+        nodes_walk_lowinc_hhs: 0.015301002515265952
     T-Score:
-        b_ln_non_residential_sqft: 1.7725670697688114
-        b_total_jobs: 9.516366419120583
-        building_type_id_is_21: 0.7593295238958485
-        building_type_id_is_41: -4.199704825371921e-12
-        nodes_drv_log_sum_30min_jobs: 0.5159110066357236
-        nodes_walk_lowinc_hhs: 1.0542357239868076
+        b_ln_non_residential_sqft: 2.1680445436121003
+        b_total_jobs: 1.978347861072154
+        building_type_id_is_21: -0.022332849317519932
+        building_type_id_is_41: -1.3589013486880058e-11
+        nodes_drv_log_sum_30min_jobs: 1.0128201431379835
+        nodes_walk_lowinc_hhs: -0.5274460363389407
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -31.221773888531896
-    'null': -65.7303995201082
-    ratio: 0.5250025236955915
+    convergence: -53.885741481325745
+    'null': -74.49445278945595
+    ratio: 0.2766475963838101

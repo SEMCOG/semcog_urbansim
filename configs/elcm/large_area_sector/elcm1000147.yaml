@@ -35,33 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.95126904518207
-        bldg_empratio_10: 1.009609640299037
-        building_type_id_is_23: -0.4904776511700697
-        building_type_id_is_31: -0.1212839740244857
-        nodes_drv_log_sum_15min_retail_jobs: 0.45475191910211654
-        nodes_walk_log_sum_residential_units: -0.29348047034723856
-        zones_empden: 0.00958956232693919
+        b_ln_non_residential_sqft: 1.0128281713532887
+        bldg_empratio_10: 0.6521518961996146
+        building_type_id_is_23: -0.9614120597143258
+        building_type_id_is_31: -0.875612393782001
+        nodes_drv_log_sum_15min_retail_jobs: 0.3277810434472198
+        nodes_walk_log_sum_residential_units: 0.10179967411172074
+        zones_empden: 0.011657153831820494
     Std. Error:
-        b_ln_non_residential_sqft: 0.20441624453203297
-        bldg_empratio_10: 3.361781141232792
-        building_type_id_is_23: 1.675907265595894
-        building_type_id_is_31: 0.6931240385925078
-        nodes_drv_log_sum_15min_retail_jobs: 0.2718436658967865
-        nodes_walk_log_sum_residential_units: 0.2710291725262355
-        zones_empden: 0.04422242116302474
+        b_ln_non_residential_sqft: 0.1343857059306678
+        bldg_empratio_10: 2.645723010241373
+        building_type_id_is_23: 1.0122036216525447
+        building_type_id_is_31: 0.7484396419185965
+        nodes_drv_log_sum_15min_retail_jobs: 0.17275694062474742
+        nodes_walk_log_sum_residential_units: 0.14617110231276995
+        zones_empden: 0.025595592330690402
     T-Score:
-        b_ln_non_residential_sqft: 4.653588306349116
-        bldg_empratio_10: 0.3003198595875296
-        building_type_id_is_23: -0.2926639565558975
-        building_type_id_is_31: -0.1749816299414041
-        nodes_drv_log_sum_15min_retail_jobs: 1.6728435352794888
-        nodes_walk_log_sum_residential_units: -1.082837200186743
-        zones_empden: 0.21684842382527028
+        b_ln_non_residential_sqft: 7.536725460041312
+        bldg_empratio_10: 0.24649288443090567
+        building_type_id_is_23: -0.9498208059606666
+        building_type_id_is_31: -1.169917178007036
+        nodes_drv_log_sum_15min_retail_jobs: 1.8973538328581931
+        nodes_walk_log_sum_residential_units: 0.6964418582128132
+        zones_empden: 0.4554359860562
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -53.27388903983502
-    'null': -78.87647942412983
-    ratio: 0.3245909372631366
+    convergence: -91.3574363816209
+    'null': -122.6967457708686
+    ratio: 0.2554208686819832

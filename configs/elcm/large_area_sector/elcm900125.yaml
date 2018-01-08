@@ -34,30 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.8913269589485666
-        bldg_empratio_9: 0.9856077087582926
-        building_age: -0.0061542213404767055
-        building_type_id_is_31: -0.08723467402252874
-        nodes_walk_quarter_mile_to_transit: 0.04198650363386273
-        zones_transit_jobs_50min: 7.135742491208905e-08
+        b_ln_non_residential_sqft: 0.8736311130895436
+        bldg_empratio_9: 0.3600065878441217
+        building_age: -0.011857523990698199
+        building_type_id_is_31: -0.41406745172856735
+        nodes_walk_quarter_mile_to_transit: 0.06287346136997446
+        zones_transit_jobs_50min: -1.7965369071822402e-06
     Std. Error:
-        b_ln_non_residential_sqft: 0.01208657728174795
-        bldg_empratio_9: 0.2443208418792345
-        building_age: 0.0029439148136097253
-        building_type_id_is_31: 0.1479933423823188
-        nodes_walk_quarter_mile_to_transit: 0.023832913725125516
-        zones_transit_jobs_50min: 1.4246794900307446e-06
+        b_ln_non_residential_sqft: 0.01193025023792679
+        bldg_empratio_9: 0.29193216014400025
+        building_age: 0.002822051388226768
+        building_type_id_is_31: 0.16189265601549058
+        nodes_walk_quarter_mile_to_transit: 0.023356030684300172
+        zones_transit_jobs_50min: 1.5406563166743855e-06
     T-Score:
-        b_ln_non_residential_sqft: 73.74519172558202
-        bldg_empratio_9: 4.034071351331825
-        building_age: -2.090488933995551
-        building_type_id_is_31: -0.5894499888864658
-        nodes_walk_quarter_mile_to_transit: 1.761702497567431
-        zones_transit_jobs_50min: 0.05008665135661436
+        b_ln_non_residential_sqft: 73.22823039471811
+        bldg_empratio_9: 1.233185777361914
+        building_age: -4.201739217140499
+        building_type_id_is_31: -2.5576666781533786
+        nodes_walk_quarter_mile_to_transit: 2.6919583305838755
+        zones_transit_jobs_50min: -1.166085445364084
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1230.8618716603225
-    'null': -1568.7655352132479
-    ratio: 0.21539462460653358
+    convergence: -1269.8378384761916
+    'null': -1638.877961368029
+    ratio: 0.22517852554670192

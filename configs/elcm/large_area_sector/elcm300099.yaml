@@ -36,36 +36,36 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_is_newerthan2010: -0.6563166307689768
-        b_ln_building_sqft: 0.9384806663220552
-        building_type_id_is_21: -0.07588080100638157
-        nodes_drv_log_sum_15min_retail_jobs: -0.14506838958844656
-        nodes_walk_ave_lot_sqft: -0.1288950855473262
-        nodes_walk_ave_nonres_sqft_price: 0.0018257331192170366
-        nodes_walk_log_sum_residential_units: 0.01965993529548063
-        zones_empden: 0.056620662879818345
+        b_is_newerthan2010: -0.4289397508171239
+        b_ln_building_sqft: 0.9357528790860942
+        building_type_id_is_21: 0.04668474408075886
+        nodes_drv_log_sum_15min_retail_jobs: 0.26396960367537614
+        nodes_walk_ave_lot_sqft: -0.29167983883344034
+        nodes_walk_ave_nonres_sqft_price: 0.004564044875208883
+        nodes_walk_log_sum_residential_units: -0.10061002636067759
+        zones_empden: 0.04128103183971824
     Std. Error:
-        b_is_newerthan2010: 1.3027552594548826
-        b_ln_building_sqft: 0.07659183879526789
-        building_type_id_is_21: 0.24611078644728523
-        nodes_drv_log_sum_15min_retail_jobs: 0.08289652234440924
-        nodes_walk_ave_lot_sqft: 0.11227239125177034
-        nodes_walk_ave_nonres_sqft_price: 0.0018562203296133566
-        nodes_walk_log_sum_residential_units: 0.08348164604808454
-        zones_empden: 0.015469551078985176
+        b_is_newerthan2010: 1.0425186537684858
+        b_ln_building_sqft: 0.07114863346251656
+        building_type_id_is_21: 0.20314332790773185
+        nodes_drv_log_sum_15min_retail_jobs: 0.08022457261324706
+        nodes_walk_ave_lot_sqft: 0.11409682558397925
+        nodes_walk_ave_nonres_sqft_price: 0.0016077205084248708
+        nodes_walk_log_sum_residential_units: 0.07350769999521568
+        zones_empden: 0.016100243866152077
     T-Score:
-        b_is_newerthan2010: -0.5037911963937126
-        b_ln_building_sqft: 12.253011300990437
-        building_type_id_is_21: -0.30831968846938196
-        nodes_drv_log_sum_15min_retail_jobs: -1.7499936726625585
-        nodes_walk_ave_lot_sqft: -1.148056829557318
-        nodes_walk_ave_nonres_sqft_price: 0.9835756510636481
-        nodes_walk_log_sum_residential_units: 0.23550009165076494
-        zones_empden: 3.6601361339266956
+        b_is_newerthan2010: -0.41144563626424985
+        b_ln_building_sqft: 13.152085058374025
+        building_type_id_is_21: 0.22981185038951008
+        nodes_drv_log_sum_15min_retail_jobs: 3.2903834208994995
+        nodes_walk_ave_lot_sqft: -2.5564237860303467
+        nodes_walk_ave_nonres_sqft_price: 2.838829791180811
+        nodes_walk_log_sum_residential_units: -1.3687005084804162
+        zones_empden: 2.5640004078760774
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -478.243371096816
-    'null': -622.2477821236921
-    ratio: 0.23142615395975885
+    convergence: -604.0493105869747
+    'null': -762.472634433258
+    ratio: 0.20777575048845986

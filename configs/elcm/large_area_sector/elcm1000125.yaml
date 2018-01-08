@@ -37,39 +37,39 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_land_area: 0.151208065507695
-        b_ln_non_residential_sqft: 0.5400359831830255
-        b_total_jobs: 0.0007561460227614745
-        bldg_empratio_10: 0.578338082022454
-        building_age: -0.007021899912862027
-        building_type_id_is_11: -0.03892919005791262
-        building_type_id_is_23: 0.2039914982252801
-        nodes_drv_log_sum_45min_jobs: 0.19619439083331733
-        zones_ln_empden_14: 0.6203072144801716
+        b_ln_land_area: 0.20862771191007182
+        b_ln_non_residential_sqft: 0.46895136903717183
+        b_total_jobs: 0.0011872663559098953
+        bldg_empratio_10: 0.5140273712202268
+        building_age: 0.00026099025084204327
+        building_type_id_is_11: 0.12362184767943565
+        building_type_id_is_23: 0.49890895893155807
+        nodes_drv_log_sum_45min_jobs: 0.5405945056305703
+        zones_ln_empden_14: 0.2356916302921466
     Std. Error:
-        b_ln_land_area: 0.10772789347695522
-        b_ln_non_residential_sqft: 0.10085170005717585
-        b_total_jobs: 6.301216802796128e-05
-        bldg_empratio_10: 0.2588715251881449
-        building_age: 0.0029433965586200365
-        building_type_id_is_11: 0.26721567366609955
-        building_type_id_is_23: 0.14409469100012104
-        nodes_drv_log_sum_45min_jobs: 0.035881814276069096
-        zones_ln_empden_14: 0.13119593758668144
+        b_ln_land_area: 0.114743945548756
+        b_ln_non_residential_sqft: 0.1116681293917124
+        b_total_jobs: 0.00014808738859354312
+        bldg_empratio_10: 0.23372199775993902
+        building_age: 0.002956278834217425
+        building_type_id_is_11: 0.26301074197313223
+        building_type_id_is_23: 0.14054729537682165
+        nodes_drv_log_sum_45min_jobs: 0.04098697301448742
+        zones_ln_empden_14: 0.14699691443687224
     T-Score:
-        b_ln_land_area: 1.403611085554559
-        b_ln_non_residential_sqft: 5.354753394110986
-        b_total_jobs: 12.000000101979337
-        bldg_empratio_10: 2.234073761500514
-        building_age: -2.385645213961292
-        building_type_id_is_11: -0.1456845308653442
-        building_type_id_is_23: 1.4156767109838122
-        nodes_drv_log_sum_45min_jobs: 5.46779461383497
-        zones_ln_empden_14: 4.728097728409717
+        b_ln_land_area: 1.8182023540529513
+        b_ln_non_residential_sqft: 4.199509489338466
+        b_total_jobs: 8.017336028313638
+        bldg_empratio_10: 2.199311045373639
+        building_age: 0.08828336752988716
+        building_type_id_is_11: 0.4700258504729217
+        building_type_id_is_23: 3.549758517899133
+        nodes_drv_log_sum_45min_jobs: 13.18942253772899
+        zones_ln_empden_14: 1.6033780790233136
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -1215.6369712153878
-    'null': -1599.4397216559646
-    ratio: 0.2399607470315982
+    convergence: -1072.1786994396696
+    'null': -1437.3047361730332
+    ratio: 0.25403522826032565

@@ -35,33 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_building_sqft: 0.9042306317511865
-        building_age: -0.004530575139826906
-        building_type_id_is_25: -0.35742318919578653
-        building_type_id_is_51: 0.6890960722696327
-        nodes_drv_log_sum_10min_pop: 0.20199448112899723
-        nodes_drv_log_sum_15min_retail_jobs: -0.10637440843220101
-        zones_ln_empden_9: 0.4008993932937932
+        b_ln_building_sqft: 0.9017015388875673
+        building_age: 0.00012126552206993814
+        building_type_id_is_25: 0.2808766779965514
+        building_type_id_is_51: -0.005443326083335951
+        nodes_drv_log_sum_10min_pop: 0.006273146208747261
+        nodes_drv_log_sum_15min_retail_jobs: 0.31597072220053246
+        zones_ln_empden_9: 0.11574652228360371
     Std. Error:
-        b_ln_building_sqft: 0.06458233007926142
-        building_age: 0.0048496275355732355
-        building_type_id_is_25: 0.584072701252628
-        building_type_id_is_51: 0.49620641345151195
-        nodes_drv_log_sum_10min_pop: 0.23896639106293602
-        nodes_drv_log_sum_15min_retail_jobs: 0.2510960067441018
-        zones_ln_empden_9: 0.1919183453538695
+        b_ln_building_sqft: 0.06561513768548592
+        building_age: 0.004025715640766841
+        building_type_id_is_25: 0.39675107425102607
+        building_type_id_is_51: 0.6115972513839011
+        nodes_drv_log_sum_10min_pop: 0.4881255315720536
+        nodes_drv_log_sum_15min_retail_jobs: 0.5829125997930561
+        zones_ln_empden_9: 0.2762270268724234
     T-Score:
-        b_ln_building_sqft: 14.001207925471732
-        building_age: -0.9342109484891366
-        building_type_id_is_25: -0.6119498282135786
-        building_type_id_is_51: 1.388728669338268
-        nodes_drv_log_sum_10min_pop: 0.8452840595303563
-        nodes_drv_log_sum_15min_retail_jobs: -0.42364038286204136
-        zones_ln_empden_9: 2.088906053012249
+        b_ln_building_sqft: 13.742279155302661
+        building_age: 0.030122724228688644
+        building_type_id_is_25: 0.7079418210190895
+        building_type_id_is_51: -0.00890018074969922
+        nodes_drv_log_sum_10min_pop: 0.012851501925219956
+        nodes_drv_log_sum_15min_retail_jobs: 0.5420550564745168
+        zones_ln_empden_9: 0.41902678240482866
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -307.9468399895006
-    'null': -403.1464503899968
-    ratio: 0.2361415071580112
+    convergence: -312.1048896314688
+    'null': -407.5284770246707
+    ratio: 0.2341519495517983

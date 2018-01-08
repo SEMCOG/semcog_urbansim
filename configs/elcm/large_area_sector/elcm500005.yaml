@@ -35,33 +35,33 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.9432135516344002
-        building_age: -0.005564858183697597
-        building_type_id_is_11: -0.8199864492412758
-        building_type_id_is_22: 0.2284709679056695
-        nodes_drv_log_sum_45min_jobs: -0.029955670121216207
-        nodes_walk_hhsize: 0.10610819514321204
-        zones_logsum_pop_high_income: 1.2662068387922952e-06
+        b_ln_non_residential_sqft: 0.9166210731197498
+        building_age: -0.011141217257410505
+        building_type_id_is_11: -0.10368479773420304
+        building_type_id_is_22: 0.654854243154338
+        nodes_drv_log_sum_45min_jobs: 0.055712849093729096
+        nodes_walk_hhsize: -0.06074702526147627
+        zones_logsum_pop_high_income: 9.299588949055486e-08
     Std. Error:
-        b_ln_non_residential_sqft: 0.05889035656441413
-        building_age: 0.0037787599013657017
-        building_type_id_is_11: 0.4210230857420495
-        building_type_id_is_22: 0.4878054857588755
-        nodes_drv_log_sum_45min_jobs: 0.11207039022273334
-        nodes_walk_hhsize: 0.24141040624449542
-        zones_logsum_pop_high_income: 7.449860664545266e-07
+        b_ln_non_residential_sqft: 0.06523218013657461
+        building_age: 0.0037752471303191034
+        building_type_id_is_11: 0.3806497215318284
+        building_type_id_is_22: 0.46304091426483956
+        nodes_drv_log_sum_45min_jobs: 0.09890516859005882
+        nodes_walk_hhsize: 0.23509758523185253
+        zones_logsum_pop_high_income: 6.582344328575967e-07
     T-Score:
-        b_ln_non_residential_sqft: 16.01643472140834
-        building_age: -1.47266784049613
-        building_type_id_is_11: -1.9476044830084718
-        building_type_id_is_22: 0.46836490071496195
-        nodes_drv_log_sum_45min_jobs: -0.26729335073859445
-        nodes_walk_hhsize: 0.43953447075412266
-        zones_logsum_pop_high_income: 1.6996382829256358
+        b_ln_non_residential_sqft: 14.051670068371905
+        building_age: -2.951122634578042
+        building_type_id_is_11: -0.2723890019331942
+        building_type_id_is_22: 1.414247041633538
+        nodes_drv_log_sum_45min_jobs: 0.5632956284079265
+        nodes_walk_hhsize: -0.2583906814762378
+        zones_logsum_pop_high_income: 0.1412808033861603
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -353.6707925977493
-    'null': -543.3713026995613
-    ratio: 0.3491176459988732
+    convergence: -331.36522416594045
+    'null': -517.0791428915177
+    ratio: 0.3591595624744425

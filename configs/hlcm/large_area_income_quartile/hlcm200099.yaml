@@ -22,8 +22,8 @@ prediction_sample_size: 100
 
 model_expression: zones_logsum_job_high_income + building_age_gt_100 + nodes_drv_log_sum_45min_jobs
     + vacant_residential_units + persons:nodes_walk_ln_popden + is_young:zones_empden
-    + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_log_sum_45min_jobs + ln_income:nodes_walk_ln_popden
-    + parcels_total_units
+    + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_log_sum_45min_jobs
+    + ln_income:nodes_walk_ln_popden + parcels_total_units
 
 fitted: true
 
@@ -31,42 +31,42 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_age_gt_100: 1.2881377168241872
-        has_workers:nodes_drv_log_sum_45min_jobs: 0.38492727857887526
-        is_race2:nodes_walk_percent_race2: 7.7895136290343805
-        is_young:zones_empden: 0.0691736112373596
-        ln_income:nodes_walk_ln_popden: 0.01453983322915957
-        nodes_drv_log_sum_45min_jobs: -0.04176549221425615
-        parcels_total_units: 0.0014474634475829388
-        persons:nodes_walk_ln_popden: 0.04227688042048425
-        vacant_residential_units: 0.08471701384525784
-        zones_logsum_job_high_income: 9.655455985252481e-08
+        building_age_gt_100: 0.976421881063644
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.8387510357097155
+        is_race2:nodes_walk_percent_race2: 7.254292314781701
+        is_young:zones_empden: 0.06348864651656051
+        ln_income:nodes_walk_ln_popden: 0.011552504649577489
+        nodes_drv_log_sum_45min_jobs: -0.7648174641678146
+        parcels_total_units: 0.0014957721314445274
+        persons:nodes_walk_ln_popden: 0.037851419049786304
+        vacant_residential_units: 0.0801466430586432
+        zones_logsum_job_high_income: 1.1098388313601426e-06
     Std. Error:
-        building_age_gt_100: 0.24626421998447973
-        has_workers:nodes_drv_log_sum_45min_jobs: 0.003829614916180765
-        is_race2:nodes_walk_percent_race2: 0.24541920310160728
-        is_young:zones_empden: 0.012651298599351112
-        ln_income:nodes_walk_ln_popden: 0.004569180559418841
-        nodes_drv_log_sum_45min_jobs: 0.013404529388119079
-        parcels_total_units: 0.00014531633142725472
-        persons:nodes_walk_ln_popden: 0.007245354747208228
-        vacant_residential_units: 0.006227467184635866
-        zones_logsum_job_high_income: 2.3229227075760638e-07
+        building_age_gt_100: 0.25394146710284565
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.0035259239321645554
+        is_race2:nodes_walk_percent_race2: 0.26543602473727596
+        is_young:zones_empden: 0.014989074423967639
+        ln_income:nodes_walk_ln_popden: 0.004612983050155355
+        nodes_drv_log_sum_45min_jobs: 0.01119283422490064
+        parcels_total_units: 0.00014687046982108515
+        persons:nodes_walk_ln_popden: 0.007605050175632881
+        vacant_residential_units: 0.0075065075947396386
+        zones_logsum_job_high_income: 2.113201945275338e-07
     T-Score:
-        building_age_gt_100: 5.230714055437567
-        has_workers:nodes_drv_log_sum_45min_jobs: 100.51331191355375
-        is_race2:nodes_walk_percent_race2: 31.739625630718894
-        is_young:zones_empden: 5.467708369550896
-        ln_income:nodes_walk_ln_popden: 3.1821533511490094
-        nodes_drv_log_sum_45min_jobs: -3.1157746016264043
-        parcels_total_units: 9.960776145161208
-        persons:nodes_walk_ln_popden: 5.835032499516235
-        vacant_residential_units: 13.603767203184619
-        zones_logsum_job_high_income: 0.41565980451100804
+        building_age_gt_100: 3.8450667084954486
+        has_workers:nodes_drv_log_sum_45min_jobs: 237.8812055638445
+        is_race2:nodes_walk_percent_race2: 27.329720304400563
+        is_young:zones_empden: 4.235661570606502
+        ln_income:nodes_walk_ln_popden: 2.5043457831886955
+        nodes_drv_log_sum_45min_jobs: -68.33099184711672
+        parcels_total_units: 10.184294591463138
+        persons:nodes_walk_ln_popden: 4.977142579685395
+        vacant_residential_units: 10.676954901745233
+        zones_logsum_job_high_income: 5.251929820723012
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8819.689014315163
-    'null': -9205.735201790207
-    ratio: 0.04193539994502238
+    convergence: -8888.391163671573
+    'null': -9210.340371976195
+    ratio: 0.03495519115495449

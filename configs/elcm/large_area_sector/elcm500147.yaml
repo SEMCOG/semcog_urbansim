@@ -34,30 +34,30 @@ choice_mode: aggregate
 
 fit_parameters:
     Coefficient:
-        b_ln_non_residential_sqft: 0.3530619678071669
-        b_total_jobs: 0.009807249572165624
-        building_type_id_is_31: -0.2484860886726702
-        nodes_drv_log_sum_15min_retail_jobs: 0.860843946639417
-        nodes_drv_log_sum_20min_pop: -0.8485358184343138
-        zones_ln_empden_3: -0.24565098793676002
+        b_ln_non_residential_sqft: 0.7141605603039145
+        b_total_jobs: 0.009867114093114335
+        building_type_id_is_31: 0.7430351622887537
+        nodes_drv_log_sum_15min_retail_jobs: -0.3461703037075406
+        nodes_drv_log_sum_20min_pop: 0.516160426183588
+        zones_ln_empden_3: 1.1489525835663177
     Std. Error:
-        b_ln_non_residential_sqft: 0.1771480247024667
-        b_total_jobs: 0.0018395269788677
-        building_type_id_is_31: 0.8723951256027592
-        nodes_drv_log_sum_15min_retail_jobs: 0.6708421687530665
-        nodes_drv_log_sum_20min_pop: 0.575479917477221
-        zones_ln_empden_3: 1.1541133729718391
+        b_ln_non_residential_sqft: 0.21814569050208266
+        b_total_jobs: 0.0018119650835389453
+        building_type_id_is_31: 0.5944122382174368
+        nodes_drv_log_sum_15min_retail_jobs: 0.3874798913429553
+        nodes_drv_log_sum_20min_pop: 0.3841520827929122
+        zones_ln_empden_3: 0.6778265843462932
     T-Score:
-        b_ln_non_residential_sqft: 1.9930336135565765
-        b_total_jobs: 5.331397519487519
-        building_type_id_is_31: -0.2848320461453576
-        nodes_drv_log_sum_15min_retail_jobs: 1.2832287335775536
-        nodes_drv_log_sum_20min_pop: -1.4744838050198354
-        zones_ln_empden_3: -0.21284822937646872
+        b_ln_non_residential_sqft: 3.2737779905722975
+        b_total_jobs: 5.445532136768825
+        building_type_id_is_31: 1.2500334187549993
+        nodes_drv_log_sum_15min_retail_jobs: -0.8933890801604155
+        nodes_drv_log_sum_20min_pop: 1.3436356310525033
+        zones_ln_empden_3: 1.695053882659952
 
 probability_mode: single_chooser
 
 log_likelihoods:
-    convergence: -82.74957777039424
+    convergence: -56.7979812969077
     'null': -105.16863923217309
-    ratio: 0.21317249729062226
+    ratio: 0.4599342378908321
