@@ -21,7 +21,7 @@ model_expression:
     - b_total_jobs
     - walk_nearest_grocery
     - nodes_walk_ave_lot_sqft
-    - nodes_drv_drv_30min_jobs
+    - nodes_drv_log_sum_30min_jobs
 
 ytransform: np.exp
 
@@ -31,7 +31,7 @@ fit_parameters:
     Coefficient:
         Intercept: 2.5188211023283844
         b_total_jobs: 0.003294369577938528
-        nodes_drv_drv_30min_jobs: 0.13792877400850811
+        nodes_drv_log_sum_30min_jobs: 0.13792877400850811
         nodes_walk_ave_lot_sqft: 0.048621243208512244
         nodes_walk_retail_jobs: 0.004832235434788585
         popden: -0.15396779707983882
@@ -42,7 +42,7 @@ fit_parameters:
     Std. Error:
         Intercept: 0.25729336156028887
         b_total_jobs: 0.001325494545822481
-        nodes_drv_drv_30min_jobs: 0.018177458895171854
+        nodes_drv_log_sum_30min_jobs: 0.018177458895171854
         nodes_walk_ave_lot_sqft: 0.023507689249059303
         nodes_walk_retail_jobs: 0.0005495035374565619
         popden: 0.01829665279778786
@@ -53,7 +53,7 @@ fit_parameters:
     T-Score:
         Intercept: 9.789685544367126
         b_total_jobs: 2.4853890107064474
-        nodes_drv_drv_30min_jobs: 7.587901851624795
+        nodes_drv_log_sum_30min_jobs: 7.587901851624795
         nodes_walk_ave_lot_sqft: 2.0683123165947883
         nodes_walk_retail_jobs: 8.793820431357227
         popden: -8.415080002963938

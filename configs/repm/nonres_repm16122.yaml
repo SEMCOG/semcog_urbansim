@@ -20,7 +20,7 @@ model_expression:
     - zones_employment
     - bldg_empratio_5
     - drv_nearest_hospital
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_sqft
     - crime_other_rate
     - drv_nearest_urgentcare
@@ -40,7 +40,7 @@ fit_parameters:
         crime_other_rate: -3.698676117106615e-05
         drv_nearest_hospital: 0.028151909462496967
         drv_nearest_urgentcare: 0.049093454658221625
-        nodes_drv_drv_15min_retail_jobs: 0.5525627235939541
+        nodes_drv_log_sum_15min_retail_jobs: 0.5525627235939541
         nodes_walk_highinc_hhs: 0.0032539853484661336
         year_built: 0.00025420496450236855
         zones_employment: 0.00013880176504265873
@@ -55,7 +55,7 @@ fit_parameters:
         crime_other_rate: 1.124391509319896e-05
         drv_nearest_hospital: 0.009352200750918728
         drv_nearest_urgentcare: 0.015043424612945026
-        nodes_drv_drv_15min_retail_jobs: 0.08168594493028418
+        nodes_drv_log_sum_15min_retail_jobs: 0.08168594493028418
         nodes_walk_highinc_hhs: 0.0014952225811984455
         year_built: 4.471648400833468e-05
         zones_employment: 4.647836075739659e-05
@@ -70,7 +70,7 @@ fit_parameters:
         crime_other_rate: -3.2894913261518766
         drv_nearest_hospital: 3.0101908857903226
         drv_nearest_urgentcare: 3.2634493754817098
-        nodes_drv_drv_15min_retail_jobs: 6.764477341426915
+        nodes_drv_log_sum_15min_retail_jobs: 6.764477341426915
         nodes_walk_highinc_hhs: 2.176254819438328
         year_built: 5.684815569466227
         zones_employment: 2.986373933606721

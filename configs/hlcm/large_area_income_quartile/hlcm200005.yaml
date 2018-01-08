@@ -21,7 +21,7 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: zones_logsum_job_low_income + has_children:nodes_walk_percent_hh_with_children
-    + improvement_value + nodes_drv_drv_60min_jobs + building_type_id_is_82 + persons:nodes_walk_ln_popden
+    + improvement_value + nodes_drv_log_sum_60min_jobs + building_type_id_is_82 + persons:nodes_walk_ln_popden
     + building_age_le_10 + is_race2:nodes_walk_percent_race2 + is_young:nodes_walk_retail_jobs
     + ln_income:nodes_walk_ln_popden + nodes_walk_ave_unit_sqft + zones_transit_jobs_30min
 
@@ -38,7 +38,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 3.5235850380072353
         is_young:nodes_walk_retail_jobs: 0.006370617377937368
         ln_income:nodes_walk_ln_popden: 0.05898288245703333
-        nodes_drv_drv_60min_jobs: 0.5692369992931163
+        nodes_drv_log_sum_60min_jobs: 0.5692369992931163
         nodes_walk_ave_unit_sqft: 5.781868125351754e-06
         persons:nodes_walk_ln_popden: 0.050900933796986195
         zones_logsum_job_low_income: -2.1574710528725253e-07
@@ -51,7 +51,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 0.09236493980752007
         is_young:nodes_walk_retail_jobs: 0.0011528982060234486
         ln_income:nodes_walk_ln_popden: 0.004873213248689598
-        nodes_drv_drv_60min_jobs: 0.014006838815149001
+        nodes_drv_log_sum_60min_jobs: 0.014006838815149001
         nodes_walk_ave_unit_sqft: 5.032162703489334e-05
         persons:nodes_walk_ln_popden: 0.00581629937477855
         zones_logsum_job_low_income: 6.14761750880885e-08
@@ -64,7 +64,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 38.148512253134776
         is_young:nodes_walk_retail_jobs: 5.525741426826192
         ln_income:nodes_walk_ln_popden: 12.103488898806914
-        nodes_drv_drv_60min_jobs: 40.639933592829095
+        nodes_drv_log_sum_60min_jobs: 40.639933592829095
         nodes_walk_ave_unit_sqft: 0.11489827467904742
         persons:nodes_walk_ln_popden: 8.751429477256611
         zones_logsum_job_low_income: -3.5094425601155406

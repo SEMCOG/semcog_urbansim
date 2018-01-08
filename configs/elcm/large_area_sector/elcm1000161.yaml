@@ -24,9 +24,9 @@ model_expression:
 - b_total_jobs
 - b_ln_non_residential_sqft
 - b_is_newerthan2010
-- nodes_drv_drv_60min_jobs
+- nodes_drv_log_sum_60min_jobs
 - b_ln_land_area
-- nodes_drv_drv_10min_pop
+- nodes_drv_log_sum_10min_pop
 - building_type_id_is_33
 - zones_ln_empden_12
 - zones_logsum_pop_high_income
@@ -44,8 +44,8 @@ fit_parameters:
         b_total_jobs: 0.000973750922692616
         building_type_id_is_24: -0.7277593960956243
         building_type_id_is_33: -2.070981112499614
-        nodes_drv_drv_10min_pop: 0.20590621991745647
-        nodes_drv_drv_60min_jobs: 0.7153901880897587
+        nodes_drv_log_sum_10min_pop: 0.20590621991745647
+        nodes_drv_log_sum_60min_jobs: 0.7153901880897587
         zones_ln_empden_12: 0.06572841001319808
         zones_logsum_pop_high_income: -1.7294609410947377e-06
     Std. Error:
@@ -55,8 +55,8 @@ fit_parameters:
         b_total_jobs: 0.00015865724497783856
         building_type_id_is_24: 12.235585429339089
         building_type_id_is_33: 1.0294848303439768
-        nodes_drv_drv_10min_pop: 0.2639395884080601
-        nodes_drv_drv_60min_jobs: 0.19263987313609535
+        nodes_drv_log_sum_10min_pop: 0.2639395884080601
+        nodes_drv_log_sum_60min_jobs: 0.19263987313609535
         zones_ln_empden_12: 0.11880126211221068
         zones_logsum_pop_high_income: 1.2181110791981194e-06
     T-Score:
@@ -66,8 +66,8 @@ fit_parameters:
         b_total_jobs: 6.13745009141329
         building_type_id_is_24: -0.05947891911657672
         building_type_id_is_33: -2.0116674393421095
-        nodes_drv_drv_10min_pop: 0.7801263204181331
-        nodes_drv_drv_60min_jobs: 3.713614302394983
+        nodes_drv_log_sum_10min_pop: 0.7801263204181331
+        nodes_drv_log_sum_60min_jobs: 3.713614302394983
         zones_ln_empden_12: 0.5532635667718412
         zones_logsum_pop_high_income: -1.4197891888753191
 

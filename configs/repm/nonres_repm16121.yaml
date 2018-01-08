@@ -25,11 +25,11 @@ model_expression:
     - nodes_walk_ave_lot_sqft
     - nodes_walk_race_3_hhs
     - stories
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_a_ln_emp_26min_drive_alone
     - zones_transit_jobs_30min
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
 
 ytransform: np.exp
 
@@ -43,12 +43,12 @@ fit_parameters:
         bldg_empratio_5: 0.1781169011584064
         bldg_empratio_9: 0.3795373336408825
         drv_nearest_grocery: -0.06567444452616535
-        nodes_drv_drv_20min_pop: -0.25299021250162584
+        nodes_drv_log_sum_20min_pop: -0.25299021250162584
         nodes_walk_ave_lot_sqft: 0.20085833713600165
         nodes_walk_percent_high_income: 0.9466817906542148
         nodes_walk_race_3_hhs: 0.011728517064515004
         nodes_walk_retail_jobs: 0.0006386262016907482
-        nodes_walk_sum_nonresidential_units: -0.09771848767543329
+        nodes_walk_log_sum_nonresidential_units: -0.09771848767543329
         stories: -0.17814769138469116
         year_built: 5.0917821548087386e-05
         zones_a_ln_emp_26min_drive_alone: 0.3409868556761846
@@ -62,12 +62,12 @@ fit_parameters:
         bldg_empratio_5: 0.02922273840840791
         bldg_empratio_9: 0.05761499005273603
         drv_nearest_grocery: 0.006053959649511176
-        nodes_drv_drv_20min_pop: 0.04256993516446353
+        nodes_drv_log_sum_20min_pop: 0.04256993516446353
         nodes_walk_ave_lot_sqft: 0.018333421169658113
         nodes_walk_percent_high_income: 0.08531936615930082
         nodes_walk_race_3_hhs: 0.0012981583669251365
         nodes_walk_retail_jobs: 8.532802530372952e-05
-        nodes_walk_sum_nonresidential_units: 0.012611766882875845
+        nodes_walk_log_sum_nonresidential_units: 0.012611766882875845
         stories: 0.025350738385829203
         year_built: 1.2808931463013991e-05
         zones_a_ln_emp_26min_drive_alone: 0.036720480278002565
@@ -81,12 +81,12 @@ fit_parameters:
         bldg_empratio_5: 6.0951475070234675
         bldg_empratio_9: 6.587475469378458
         drv_nearest_grocery: -10.848180088459657
-        nodes_drv_drv_20min_pop: -5.942931590669104
+        nodes_drv_log_sum_20min_pop: -5.942931590669104
         nodes_walk_ave_lot_sqft: 10.955856808025718
         nodes_walk_percent_high_income: 11.095743361321436
         nodes_walk_race_3_hhs: 9.034735178185986
         nodes_walk_retail_jobs: 7.484366354635832
-        nodes_walk_sum_nonresidential_units: -7.748199644263537
+        nodes_walk_log_sum_nonresidential_units: -7.748199644263537
         stories: -7.02731765336957
         year_built: 3.9751810441888513
         zones_a_ln_emp_26min_drive_alone: 9.2860129577459

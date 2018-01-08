@@ -23,7 +23,7 @@ prediction_sample_size: null
 model_expression:
 - b_ln_building_sqft
 - building_type_id_is_14
-- nodes_walk_sum_residential_units
+- nodes_walk_log_sum_residential_units
 - bldg_empratio_11
 
 fitted: true
@@ -35,17 +35,17 @@ fit_parameters:
         b_ln_building_sqft: 0.8214222237377352
         bldg_empratio_11: 9.34207100706085
         building_type_id_is_14: 0.5509721658448933
-        nodes_walk_sum_residential_units: -0.06728154047687902
+        nodes_walk_log_sum_residential_units: -0.06728154047687902
     Std. Error:
         b_ln_building_sqft: 0.000681406727453568
         bldg_empratio_11: 0.60324553644188
         building_type_id_is_14: 0.019691474920034112
-        nodes_walk_sum_residential_units: 0.0036225860906984445
+        nodes_walk_log_sum_residential_units: 0.0036225860906984445
     T-Score:
         b_ln_building_sqft: 1205.4800615300765
         bldg_empratio_11: 15.486349160846078
         building_type_id_is_14: 27.980238559191626
-        nodes_walk_sum_residential_units: -18.57279269349454
+        nodes_walk_log_sum_residential_units: -18.57279269349454
 
 probability_mode: single_chooser
 

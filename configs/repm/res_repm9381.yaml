@@ -21,12 +21,12 @@ model_expression:
     - nodes_walk_ave_unit_sqft
     - popden
     - walk_nearest_park
-    - nodes_drv_drv_45min_jobs
+    - nodes_drv_log_sum_45min_jobs
     - nodes_walk_ln_popden
     - nodes_walk_ave_lot_sqft
     - drv_nearest_healthcenter
     - drv_nearest_hospital
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_50min
     - nodes_walk_ave_income
 
@@ -41,8 +41,8 @@ fit_parameters:
         crime_other_rate: -1.1435684518952468e-05
         drv_nearest_healthcenter: -0.004961117110934451
         drv_nearest_hospital: 0.006500137179071986
-        nodes_drv_drv_20min_pop: 0.020527030544760703
-        nodes_drv_drv_45min_jobs: 0.0745598386832941
+        nodes_drv_log_sum_20min_pop: 0.020527030544760703
+        nodes_drv_log_sum_45min_jobs: 0.0745598386832941
         nodes_walk_ave_income: 0.20876089367908568
         nodes_walk_ave_lot_sqft: 0.17044536752968226
         nodes_walk_ave_unit_sqft: 2.5413833578338346e-05
@@ -59,8 +59,8 @@ fit_parameters:
         crime_other_rate: 1.6010193484613076e-06
         drv_nearest_healthcenter: 0.00033146896892672967
         drv_nearest_hospital: 0.000357906849941408
-        nodes_drv_drv_20min_pop: 0.005713762449719028
-        nodes_drv_drv_45min_jobs: 0.005427033192538308
+        nodes_drv_log_sum_20min_pop: 0.005713762449719028
+        nodes_drv_log_sum_45min_jobs: 0.005427033192538308
         nodes_walk_ave_income: 0.0035930803116965278
         nodes_walk_ave_lot_sqft: 0.00395624089738293
         nodes_walk_ave_unit_sqft: 2.5874280938960217e-06
@@ -77,8 +77,8 @@ fit_parameters:
         crime_other_rate: -7.142752228411834
         drv_nearest_healthcenter: -14.967063514265472
         drv_nearest_hospital: 18.161533315543153
-        nodes_drv_drv_20min_pop: 3.592559320657461
-        nodes_drv_drv_45min_jobs: 13.738600085550852
+        nodes_drv_log_sum_20min_pop: 3.592559320657461
+        nodes_drv_log_sum_45min_jobs: 13.738600085550852
         nodes_walk_ave_income: 58.100814779872266
         nodes_walk_ave_lot_sqft: 43.08265647888949
         nodes_walk_ave_unit_sqft: 9.822044383877524

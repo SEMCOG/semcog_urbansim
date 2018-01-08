@@ -23,7 +23,7 @@ model_expression:
     - zones_a_ln_emp_50min_transit
     - nodes_walk_ave_nonres_sqft_price
     - drv_nearest_hospital
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
 
 ytransform: np.exp
 
@@ -38,7 +38,7 @@ fit_parameters:
         nodes_walk_midinc_hhs: 0.00580898451167135
         nodes_walk_percent_race4: 6.774188116238021
         nodes_walk_population: -0.005224168241823545
-        nodes_walk_sum_nonresidential_units: -0.07602504486574684
+        nodes_walk_log_sum_nonresidential_units: -0.07602504486574684
         year_built: 0.0003789902677897887
         zones_a_ln_emp_50min_transit: 0.03436180424061305
         zones_empden: -0.049849788056501095
@@ -51,7 +51,7 @@ fit_parameters:
         nodes_walk_midinc_hhs: 0.002061833031980889
         nodes_walk_percent_race4: 2.0544875805669065
         nodes_walk_population: 0.0010819594647533397
-        nodes_walk_sum_nonresidential_units: 0.019137914518860766
+        nodes_walk_log_sum_nonresidential_units: 0.019137914518860766
         year_built: 5.162510560201735e-05
         zones_a_ln_emp_50min_transit: 0.008552021207964467
         zones_empden: 0.012937238924548924
@@ -64,7 +64,7 @@ fit_parameters:
         nodes_walk_midinc_hhs: 2.817388421646546
         nodes_walk_percent_race4: 3.297264086828298
         nodes_walk_population: -4.828432498637579
-        nodes_walk_sum_nonresidential_units: -3.9724832499812224
+        nodes_walk_log_sum_nonresidential_units: -3.9724832499812224
         year_built: 7.3412008241001825
         zones_a_ln_emp_50min_transit: 4.017974629039978
         zones_empden: -3.8532014711353244

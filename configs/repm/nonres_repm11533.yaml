@@ -16,7 +16,7 @@ model_expression:
     - zones_logsum_job_high_income
     - zones_ln_empden_1
     - year_built
-    - nodes_drv_drv_60min_jobs
+    - nodes_drv_log_sum_60min_jobs
     - zones_ln_empden_8
     - parcels_pptytax
     - stories
@@ -26,7 +26,7 @@ model_expression:
     - drv_nearest_urgentcare
     - crime_ucr_rate
     - nodes_walk_hhsize
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - nodes_walk_households
 
 ytransform: np.exp
@@ -40,10 +40,10 @@ fit_parameters:
         building_sqft: -1.638830746707672e-06
         crime_ucr_rate: -0.0002111744671860472
         drv_nearest_urgentcare: -0.02324519391126084
-        nodes_drv_drv_60min_jobs: 0.24101781994645433
+        nodes_drv_log_sum_60min_jobs: 0.24101781994645433
         nodes_walk_hhsize: -0.13965226541861472
         nodes_walk_households: 0.0008225888948389289
-        nodes_walk_sum_nonresidential_units: -0.04704904410508766
+        nodes_walk_log_sum_nonresidential_units: -0.04704904410508766
         parcels_pptytax: -0.009711613911017977
         stories: 0.14690146253380942
         year_built: 0.00013090633128751925
@@ -57,10 +57,10 @@ fit_parameters:
         building_sqft: 2.2606488699495589e-07
         crime_ucr_rate: 4.0241262378676e-05
         drv_nearest_urgentcare: 0.004460437651796189
-        nodes_drv_drv_60min_jobs: 0.05130386518923987
+        nodes_drv_log_sum_60min_jobs: 0.05130386518923987
         nodes_walk_hhsize: 0.021228977721463562
         nodes_walk_households: 0.00014699178806596886
-        nodes_walk_sum_nonresidential_units: 0.015137501176227917
+        nodes_walk_log_sum_nonresidential_units: 0.015137501176227917
         parcels_pptytax: 0.002416584535994581
         stories: 0.067578027345274
         year_built: 1.4289431663939344e-05
@@ -74,10 +74,10 @@ fit_parameters:
         building_sqft: -7.249382106581809
         crime_ucr_rate: -5.247709805891909
         drv_nearest_urgentcare: -5.211415499082282
-        nodes_drv_drv_60min_jobs: 4.697849159267707
+        nodes_drv_log_sum_60min_jobs: 4.697849159267707
         nodes_walk_hhsize: -6.578379197101859
         nodes_walk_households: 5.596155442845262
-        nodes_walk_sum_nonresidential_units: -3.108111672947312
+        nodes_walk_log_sum_nonresidential_units: -3.108111672947312
         parcels_pptytax: -4.018735436880141
         stories: 2.173805130227478
         year_built: 9.161059331552917

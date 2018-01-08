@@ -22,7 +22,7 @@
 
 - name: worker_interactions
   sign: positive
-  variables: ['has_workers:nodes_drv_drv_45min_jobs', 'has_workers:zones_a_ln_emp_50min_transit']
+  variables: ['has_workers:nodes_drv_log_sum_45min_jobs', 'has_workers:zones_a_ln_emp_50min_transit']
 
 - name: race_clustering
   sign: positive
@@ -39,7 +39,7 @@
 
 - name: size_vars
   sign: positive
-  variables: [parcels_total_units, popden, residential_units, nodes_walk_sum_residential_units, nodes_walk_ln_popden, 
+  variables: [parcels_total_units, popden, residential_units, nodes_walk_log_sum_residential_units, nodes_walk_ln_popden,
               nodes_walk_population, zones_population, nodes_walk_households, zones_households]
 
 - name: crime
@@ -60,7 +60,7 @@
 
 - name: employment_access_drive
   sign: positive
-  variables: [nodes_drv_drv_15min_retail_jobs,nodes_drv_drv_30min_jobs,nodes_drv_drv_45min_jobs,nodes_drv_drv_60min_jobs,
+  variables: [nodes_drv_log_sum_15min_retail_jobs,nodes_drv_log_sum_30min_jobs,nodes_drv_log_sum_45min_jobs,nodes_drv_log_sum_60min_jobs,
               zones_a_ln_emp_26min_drive_alone, zones_a_ln_retail_emp_15min_drive_alone]
 
 - name: employment_access_transit
@@ -81,7 +81,7 @@
 
 - name: population_access
   sign: positive
-  variables: [nodes_drv_drv_10min_pop,nodes_drv_drv_20min_pop]
+  variables: [nodes_drv_log_sum_10min_pop,nodes_drv_log_sum_20min_pop]
 
 - name: positive_structure
   sign: positive
@@ -111,7 +111,7 @@
   sign: ''
   variables: [nodes_walk_industrial,drv_nearest_healthcenter, drv_nearest_park,walk_nearest_grocery,walk_nearest_healthcenter,
               nodes_walk_population,nodes_walk_quarter_mile_to_transit,
-              nodes_walk_retail_jobs,nodes_walk_sfdu,nodes_walk_sum_nonresidential_units,
+              nodes_walk_retail_jobs,nodes_walk_log_sum_nonresidential_units,
  drv_nearest_library,drv_nearest_grocery,walk_nearest_hospital,drv_nearest_hospital,walk_nearest_park,walk_nearest_urgentcare,
               drv_nearest_urgentcare,walk_nearest_library]
 

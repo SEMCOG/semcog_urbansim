@@ -20,9 +20,9 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression: zones_logsum_job_high_income + building_age_gt_100 + nodes_drv_drv_45min_jobs
+model_expression: zones_logsum_job_high_income + building_age_gt_100 + nodes_drv_log_sum_45min_jobs
     + vacant_residential_units + persons:nodes_walk_ln_popden + is_young:zones_empden
-    + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_drv_45min_jobs + ln_income:nodes_walk_ln_popden
+    + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_log_sum_45min_jobs + ln_income:nodes_walk_ln_popden
     + parcels_total_units
 
 fitted: true
@@ -32,33 +32,33 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         building_age_gt_100: 1.2881377168241872
-        has_workers:nodes_drv_drv_45min_jobs: 0.38492727857887526
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.38492727857887526
         is_race2:nodes_walk_percent_race2: 7.7895136290343805
         is_young:zones_empden: 0.0691736112373596
         ln_income:nodes_walk_ln_popden: 0.01453983322915957
-        nodes_drv_drv_45min_jobs: -0.04176549221425615
+        nodes_drv_log_sum_45min_jobs: -0.04176549221425615
         parcels_total_units: 0.0014474634475829388
         persons:nodes_walk_ln_popden: 0.04227688042048425
         vacant_residential_units: 0.08471701384525784
         zones_logsum_job_high_income: 9.655455985252481e-08
     Std. Error:
         building_age_gt_100: 0.24626421998447973
-        has_workers:nodes_drv_drv_45min_jobs: 0.003829614916180765
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.003829614916180765
         is_race2:nodes_walk_percent_race2: 0.24541920310160728
         is_young:zones_empden: 0.012651298599351112
         ln_income:nodes_walk_ln_popden: 0.004569180559418841
-        nodes_drv_drv_45min_jobs: 0.013404529388119079
+        nodes_drv_log_sum_45min_jobs: 0.013404529388119079
         parcels_total_units: 0.00014531633142725472
         persons:nodes_walk_ln_popden: 0.007245354747208228
         vacant_residential_units: 0.006227467184635866
         zones_logsum_job_high_income: 2.3229227075760638e-07
     T-Score:
         building_age_gt_100: 5.230714055437567
-        has_workers:nodes_drv_drv_45min_jobs: 100.51331191355375
+        has_workers:nodes_drv_log_sum_45min_jobs: 100.51331191355375
         is_race2:nodes_walk_percent_race2: 31.739625630718894
         is_young:zones_empden: 5.467708369550896
         ln_income:nodes_walk_ln_popden: 3.1821533511490094
-        nodes_drv_drv_45min_jobs: -3.1157746016264043
+        nodes_drv_log_sum_45min_jobs: -3.1157746016264043
         parcels_total_units: 9.960776145161208
         persons:nodes_walk_ln_popden: 5.835032499516235
         vacant_residential_units: 13.603767203184619

@@ -21,13 +21,13 @@ model_expression:
     - zones_empden
     - walk_nearest_grocery
     - b_ln_building_sqft
-    - nodes_walk_sum_residential_units
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_walk_log_sum_residential_units
+    - nodes_drv_log_sum_15min_retail_jobs
     - stories
     - nodes_walk_percent_race1
     - drv_nearest_urgentcare
     - crime_ucr_rate
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
 
 ytransform: np.exp
@@ -42,12 +42,12 @@ fit_parameters:
         bldg_empratio_5: 0.287148048429286
         crime_ucr_rate: -2.459579080060348e-05
         drv_nearest_urgentcare: -0.027479106161226265
-        nodes_drv_drv_15min_retail_jobs: 0.4426215853650504
-        nodes_drv_drv_20min_pop: -0.2886011566589439
+        nodes_drv_log_sum_15min_retail_jobs: 0.4426215853650504
+        nodes_drv_log_sum_20min_pop: -0.2886011566589439
         nodes_drv_elem_school_perf: 0.6160499350634675
         nodes_walk_highinc_hhs: 0.0026466352011971024
         nodes_walk_percent_race1: 0.7762969826686089
-        nodes_walk_sum_residential_units: -0.06825900932648236
+        nodes_walk_log_sum_residential_units: -0.06825900932648236
         stories: -0.1911423669162381
         walk_nearest_grocery: -2.3602522162308728e-05
         year_built: 0.00010410476573043448
@@ -60,12 +60,12 @@ fit_parameters:
         bldg_empratio_5: 0.011788377857360244
         crime_ucr_rate: 6.2108441053267736e-06
         drv_nearest_urgentcare: 0.0029361821872928512
-        nodes_drv_drv_15min_retail_jobs: 0.0253184773040251
-        nodes_drv_drv_20min_pop: 0.033083487016882906
+        nodes_drv_log_sum_15min_retail_jobs: 0.0253184773040251
+        nodes_drv_log_sum_20min_pop: 0.033083487016882906
         nodes_drv_elem_school_perf: 0.0657320632007098
         nodes_walk_highinc_hhs: 0.00016809991625827358
         nodes_walk_percent_race1: 0.03122146616089475
-        nodes_walk_sum_residential_units: 0.0044299221808109385
+        nodes_walk_log_sum_residential_units: 0.0044299221808109385
         stories: 0.01387972874598752
         walk_nearest_grocery: 2.058870594774476e-06
         year_built: 5.199950256006671e-06
@@ -78,12 +78,12 @@ fit_parameters:
         bldg_empratio_5: 24.358571798748454
         crime_ucr_rate: -3.960136558492706
         drv_nearest_urgentcare: -9.358787843666438
-        nodes_drv_drv_15min_retail_jobs: 17.482156610369415
-        nodes_drv_drv_20min_pop: -8.723420131368474
+        nodes_drv_log_sum_15min_retail_jobs: 17.482156610369415
+        nodes_drv_log_sum_20min_pop: -8.723420131368474
         nodes_drv_elem_school_perf: 9.372137508941224
         nodes_walk_highinc_hhs: 15.744417130647083
         nodes_walk_percent_race1: 24.86420652598724
-        nodes_walk_sum_residential_units: -15.408624923968059
+        nodes_walk_log_sum_residential_units: -15.408624923968059
         stories: -13.771333029220424
         walk_nearest_grocery: -11.463820126535975
         year_built: 20.02033877346786

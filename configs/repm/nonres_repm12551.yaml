@@ -25,7 +25,7 @@ model_expression:
     - nodes_walk_ave_nonres_sqft_price
     - parcels_total_units
     - drv_nearest_park
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
 
 ytransform: np.exp
 
@@ -41,7 +41,7 @@ fit_parameters:
         nodes_walk_hhs_with_children: -0.0023526663916378235
         nodes_walk_highinc_hhs: 0.0031042333827932633
         nodes_walk_retail_jobs: 0.0006787563432675942
-        nodes_walk_sum_nonresidential_units: 0.024516619815664737
+        nodes_walk_log_sum_nonresidential_units: 0.024516619815664737
         parcels_total_units: -0.00972949629739733
         year_built: 0.00014395041958229656
         zones_empden: -0.00946611539652896
@@ -56,7 +56,7 @@ fit_parameters:
         nodes_walk_hhs_with_children: 0.0003556027444133147
         nodes_walk_highinc_hhs: 0.0003660705759474849
         nodes_walk_retail_jobs: 0.00014541925126679455
-        nodes_walk_sum_nonresidential_units: 0.007312398666739191
+        nodes_walk_log_sum_nonresidential_units: 0.007312398666739191
         parcels_total_units: 0.001581070849645436
         year_built: 2.268435983196954e-05
         zones_empden: 0.0011761408653212235
@@ -71,7 +71,7 @@ fit_parameters:
         nodes_walk_hhs_with_children: -6.615996160320223
         nodes_walk_highinc_hhs: 8.479876796321879
         nodes_walk_retail_jobs: 4.66758243736456
-        nodes_walk_sum_nonresidential_units: 3.352746606551938
+        nodes_walk_log_sum_nonresidential_units: 3.352746606551938
         parcels_total_units: -6.153738334736374
         year_built: 6.345800395011555
         zones_empden: -8.048453782739372

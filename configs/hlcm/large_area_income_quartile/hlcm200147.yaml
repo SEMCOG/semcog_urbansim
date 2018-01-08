@@ -23,7 +23,7 @@ prediction_sample_size: 100
 
 model_expression: is_young:nodes_walk_retail_jobs + ln_income:nodes_walk_ln_popden
     + has_children:nodes_walk_percent_hh_with_children + is_race1:nodes_walk_percent_race1
-    + nodes_drv_drv_15min_retail_jobs
+    + nodes_drv_log_sum_15min_retail_jobs
 
 fitted: true
 
@@ -35,19 +35,19 @@ fit_parameters:
         is_race1:nodes_walk_percent_race1: 3.7639653536870163
         is_young:nodes_walk_retail_jobs: 0.014327378052003457
         ln_income:nodes_walk_ln_popden: 0.06446319784074915
-        nodes_drv_drv_15min_retail_jobs: -0.5049217158087177
+        nodes_drv_log_sum_15min_retail_jobs: -0.5049217158087177
     Std. Error:
         has_children:nodes_walk_percent_hh_with_children: 8.663407416836202
         is_race1:nodes_walk_percent_race1: 4.648441892505461
         is_young:nodes_walk_retail_jobs: 0.19864278298496885
         ln_income:nodes_walk_ln_popden: 0.06030642426164697
-        nodes_drv_drv_15min_retail_jobs: 0.5591841794939425
+        nodes_drv_log_sum_15min_retail_jobs: 0.5591841794939425
     T-Score:
         has_children:nodes_walk_percent_hh_with_children: 0.7183449658813671
         is_race1:nodes_walk_percent_race1: 0.8097262353124262
         is_young:nodes_walk_retail_jobs: 0.07212634577863118
         ln_income:nodes_walk_ln_popden: 1.068927541799983
-        nodes_drv_drv_15min_retail_jobs: -0.9029613753838102
+        nodes_drv_log_sum_15min_retail_jobs: -0.9029613753838102
 
 probability_mode: full_product
 

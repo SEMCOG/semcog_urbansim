@@ -20,7 +20,7 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression: zones_logsum_pop_high_income + nodes_walk_sum_residential_units
+model_expression: zones_logsum_pop_high_income + nodes_walk_log_sum_residential_units
     + stories + hhsize_gt_2:building_type_id_is_81 + nodes_walk_ave_lot_sqft + ln_income:nodes_walk_ln_popden
 
 fitted: true
@@ -32,21 +32,21 @@ fit_parameters:
         hhsize_gt_2:building_type_id_is_81: 0.1494284059120697
         ln_income:nodes_walk_ln_popden: 0.018373855946789412
         nodes_walk_ave_lot_sqft: 0.6118052636461396
-        nodes_walk_sum_residential_units: 0.09624677720121202
+        nodes_walk_log_sum_residential_units: 0.09624677720121202
         stories: 0.1310993885324868
         zones_logsum_pop_high_income: -3.685378865818021e-07
     Std. Error:
         hhsize_gt_2:building_type_id_is_81: 0.04647629399311243
         ln_income:nodes_walk_ln_popden: 0.003366095701933559
         nodes_walk_ave_lot_sqft: 0.01881520774421725
-        nodes_walk_sum_residential_units: 0.028317314244965978
+        nodes_walk_log_sum_residential_units: 0.028317314244965978
         stories: 0.048603795896863214
         zones_logsum_pop_high_income: 1.2436317786764398e-07
     T-Score:
         hhsize_gt_2:building_type_id_is_81: 3.215153211962518
         ln_income:nodes_walk_ln_popden: 5.458506701468727
         nodes_walk_ave_lot_sqft: 32.51652981796997
-        nodes_walk_sum_residential_units: 3.3988667275648146
+        nodes_walk_log_sum_residential_units: 3.3988667275648146
         stories: 2.6973076096911943
         zones_logsum_pop_high_income: -2.963400364165879
 

@@ -25,9 +25,9 @@ model_expression:
     - nodes_walk_percent_race1
     - vacant_job_spaces
     - nodes_walk_population
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - zones_ln_empden_17
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - crime_ucr_rate
     - nodes_walk_percent_high_income
 
@@ -44,8 +44,8 @@ fit_parameters:
         bldg_empratio_16: 0.3321268370687874
         crime_ucr_rate: -3.297594469291554e-05
         drv_nearest_grocery: -0.07531175401735016
-        nodes_drv_drv_15min_retail_jobs: 0.44249647340287196
-        nodes_drv_drv_20min_pop: -0.2847227461867404
+        nodes_drv_log_sum_15min_retail_jobs: 0.44249647340287196
+        nodes_drv_log_sum_20min_pop: -0.2847227461867404
         nodes_walk_industrial: -0.0017950547160556173
         nodes_walk_percent_high_income: 0.2490443999774462
         nodes_walk_percent_race1: 0.279420665791841
@@ -63,8 +63,8 @@ fit_parameters:
         bldg_empratio_16: 0.024959730188640908
         crime_ucr_rate: 1.3079631914659955e-05
         drv_nearest_grocery: 0.008614729977016318
-        nodes_drv_drv_15min_retail_jobs: 0.06003463375898723
-        nodes_drv_drv_20min_pop: 0.06557595702801045
+        nodes_drv_log_sum_15min_retail_jobs: 0.06003463375898723
+        nodes_drv_log_sum_20min_pop: 0.06557595702801045
         nodes_walk_industrial: 0.00040076723415253873
         nodes_walk_percent_high_income: 0.10920736327704689
         nodes_walk_percent_race1: 0.06358957222046852
@@ -82,8 +82,8 @@ fit_parameters:
         bldg_empratio_16: 13.306507504633894
         crime_ucr_rate: -2.5211676374436296
         drv_nearest_grocery: -8.742207151968577
-        nodes_drv_drv_15min_retail_jobs: 7.370686646966176
-        nodes_drv_drv_20min_pop: -4.341877100857598
+        nodes_drv_log_sum_15min_retail_jobs: 7.370686646966176
+        nodes_drv_log_sum_20min_pop: -4.341877100857598
         nodes_walk_industrial: -4.479045598254645
         nodes_walk_percent_high_income: 2.2804726028010434
         nodes_walk_percent_race1: 4.394127150644674

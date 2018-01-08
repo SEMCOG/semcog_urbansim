@@ -21,10 +21,10 @@ model_expression:
     - nodes_walk_ave_nonres_sqft_price
     - nodes_walk_retail_jobs
     - zones_ln_empden_10
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - zones_ln_empden_13
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_percent_hh_with_children
 
 ytransform: np.exp
@@ -35,11 +35,11 @@ fit_parameters:
     Coefficient:
         Intercept: 4.4172188835389505
         b_ln_building_sqft: -0.1931046564184502
-        nodes_drv_drv_20min_pop: 0.18337039501483954
+        nodes_drv_log_sum_20min_pop: 0.18337039501483954
         nodes_walk_ave_nonres_sqft_price: 0.0011255660089318146
         nodes_walk_percent_hh_with_children: -0.5475990627080728
         nodes_walk_retail_jobs: 0.0017888349537218994
-        nodes_walk_sum_nonresidential_units: -0.047098439795594645
+        nodes_walk_log_sum_nonresidential_units: -0.047098439795594645
         parcels_total_units: -0.000346000085244108
         walk_nearest_library: -3.51446913055466e-05
         year_built: 0.0001444491519980704
@@ -50,11 +50,11 @@ fit_parameters:
     Std. Error:
         Intercept: 0.42963921214883694
         b_ln_building_sqft: 0.014871145498447376
-        nodes_drv_drv_20min_pop: 0.04536172043608776
+        nodes_drv_log_sum_20min_pop: 0.04536172043608776
         nodes_walk_ave_nonres_sqft_price: 0.00024320508795903193
         nodes_walk_percent_hh_with_children: 0.16112412166326734
         nodes_walk_retail_jobs: 0.0005651538103896178
-        nodes_walk_sum_nonresidential_units: 0.011055525748642155
+        nodes_walk_log_sum_nonresidential_units: 0.011055525748642155
         parcels_total_units: 0.00014725348865377087
         walk_nearest_library: 1.735481565135374e-05
         year_built: 2.914472848882509e-05
@@ -65,11 +65,11 @@ fit_parameters:
     T-Score:
         Intercept: 10.28122843221471
         b_ln_building_sqft: -12.985190444045573
-        nodes_drv_drv_20min_pop: 4.042403887065938
+        nodes_drv_log_sum_20min_pop: 4.042403887065938
         nodes_walk_ave_nonres_sqft_price: 4.628052884820473
         nodes_walk_percent_hh_with_children: -3.3986162782782947
         nodes_walk_retail_jobs: 3.1652178943793623
-        nodes_walk_sum_nonresidential_units: -4.260171869382087
+        nodes_walk_log_sum_nonresidential_units: -4.260171869382087
         parcels_total_units: -2.3496902410077305
         walk_nearest_library: -2.0250685464818052
         year_built: 4.9562702927034055

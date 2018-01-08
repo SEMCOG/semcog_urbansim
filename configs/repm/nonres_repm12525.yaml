@@ -24,8 +24,8 @@ model_expression:
     - b_ln_parcels_parcel_far
     - nodes_walk_quarter_mile_to_transit
     - nodes_walk_race_2_hhs
-    - nodes_drv_drv_10min_pop
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_10min_pop
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_age_le_10
     - zones_ln_empden_12
     - drv_nearest_healthcenter
@@ -42,8 +42,8 @@ fit_parameters:
         building_age_gt_50: 0.411880460797499
         building_age_le_10: 0.27583247424389257
         drv_nearest_healthcenter: -0.01766465785318873
-        nodes_drv_drv_10min_pop: -0.15316150219462327
-        nodes_drv_drv_15min_retail_jobs: 0.2832841078050409
+        nodes_drv_log_sum_10min_pop: -0.15316150219462327
+        nodes_drv_log_sum_15min_retail_jobs: 0.2832841078050409
         nodes_walk_midinc_hhs: 0.001479902977660841
         nodes_walk_quarter_mile_to_transit: 0.02018961850222427
         nodes_walk_race_2_hhs: -0.0008277612865989529
@@ -61,8 +61,8 @@ fit_parameters:
         building_age_gt_50: 0.03607434334130399
         building_age_le_10: 0.07338460332193333
         drv_nearest_healthcenter: 0.003916347092087254
-        nodes_drv_drv_10min_pop: 0.03652757379798207
-        nodes_drv_drv_15min_retail_jobs: 0.039530379711986294
+        nodes_drv_log_sum_10min_pop: 0.03652757379798207
+        nodes_drv_log_sum_15min_retail_jobs: 0.039530379711986294
         nodes_walk_midinc_hhs: 0.0003295196272600817
         nodes_walk_quarter_mile_to_transit: 0.00876928619500057
         nodes_walk_race_2_hhs: 0.00028358800381351643
@@ -80,8 +80,8 @@ fit_parameters:
         building_age_gt_50: 11.417545619629031
         building_age_le_10: 3.758724061419723
         drv_nearest_healthcenter: -4.510493436314446
-        nodes_drv_drv_10min_pop: -4.193037923670817
-        nodes_drv_drv_15min_retail_jobs: 7.166237963536289
+        nodes_drv_log_sum_10min_pop: -4.193037923670817
+        nodes_drv_log_sum_15min_retail_jobs: 7.166237963536289
         nodes_walk_midinc_hhs: 4.491092048039949
         nodes_walk_quarter_mile_to_transit: 2.3023103652078896
         nodes_walk_race_2_hhs: -2.918886819850382

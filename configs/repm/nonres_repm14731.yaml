@@ -22,7 +22,7 @@ model_expression:
     - zones_ln_empden_14
     - zones_ln_empden_6
     - stories
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - year_built
     - crime_ucr_rate
     - nodes_walk_race_3_hhs
@@ -39,7 +39,7 @@ fit_parameters:
         nodes_walk_industrial: 0.0016673050001223394
         nodes_walk_race_3_hhs: -0.0273221118790343
         nodes_walk_retail_jobs: 0.0004081796857683071
-        nodes_walk_sum_nonresidential_units: -0.034820086387393756
+        nodes_walk_log_sum_nonresidential_units: -0.034820086387393756
         popden: -0.04482356907777333
         stories: -0.20027439725935803
         year_built: 0.00010156868742410326
@@ -54,7 +54,7 @@ fit_parameters:
         nodes_walk_industrial: 0.0006991014520866503
         nodes_walk_race_3_hhs: 0.004178775089497158
         nodes_walk_retail_jobs: 0.00017017149394725104
-        nodes_walk_sum_nonresidential_units: 0.009865095854082274
+        nodes_walk_log_sum_nonresidential_units: 0.009865095854082274
         popden: 0.008803204472253075
         stories: 0.03790151921396208
         year_built: 8.546404083024815e-06
@@ -69,7 +69,7 @@ fit_parameters:
         nodes_walk_industrial: 2.384925671582906
         nodes_walk_race_3_hhs: -6.53830639215427
         nodes_walk_retail_jobs: 2.398637258804537
-        nodes_walk_sum_nonresidential_units: -3.5296247398331015
+        nodes_walk_log_sum_nonresidential_units: -3.5296247398331015
         popden: -5.091733268158574
         stories: -5.284073077091363
         year_built: 11.884376918924621

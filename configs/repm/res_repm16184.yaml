@@ -14,14 +14,14 @@ model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
     - nodes_walk_population
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_logsum_pop_high_income
     - zones_logsum_pop_low_income
     - zones_empden
     - building_age_gt_50
     - nodes_walk_quarter_mile_to_transit
     - nodes_walk_race_1_hhs
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - zones_a_ln_emp_50min_transit
     - nodes_walk_ave_nonres_sqft_price
     - parcel_sqft
@@ -36,8 +36,8 @@ fit_parameters:
     Coefficient:
         Intercept: 8.780943019153455
         building_age_gt_50: 0.04219629302558736
-        nodes_drv_drv_15min_retail_jobs: 0.7171600362017254
-        nodes_drv_drv_20min_pop: -1.3473449144689917
+        nodes_drv_log_sum_15min_retail_jobs: 0.7171600362017254
+        nodes_drv_log_sum_20min_pop: -1.3473449144689917
         nodes_walk_ave_nonres_sqft_price: -0.005115433008450887
         nodes_walk_population: -0.0012143111937855946
         nodes_walk_quarter_mile_to_transit: 0.02307744051116789
@@ -52,8 +52,8 @@ fit_parameters:
     Std. Error:
         Intercept: 0.2242848980044502
         building_age_gt_50: 0.009987645648276849
-        nodes_drv_drv_15min_retail_jobs: 0.019947865656725315
-        nodes_drv_drv_20min_pop: 0.03923568044756682
+        nodes_drv_log_sum_15min_retail_jobs: 0.019947865656725315
+        nodes_drv_log_sum_20min_pop: 0.03923568044756682
         nodes_walk_ave_nonres_sqft_price: 0.000216157327360882
         nodes_walk_population: 4.8176220472569726e-05
         nodes_walk_quarter_mile_to_transit: 0.008597184897951124
@@ -68,8 +68,8 @@ fit_parameters:
     T-Score:
         Intercept: 39.15084384762823
         building_age_gt_50: 4.224848829400291
-        nodes_drv_drv_15min_retail_jobs: 35.951717769862704
-        nodes_drv_drv_20min_pop: -34.33978712997054
+        nodes_drv_log_sum_15min_retail_jobs: 35.951717769862704
+        nodes_drv_log_sum_20min_pop: -34.33978712997054
         nodes_walk_ave_nonres_sqft_price: -23.66532317412723
         nodes_walk_population: -25.205613513766433
         nodes_walk_quarter_mile_to_transit: 2.6843019878132077

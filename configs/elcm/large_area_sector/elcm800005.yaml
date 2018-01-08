@@ -30,7 +30,7 @@ model_expression:
 - nodes_walk_max_retail_far
 - parcels_total_sqft
 - stories
-- nodes_drv_drv_20min_pop
+- nodes_drv_log_sum_20min_pop
 - zones_transit_jobs_50min
 
 fitted: true
@@ -45,7 +45,7 @@ fit_parameters:
         building_age: -0.0012925567687680965
         building_type_id_is_23: 0.6430678864811704
         building_type_id_is_31: -0.41256806231919957
-        nodes_drv_drv_20min_pop: -0.23483878875940437
+        nodes_drv_log_sum_20min_pop: -0.23483878875940437
         nodes_walk_max_retail_far: 0.04987056863614312
         parcels_total_sqft: 1.395382296184218e-07
         stories: -0.04999817800969323
@@ -57,7 +57,7 @@ fit_parameters:
         building_age: 0.004243806752130468
         building_type_id_is_23: 0.286037559107956
         building_type_id_is_31: 0.4021135771970151
-        nodes_drv_drv_20min_pop: 0.05878195833719184
+        nodes_drv_log_sum_20min_pop: 0.05878195833719184
         nodes_walk_max_retail_far: 0.02405733574192929
         parcels_total_sqft: 7.204705365624071e-08
         stories: 0.020755645890619435
@@ -69,7 +69,7 @@ fit_parameters:
         building_age: -0.30457484147203673
         building_type_id_is_23: 2.2481938682691123
         building_type_id_is_31: -1.0259988364358616
-        nodes_drv_drv_20min_pop: -3.9950827669315654
+        nodes_drv_log_sum_20min_pop: -3.9950827669315654
         nodes_walk_max_retail_far: 2.07298801376514
         parcels_total_sqft: 1.936765246282004
         stories: -2.408895308446654

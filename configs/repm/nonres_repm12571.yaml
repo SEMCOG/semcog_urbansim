@@ -21,8 +21,8 @@ model_expression:
     - b_ln_parcel_sqft
     - nodes_walk_percent_race1
     - walk_nearest_park
-    - nodes_drv_drv_10min_pop
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_10min_pop
+    - nodes_drv_log_sum_15min_retail_jobs
     - nodes_walk_quarter_mile_to_transit
     - drv_nearest_hospital
     - crime_ucr_rate
@@ -41,8 +41,8 @@ fit_parameters:
         building_age_gt_90: 0.97259430582919
         crime_ucr_rate: -0.00022140015339412955
         drv_nearest_hospital: 0.033806145934720526
-        nodes_drv_drv_10min_pop: -0.30383555746160784
-        nodes_drv_drv_15min_retail_jobs: 0.33757247602884755
+        nodes_drv_log_sum_10min_pop: -0.30383555746160784
+        nodes_drv_log_sum_15min_retail_jobs: 0.33757247602884755
         nodes_walk_highinc_hhs: 0.01502163533109199
         nodes_walk_percent_race1: -0.5611085493139767
         nodes_walk_quarter_mile_to_transit: 0.26655808250319496
@@ -57,8 +57,8 @@ fit_parameters:
         building_age_gt_90: 0.2716600168306416
         crime_ucr_rate: 6.729567268296556e-05
         drv_nearest_hospital: 0.013707648421253722
-        nodes_drv_drv_10min_pop: 0.081369512278873
-        nodes_drv_drv_15min_retail_jobs: 0.07431218915350275
+        nodes_drv_log_sum_10min_pop: 0.081369512278873
+        nodes_drv_log_sum_15min_retail_jobs: 0.07431218915350275
         nodes_walk_highinc_hhs: 0.0028814401914266335
         nodes_walk_percent_race1: 0.1835078908459532
         nodes_walk_quarter_mile_to_transit: 0.053212627513694634
@@ -73,8 +73,8 @@ fit_parameters:
         building_age_gt_90: 3.580189374852042
         crime_ucr_rate: -3.2899612199013233
         drv_nearest_hospital: 2.4662250515780713
-        nodes_drv_drv_10min_pop: -3.7340221042531248
-        nodes_drv_drv_15min_retail_jobs: 4.542625912036341
+        nodes_drv_log_sum_10min_pop: -3.7340221042531248
+        nodes_drv_log_sum_15min_retail_jobs: 4.542625912036341
         nodes_walk_highinc_hhs: 5.213238635244624
         nodes_walk_percent_race1: -3.057680771803991
         nodes_walk_quarter_mile_to_transit: 5.0093012684741876

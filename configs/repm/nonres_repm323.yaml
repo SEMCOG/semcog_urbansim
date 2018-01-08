@@ -22,12 +22,12 @@ model_expression:
     - building_age_gt_50
     - nodes_walk_retail_jobs
     - b_total_jobs
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_sqft
     - walk_nearest_urgentcare
     - bldg_empratio_9
     - stories
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_percent_high_income
     - nodes_walk_percent_hh_with_children
 
@@ -43,8 +43,8 @@ fit_parameters:
         building_age_gt_50: 0.03926798926666098
         building_sqft: -2.687342261789792e-06
         crime_other_rate: -1.2701571735356323e-05
-        nodes_drv_drv_15min_retail_jobs: 0.3672817197439079
-        nodes_drv_drv_20min_pop: -0.19122140418374897
+        nodes_drv_log_sum_15min_retail_jobs: 0.3672817197439079
+        nodes_drv_log_sum_20min_pop: -0.19122140418374897
         nodes_walk_percent_hh_with_children: -0.17435028262065982
         nodes_walk_percent_high_income: 1.0575459782316978
         nodes_walk_retail_jobs: 0.0006573205103073247
@@ -62,8 +62,8 @@ fit_parameters:
         building_age_gt_50: 0.02002235428318941
         building_sqft: 2.071810374204693e-07
         crime_other_rate: 3.519588190849085e-06
-        nodes_drv_drv_15min_retail_jobs: 0.04160425148938488
-        nodes_drv_drv_20min_pop: 0.03866986955098408
+        nodes_drv_log_sum_15min_retail_jobs: 0.04160425148938488
+        nodes_drv_log_sum_20min_pop: 0.03866986955098408
         nodes_walk_percent_hh_with_children: 0.06613584393460117
         nodes_walk_percent_high_income: 0.06500466209468236
         nodes_walk_retail_jobs: 5.693025110395245e-05
@@ -81,8 +81,8 @@ fit_parameters:
         building_age_gt_50: 1.961207394059051
         building_sqft: -12.970985642551305
         crime_other_rate: -3.6088232618748854
-        nodes_drv_drv_15min_retail_jobs: 8.82798528024517
-        nodes_drv_drv_20min_pop: -4.944971534792331
+        nodes_drv_log_sum_15min_retail_jobs: 8.82798528024517
+        nodes_drv_log_sum_20min_pop: -4.944971534792331
         nodes_walk_percent_hh_with_children: -2.6362449202745055
         nodes_walk_percent_high_income: 16.268771256611288
         nodes_walk_retail_jobs: 11.546067293943297

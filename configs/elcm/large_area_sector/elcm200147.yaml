@@ -22,12 +22,12 @@ prediction_sample_size: null
 
 model_expression:
 - zones_ln_empden_2
-- nodes_drv_drv_10min_pop
+- nodes_drv_log_sum_10min_pop
 - b_ln_non_residential_sqft
 - zones_logsum_job_low_income
 - b_total_jobs
 - nodes_walk_max_medical_far
-- nodes_drv_drv_45min_jobs
+- nodes_drv_log_sum_45min_jobs
 - b_is_pre_1945
 - building_type_id_is_23
 - sqft_price_nonres
@@ -42,8 +42,8 @@ fit_parameters:
         b_ln_non_residential_sqft: 0.5153184332209595
         b_total_jobs: 0.00888312682651164
         building_type_id_is_23: 0.2956746064381384
-        nodes_drv_drv_10min_pop: 0.7100003848524881
-        nodes_drv_drv_45min_jobs: 1.4892299272390985
+        nodes_drv_log_sum_10min_pop: 0.7100003848524881
+        nodes_drv_log_sum_45min_jobs: 1.4892299272390985
         nodes_walk_max_medical_far: 0.5138932374448885
         sqft_price_nonres: 0.001481925326385445
         zones_ln_empden_2: 0.07908564992180672
@@ -53,8 +53,8 @@ fit_parameters:
         b_ln_non_residential_sqft: 0.22183762048779912
         b_total_jobs: 0.001955278403699971
         building_type_id_is_23: 0.6904123438659001
-        nodes_drv_drv_10min_pop: 0.4798527071994652
-        nodes_drv_drv_45min_jobs: 0.49270633342485187
+        nodes_drv_log_sum_10min_pop: 0.4798527071994652
+        nodes_drv_log_sum_45min_jobs: 0.49270633342485187
         nodes_walk_max_medical_far: 0.31204421183930636
         sqft_price_nonres: 0.004629489809460062
         zones_ln_empden_2: 3.3165969578513694
@@ -64,8 +64,8 @@ fit_parameters:
         b_ln_non_residential_sqft: 2.3229533029060847
         b_total_jobs: 4.543151916219251
         building_type_id_is_23: 0.4282579954792462
-        nodes_drv_drv_10min_pop: 1.4796215050993868
-        nodes_drv_drv_45min_jobs: 3.022550810108954
+        nodes_drv_log_sum_10min_pop: 1.4796215050993868
+        nodes_drv_log_sum_45min_jobs: 3.022550810108954
         nodes_walk_max_medical_far: 1.6468603420515566
         sqft_price_nonres: 0.320105538056748
         zones_ln_empden_2: 0.023845420751106797

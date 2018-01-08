@@ -21,7 +21,7 @@ model_expression:
     - popden
     - nodes_walk_quarter_mile_to_transit
     - nodes_walk_ave_nonres_sqft_price
-    - nodes_drv_drv_30min_jobs
+    - nodes_drv_log_sum_30min_jobs
     - nodes_walk_race_4_hhs
     - zones_transit_jobs_30min
     - parcel_sqft
@@ -35,7 +35,7 @@ fit_parameters:
         Intercept: -5.021953106001193e-07
         b_is_pre_1945: 0.21805346193645747
         crime_other_rate: -5.9424774512380655e-05
-        nodes_drv_drv_30min_jobs: 3.715613944160581
+        nodes_drv_log_sum_30min_jobs: 3.715613944160581
         nodes_walk_ave_nonres_sqft_price: 0.005291800099047336
         nodes_walk_quarter_mile_to_transit: 0.3892090230549248
         nodes_walk_race_4_hhs: -0.1584850192146931
@@ -49,7 +49,7 @@ fit_parameters:
         Intercept: 6.008278089102151e-09
         b_is_pre_1945: 0.026082534109584932
         crime_other_rate: 5.853591350926776e-06
-        nodes_drv_drv_30min_jobs: 0.043784667543919915
+        nodes_drv_log_sum_30min_jobs: 0.043784667543919915
         nodes_walk_ave_nonres_sqft_price: 0.0002177272382508172
         nodes_walk_quarter_mile_to_transit: 0.18916433001504068
         nodes_walk_race_4_hhs: 0.0038014377713104764
@@ -63,7 +63,7 @@ fit_parameters:
         Intercept: -83.58389927240619
         b_is_pre_1945: 8.360133299176868
         crime_other_rate: -10.151848830884337
-        nodes_drv_drv_30min_jobs: 84.86107472286936
+        nodes_drv_log_sum_30min_jobs: 84.86107472286936
         nodes_walk_ave_nonres_sqft_price: 24.304722466333278
         nodes_walk_quarter_mile_to_transit: 2.0575180480589457
         nodes_walk_race_4_hhs: -41.690809832738175

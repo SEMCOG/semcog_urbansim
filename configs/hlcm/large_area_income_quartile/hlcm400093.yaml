@@ -21,7 +21,7 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: residential_units + has_children:nodes_walk_percent_hh_with_children
-    + nodes_drv_drv_60min_jobs + ln_income:nodes_walk_ave_income + nodes_walk_sum_residential_units
+    + nodes_drv_log_sum_60min_jobs + ln_income:nodes_walk_ave_income + nodes_walk_log_sum_residential_units
     + is_race1:nodes_walk_percent_race1 + persons:sqft_per_unit + zones_logsum_pop_low_income
 
 fitted: true
@@ -33,8 +33,8 @@ fit_parameters:
         has_children:nodes_walk_percent_hh_with_children: 0.168872135971304
         is_race1:nodes_walk_percent_race1: 0.0051611442654721585
         ln_income:nodes_walk_ave_income: 0.11707057483629767
-        nodes_drv_drv_60min_jobs: 0.19159006319210153
-        nodes_walk_sum_residential_units: 0.014849991043290524
+        nodes_drv_log_sum_60min_jobs: 0.19159006319210153
+        nodes_walk_log_sum_residential_units: 0.014849991043290524
         persons:sqft_per_unit: 3.53545761833154e-05
         residential_units: 0.049435532989923314
         zones_logsum_pop_low_income: -1.3023981521502593e-07
@@ -42,8 +42,8 @@ fit_parameters:
         has_children:nodes_walk_percent_hh_with_children: 0.15263384553384896
         is_race1:nodes_walk_percent_race1: 0.2068427215572101
         ln_income:nodes_walk_ave_income: 0.0034016511406621125
-        nodes_drv_drv_60min_jobs: 0.037509735536957606
-        nodes_walk_sum_residential_units: 0.028848475871338434
+        nodes_drv_log_sum_60min_jobs: 0.037509735536957606
+        nodes_walk_log_sum_residential_units: 0.028848475871338434
         persons:sqft_per_unit: 7.524038944596102e-06
         residential_units: 0.005166682953142372
         zones_logsum_pop_low_income: 6.15950398746993e-08
@@ -51,8 +51,8 @@ fit_parameters:
         has_children:nodes_walk_percent_hh_with_children: 1.1063872195623476
         is_race1:nodes_walk_percent_race1: 0.02495202261223705
         ln_income:nodes_walk_ave_income: 34.415808675051416
-        nodes_drv_drv_60min_jobs: 5.107742308748928
-        nodes_walk_sum_residential_units: 0.5147582530709812
+        nodes_drv_log_sum_60min_jobs: 5.107742308748928
+        nodes_walk_log_sum_residential_units: 0.5147582530709812
         persons:sqft_per_unit: 4.698882667095667
         residential_units: 9.568137514584027
         zones_logsum_pop_low_income: -2.114452973485663

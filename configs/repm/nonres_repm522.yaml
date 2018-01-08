@@ -22,11 +22,11 @@ model_expression:
     - drv_nearest_grocery
     - zones_ln_empden_16
     - nodes_walk_race_1_hhs
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_age_le_10
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_transit_jobs_30min
 
@@ -43,11 +43,11 @@ fit_parameters:
         building_age_le_10: 0.8008339529308688
         crime_other_rate: -9.230987912570375e-06
         drv_nearest_grocery: -0.07257305104570762
-        nodes_drv_drv_15min_retail_jobs: 0.5075523945660504
-        nodes_drv_drv_20min_pop: -0.3349806207801804
+        nodes_drv_log_sum_15min_retail_jobs: 0.5075523945660504
+        nodes_drv_log_sum_20min_pop: -0.3349806207801804
         nodes_walk_highinc_hhs: 0.003570088313683157
         nodes_walk_race_1_hhs: 0.0008117690938492958
-        nodes_walk_sum_nonresidential_units: -0.06053643102306878
+        nodes_walk_log_sum_nonresidential_units: -0.06053643102306878
         parcels_total_units: -0.044273779860157486
         vacant_job_spaces: -0.00512277373151683
         zones_ln_empden_16: 0.5433648291741577
@@ -61,11 +61,11 @@ fit_parameters:
         building_age_le_10: 0.07794630557815416
         crime_other_rate: 3.0242816728447045e-06
         drv_nearest_grocery: 0.012903445066734994
-        nodes_drv_drv_15min_retail_jobs: 0.07589516866091557
-        nodes_drv_drv_20min_pop: 0.0960519815828255
+        nodes_drv_log_sum_15min_retail_jobs: 0.07589516866091557
+        nodes_drv_log_sum_20min_pop: 0.0960519815828255
         nodes_walk_highinc_hhs: 0.000573788999163455
         nodes_walk_race_1_hhs: 0.00016521030240758918
-        nodes_walk_sum_nonresidential_units: 0.011259491550959256
+        nodes_walk_log_sum_nonresidential_units: 0.011259491550959256
         parcels_total_units: 0.0057074423997873465
         vacant_job_spaces: 0.0010258018713017714
         zones_ln_empden_16: 0.04917475611200021
@@ -79,11 +79,11 @@ fit_parameters:
         building_age_le_10: 10.274174599948157
         crime_other_rate: -3.052291059875884
         drv_nearest_grocery: -5.6243158838875145
-        nodes_drv_drv_15min_retail_jobs: 6.687545512069325
-        nodes_drv_drv_20min_pop: -3.4874930767703844
+        nodes_drv_log_sum_15min_retail_jobs: 6.687545512069325
+        nodes_drv_log_sum_20min_pop: -3.4874930767703844
         nodes_walk_highinc_hhs: 6.221953224770954
         nodes_walk_race_1_hhs: 4.91355007538565
-        nodes_walk_sum_nonresidential_units: -5.376479990156515
+        nodes_walk_log_sum_nonresidential_units: -5.376479990156515
         parcels_total_units: -7.757201345002988
         vacant_job_spaces: -4.993921218934692
         zones_ln_empden_16: 11.049670036727633

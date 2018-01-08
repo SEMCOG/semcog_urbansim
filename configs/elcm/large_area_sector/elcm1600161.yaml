@@ -25,7 +25,7 @@ model_expression:
 - b_is_newerthan2010
 - zones_empden
 - b_ln_building_sqft
-- nodes_drv_drv_15min_retail_jobs
+- nodes_drv_log_sum_15min_retail_jobs
 - building_type_id_is_11
 - building_type_id_is_26
 
@@ -40,7 +40,7 @@ fit_parameters:
         b_ln_land_area: 0.04912135572670225
         building_type_id_is_11: -1.012073898456135
         building_type_id_is_26: 1.2536472390101099
-        nodes_drv_drv_15min_retail_jobs: 0.14460299423093476
+        nodes_drv_log_sum_15min_retail_jobs: 0.14460299423093476
         zones_empden: 0.0032931797918786085
     Std. Error:
         b_is_newerthan2010: 76177169476356.66
@@ -48,7 +48,7 @@ fit_parameters:
         b_ln_land_area: 0.2246837460712597
         building_type_id_is_11: 0.469060052363148
         building_type_id_is_26: 0.5067212333796952
-        nodes_drv_drv_15min_retail_jobs: 0.09167756227574422
+        nodes_drv_log_sum_15min_retail_jobs: 0.09167756227574422
         zones_empden: 0.002132924323637389
     T-Score:
         b_is_newerthan2010: -4.0500442306879683e-13
@@ -56,7 +56,7 @@ fit_parameters:
         b_ln_land_area: 0.21862442916152527
         building_type_id_is_11: -2.1576638073467485
         building_type_id_is_26: 2.474037313669723
-        nodes_drv_drv_15min_retail_jobs: 1.5772997300692122
+        nodes_drv_log_sum_15min_retail_jobs: 1.5772997300692122
         zones_empden: 1.5439740432340208
 
 probability_mode: single_chooser

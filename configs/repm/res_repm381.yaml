@@ -21,12 +21,12 @@ model_expression:
     - nodes_walk_ave_unit_sqft
     - parcels_pptytax
     - nodes_walk_percent_race1
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - improvement_value
     - nodes_walk_ave_lot_sqft
     - drv_nearest_healthcenter
     - drv_nearest_hospital
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - crime_ucr_rate
     - nodes_walk_ave_income
 
@@ -41,8 +41,8 @@ fit_parameters:
         drv_nearest_healthcenter: 0.011366313160154762
         drv_nearest_hospital: -0.014269681161433477
         improvement_value: 9.260013960131224e-07
-        nodes_drv_drv_15min_retail_jobs: 0.05986544794829625
-        nodes_drv_drv_20min_pop: -0.05515829691512748
+        nodes_drv_log_sum_15min_retail_jobs: 0.05986544794829625
+        nodes_drv_log_sum_20min_pop: -0.05515829691512748
         nodes_drv_elem_school_perf: 0.02146251842202859
         nodes_walk_ave_income: 0.4283555162126471
         nodes_walk_ave_lot_sqft: 0.06344281368676986
@@ -59,8 +59,8 @@ fit_parameters:
         drv_nearest_healthcenter: 0.00014670845439619656
         drv_nearest_hospital: 0.00012805488333083527
         improvement_value: 4.35538409410835e-09
-        nodes_drv_drv_15min_retail_jobs: 0.0021410195636495087
-        nodes_drv_drv_20min_pop: 0.0024303600176699245
+        nodes_drv_log_sum_15min_retail_jobs: 0.0021410195636495087
+        nodes_drv_log_sum_20min_pop: 0.0024303600176699245
         nodes_drv_elem_school_perf: 0.004958442193637726
         nodes_walk_ave_income: 0.0012912537535608834
         nodes_walk_ave_lot_sqft: 0.0009202574433799877
@@ -77,8 +77,8 @@ fit_parameters:
         drv_nearest_healthcenter: 77.47551568813634
         drv_nearest_hospital: -111.43410380193893
         improvement_value: 212.61073099517228
-        nodes_drv_drv_15min_retail_jobs: 27.961186793758976
-        nodes_drv_drv_20min_pop: -22.695525154338974
+        nodes_drv_log_sum_15min_retail_jobs: 27.961186793758976
+        nodes_drv_log_sum_20min_pop: -22.695525154338974
         nodes_drv_elem_school_perf: 4.328480112073821
         nodes_walk_ave_income: 331.73612470157275
         nodes_walk_ave_lot_sqft: 68.9402885498568

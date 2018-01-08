@@ -4,11 +4,11 @@
 
 - name: employment_access
   sign: positive
-  variables: [zones_transit_jobs_50min,nodes_drv_drv_15min_retail_jobs,nodes_drv_drv_30min_jobs,nodes_drv_drv_45min_jobs,nodes_drv_drv_60min_jobs]
+  variables: [zones_transit_jobs_50min,nodes_drv_log_sum_15min_retail_jobs,nodes_drv_log_sum_30min_jobs,nodes_drv_log_sum_45min_jobs,nodes_drv_log_sum_60min_jobs]
 
 - name: population_access
   sign: positive
-  variables: [nodes_drv_drv_10min_pop,nodes_drv_drv_20min_pop]
+  variables: [nodes_drv_log_sum_10min_pop,nodes_drv_log_sum_20min_pop]
 
 - name: positive_structure
   sign: positive
@@ -66,5 +66,5 @@
   variables: [zones_population,zones_households,nodes_walk_ave_income,nodes_walk_hhsize,nodes_walk_industrial,
               nodes_walk_max_industrial_far,nodes_walk_max_medical_far,nodes_walk_max_office_far,nodes_walk_max_retail_far,
               nodes_walk_medical,nodes_walk_office,nodes_walk_lowinc_hhs,nodes_walk_population,nodes_walk_quarter_mile_to_transit,
-              nodes_walk_residential,nodes_walk_retail,nodes_walk_retail_jobs,nodes_walk_sfdu,nodes_walk_sum_nonresidential_units,
-              nodes_walk_sum_residential_units]
+              nodes_walk_residential,nodes_walk_retail,nodes_walk_retail_jobs,nodes_walk_log_sum_nonresidential_units,
+              nodes_walk_log_sum_residential_units]

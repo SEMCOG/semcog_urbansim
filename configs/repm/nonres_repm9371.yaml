@@ -18,7 +18,7 @@ model_expression:
     - nodes_walk_percent_high_income
     - popden
     - nodes_walk_retail_jobs
-    - nodes_drv_drv_45min_jobs
+    - nodes_drv_log_sum_45min_jobs
     - stories
     - nodes_walk_percent_hh_with_children
     - drv_nearest_hospital
@@ -34,7 +34,7 @@ fit_parameters:
         Intercept: 2.9756654781644847
         b_total_jobs: -0.00536922511396711
         drv_nearest_hospital: -0.03823414349001217
-        nodes_drv_drv_45min_jobs: 0.07938417987067002
+        nodes_drv_log_sum_45min_jobs: 0.07938417987067002
         nodes_walk_percent_hh_with_children: -1.1419149988320636
         nodes_walk_percent_high_income: 1.1396212608899576
         nodes_walk_retail_jobs: 0.005011155708835947
@@ -47,7 +47,7 @@ fit_parameters:
         Intercept: 0.4411301879308747
         b_total_jobs: 0.0020928710673692808
         drv_nearest_hospital: 0.008136583778327041
-        nodes_drv_drv_45min_jobs: 0.03392764646121514
+        nodes_drv_log_sum_45min_jobs: 0.03392764646121514
         nodes_walk_percent_hh_with_children: 0.13566394408995217
         nodes_walk_percent_high_income: 0.12885682890966074
         nodes_walk_retail_jobs: 0.0010506359526091524
@@ -60,7 +60,7 @@ fit_parameters:
         Intercept: 6.745549408263967
         b_total_jobs: -2.5654829853977463
         drv_nearest_hospital: -4.699041333766426
-        nodes_drv_drv_45min_jobs: 2.3398080371245067
+        nodes_drv_log_sum_45min_jobs: 2.3398080371245067
         nodes_walk_percent_hh_with_children: -8.417232791602427
         nodes_walk_percent_high_income: 8.844088982578688
         nodes_walk_retail_jobs: 4.769640422442453

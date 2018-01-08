@@ -24,7 +24,7 @@ model_expression:
 - b_ln_non_residential_sqft
 - zones_population
 - zones_empden
-- nodes_drv_drv_60min_jobs
+- nodes_drv_log_sum_60min_jobs
 - popden
 - building_type_id_is_31
 - nodes_walk_ave_lot_sqft
@@ -42,7 +42,7 @@ fit_parameters:
         building_age: -0.014944022986612791
         building_type_id_is_26: 0.9265918392145346
         building_type_id_is_31: -0.13601834303712
-        nodes_drv_drv_60min_jobs: 0.45822893881389853
+        nodes_drv_log_sum_60min_jobs: 0.45822893881389853
         nodes_walk_ave_lot_sqft: 0.13393563656219473
         popden: -0.22849842522896818
         zones_empden: 0.2937711913229178
@@ -53,7 +53,7 @@ fit_parameters:
         building_age: 0.015814926493637086
         building_type_id_is_26: 1.4308299565103182
         building_type_id_is_31: 0.7935158853430808
-        nodes_drv_drv_60min_jobs: 0.20039715025822114
+        nodes_drv_log_sum_60min_jobs: 0.20039715025822114
         nodes_walk_ave_lot_sqft: 0.3139143420301608
         popden: 0.30262954367187556
         zones_empden: 0.11979293125340341
@@ -64,7 +64,7 @@ fit_parameters:
         building_age: -0.9449315488519855
         building_type_id_is_26: 0.6475904666368737
         building_type_id_is_31: -0.17141224964678778
-        nodes_drv_drv_60min_jobs: 2.286604067091019
+        nodes_drv_log_sum_60min_jobs: 2.286604067091019
         nodes_walk_ave_lot_sqft: 0.4266630052516882
         popden: -0.7550433525310944
         zones_empden: 2.452324926430678

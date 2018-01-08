@@ -23,11 +23,11 @@ model_expression:
     - zones_ln_empden_5
     - nodes_walk_percent_race1
     - nodes_walk_population
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_age_le_10
     - nodes_walk_retail_jobs
     - nodes_walk_ave_nonres_sqft_price
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_households
     - zones_transit_jobs_30min
@@ -44,8 +44,8 @@ fit_parameters:
         bldg_empratio_5: 0.2386141832102354
         building_age_le_10: 0.27859730565083185
         crime_other_rate: -9.893248763130986e-06
-        nodes_drv_drv_15min_retail_jobs: 0.15325847275173154
-        nodes_drv_drv_20min_pop: -0.14113268064617276
+        nodes_drv_log_sum_15min_retail_jobs: 0.15325847275173154
+        nodes_drv_log_sum_20min_pop: -0.14113268064617276
         nodes_walk_ave_nonres_sqft_price: 0.009594363266933005
         nodes_walk_percent_high_income: 0.8642089489007271
         nodes_walk_percent_race1: 0.2664087504822019
@@ -64,8 +64,8 @@ fit_parameters:
         bldg_empratio_5: 0.008817694319943127
         building_age_le_10: 0.0347177082521074
         crime_other_rate: 1.0409273279285584e-06
-        nodes_drv_drv_15min_retail_jobs: 0.028394756524487953
-        nodes_drv_drv_20min_pop: 0.03453751689112217
+        nodes_drv_log_sum_15min_retail_jobs: 0.028394756524487953
+        nodes_drv_log_sum_20min_pop: 0.03453751689112217
         nodes_walk_ave_nonres_sqft_price: 0.00022090731626755777
         nodes_walk_percent_high_income: 0.0694973707331141
         nodes_walk_percent_race1: 0.028306312191698893
@@ -84,8 +84,8 @@ fit_parameters:
         bldg_empratio_5: 27.0608363765296
         building_age_le_10: 8.024645625447375
         crime_other_rate: -9.50426460876814
-        nodes_drv_drv_15min_retail_jobs: 5.397421619712067
-        nodes_drv_drv_20min_pop: -4.086358642721381
+        nodes_drv_log_sum_15min_retail_jobs: 5.397421619712067
+        nodes_drv_log_sum_20min_pop: -4.086358642721381
         nodes_walk_ave_nonres_sqft_price: 43.431622949565586
         nodes_walk_percent_high_income: 12.43513157094084
         nodes_walk_percent_race1: 9.411637541407776

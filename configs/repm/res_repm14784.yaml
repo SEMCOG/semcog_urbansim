@@ -18,15 +18,15 @@ model_expression:
     - year_built
     - zones_logsum_pop_low_income
     - zones_employment
-    - nodes_drv_drv_60min_jobs
+    - nodes_drv_log_sum_60min_jobs
     - popden
     - nodes_walk_percent_race4
     - building_age_gt_50
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - zones_population
     - nodes_drv_elem_school_perf
     - zones_a_ln_emp_50min_transit
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - parcel_sqft
 
 ytransform: np.exp
@@ -37,11 +37,11 @@ fit_parameters:
     Coefficient:
         Intercept: -39.16334829343854
         building_age_gt_50: 0.08441188299428386
-        nodes_drv_drv_10min_pop: 0.782719663957456
-        nodes_drv_drv_60min_jobs: 2.379691686626235
+        nodes_drv_log_sum_10min_pop: 0.782719663957456
+        nodes_drv_log_sum_60min_jobs: 2.379691686626235
         nodes_drv_elem_school_perf: 16.35090428877775
         nodes_walk_percent_race4: -23.109338567527413
-        nodes_walk_sum_nonresidential_units: 0.19544202311252543
+        nodes_walk_log_sum_nonresidential_units: 0.19544202311252543
         parcel_sqft: 3.50255520904601e-08
         popden: 0.294025397165765
         walk_nearest_healthcenter: 0.000522446021994468
@@ -54,11 +54,11 @@ fit_parameters:
     Std. Error:
         Intercept: 1.1583870567366403
         building_age_gt_50: 0.020935296292441626
-        nodes_drv_drv_10min_pop: 0.03842695121638825
-        nodes_drv_drv_60min_jobs: 0.08899809060208809
+        nodes_drv_log_sum_10min_pop: 0.03842695121638825
+        nodes_drv_log_sum_60min_jobs: 0.08899809060208809
         nodes_drv_elem_school_perf: 0.7744864324832953
         nodes_walk_percent_race4: 0.7191186601778783
-        nodes_walk_sum_nonresidential_units: 0.008273227075932546
+        nodes_walk_log_sum_nonresidential_units: 0.008273227075932546
         parcel_sqft: 4.326388133936301e-09
         popden: 0.03600963468918183
         walk_nearest_healthcenter: 3.241145300337243e-05
@@ -71,11 +71,11 @@ fit_parameters:
     T-Score:
         Intercept: -33.8085168214568
         building_age_gt_50: 4.032036700849536
-        nodes_drv_drv_10min_pop: 20.36902848601851
-        nodes_drv_drv_60min_jobs: 26.738682487761174
+        nodes_drv_log_sum_10min_pop: 20.36902848601851
+        nodes_drv_log_sum_60min_jobs: 26.738682487761174
         nodes_drv_elem_school_perf: 21.111931214018288
         nodes_walk_percent_race4: -32.135640259719004
-        nodes_walk_sum_nonresidential_units: 23.62343270875295
+        nodes_walk_log_sum_nonresidential_units: 23.62343270875295
         parcel_sqft: 8.095795154327176
         popden: 8.16518689244291
         walk_nearest_healthcenter: 16.119179289497055

@@ -18,14 +18,14 @@ model_expression:
     - year_built
     - b_ln_building_sqft
     - nodes_walk_percent_race3
-    - nodes_walk_sum_residential_units
+    - nodes_walk_log_sum_residential_units
     - b_total_jobs
     - nodes_walk_lowinc_hhs
     - stories
     - nodes_walk_retail_jobs
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - crime_ucr_rate
-    - nodes_drv_drv_30min_jobs
+    - nodes_drv_log_sum_30min_jobs
     - bldg_empratio_5
 
 ytransform: np.exp
@@ -40,12 +40,12 @@ fit_parameters:
         bldg_empratio_16: 0.6799631101137382
         bldg_empratio_5: 0.6501604312452658
         crime_ucr_rate: -8.35584498199981e-05
-        nodes_drv_drv_10min_pop: 0.06720777324861549
-        nodes_drv_drv_30min_jobs: 0.08174577790923618
+        nodes_drv_log_sum_10min_pop: 0.06720777324861549
+        nodes_drv_log_sum_30min_jobs: 0.08174577790923618
         nodes_walk_lowinc_hhs: 0.0014955086778973992
         nodes_walk_percent_race3: -1.8406339860553773
         nodes_walk_retail_jobs: 0.0004669481445251806
-        nodes_walk_sum_residential_units: -0.05487476782328091
+        nodes_walk_log_sum_residential_units: -0.05487476782328091
         stories: 0.21132035590992115
         year_built: 0.00013606030421584896
         zones_logsum_job_low_income: -4.099914328658827e-07
@@ -56,12 +56,12 @@ fit_parameters:
         bldg_empratio_16: 0.0840258721632941
         bldg_empratio_5: 0.04652320754781741
         crime_ucr_rate: 3.0257444503106203e-05
-        nodes_drv_drv_10min_pop: 0.027907241444414345
-        nodes_drv_drv_30min_jobs: 0.031390566641181616
+        nodes_drv_log_sum_10min_pop: 0.027907241444414345
+        nodes_drv_log_sum_30min_jobs: 0.031390566641181616
         nodes_walk_lowinc_hhs: 0.0005723270115329398
         nodes_walk_percent_race3: 0.47837108948054924
         nodes_walk_retail_jobs: 0.00011325975159199366
-        nodes_walk_sum_residential_units: 0.016738984148015515
+        nodes_walk_log_sum_residential_units: 0.016738984148015515
         stories: 0.08091163438683252
         year_built: 1.9273929874169194e-05
         zones_logsum_job_low_income: 1.1663677150015917e-07
@@ -72,12 +72,12 @@ fit_parameters:
         bldg_empratio_16: 8.092306483797184
         bldg_empratio_5: 13.974970031398176
         crime_ucr_rate: -2.761583180344925
-        nodes_drv_drv_10min_pop: 2.4082556988830284
-        nodes_drv_drv_30min_jobs: 2.604151076457251
+        nodes_drv_log_sum_10min_pop: 2.4082556988830284
+        nodes_drv_log_sum_30min_jobs: 2.604151076457251
         nodes_walk_lowinc_hhs: 2.613031794343899
         nodes_walk_percent_race3: -3.8477115915472107
         nodes_walk_retail_jobs: 4.122807422422328
-        nodes_walk_sum_residential_units: -3.278261532363454
+        nodes_walk_log_sum_residential_units: -3.278261532363454
         stories: 2.6117425202365117
         year_built: 7.059292272210462
         zones_logsum_job_low_income: -3.51511300932505

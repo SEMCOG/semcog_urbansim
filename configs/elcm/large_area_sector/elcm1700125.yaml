@@ -27,7 +27,7 @@ model_expression:
 - b_ln_building_sqft
 - nodes_walk_retail_jobs
 - vacant_job_spaces
-- nodes_drv_drv_15min_retail_jobs
+- nodes_drv_log_sum_15min_retail_jobs
 - zones_ln_empden_17
 - building_type_id_is_11
 - building_type_id_is_21
@@ -42,7 +42,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 0.24706336560450598
         building_type_id_is_11: -0.13099570642230715
         building_type_id_is_21: -0.14951743278939914
-        nodes_drv_drv_15min_retail_jobs: 0.20190036001119785
+        nodes_drv_log_sum_15min_retail_jobs: 0.20190036001119785
         nodes_walk_retail_jobs: 0.00021819515938185154
         vacant_job_spaces: -0.00029842351152409497
         year_built: 3.658724008993713e-06
@@ -53,7 +53,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 0.04159631237811389
         building_type_id_is_11: 0.3170705596514185
         building_type_id_is_21: 0.15816809478796498
-        nodes_drv_drv_15min_retail_jobs: 0.0596907162656738
+        nodes_drv_log_sum_15min_retail_jobs: 0.0596907162656738
         nodes_walk_retail_jobs: 0.00020861556359736688
         vacant_job_spaces: 0.0001391152542226384
         year_built: 9.797815577322741e-05
@@ -64,7 +64,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 5.939549721587811
         building_type_id_is_11: -0.4131437070862757
         building_type_id_is_21: -0.9453071619142746
-        nodes_drv_drv_15min_retail_jobs: 3.3824415695159655
+        nodes_drv_log_sum_15min_retail_jobs: 3.3824415695159655
         nodes_walk_retail_jobs: 1.0459198519002806
         vacant_job_spaces: -2.145153047317885
         year_built: 0.03734224205507511

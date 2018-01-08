@@ -6,16 +6,18 @@ node_col: nodeid_walk
 
 variable_definitions:
 
-  - name: sum_residential_units
+  - name: log_sum_residential_units
     dataframe: buildings
     varname: residential_units
     radius: 500
+    decay: flat
     apply: np.log1p
 
-  - name: sum_nonresidential_units
+  - name: log_sum_nonresidential_units
     dataframe: buildings
     varname: job_spaces
     radius: 500
+    decay: flat
     apply: np.log1p
 
   - name: ave_unit_sqft
@@ -39,12 +41,14 @@ variable_definitions:
     dataframe: households
     varname: persons
     radius: 1500
+    decay: flat
 
   - name: hhsize
     dataframe: households
     varname: persons
     radius: 1500
     aggregation: average
+    decay: flat
 
   - name: households
     dataframe: households
@@ -121,15 +125,6 @@ variable_definitions:
     radius: 1500
     aggregation: count
 
-  - name: sfdu
-    dataframe: buildings
-    filters:
-    - building_type_id == 17
-    add_fields:
-    - building_type_id
-    radius: 500
-    apply: np.log1p
-
   - name: hhsize
     dataframe: households
     varname: persons
@@ -197,6 +192,7 @@ variable_definitions:
     dataframe: parcels
     varname: parcel_sqft
     radius: 1500
+    decay: flat
     aggregation: sum
  
   - aggregation: average
@@ -267,7 +263,7 @@ variable_definitions:
     dataframe: transit_stops
     radius: 1320
 
-  - name: walk_15min_retail_jobs
+  - name: log_15min_retail_jobs
     dataframe: jobs
     filters:
     - sector_id == 5
@@ -276,7 +272,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: walk_15min_shopping_jobs
+  - name: log_15min_shopping_jobs
     dataframe: jobs
     filters:
     - (sector_id == 16) | (sector_id == 5)
@@ -285,7 +281,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: walk_30min_retail_jobs
+  - name: log_30min_retail_jobs
     dataframe: jobs
     filters:
     - sector_id == 5
@@ -294,7 +290,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: walk_30min_shopping_jobs
+  - name: log_30min_shopping_jobs
     dataframe: jobs
     filters:
     - (sector_id == 16) | (sector_id == 5)

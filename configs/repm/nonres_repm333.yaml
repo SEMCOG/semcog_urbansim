@@ -20,13 +20,13 @@ model_expression:
     - drv_nearest_healthcenter
     - parcels_pptytax
     - bldg_empratio_18
-    - nodes_walk_sum_residential_units
+    - nodes_walk_log_sum_residential_units
     - nodes_walk_race_2_hhs
     - b_total_jobs
     - zones_ln_empden_16
     - walk_nearest_park
     - nodes_walk_ave_nonres_sqft_price
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - zones_a_ln_retail_emp_15min_drive_alone
     - parcel_sqft
 
@@ -43,8 +43,8 @@ fit_parameters:
         nodes_walk_ave_nonres_sqft_price: 0.0016546379627044644
         nodes_walk_midinc_hhs: 0.0011437133276566045
         nodes_walk_race_2_hhs: -0.0016916855326666942
-        nodes_walk_sum_nonresidential_units: -0.09156575448488886
-        nodes_walk_sum_residential_units: -0.061742509487609024
+        nodes_walk_log_sum_nonresidential_units: -0.09156575448488886
+        nodes_walk_log_sum_residential_units: -0.061742509487609024
         non_residential_units: -0.0003884070105999651
         parcel_sqft: 2.3752502210087403e-09
         parcels_pptytax: -0.003572146197899821
@@ -61,8 +61,8 @@ fit_parameters:
         nodes_walk_ave_nonres_sqft_price: 0.000240646171550539
         nodes_walk_midinc_hhs: 0.00014518707432273632
         nodes_walk_race_2_hhs: 0.000269190171845913
-        nodes_walk_sum_nonresidential_units: 0.006402235293879841
-        nodes_walk_sum_residential_units: 0.0059287763873429634
+        nodes_walk_log_sum_nonresidential_units: 0.006402235293879841
+        nodes_walk_log_sum_residential_units: 0.0059287763873429634
         non_residential_units: 2.8134678297832065e-05
         parcel_sqft: 3.9995248342360283e-10
         parcels_pptytax: 0.0008723018247662522
@@ -79,8 +79,8 @@ fit_parameters:
         nodes_walk_ave_nonres_sqft_price: 6.875812534407877
         nodes_walk_midinc_hhs: 7.877514806271558
         nodes_walk_race_2_hhs: -6.284351026140104
-        nodes_walk_sum_nonresidential_units: -14.302153901219521
-        nodes_walk_sum_residential_units: -10.414039163193927
+        nodes_walk_log_sum_nonresidential_units: -14.302153901219521
+        nodes_walk_log_sum_residential_units: -10.414039163193927
         non_residential_units: -13.805276409714414
         parcel_sqft: 5.93883103481829
         parcels_pptytax: -4.095080505944186

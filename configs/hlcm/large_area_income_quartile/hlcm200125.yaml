@@ -21,9 +21,9 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: walk_nearest_healthcenter + has_children:nodes_walk_percent_hh_with_children
-    + vacant_residential_units + nodes_walk_sum_residential_units + building_type_id_is_82
+    + vacant_residential_units + nodes_walk_log_sum_residential_units + building_type_id_is_82
     + is_race1:nodes_walk_percent_race1 + nodes_walk_ave_lot_sqft + ln_income:sqft_price_res
-    + is_young:zones_empden + ln_income:nodes_walk_ln_popden + nodes_drv_drv_30min_jobs
+    + is_young:zones_empden + ln_income:nodes_walk_ln_popden + nodes_drv_log_sum_30min_jobs
 
 fitted: true
 
@@ -37,9 +37,9 @@ fit_parameters:
         is_young:zones_empden: 0.027182444538286114
         ln_income:nodes_walk_ln_popden: 0.03909594193872509
         ln_income:sqft_price_res: -0.0005514151561099408
-        nodes_drv_drv_30min_jobs: 0.06635275253337541
+        nodes_drv_log_sum_30min_jobs: 0.06635275253337541
         nodes_walk_ave_lot_sqft: 0.955377267789462
-        nodes_walk_sum_residential_units: 0.24225208330731768
+        nodes_walk_log_sum_residential_units: 0.24225208330731768
         vacant_residential_units: 0.030762766710332918
         walk_nearest_healthcenter: -8.103832723716528e-05
     Std. Error:
@@ -49,9 +49,9 @@ fit_parameters:
         is_young:zones_empden: 0.006188593457485885
         ln_income:nodes_walk_ln_popden: 0.004789903703947584
         ln_income:sqft_price_res: 3.2549662000950256e-05
-        nodes_drv_drv_30min_jobs: 0.02172691596933927
+        nodes_drv_log_sum_30min_jobs: 0.02172691596933927
         nodes_walk_ave_lot_sqft: 0.03241423357714428
-        nodes_walk_sum_residential_units: 0.02980426514344179
+        nodes_walk_log_sum_residential_units: 0.02980426514344179
         vacant_residential_units: 0.00480492222372064
         walk_nearest_healthcenter: 1.6547451749649698e-05
     T-Score:
@@ -61,9 +61,9 @@ fit_parameters:
         is_young:zones_empden: 4.3923461324488065
         ln_income:nodes_walk_ln_popden: 8.162156142409355
         ln_income:sqft_price_res: -16.940733703896612
-        nodes_drv_drv_30min_jobs: 3.053942521203263
+        nodes_drv_log_sum_30min_jobs: 3.053942521203263
         nodes_walk_ave_lot_sqft: 29.474004545432525
-        nodes_walk_sum_residential_units: 8.12810120099953
+        nodes_walk_log_sum_residential_units: 8.12810120099953
         vacant_residential_units: 6.402344362301061
         walk_nearest_healthcenter: -4.8973297195975105
 

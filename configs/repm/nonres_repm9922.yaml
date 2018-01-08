@@ -21,11 +21,11 @@ model_expression:
     - walk_nearest_library
     - b_ln_building_sqft
     - nodes_walk_hhsize
-    - nodes_walk_sum_residential_units
+    - nodes_walk_log_sum_residential_units
     - b_total_jobs
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - drv_nearest_hospital
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_a_ln_retail_emp_15min_drive_alone
 
@@ -42,11 +42,11 @@ fit_parameters:
         bldg_empratio_5: 0.6843725167803562
         crime_other_rate: -2.454128705773981e-05
         drv_nearest_hospital: -0.02397915232226904
-        nodes_drv_drv_20min_pop: -0.2261356282304585
+        nodes_drv_log_sum_20min_pop: -0.2261356282304585
         nodes_walk_hhsize: -0.07126677450028718
         nodes_walk_highinc_hhs: 0.003011667076115776
-        nodes_walk_sum_nonresidential_units: -0.05983049491493163
-        nodes_walk_sum_residential_units: -0.04135892544717207
+        nodes_walk_log_sum_nonresidential_units: -0.05983049491493163
+        nodes_walk_log_sum_residential_units: -0.04135892544717207
         walk_nearest_library: 2.9111549336647344e-05
         year_built: 0.00015230302057052782
         zones_a_ln_retail_emp_15min_drive_alone: 0.2476999402404428
@@ -59,11 +59,11 @@ fit_parameters:
         bldg_empratio_5: 0.032214708488050844
         crime_other_rate: 9.504419850954017e-06
         drv_nearest_hospital: 0.006209766231515213
-        nodes_drv_drv_20min_pop: 0.048164230437135094
+        nodes_drv_log_sum_20min_pop: 0.048164230437135094
         nodes_walk_hhsize: 0.03479771854762741
         nodes_walk_highinc_hhs: 0.0008291897987875745
-        nodes_walk_sum_nonresidential_units: 0.014335034315288117
-        nodes_walk_sum_residential_units: 0.015210276419201188
+        nodes_walk_log_sum_nonresidential_units: 0.014335034315288117
+        nodes_walk_log_sum_residential_units: 0.015210276419201188
         walk_nearest_library: 6.922006935770724e-06
         year_built: 1.8574551783349164e-05
         zones_a_ln_retail_emp_15min_drive_alone: 0.04575009760626348
@@ -76,11 +76,11 @@ fit_parameters:
         bldg_empratio_5: 21.244100875046104
         crime_other_rate: -2.582092062702433
         drv_nearest_hospital: -3.8615225482357673
-        nodes_drv_drv_20min_pop: -4.695094807454988
+        nodes_drv_log_sum_20min_pop: -4.695094807454988
         nodes_walk_hhsize: -2.0480300857294655
         nodes_walk_highinc_hhs: 3.6320599704909275
-        nodes_walk_sum_nonresidential_units: -4.173725266295542
-        nodes_walk_sum_residential_units: -2.719143578150972
+        nodes_walk_log_sum_nonresidential_units: -4.173725266295542
+        nodes_walk_log_sum_residential_units: -2.719143578150972
         walk_nearest_library: 4.20565156995266
         year_built: 8.199552933872527
         zones_a_ln_retail_emp_15min_drive_alone: 5.41419479302993

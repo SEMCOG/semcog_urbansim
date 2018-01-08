@@ -21,10 +21,10 @@ model_expression:
     - nodes_walk_hhs_with_children
     - b_ln_parcel_sqft
     - drv_nearest_healthcenter
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - nodes_walk_ave_nonres_sqft_price
     - year_built
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_ave_income
 
 ytransform: np.exp
@@ -36,8 +36,8 @@ fit_parameters:
         Intercept: 6.652902052671124
         b_ln_parcel_sqft: 0.09165588401986564
         drv_nearest_healthcenter: -0.01936977771490416
-        nodes_drv_drv_15min_retail_jobs: 0.7391643752387337
-        nodes_drv_drv_20min_pop: -1.1139358209538708
+        nodes_drv_log_sum_15min_retail_jobs: 0.7391643752387337
+        nodes_drv_log_sum_20min_pop: -1.1139358209538708
         nodes_drv_elem_school_perf: 3.1506450629988545
         nodes_walk_ave_income: 0.4011054194730626
         nodes_walk_ave_nonres_sqft_price: 0.0009616432156982675
@@ -51,8 +51,8 @@ fit_parameters:
         Intercept: 0.059924069761704744
         b_ln_parcel_sqft: 0.0013451578792824427
         drv_nearest_healthcenter: 0.00032408799077242794
-        nodes_drv_drv_15min_retail_jobs: 0.003972829415910266
-        nodes_drv_drv_20min_pop: 0.004771707096549167
+        nodes_drv_log_sum_15min_retail_jobs: 0.003972829415910266
+        nodes_drv_log_sum_20min_pop: 0.004771707096549167
         nodes_drv_elem_school_perf: 0.023253955643384484
         nodes_walk_ave_income: 0.0017111526041352879
         nodes_walk_ave_nonres_sqft_price: 1.8615548037969796e-05
@@ -66,8 +66,8 @@ fit_parameters:
         Intercept: 111.02219991277607
         b_ln_parcel_sqft: 68.1376405190135
         drv_nearest_healthcenter: -59.767033232976125
-        nodes_drv_drv_15min_retail_jobs: 186.05489887850476
-        nodes_drv_drv_20min_pop: -233.44597612863828
+        nodes_drv_log_sum_15min_retail_jobs: 186.05489887850476
+        nodes_drv_log_sum_20min_pop: -233.44597612863828
         nodes_drv_elem_school_perf: 135.48856423896987
         nodes_walk_ave_income: 234.40657396875295
         nodes_walk_ave_nonres_sqft_price: 51.65806635060226

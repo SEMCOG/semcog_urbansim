@@ -25,7 +25,7 @@ model_expression:
     - crime_ucr_rate
     - zones_ln_empden_18
     - zones_a_ln_emp_26min_drive_alone
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
 
 ytransform: np.exp
 
@@ -41,7 +41,7 @@ fit_parameters:
         nodes_walk_lowinc_hhs: 0.004856899503436008
         nodes_walk_race_1_hhs: -0.0019918088776379067
         nodes_walk_retail_jobs: -0.0009586007646207221
-        nodes_walk_sum_nonresidential_units: -0.035350980921785916
+        nodes_walk_log_sum_nonresidential_units: -0.035350980921785916
         popden: 0.033851402509706134
         year_built: 0.00017204124100391458
         zones_a_ln_emp_26min_drive_alone: 0.07630053999666254
@@ -56,7 +56,7 @@ fit_parameters:
         nodes_walk_lowinc_hhs: 0.0013982127238043249
         nodes_walk_race_1_hhs: 0.00045526829117235873
         nodes_walk_retail_jobs: 0.0003672157716418257
-        nodes_walk_sum_nonresidential_units: 0.011763060752053191
+        nodes_walk_log_sum_nonresidential_units: 0.011763060752053191
         popden: 0.012355496301599498
         year_built: 1.0290302655079177e-05
         zones_a_ln_emp_26min_drive_alone: 0.018623370089057893
@@ -71,7 +71,7 @@ fit_parameters:
         nodes_walk_lowinc_hhs: 3.4736484804837997
         nodes_walk_race_1_hhs: -4.375022192977269
         nodes_walk_retail_jobs: -2.6104564091427984
-        nodes_walk_sum_nonresidential_units: -3.0052536212240133
+        nodes_walk_log_sum_nonresidential_units: -3.0052536212240133
         popden: 2.739784925136828
         year_built: 16.718773662016343
         zones_a_ln_emp_26min_drive_alone: 4.097031827847996

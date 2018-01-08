@@ -18,7 +18,7 @@ model_expression:
     - crime_other_rate
     - zones_empden
     - b_ln_building_sqft
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - vacant_job_spaces
     - building_age_le_10
     - nodes_walk_population
@@ -37,7 +37,7 @@ fit_parameters:
         bldg_empratio_5: 0.29321126209311504
         building_age_le_10: 0.5231646124852782
         crime_other_rate: -1.6273847232971457e-05
-        nodes_drv_drv_10min_pop: 0.16599478873639514
+        nodes_drv_log_sum_10min_pop: 0.16599478873639514
         nodes_walk_households: 0.0019778356761289686
         nodes_walk_percent_hh_with_children: -0.44777370260173704
         nodes_walk_population: -0.0011001259652172603
@@ -51,7 +51,7 @@ fit_parameters:
         bldg_empratio_5: 0.03011964799368415
         building_age_le_10: 0.07435768382488044
         crime_other_rate: 7.003617671132094e-06
-        nodes_drv_drv_10min_pop: 0.018429640805569376
+        nodes_drv_log_sum_10min_pop: 0.018429640805569376
         nodes_walk_households: 0.00026877038347964186
         nodes_walk_percent_hh_with_children: 0.1033162481106364
         nodes_walk_population: 0.0002528762817008005
@@ -65,7 +65,7 @@ fit_parameters:
         bldg_empratio_5: 9.734883427409214
         building_age_le_10: 7.0357841392341065
         crime_other_rate: -2.323634441104619
-        nodes_drv_drv_10min_pop: 9.006946499262865
+        nodes_drv_log_sum_10min_pop: 9.006946499262865
         nodes_walk_households: 7.358830428125578
         nodes_walk_percent_hh_with_children: -4.334010485187554
         nodes_walk_population: -4.350451366249181

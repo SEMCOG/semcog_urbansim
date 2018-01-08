@@ -20,7 +20,7 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression: zones_logsum_pop_low_income + persons:nodes_walk_ln_popden + has_workers:nodes_drv_drv_45min_jobs
+model_expression: zones_logsum_pop_low_income + persons:nodes_walk_ln_popden + has_workers:nodes_drv_log_sum_45min_jobs
     + ln_income:nodes_walk_ln_popden + crime_ucr_rate + zones_transit_jobs_30min
 
 fitted: true
@@ -30,21 +30,21 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         crime_ucr_rate: -0.00017127791515134466
-        has_workers:nodes_drv_drv_45min_jobs: 0.13300843107514287
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.13300843107514287
         ln_income:nodes_walk_ln_popden: 0.0018193314658582309
         persons:nodes_walk_ln_popden: 0.07906790039538392
         zones_logsum_pop_low_income: -4.1345086889442456e-08
         zones_transit_jobs_30min: 4.95834162374677e-05
     Std. Error:
         crime_ucr_rate: 3.9923425448442864e-05
-        has_workers:nodes_drv_drv_45min_jobs: 0.003953095063275186
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.003953095063275186
         ln_income:nodes_walk_ln_popden: 0.003584465228693644
         persons:nodes_walk_ln_popden: 0.010404137995413825
         zones_logsum_pop_low_income: 9.119266303916609e-08
         zones_transit_jobs_30min: 1.2131297708816039e-05
     T-Score:
         crime_ucr_rate: -4.290160807281756
-        has_workers:nodes_drv_drv_45min_jobs: 33.646656340448295
+        has_workers:nodes_drv_log_sum_45min_jobs: 33.646656340448295
         ln_income:nodes_walk_ln_popden: 0.5075600821273094
         persons:nodes_walk_ln_popden: 7.599658946299759
         zones_logsum_pop_low_income: -0.4533817251469591

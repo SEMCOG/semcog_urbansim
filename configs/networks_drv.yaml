@@ -7,34 +7,39 @@ node_col: nodeid_drv
 variable_definitions:
 
 
-  - name: drv_30min_jobs
+  - name: log_sum_30min_jobs
     dataframe: jobs
     radius: 30
+    decay: flat
     apply: np.log1p
 
-  - name: drv_45min_jobs
+  - name: log_sum_45min_jobs
     dataframe: jobs
     radius: 45
+    decay: flat
     apply: np.log1p
 
-  - name: drv_60min_jobs
+  - name: log_sum_60min_jobs
     dataframe: jobs
     radius: 60
+    decay: flat
     apply: np.log1p
 
-  - name: drv_10min_pop
+  - name: log_sum_10min_pop
     dataframe: households
     varname: persons 
     radius: 10
+    decay: flat
     apply: np.log1p
 
-  - name: drv_20min_pop
+  - name: log_sum_20min_pop
     dataframe: households
     varname: persons 
     radius: 20
+    decay: flat
     apply: np.log1p
 
-  - name: drv_15min_retail_jobs
+  - name: log_sum_15min_retail_jobs
     dataframe: jobs
     filters:
     - sector_id == 5
@@ -43,7 +48,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: drv_15min_shopping_jobs
+  - name: log_sum_15min_shopping_jobs
     dataframe: jobs
     filters:
     - (sector_id == 16) | (sector_id == 5)
@@ -52,7 +57,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: drv_30min_retail_jobs
+  - name: log_sum_30min_retail_jobs
     dataframe: jobs
     filters:
     - sector_id == 5
@@ -61,7 +66,7 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: drv_30min_shopping_jobs
+  - name: log_sum_30min_shopping_jobs
     dataframe: jobs
     filters:
     - (sector_id == 16) | (sector_id == 5)
@@ -77,8 +82,4 @@ variable_definitions:
     - is_grade_school == True
     aggregation: average
     radius: 30
-    decay: exponential
-
-
-
-
+    decay: flat

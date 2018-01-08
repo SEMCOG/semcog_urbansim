@@ -21,8 +21,8 @@ model_expression:
     - nodes_walk_hhs_with_children
     - zones_households
     - building_age_gt_50
-    - nodes_drv_drv_10min_pop
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_10min_pop
+    - nodes_drv_log_sum_15min_retail_jobs
     - stories
     - crime_ucr_rate
 
@@ -36,8 +36,8 @@ fit_parameters:
         building_age_gt_50: 0.068072274806408
         crime_ucr_rate: -0.000136977683269963
         drv_nearest_library: -0.02015272218099568
-        nodes_drv_drv_10min_pop: -0.06867841543181723
-        nodes_drv_drv_15min_retail_jobs: 0.07589261742428582
+        nodes_drv_log_sum_10min_pop: -0.06867841543181723
+        nodes_drv_log_sum_15min_retail_jobs: 0.07589261742428582
         nodes_walk_hhs_with_children: -0.0010830693125578929
         stories: -0.05755247749545302
         walk_nearest_hospital: 5.00701862263172e-05
@@ -50,8 +50,8 @@ fit_parameters:
         building_age_gt_50: 0.010373280232429026
         crime_ucr_rate: 3.378158303117012e-06
         drv_nearest_library: 0.0015173871864580812
-        nodes_drv_drv_10min_pop: 0.009572424215155601
-        nodes_drv_drv_15min_retail_jobs: 0.007459103138700008
+        nodes_drv_log_sum_10min_pop: 0.009572424215155601
+        nodes_drv_log_sum_15min_retail_jobs: 0.007459103138700008
         nodes_walk_hhs_with_children: 4.694983352314857e-05
         stories: 0.0034510712734345506
         walk_nearest_hospital: 2.449244184018358e-06
@@ -64,8 +64,8 @@ fit_parameters:
         building_age_gt_50: 6.562270880680534
         crime_ucr_rate: -40.548035639293246
         drv_nearest_library: -13.281199657443143
-        nodes_drv_drv_10min_pop: -7.1746105153887445
-        nodes_drv_drv_15min_retail_jobs: 10.174496318536304
+        nodes_drv_log_sum_10min_pop: -7.1746105153887445
+        nodes_drv_log_sum_15min_retail_jobs: 10.174496318536304
         nodes_walk_hhs_with_children: -23.068650755148827
         stories: -16.676699185692577
         walk_nearest_hospital: 20.44311733106555

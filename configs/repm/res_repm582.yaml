@@ -22,7 +22,7 @@ model_expression:
     - nodes_walk_ave_lot_sqft
     - nodes_walk_ave_nonres_sqft_price
     - nodes_drv_elem_school_perf
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_50min
     - nodes_walk_ave_income
     - nodes_walk_hhsize
@@ -39,7 +39,7 @@ fit_parameters:
         building_age_gt_70: 0.03155632648610026
         crime_other_rate: -1.0533936066803184e-05
         drv_nearest_grocery: -0.10397957535710822
-        nodes_drv_drv_20min_pop: -0.5047685358058667
+        nodes_drv_log_sum_20min_pop: -0.5047685358058667
         nodes_drv_elem_school_perf: 1.790264860764365
         nodes_walk_ave_income: 0.15638216450981904
         nodes_walk_ave_lot_sqft: 0.07649892753910639
@@ -55,7 +55,7 @@ fit_parameters:
         building_age_gt_70: 0.008352241066273195
         crime_other_rate: 1.5175059953146432e-06
         drv_nearest_grocery: 0.005989104975927438
-        nodes_drv_drv_20min_pop: 0.03524963122146906
+        nodes_drv_log_sum_20min_pop: 0.03524963122146906
         nodes_drv_elem_school_perf: 0.22858236989913247
         nodes_walk_ave_income: 0.01687711051981594
         nodes_walk_ave_lot_sqft: 0.008318017404771344
@@ -71,7 +71,7 @@ fit_parameters:
         building_age_gt_70: 3.7781867448158826
         crime_other_rate: -6.941610839975003
         drv_nearest_grocery: -17.361454804189094
-        nodes_drv_drv_20min_pop: -14.319824585808247
+        nodes_drv_log_sum_20min_pop: -14.319824585808247
         nodes_drv_elem_school_perf: 7.83203385962952
         nodes_walk_ave_income: 9.265932360056887
         nodes_walk_ave_lot_sqft: 9.196774161018878

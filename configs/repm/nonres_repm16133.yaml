@@ -27,7 +27,7 @@ model_expression:
     - building_sqft
     - zones_a_ln_retail_emp_15min_drive_alone
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_30min
 
 ytransform: np.exp
@@ -40,7 +40,7 @@ fit_parameters:
         b_total_jobs: 0.0023395484767833306
         building_sqft: -3.987204197445304e-06
         crime_other_rate: -2.8089142969339914e-05
-        nodes_drv_drv_20min_pop: 0.08453800724337684
+        nodes_drv_log_sum_20min_pop: 0.08453800724337684
         nodes_walk_industrial: 0.0016795384674239578
         nodes_walk_percent_hh_with_children: 0.20868780811400317
         nodes_walk_quarter_mile_to_transit: 0.02440292439385012
@@ -58,7 +58,7 @@ fit_parameters:
         b_total_jobs: 0.00041404234643048997
         building_sqft: 4.0205169118323924e-07
         crime_other_rate: 3.4692591319909282e-06
-        nodes_drv_drv_20min_pop: 0.020268256042274908
+        nodes_drv_log_sum_20min_pop: 0.020268256042274908
         nodes_walk_industrial: 0.00035122973392740257
         nodes_walk_percent_hh_with_children: 0.050933806931936595
         nodes_walk_quarter_mile_to_transit: 0.008261853695348292
@@ -76,7 +76,7 @@ fit_parameters:
         b_total_jobs: 5.650505309306804
         building_sqft: -9.91714320541956
         crime_other_rate: -8.096582555717076
-        nodes_drv_drv_20min_pop: 4.170956152667998
+        nodes_drv_log_sum_20min_pop: 4.170956152667998
         nodes_walk_industrial: 4.78188007787265
         nodes_walk_percent_hh_with_children: 4.097235621772293
         nodes_walk_quarter_mile_to_transit: 2.953686338889032

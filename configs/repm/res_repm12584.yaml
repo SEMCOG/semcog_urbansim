@@ -18,8 +18,8 @@ model_expression:
     - nodes_walk_midinc_hhs
     - building_age_gt_50
     - nodes_walk_industrial
-    - nodes_walk_sum_residential_units
-    - nodes_drv_drv_10min_pop
+    - nodes_walk_log_sum_residential_units
+    - nodes_drv_log_sum_10min_pop
     - nodes_walk_quarter_mile_to_transit
     - nodes_walk_ave_nonres_sqft_price
     - nodes_walk_percent_race3
@@ -35,13 +35,13 @@ fit_parameters:
         Intercept: 5.000574365868748
         building_age_gt_50: 0.3589027731703042
         crime_ucr_rate: -4.3524418995958404e-05
-        nodes_drv_drv_10min_pop: -0.019414423683485792
+        nodes_drv_log_sum_10min_pop: -0.019414423683485792
         nodes_walk_ave_nonres_sqft_price: 0.00404656681072852
         nodes_walk_industrial: -0.0062195545847393416
         nodes_walk_midinc_hhs: 0.002874027775397271
         nodes_walk_percent_race3: 1.0783480807262635
         nodes_walk_quarter_mile_to_transit: 0.20928334999155393
-        nodes_walk_sum_residential_units: -0.7937648609878164
+        nodes_walk_log_sum_residential_units: -0.7937648609878164
         parcel_sqft: 1.416735376085599e-07
         walk_nearest_hospital: 0.0001568394927713765
         year_built: 0.00027325930021317597
@@ -49,13 +49,13 @@ fit_parameters:
         Intercept: 0.11903925064224592
         building_age_gt_50: 0.017423817076054057
         crime_ucr_rate: 5.987906036234858e-06
-        nodes_drv_drv_10min_pop: 0.008341319825417292
+        nodes_drv_log_sum_10min_pop: 0.008341319825417292
         nodes_walk_ave_nonres_sqft_price: 0.00012728019950524608
         nodes_walk_industrial: 0.00030393474300198926
         nodes_walk_midinc_hhs: 6.992889120230992e-05
         nodes_walk_percent_race3: 0.09189273474854742
         nodes_walk_quarter_mile_to_transit: 0.009749376603219792
-        nodes_walk_sum_residential_units: 0.013117507627504786
+        nodes_walk_log_sum_residential_units: 0.013117507627504786
         parcel_sqft: 3.6301743525722817e-09
         walk_nearest_hospital: 7.597055216838561e-06
         year_built: 8.61654191990696e-06
@@ -63,13 +63,13 @@ fit_parameters:
         Intercept: 42.00777759343598
         building_age_gt_50: 20.598401119784043
         crime_ucr_rate: -7.268721107608791
-        nodes_drv_drv_10min_pop: -2.3275002145736026
+        nodes_drv_log_sum_10min_pop: -2.3275002145736026
         nodes_walk_ave_nonres_sqft_price: 31.792586957421708
         nodes_walk_industrial: -20.463453843112088
         nodes_walk_midinc_hhs: 41.0992899498789
         nodes_walk_percent_race3: 11.734856772703779
         nodes_walk_quarter_mile_to_transit: 21.46633149061416
-        nodes_walk_sum_residential_units: -60.511865784888165
+        nodes_walk_log_sum_residential_units: -60.511865784888165
         parcel_sqft: 39.0266482677815
         walk_nearest_hospital: 20.644774625798192
         year_built: 31.713337293916002

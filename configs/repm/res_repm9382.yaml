@@ -24,7 +24,7 @@ model_expression:
     - building_age_le_10
     - drv_nearest_hospital
     - stories
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_50min
     - zones_a_ln_emp_26min_drive_alone
     - parcel_sqft
@@ -38,7 +38,7 @@ fit_parameters:
         Intercept: -0.08582427229191225
         building_age_le_10: 0.13502794439191104
         drv_nearest_hospital: -0.013418266727401758
-        nodes_drv_drv_20min_pop: -0.5111471977651251
+        nodes_drv_log_sum_20min_pop: -0.5111471977651251
         nodes_walk_ave_unit_sqft: 0.00022336396740659612
         nodes_walk_percent_mid_income: 0.584692299206443
         nodes_walk_race_2_hhs: -0.05810905222507663
@@ -55,7 +55,7 @@ fit_parameters:
         Intercept: 0.40263116013295147
         building_age_le_10: 0.01959552285949458
         drv_nearest_hospital: 0.0014565844929107278
-        nodes_drv_drv_20min_pop: 0.038726417490761535
+        nodes_drv_log_sum_20min_pop: 0.038726417490761535
         nodes_walk_ave_unit_sqft: 1.6311596730700745e-05
         nodes_walk_percent_mid_income: 0.08116911563056736
         nodes_walk_race_2_hhs: 0.003759514483653786
@@ -72,7 +72,7 @@ fit_parameters:
         Intercept: -0.21315854506534593
         building_age_le_10: 6.890754860694427
         drv_nearest_hospital: -9.212144432890202
-        nodes_drv_drv_20min_pop: -13.198928041486484
+        nodes_drv_log_sum_20min_pop: -13.198928041486484
         nodes_walk_ave_unit_sqft: 13.693568514123045
         nodes_walk_percent_mid_income: 7.203383881470485
         nodes_walk_race_2_hhs: -15.456531016899229

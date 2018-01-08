@@ -14,7 +14,7 @@ model_expression:
     left_side: np.log1p(sqft_price_res)
     right_side:
     - zones_logsum_job_high_income
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - residential_units
     - year_built
     - nodes_drv_elem_school_perf
@@ -39,7 +39,7 @@ fit_parameters:
         Intercept: -1.732507669658729
         building_age_gt_50: 0.030550356675955622
         crime_ucr_rate: -7.524157125792416e-05
-        nodes_drv_drv_10min_pop: 0.043381037729135756
+        nodes_drv_log_sum_10min_pop: 0.043381037729135756
         nodes_drv_elem_school_perf: 0.23182877443370487
         nodes_walk_ave_income: 0.3849611787537365
         nodes_walk_percent_race4: -0.5094006790184056
@@ -57,7 +57,7 @@ fit_parameters:
         Intercept: 0.17019654919262214
         building_age_gt_50: 0.010362324222287042
         crime_ucr_rate: 3.605213971667598e-06
-        nodes_drv_drv_10min_pop: 0.009704259849003144
+        nodes_drv_log_sum_10min_pop: 0.009704259849003144
         nodes_drv_elem_school_perf: 0.043387388660035
         nodes_walk_ave_income: 0.009803740854815909
         nodes_walk_percent_race4: 0.05589598313339471
@@ -75,7 +75,7 @@ fit_parameters:
         Intercept: -10.179452391234683
         building_age_gt_50: 2.948214707492807
         crime_ucr_rate: -20.870209604541458
-        nodes_drv_drv_10min_pop: 4.470308751428582
+        nodes_drv_log_sum_10min_pop: 4.470308751428582
         nodes_drv_elem_school_perf: 5.343229486573066
         nodes_walk_ave_income: 39.266764029633784
         nodes_walk_percent_race4: -9.113368268391138

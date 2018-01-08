@@ -21,7 +21,7 @@ model_expression:
     - b_total_jobs
     - nodes_walk_quarter_mile_to_transit
     - nodes_walk_race_2_hhs
-    - nodes_drv_drv_45min_jobs
+    - nodes_drv_log_sum_45min_jobs
     - bldg_empratio_8
     - nodes_walk_midinc_hhs
     - walk_nearest_library
@@ -39,7 +39,7 @@ fit_parameters:
         b_total_jobs: 0.001458466286051683
         bldg_empratio_8: 0.7539730396262231
         crime_ucr_rate: -8.41889074569137e-05
-        nodes_drv_drv_45min_jobs: 0.14154828074212514
+        nodes_drv_log_sum_45min_jobs: 0.14154828074212514
         nodes_walk_ave_nonres_sqft_price: 0.0013329185394063841
         nodes_walk_midinc_hhs: 0.0025510365548486276
         nodes_walk_population: -0.001464265199446039
@@ -55,7 +55,7 @@ fit_parameters:
         b_total_jobs: 0.0004372192107537418
         bldg_empratio_8: 0.25762916248275297
         crime_ucr_rate: 2.016583078696559e-05
-        nodes_drv_drv_45min_jobs: 0.04189411058320517
+        nodes_drv_log_sum_45min_jobs: 0.04189411058320517
         nodes_walk_ave_nonres_sqft_price: 0.0002558266770287255
         nodes_walk_midinc_hhs: 0.0006216567682543
         nodes_walk_population: 0.00023125347114933564
@@ -71,7 +71,7 @@ fit_parameters:
         b_total_jobs: 3.3357781409864575
         bldg_empratio_8: 2.926582659976228
         crime_ucr_rate: -4.174829608871366
-        nodes_drv_drv_45min_jobs: 3.3787154989482002
+        nodes_drv_log_sum_45min_jobs: 3.3787154989482002
         nodes_walk_ave_nonres_sqft_price: 5.2102406007357756
         nodes_walk_midinc_hhs: 4.103609395281416
         nodes_walk_population: -6.331862575591206

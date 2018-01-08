@@ -20,8 +20,8 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression: residential_units + b_ln_parcels_parcel_far + nodes_drv_drv_15min_retail_jobs
-    + persons:nodes_walk_ln_popden + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_drv_45min_jobs
+model_expression: residential_units + b_ln_parcels_parcel_far + nodes_drv_log_sum_15min_retail_jobs
+    + persons:nodes_walk_ln_popden + is_race2:nodes_walk_percent_race2 + has_workers:nodes_drv_log_sum_45min_jobs
     + ln_income:nodes_walk_ln_popden
 
 fitted: true
@@ -31,26 +31,26 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         b_ln_parcels_parcel_far: 1.6887176042871535
-        has_workers:nodes_drv_drv_45min_jobs: 0.26453478390971696
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.26453478390971696
         is_race2:nodes_walk_percent_race2: 16.781965933846426
         ln_income:nodes_walk_ln_popden: 0.01657868904380689
-        nodes_drv_drv_15min_retail_jobs: -0.06953174011677152
+        nodes_drv_log_sum_15min_retail_jobs: -0.06953174011677152
         persons:nodes_walk_ln_popden: 0.0977902493409768
         residential_units: 0.06641772323441338
     Std. Error:
         b_ln_parcels_parcel_far: 0.22116159684738415
-        has_workers:nodes_drv_drv_45min_jobs: 0.004021067696844968
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.004021067696844968
         is_race2:nodes_walk_percent_race2: 0.7856149811946681
         ln_income:nodes_walk_ln_popden: 0.0033022258901686335
-        nodes_drv_drv_15min_retail_jobs: 0.006122168405762425
+        nodes_drv_log_sum_15min_retail_jobs: 0.006122168405762425
         persons:nodes_walk_ln_popden: 0.010182363610141142
         residential_units: 0.0013832839208843509
     T-Score:
         b_ln_parcels_parcel_far: 7.635672867077724
-        has_workers:nodes_drv_drv_45min_jobs: 65.78719978210705
+        has_workers:nodes_drv_log_sum_45min_jobs: 65.78719978210705
         is_race2:nodes_walk_percent_race2: 21.361565570359218
         ln_income:nodes_walk_ln_popden: 5.020458804215926
-        nodes_drv_drv_15min_retail_jobs: -11.357371360664551
+        nodes_drv_log_sum_15min_retail_jobs: -11.357371360664551
         persons:nodes_walk_ln_popden: 9.603885019739664
         residential_units: 48.01452704803486
 

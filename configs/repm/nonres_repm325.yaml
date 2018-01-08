@@ -16,7 +16,7 @@ model_expression:
     - nodes_walk_highinc_hhs
     - bldg_empratio_16
     - b_is_pre_1945
-    - nodes_walk_sum_residential_units
+    - nodes_walk_log_sum_residential_units
     - walk_nearest_urgentcare
     - zones_ln_empden_16
     - stories
@@ -36,7 +36,7 @@ fit_parameters:
         crime_ucr_rate: -7.99919859095468e-05
         nodes_walk_highinc_hhs: 0.004000968754655063
         nodes_walk_race_4_hhs: -0.006891193012278665
-        nodes_walk_sum_residential_units: -0.07318606490726708
+        nodes_walk_log_sum_residential_units: -0.07318606490726708
         parcel_sqft: 7.191600556014355e-09
         stories: -0.06753690622745134
         walk_nearest_urgentcare: -2.6757993860291643e-05
@@ -48,7 +48,7 @@ fit_parameters:
         crime_ucr_rate: 1.670258578538225e-05
         nodes_walk_highinc_hhs: 0.0011981369458116356
         nodes_walk_race_4_hhs: 0.0016635352685661143
-        nodes_walk_sum_residential_units: 0.015896933755708043
+        nodes_walk_log_sum_residential_units: 0.015896933755708043
         parcel_sqft: 1.391577794876117e-09
         stories: 0.016036559388369048
         walk_nearest_urgentcare: 1.0234260278179667e-05
@@ -60,7 +60,7 @@ fit_parameters:
         crime_ucr_rate: -4.7891977288662755
         nodes_walk_highinc_hhs: 3.3393250818626146
         nodes_walk_race_4_hhs: -4.1424988952705135
-        nodes_walk_sum_residential_units: -4.603784983439871
+        nodes_walk_log_sum_residential_units: -4.603784983439871
         parcel_sqft: 5.167947190947076
         stories: -4.211433674260224
         walk_nearest_urgentcare: -2.614550845198066

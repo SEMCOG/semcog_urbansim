@@ -22,7 +22,7 @@ prediction_sample_size: null
 
 model_expression:
 - b_ln_sqft_price_nonres
-- nodes_drv_drv_20min_pop
+- nodes_drv_log_sum_20min_pop
 - b_ln_non_residential_sqft
 - zones_employment
 - b_ln_parcels_parcel_far
@@ -46,7 +46,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 0.3099674268352928
         building_type_id_is_31: -3.382103638646925
         building_type_id_is_51: 1.8778290941557505
-        nodes_drv_drv_20min_pop: 0.2721770533031513
+        nodes_drv_log_sum_20min_pop: 0.2721770533031513
         nodes_walk_residential: 0.008114584556964326
         zones_employment: 0.0010122223188097112
         zones_ln_empden_16: -0.061608538908308655
@@ -59,7 +59,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 0.24602017572499024
         building_type_id_is_31: 77.0200747586462
         building_type_id_is_51: 1.9147198764040183
-        nodes_drv_drv_20min_pop: 0.43204091237254183
+        nodes_drv_log_sum_20min_pop: 0.43204091237254183
         nodes_walk_residential: 0.006136115991779333
         zones_employment: 0.000641794802593968
         zones_ln_empden_16: 1.0716354843226974
@@ -72,7 +72,7 @@ fit_parameters:
         b_ln_sqft_price_nonres: 1.2599268573069593
         building_type_id_is_31: -0.04391197553683565
         building_type_id_is_51: 0.9807330656024988
-        nodes_drv_drv_20min_pop: 0.6299798132739277
+        nodes_drv_log_sum_20min_pop: 0.6299798132739277
         nodes_walk_residential: 1.3224301117898658
         zones_employment: 1.5771743783504812
         zones_ln_empden_16: -0.057490200548227385

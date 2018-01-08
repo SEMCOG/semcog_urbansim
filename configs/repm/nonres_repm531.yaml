@@ -19,15 +19,15 @@ model_expression:
     - nodes_walk_percent_high_income
     - zones_ln_empden_16
     - nodes_walk_population
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - zones_ln_empden_1
     - building_age_le_10
     - drv_nearest_healthcenter
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - stories
     - crime_ucr_rate
     - nodes_walk_race_4_hhs
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - parcel_sqft
 
 ytransform: np.exp
@@ -41,12 +41,12 @@ fit_parameters:
         building_age_le_10: 0.3937205671749859
         crime_ucr_rate: -2.325914657198157e-05
         drv_nearest_healthcenter: 0.048593385724184916
-        nodes_drv_drv_10min_pop: -0.20814352544672957
-        nodes_drv_drv_15min_retail_jobs: 0.20533939247530697
+        nodes_drv_log_sum_10min_pop: -0.20814352544672957
+        nodes_drv_log_sum_15min_retail_jobs: 0.20533939247530697
         nodes_walk_percent_high_income: 0.680629530567434
         nodes_walk_population: -0.0011674584091658075
         nodes_walk_race_4_hhs: 0.0036152763675248484
-        nodes_walk_sum_nonresidential_units: -0.07320048372972682
+        nodes_walk_log_sum_nonresidential_units: -0.07320048372972682
         non_residential_sqft: -1.0235996576079579e-06
         parcel_sqft: 1.8399378623003005e-07
         stories: -0.10316345253847489
@@ -59,12 +59,12 @@ fit_parameters:
         building_age_le_10: 0.09637683444253473
         crime_ucr_rate: 2.307770308014079e-06
         drv_nearest_healthcenter: 0.006836473209196209
-        nodes_drv_drv_10min_pop: 0.04780802170780807
-        nodes_drv_drv_15min_retail_jobs: 0.058729701248169966
+        nodes_drv_log_sum_10min_pop: 0.04780802170780807
+        nodes_drv_log_sum_15min_retail_jobs: 0.058729701248169966
         nodes_walk_percent_high_income: 0.17589844992251835
         nodes_walk_population: 8.65354722055408e-05
         nodes_walk_race_4_hhs: 0.0009608019273997286
-        nodes_walk_sum_nonresidential_units: 0.008308895847301934
+        nodes_walk_log_sum_nonresidential_units: 0.008308895847301934
         non_residential_sqft: 8.983987992146619e-08
         parcel_sqft: 1.8027649968444048e-08
         stories: 0.009539155972079572
@@ -77,12 +77,12 @@ fit_parameters:
         building_age_le_10: 4.085219954072513
         crime_ucr_rate: -10.07862285566752
         drv_nearest_healthcenter: 7.107961113461049
-        nodes_drv_drv_10min_pop: -4.353736423541141
-        nodes_drv_drv_15min_retail_jobs: 3.4963466203858036
+        nodes_drv_log_sum_10min_pop: -4.353736423541141
+        nodes_drv_log_sum_15min_retail_jobs: 3.4963466203858036
         nodes_walk_percent_high_income: 3.8694458698598257
         nodes_walk_population: -13.491096534295632
         nodes_walk_race_4_hhs: 3.7627696868896496
-        nodes_walk_sum_nonresidential_units: -8.809893044151767
+        nodes_walk_log_sum_nonresidential_units: -8.809893044151767
         non_residential_sqft: -11.393600019309249
         parcel_sqft: 10.206199174717526
         stories: -10.814735899111719

@@ -20,7 +20,7 @@ model_expression:
     - stories
     - zones_ln_empden_6
     - drv_nearest_urgentcare
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_50min
     - building_age_gt_100
     - nodes_walk_race_3_hhs
@@ -37,7 +37,7 @@ fit_parameters:
         building_age_gt_100: 0.28640568879710404
         drv_nearest_park: -0.19462511224005608
         drv_nearest_urgentcare: -0.1806518706569652
-        nodes_drv_drv_20min_pop: -0.9529075347802229
+        nodes_drv_log_sum_20min_pop: -0.9529075347802229
         nodes_walk_race_3_hhs: -0.01798665609438422
         stories: -0.06300046501687552
         zones_ln_empden_6: -1.0270225212837207
@@ -51,7 +51,7 @@ fit_parameters:
         building_age_gt_100: 0.0958560501320538
         drv_nearest_park: 0.03824630586661006
         drv_nearest_urgentcare: 0.0303819118743484
-        nodes_drv_drv_20min_pop: 0.2651457636573231
+        nodes_drv_log_sum_20min_pop: 0.2651457636573231
         nodes_walk_race_3_hhs: 0.002156026252887045
         stories: 0.02398635946634689
         zones_ln_empden_6: 0.04678198827897546
@@ -65,7 +65,7 @@ fit_parameters:
         building_age_gt_100: 2.9878728406036354
         drv_nearest_park: -5.088729691145634
         drv_nearest_urgentcare: -5.946033659899148
-        nodes_drv_drv_20min_pop: -3.593900659155051
+        nodes_drv_log_sum_20min_pop: -3.593900659155051
         nodes_walk_race_3_hhs: -8.34250328366783
         stories: -2.6265121685208555
         zones_ln_empden_6: -21.95337477234332

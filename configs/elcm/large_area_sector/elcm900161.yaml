@@ -25,8 +25,8 @@ model_expression:
 - vacant_job_spaces
 - zones_empden
 - b_ln_building_sqft
-- nodes_drv_drv_10min_pop
-- nodes_drv_drv_15min_retail_jobs
+- nodes_drv_log_sum_10min_pop
+- nodes_drv_log_sum_15min_retail_jobs
 - nodes_walk_ave_lot_sqft
 - zones_ln_empden_11
 - building_type_id_is_11
@@ -42,8 +42,8 @@ fit_parameters:
         b_ln_building_sqft: 0.7400478691039722
         building_type_id_is_11: 0.5408848542692508
         building_type_id_is_24: 1.3601507311147871
-        nodes_drv_drv_10min_pop: -0.17829825962670734
-        nodes_drv_drv_15min_retail_jobs: 0.10291283934822963
+        nodes_drv_log_sum_10min_pop: -0.17829825962670734
+        nodes_drv_log_sum_15min_retail_jobs: 0.10291283934822963
         nodes_walk_ave_lot_sqft: 0.17281782359384595
         nodes_walk_max_office_far: 0.00864591405997058
         vacant_job_spaces: -0.0007607828026502087
@@ -54,8 +54,8 @@ fit_parameters:
         b_ln_building_sqft: 0.09367348869806526
         building_type_id_is_11: 0.2930878311958209
         building_type_id_is_24: 0.843073854298624
-        nodes_drv_drv_10min_pop: 0.28134085595512304
-        nodes_drv_drv_15min_retail_jobs: 0.3756877522921001
+        nodes_drv_log_sum_10min_pop: 0.28134085595512304
+        nodes_drv_log_sum_15min_retail_jobs: 0.3756877522921001
         nodes_walk_ave_lot_sqft: 0.1339228101718452
         nodes_walk_max_office_far: 0.01991239003553137
         vacant_job_spaces: 0.0003849642876956261
@@ -66,8 +66,8 @@ fit_parameters:
         b_ln_building_sqft: 7.900291527406914
         building_type_id_is_11: 1.845470185720093
         building_type_id_is_24: 1.6133233454930629
-        nodes_drv_drv_10min_pop: -0.6337446405407534
-        nodes_drv_drv_15min_retail_jobs: 0.27393184558280226
+        nodes_drv_log_sum_10min_pop: -0.6337446405407534
+        nodes_drv_log_sum_15min_retail_jobs: 0.27393184558280226
         nodes_walk_ave_lot_sqft: 1.2904285936958162
         nodes_walk_max_office_far: 0.4341977052751046
         vacant_job_spaces: -1.9762425424036354

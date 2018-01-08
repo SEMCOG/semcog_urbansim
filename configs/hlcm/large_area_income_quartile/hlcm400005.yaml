@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: has_children:nodes_walk_percent_hh_with_children + improvement_value
     + has_workers:zones_a_ln_emp_50min_transit + ln_income:nodes_walk_ave_income +
-    b_ln_parcel_sqft + nodes_drv_drv_60min_jobs + building_age_gt_100 + is_race1:nodes_walk_percent_race1
+    b_ln_parcel_sqft + nodes_drv_log_sum_60min_jobs + building_age_gt_100 + is_race1:nodes_walk_percent_race1
     + persons:nodes_walk_ln_popden + nodes_walk_race_4_hhs + is_young:nodes_walk_retail_jobs
     + nodes_walk_ave_unit_sqft + parcels_total_units
 
@@ -40,7 +40,7 @@ fit_parameters:
         is_race1:nodes_walk_percent_race1: 0.07683192796673412
         is_young:nodes_walk_retail_jobs: 0.0068206934791169025
         ln_income:nodes_walk_ave_income: 0.18520432643915324
-        nodes_drv_drv_60min_jobs: 0.01664792338440978
+        nodes_drv_log_sum_60min_jobs: 0.01664792338440978
         nodes_walk_ave_unit_sqft: 0.00012785252047665195
         nodes_walk_race_4_hhs: 0.004540161403956666
         parcels_total_units: 0.002480403001583893
@@ -54,7 +54,7 @@ fit_parameters:
         is_race1:nodes_walk_percent_race1: 0.26677475658876
         is_young:nodes_walk_retail_jobs: 0.0014879419802710874
         ln_income:nodes_walk_ave_income: 0.004945008788503619
-        nodes_drv_drv_60min_jobs: 0.04850835572429937
+        nodes_drv_log_sum_60min_jobs: 0.04850835572429937
         nodes_walk_ave_unit_sqft: 3.425234606174015e-05
         nodes_walk_race_4_hhs: 0.0009519327580347647
         parcels_total_units: 0.0005987953885032385
@@ -68,7 +68,7 @@ fit_parameters:
         is_race1:nodes_walk_percent_race1: 0.2880029915468069
         is_young:nodes_walk_retail_jobs: 4.583978118470886
         ln_income:nodes_walk_ave_income: 37.45278003746417
-        nodes_drv_drv_60min_jobs: 0.34319702525126633
+        nodes_drv_log_sum_60min_jobs: 0.34319702525126633
         nodes_walk_ave_unit_sqft: 3.7326646252550613
         nodes_walk_race_4_hhs: 4.769413979753871
         parcels_total_units: 4.142321482775544

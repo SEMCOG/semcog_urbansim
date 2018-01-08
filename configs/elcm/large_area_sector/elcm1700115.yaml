@@ -25,7 +25,7 @@ model_expression:
 - year_built
 - zones_logsum_pop_low_income
 - b_ln_building_sqft
-- nodes_drv_drv_10min_pop
+- nodes_drv_log_sum_10min_pop
 - building_type_id_is_33
 - stories
 - building_type_id_is_13
@@ -40,7 +40,7 @@ fit_parameters:
         b_ln_building_sqft: 0.7902654209201556
         building_type_id_is_13: -0.5674836227245185
         building_type_id_is_33: -3.1371568018356384
-        nodes_drv_drv_10min_pop: 0.20852491506840937
+        nodes_drv_log_sum_10min_pop: 0.20852491506840937
         nodes_walk_office: -0.00020895752646109982
         stories: -0.2342015842797303
         year_built: 0.00027799854680523673
@@ -50,7 +50,7 @@ fit_parameters:
         b_ln_building_sqft: 0.14816500303862215
         building_type_id_is_13: 1.5204097357837618
         building_type_id_is_33: 55.1926913156073
-        nodes_drv_drv_10min_pop: 0.16183947803714246
+        nodes_drv_log_sum_10min_pop: 0.16183947803714246
         nodes_walk_office: 0.0024954896784608505
         stories: 0.5697397088922116
         year_built: 0.00028483247267520984
@@ -60,7 +60,7 @@ fit_parameters:
         b_ln_building_sqft: 5.333684775170269
         building_type_id_is_13: -0.3732438758898003
         building_type_id_is_33: -0.056840076594498634
-        nodes_drv_drv_10min_pop: 1.2884675457279497
+        nodes_drv_log_sum_10min_pop: 1.2884675457279497
         nodes_walk_office: -0.08373407762999809
         stories: -0.4110676869181303
         year_built: 0.9760072094105445

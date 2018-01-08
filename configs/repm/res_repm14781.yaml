@@ -25,7 +25,7 @@ model_expression:
     - nodes_walk_ave_lot_sqft
     - drv_nearest_hospital
     - stories
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_ave_unit_sqft
     - nodes_walk_percent_high_income
     - zones_a_ln_retail_emp_15min_drive_alone
@@ -39,7 +39,7 @@ fit_parameters:
         Intercept: 3.0418094518791445
         crime_ucr_rate: -6.629807357963427e-05
         drv_nearest_hospital: -0.010852106553853286
-        nodes_drv_drv_20min_pop: 0.06034020299220838
+        nodes_drv_log_sum_20min_pop: 0.06034020299220838
         nodes_walk_ave_lot_sqft: 0.034836212184274594
         nodes_walk_ave_unit_sqft: 0.00010651785837678039
         nodes_walk_percent_high_income: 0.8443546398043068
@@ -57,7 +57,7 @@ fit_parameters:
         Intercept: 0.04085349997879819
         crime_ucr_rate: 2.71542224602718e-06
         drv_nearest_hospital: 0.00044849724790624253
-        nodes_drv_drv_20min_pop: 0.0023547770962504206
+        nodes_drv_log_sum_20min_pop: 0.0023547770962504206
         nodes_walk_ave_lot_sqft: 0.0038126299243074
         nodes_walk_ave_unit_sqft: 3.3105091272196616e-06
         nodes_walk_percent_high_income: 0.01148195598432494
@@ -75,7 +75,7 @@ fit_parameters:
         Intercept: 74.45652033382103
         crime_ucr_rate: -24.41538279235658
         drv_nearest_hospital: -24.196595641367008
-        nodes_drv_drv_20min_pop: 25.624592275969487
+        nodes_drv_log_sum_20min_pop: 25.624592275969487
         nodes_walk_ave_lot_sqft: 9.13705575308438
         nodes_walk_ave_unit_sqft: 32.17567276917302
         nodes_walk_percent_high_income: 73.53752626791218

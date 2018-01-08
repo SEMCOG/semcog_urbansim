@@ -27,7 +27,7 @@ model_expression:
 - b_total_jobs
 - building_type_id_is_13
 - building_type_id_is_51
-- nodes_drv_drv_30min_jobs
+- nodes_drv_log_sum_30min_jobs
 - bldg_empratio_14
 
 fitted: true
@@ -41,7 +41,7 @@ fit_parameters:
         bldg_empratio_14: 0.9554582524045664
         building_type_id_is_13: -0.8270205741565854
         building_type_id_is_51: 0.19247703420983675
-        nodes_drv_drv_30min_jobs: 0.09258470343436127
+        nodes_drv_log_sum_30min_jobs: 0.09258470343436127
         nodes_walk_quarter_mile_to_transit: 0.05333960800497592
         vacant_job_spaces: -0.0025397060727568995
     Std. Error:
@@ -50,7 +50,7 @@ fit_parameters:
         bldg_empratio_14: 0.2750045974549193
         building_type_id_is_13: 0.41595780644922
         building_type_id_is_51: 0.30225377468156867
-        nodes_drv_drv_30min_jobs: 0.03394322583827738
+        nodes_drv_log_sum_30min_jobs: 0.03394322583827738
         nodes_walk_quarter_mile_to_transit: 0.01935898835484718
         vacant_job_spaces: 0.0002323618026686909
     T-Score:
@@ -59,7 +59,7 @@ fit_parameters:
         bldg_empratio_14: 3.4743355611034534
         building_type_id_is_13: -1.9882318863452988
         building_type_id_is_51: 0.6368060561447603
-        nodes_drv_drv_30min_jobs: 2.727634193505397
+        nodes_drv_log_sum_30min_jobs: 2.727634193505397
         nodes_walk_quarter_mile_to_transit: 2.7552890175493356
         vacant_job_spaces: -10.929963718598344
 

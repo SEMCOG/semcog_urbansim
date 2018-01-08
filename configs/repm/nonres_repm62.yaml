@@ -25,7 +25,7 @@ model_expression:
     - building_sqft
     - zones_logsum_pop_high_income
     - nodes_walk_population
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - crime_ucr_rate
     - nodes_walk_race_3_hhs
     - zones_ln_empden_7
@@ -43,7 +43,7 @@ fit_parameters:
         building_sqft: -3.9233510373236815e-06
         crime_ucr_rate: -3.683982886021929e-05
         drv_nearest_urgentcare: -0.012969407649463076
-        nodes_drv_drv_20min_pop: -0.07623770371810952
+        nodes_drv_log_sum_20min_pop: -0.07623770371810952
         nodes_walk_population: -0.00039841119851605797
         nodes_walk_race_3_hhs: 0.008593281227716805
         nodes_walk_retail_jobs: 0.0003168846942256015
@@ -61,7 +61,7 @@ fit_parameters:
         building_sqft: 3.52909014776593e-07
         crime_ucr_rate: 9.344151403645439e-06
         drv_nearest_urgentcare: 0.003844315521591084
-        nodes_drv_drv_20min_pop: 0.023432039634449116
+        nodes_drv_log_sum_20min_pop: 0.023432039634449116
         nodes_walk_population: 7.690581043571445e-05
         nodes_walk_race_3_hhs: 0.0009182022927670844
         nodes_walk_retail_jobs: 8.55135037238322e-05
@@ -79,7 +79,7 @@ fit_parameters:
         building_sqft: -11.117174322699963
         crime_ucr_rate: -3.9425547884259395
         drv_nearest_urgentcare: -3.373658477464228
-        nodes_drv_drv_20min_pop: -3.253566693614969
+        nodes_drv_log_sum_20min_pop: -3.253566693614969
         nodes_walk_population: -5.18050842008992
         nodes_walk_race_3_hhs: 9.358810466286451
         nodes_walk_retail_jobs: 3.705668466690218

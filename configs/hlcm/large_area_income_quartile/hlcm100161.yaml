@@ -21,7 +21,7 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: residential_units + has_children:nodes_walk_percent_hh_with_children
-    + zones_employment + has_workers:zones_a_ln_emp_50min_transit + nodes_drv_drv_60min_jobs
+    + zones_employment + has_workers:zones_a_ln_emp_50min_transit + nodes_drv_log_sum_60min_jobs
     + persons:nodes_walk_ln_popden + nodes_walk_ave_lot_sqft + is_young:zones_empden
     + is_race2:nodes_walk_percent_race2 + ln_income:nodes_walk_ln_popden + zones_transit_jobs_30min
 
@@ -36,7 +36,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 7.214471045301141
         is_young:zones_empden: 0.0071330947167717014
         ln_income:nodes_walk_ln_popden: 0.028076373573311005
-        nodes_drv_drv_60min_jobs: 0.011809044502474664
+        nodes_drv_log_sum_60min_jobs: 0.011809044502474664
         nodes_walk_ave_lot_sqft: 1.1341536348007257
         persons:nodes_walk_ln_popden: 0.20001642685873156
         residential_units: 0.03511838775105063
@@ -48,7 +48,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 0.2019137256018495
         is_young:zones_empden: 0.0018230033900247067
         ln_income:nodes_walk_ln_popden: 0.0030121768762755544
-        nodes_drv_drv_60min_jobs: 0.019219201384428168
+        nodes_drv_log_sum_60min_jobs: 0.019219201384428168
         nodes_walk_ave_lot_sqft: 0.03291305330259248
         persons:nodes_walk_ln_popden: 0.009589509707605338
         residential_units: 0.0008898454116869541
@@ -60,7 +60,7 @@ fit_parameters:
         is_race2:nodes_walk_percent_race2: 35.73046371066048
         is_young:zones_empden: 3.9128258103102205
         ln_income:nodes_walk_ln_popden: 9.320957807772034
-        nodes_drv_drv_60min_jobs: 0.6144399169490268
+        nodes_drv_log_sum_60min_jobs: 0.6144399169490268
         nodes_walk_ave_lot_sqft: 34.459082977615786
         persons:nodes_walk_ln_popden: 20.85783663163724
         residential_units: 39.46571762894611

@@ -25,7 +25,7 @@ model_expression:
     - stories
     - zones_ln_empden_11
     - zones_ln_empden_13
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_ave_income
 
 ytransform: np.exp
@@ -38,7 +38,7 @@ fit_parameters:
         b_ln_building_sqft: -0.149196317617598
         b_total_jobs: 0.002155546600492703
         drv_nearest_grocery: -0.069072050229468
-        nodes_drv_drv_20min_pop: -0.1952641754582402
+        nodes_drv_log_sum_20min_pop: -0.1952641754582402
         nodes_walk_ave_income: 0.05945827187842557
         nodes_walk_hhsize: -0.11569735083283234
         nodes_walk_ln_popden: 0.1360272930475962
@@ -54,7 +54,7 @@ fit_parameters:
         b_ln_building_sqft: 0.01901755830621093
         b_total_jobs: 0.000254434176637669
         drv_nearest_grocery: 0.01469062758317346
-        nodes_drv_drv_20min_pop: 0.06072338623777562
+        nodes_drv_log_sum_20min_pop: 0.06072338623777562
         nodes_walk_ave_income: 0.009359214932149949
         nodes_walk_hhsize: 0.04642624131092175
         nodes_walk_ln_popden: 0.02598061500364556
@@ -70,7 +70,7 @@ fit_parameters:
         b_ln_building_sqft: -7.845187863516217
         b_total_jobs: 8.471922400434211
         drv_nearest_grocery: -4.7017766830181325
-        nodes_drv_drv_20min_pop: -3.2156338365854773
+        nodes_drv_log_sum_20min_pop: -3.2156338365854773
         nodes_walk_ave_income: 6.352912323252644
         nodes_walk_hhsize: -2.4920680108043682
         nodes_walk_ln_popden: 5.235722596578605

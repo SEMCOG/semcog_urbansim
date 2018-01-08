@@ -24,8 +24,8 @@ model_expression:
     - popden
     - nodes_walk_lowinc_hhs
     - drv_nearest_urgentcare
-    - nodes_drv_drv_20min_pop
-    - nodes_drv_drv_30min_jobs
+    - nodes_drv_log_sum_20min_pop
+    - nodes_drv_log_sum_30min_jobs
     - zones_transit_jobs_30min
 
 ytransform: np.exp
@@ -37,8 +37,8 @@ fit_parameters:
         Intercept: -10.87171459992437
         b_is_pre_1945: 0.46315207473876485
         drv_nearest_urgentcare: -0.06715602730985613
-        nodes_drv_drv_20min_pop: -3.80080167626114
-        nodes_drv_drv_30min_jobs: 5.266767756840773
+        nodes_drv_log_sum_20min_pop: -3.80080167626114
+        nodes_drv_log_sum_30min_jobs: 5.266767756840773
         nodes_walk_industrial: 0.0066835815584949535
         nodes_walk_lowinc_hhs: 0.004126210864211527
         nodes_walk_percent_race4: -10.11858354082886
@@ -53,8 +53,8 @@ fit_parameters:
         Intercept: 0.16706114055009294
         b_is_pre_1945: 0.010146700676843303
         drv_nearest_urgentcare: 0.00233104409455589
-        nodes_drv_drv_20min_pop: 0.02940437647417726
-        nodes_drv_drv_30min_jobs: 0.03365392532140526
+        nodes_drv_log_sum_20min_pop: 0.02940437647417726
+        nodes_drv_log_sum_30min_jobs: 0.03365392532140526
         nodes_walk_industrial: 0.00017854089081870516
         nodes_walk_lowinc_hhs: 7.570839323404731e-05
         nodes_walk_percent_race4: 0.2031228753773689
@@ -69,8 +69,8 @@ fit_parameters:
         Intercept: -65.07626228413369
         b_is_pre_1945: 45.64558367191867
         drv_nearest_urgentcare: -28.80941955010537
-        nodes_drv_drv_20min_pop: -129.25972702053315
-        nodes_drv_drv_30min_jobs: 156.497873770787
+        nodes_drv_log_sum_20min_pop: -129.25972702053315
+        nodes_drv_log_sum_30min_jobs: 156.497873770787
         nodes_walk_industrial: 37.43445844728997
         nodes_walk_lowinc_hhs: 54.50136620196956
         nodes_walk_percent_race4: -49.81508617397325

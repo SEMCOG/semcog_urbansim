@@ -23,7 +23,7 @@ model_expression:
     - stories
     - zones_a_ln_emp_50min_transit
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_a_ln_emp_26min_drive_alone
 
@@ -38,7 +38,7 @@ fit_parameters:
         b_total_jobs: 0.0004840180552212307
         bldg_empratio_16: 0.47733806315916
         bldg_empratio_5: 0.2692622928443847
-        nodes_drv_drv_20min_pop: -0.11495428352822507
+        nodes_drv_log_sum_20min_pop: -0.11495428352822507
         nodes_walk_hhsize: -0.09145866891492783
         parcels_total_units: -0.028606196631812998
         stories: -0.10796215004147838
@@ -53,7 +53,7 @@ fit_parameters:
         b_total_jobs: 0.00020758137376296104
         bldg_empratio_16: 0.052327678167335606
         bldg_empratio_5: 0.024074035311698102
-        nodes_drv_drv_20min_pop: 0.03657243080866463
+        nodes_drv_log_sum_20min_pop: 0.03657243080866463
         nodes_walk_hhsize: 0.02726744482547166
         parcels_total_units: 0.012163279760880986
         stories: 0.025581956614666505
@@ -68,7 +68,7 @@ fit_parameters:
         b_total_jobs: 2.331702726728917
         bldg_empratio_16: 9.122095225259349
         bldg_empratio_5: 11.1847594039851
-        nodes_drv_drv_20min_pop: -3.1431950512020777
+        nodes_drv_log_sum_20min_pop: -3.1431950512020777
         nodes_walk_hhsize: -3.354134188235066
         parcels_total_units: -2.3518489415835857
         stories: -4.220245998681044

@@ -23,7 +23,7 @@ prediction_sample_size: null
 model_expression:
 - building_type_id_is_62
 - b_ln_non_residential_sqft
-- nodes_drv_drv_15min_retail_jobs
+- nodes_drv_log_sum_15min_retail_jobs
 - b_is_pre_1945
 - building_type_id_is_42
 
@@ -37,19 +37,19 @@ fit_parameters:
         b_ln_non_residential_sqft: 0.8611807422508944
         building_type_id_is_42: -0.3037680667414119
         building_type_id_is_62: 0.32435755563301566
-        nodes_drv_drv_15min_retail_jobs: 0.09354328214438114
+        nodes_drv_log_sum_15min_retail_jobs: 0.09354328214438114
     Std. Error:
         b_is_pre_1945: 0.1500441756548611
         b_ln_non_residential_sqft: 0.03513025140123954
         building_type_id_is_42: 1.0997462644980787
         building_type_id_is_62: 0.383675025683265
-        nodes_drv_drv_15min_retail_jobs: 0.03701294315245085
+        nodes_drv_log_sum_15min_retail_jobs: 0.03701294315245085
     T-Score:
         b_is_pre_1945: -4.048636245628674
         b_ln_non_residential_sqft: 24.513936220237476
         building_type_id_is_42: -0.27621650243117746
         building_type_id_is_62: 0.8453965828382647
-        nodes_drv_drv_15min_retail_jobs: 2.5273127229869337
+        nodes_drv_log_sum_15min_retail_jobs: 2.5273127229869337
 
 probability_mode: single_chooser
 

@@ -18,11 +18,11 @@ model_expression:
     - zones_logsum_pop_low_income
     - zones_ln_empden_15
     - walk_nearest_grocery
-    - nodes_walk_sum_nonresidential_units
-    - nodes_walk_sum_residential_units
+    - nodes_walk_log_sum_nonresidential_units
+    - nodes_walk_log_sum_residential_units
     - b_total_jobs
     - bldg_empratio_8
-    - nodes_drv_drv_15min_retail_jobs
+    - nodes_drv_log_sum_15min_retail_jobs
     - building_sqft
     - nodes_walk_percent_hh_with_children
     - crime_ucr_rate
@@ -39,10 +39,10 @@ fit_parameters:
         bldg_empratio_8: 0.7159384203202241
         building_sqft: -2.1630202924117947e-05
         crime_ucr_rate: -0.00011182822167810975
-        nodes_drv_drv_15min_retail_jobs: 0.07581432271950808
+        nodes_drv_log_sum_15min_retail_jobs: 0.07581432271950808
         nodes_walk_percent_hh_with_children: -0.43463157101504624
-        nodes_walk_sum_nonresidential_units: -0.0900714361609478
-        nodes_walk_sum_residential_units: -0.03769326106335529
+        nodes_walk_log_sum_nonresidential_units: -0.0900714361609478
+        nodes_walk_log_sum_residential_units: -0.03769326106335529
         walk_nearest_grocery: -3.2193669147700345e-05
         year_built: 0.0002984385887194359
         zones_ln_empden_15: -0.10745882899220775
@@ -55,10 +55,10 @@ fit_parameters:
         bldg_empratio_8: 0.3429240420308288
         building_sqft: 1.3338427074042523e-06
         crime_ucr_rate: 1.5678545444526766e-05
-        nodes_drv_drv_15min_retail_jobs: 0.028954465547426405
+        nodes_drv_log_sum_15min_retail_jobs: 0.028954465547426405
         nodes_walk_percent_hh_with_children: 0.10595994114996171
-        nodes_walk_sum_nonresidential_units: 0.012957804131084688
-        nodes_walk_sum_residential_units: 0.010667160125960841
+        nodes_walk_log_sum_nonresidential_units: 0.012957804131084688
+        nodes_walk_log_sum_residential_units: 0.010667160125960841
         walk_nearest_grocery: 5.207237553985885e-06
         year_built: 2.4127787209314026e-05
         zones_ln_empden_15: 0.034216504277802116
@@ -71,10 +71,10 @@ fit_parameters:
         bldg_empratio_8: 2.087746359457239
         building_sqft: -16.21645701104576
         crime_ucr_rate: -7.132563545118144
-        nodes_drv_drv_15min_retail_jobs: 2.6183982776448373
+        nodes_drv_log_sum_15min_retail_jobs: 2.6183982776448373
         nodes_walk_percent_hh_with_children: -4.101847984229494
-        nodes_walk_sum_nonresidential_units: -6.951134254674676
-        nodes_walk_sum_residential_units: -3.533579754898456
+        nodes_walk_log_sum_nonresidential_units: -6.951134254674676
+        nodes_walk_log_sum_residential_units: -3.533579754898456
         walk_nearest_grocery: -6.182485207162801
         year_built: 12.369082424774946
         zones_ln_empden_15: -3.1405554500762207

@@ -25,7 +25,7 @@ model_expression:
 - b_ln_non_residential_sqft
 - zones_ln_empden_14
 - b_ln_land_area
-- nodes_drv_drv_45min_jobs
+- nodes_drv_log_sum_45min_jobs
 - building_type_id_is_11
 - building_age
 - building_type_id_is_23
@@ -44,7 +44,7 @@ fit_parameters:
         building_age: -0.007021899912862027
         building_type_id_is_11: -0.03892919005791262
         building_type_id_is_23: 0.2039914982252801
-        nodes_drv_drv_45min_jobs: 0.19619439083331733
+        nodes_drv_log_sum_45min_jobs: 0.19619439083331733
         zones_ln_empden_14: 0.6203072144801716
     Std. Error:
         b_ln_land_area: 0.10772789347695522
@@ -54,7 +54,7 @@ fit_parameters:
         building_age: 0.0029433965586200365
         building_type_id_is_11: 0.26721567366609955
         building_type_id_is_23: 0.14409469100012104
-        nodes_drv_drv_45min_jobs: 0.035881814276069096
+        nodes_drv_log_sum_45min_jobs: 0.035881814276069096
         zones_ln_empden_14: 0.13119593758668144
     T-Score:
         b_ln_land_area: 1.403611085554559
@@ -64,7 +64,7 @@ fit_parameters:
         building_age: -2.385645213961292
         building_type_id_is_11: -0.1456845308653442
         building_type_id_is_23: 1.4156767109838122
-        nodes_drv_drv_45min_jobs: 5.46779461383497
+        nodes_drv_log_sum_45min_jobs: 5.46779461383497
         zones_ln_empden_14: 4.728097728409717
 
 probability_mode: single_chooser

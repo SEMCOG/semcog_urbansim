@@ -25,7 +25,7 @@ model_expression:
     - nodes_walk_percent_hh_with_children
     - year_built
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - crime_ucr_rate
     - zones_a_ln_retail_emp_15min_drive_alone
 
@@ -41,7 +41,7 @@ fit_parameters:
         building_age_gt_80: 0.12892036442429855
         crime_ucr_rate: -0.00017853014101972187
         drv_nearest_grocery: -0.07962692296815022
-        nodes_drv_drv_20min_pop: -0.11894839083810188
+        nodes_drv_log_sum_20min_pop: -0.11894839083810188
         nodes_walk_percent_hh_with_children: -0.32058202169116257
         parcels_total_units: -0.0028425128141372834
         stories: -0.10292288450089569
@@ -58,7 +58,7 @@ fit_parameters:
         building_age_gt_80: 0.05230197313927889
         crime_ucr_rate: 2.0834520573136722e-05
         drv_nearest_grocery: 0.010615217355344011
-        nodes_drv_drv_20min_pop: 0.05921753883078288
+        nodes_drv_log_sum_20min_pop: 0.05921753883078288
         nodes_walk_percent_hh_with_children: 0.10709188536842391
         parcels_total_units: 0.00015911098024870308
         stories: 0.020953670484930943
@@ -75,7 +75,7 @@ fit_parameters:
         building_age_gt_80: 2.4649235332094785
         crime_ucr_rate: -8.568958445336735
         drv_nearest_grocery: -7.50120513811841
-        nodes_drv_drv_20min_pop: -2.008668262590293
+        nodes_drv_log_sum_20min_pop: -2.008668262590293
         nodes_walk_percent_hh_with_children: -2.9935229974547286
         parcels_total_units: -17.864969530664762
         stories: -4.911926269667827

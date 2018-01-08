@@ -24,7 +24,7 @@ model_expression:
 - b_ln_non_residential_sqft
 - vacant_job_spaces
 - nodes_walk_lowinc_hhs
-- nodes_drv_drv_15min_retail_jobs
+- nodes_drv_log_sum_15min_retail_jobs
 - nodes_walk_ave_lot_sqft
 - year_built
 - building_type_id_is_25
@@ -39,7 +39,7 @@ fit_parameters:
         b_ln_non_residential_sqft: 0.7679670020214738
         building_type_id_is_23: 0.4168016015609774
         building_type_id_is_25: -1.5864764213360942
-        nodes_drv_drv_15min_retail_jobs: 0.2230072700362413
+        nodes_drv_log_sum_15min_retail_jobs: 0.2230072700362413
         nodes_walk_ave_lot_sqft: 0.010297240255948286
         nodes_walk_lowinc_hhs: -0.00020547558972008103
         vacant_job_spaces: -0.0004961450360145086
@@ -48,7 +48,7 @@ fit_parameters:
         b_ln_non_residential_sqft: 0.09307515510877166
         building_type_id_is_23: 0.2978851490191219
         building_type_id_is_25: 1.034445376060077
-        nodes_drv_drv_15min_retail_jobs: 0.09810111239367822
+        nodes_drv_log_sum_15min_retail_jobs: 0.09810111239367822
         nodes_walk_ave_lot_sqft: 0.14485282917640055
         nodes_walk_lowinc_hhs: 0.000775283422078375
         vacant_job_spaces: 0.00076541941287139
@@ -57,7 +57,7 @@ fit_parameters:
         b_ln_non_residential_sqft: 8.251041871743263
         building_type_id_is_23: 1.39920235343529
         building_type_id_is_25: -1.533649294638016
-        nodes_drv_drv_15min_retail_jobs: 2.273238953105003
+        nodes_drv_log_sum_15min_retail_jobs: 2.273238953105003
         nodes_walk_ave_lot_sqft: 0.07108760190944144
         nodes_walk_lowinc_hhs: -0.26503286910126794
         vacant_job_spaces: -0.6482002254858849

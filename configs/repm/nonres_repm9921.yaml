@@ -26,7 +26,7 @@ model_expression:
     - vacant_job_spaces
     - walk_nearest_urgentcare
     - crime_ucr_rate
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - bldg_empratio_5
     - zones_a_ln_retail_emp_15min_drive_alone
 
@@ -41,7 +41,7 @@ fit_parameters:
         bldg_empratio_16: 0.2732357571581012
         bldg_empratio_5: 0.23761994056970465
         crime_ucr_rate: -3.8086280248177665e-05
-        nodes_drv_drv_20min_pop: 0.043895543056552175
+        nodes_drv_log_sum_20min_pop: 0.043895543056552175
         nodes_drv_elem_school_perf: 0.534795068147932
         nodes_walk_highinc_hhs: 0.0020092685060802626
         nodes_walk_percent_race2: -0.2970762953488269
@@ -59,7 +59,7 @@ fit_parameters:
         bldg_empratio_16: 0.022415918162988654
         bldg_empratio_5: 0.013354239290561894
         crime_ucr_rate: 6.4132929942184395e-06
-        nodes_drv_drv_20min_pop: 0.01861750970525336
+        nodes_drv_log_sum_20min_pop: 0.01861750970525336
         nodes_drv_elem_school_perf: 0.05262602631560103
         nodes_walk_highinc_hhs: 0.0002717349959435329
         nodes_walk_percent_race2: 0.05137923068130464
@@ -77,7 +77,7 @@ fit_parameters:
         bldg_empratio_16: 12.18936271855444
         bldg_empratio_5: 17.79359613075396
         crime_ucr_rate: -5.938646539696894
-        nodes_drv_drv_20min_pop: 2.3577558841914303
+        nodes_drv_log_sum_20min_pop: 2.3577558841914303
         nodes_drv_elem_school_perf: 10.162178404668785
         nodes_walk_highinc_hhs: 7.394220604907999
         nodes_walk_percent_race2: -5.782030820810324

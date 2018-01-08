@@ -25,11 +25,11 @@ model_expression:
 - nodes_walk_residential
 - b_ln_building_sqft
 - b_ln_parcels_parcel_far
-- nodes_drv_drv_45min_jobs
+- nodes_drv_log_sum_45min_jobs
 - building_type_id_is_33
 - stories
 - building_type_id_is_11
-- nodes_drv_drv_20min_pop
+- nodes_drv_log_sum_20min_pop
 
 fitted: true
 
@@ -42,8 +42,8 @@ fit_parameters:
         b_total_jobs: 0.004691817123190724
         building_type_id_is_11: -0.4731263208788812
         building_type_id_is_33: -20.751753713088025
-        nodes_drv_drv_20min_pop: 1.42605519789724
-        nodes_drv_drv_45min_jobs: -0.3048973348170959
+        nodes_drv_log_sum_20min_pop: 1.42605519789724
+        nodes_drv_log_sum_45min_jobs: -0.3048973348170959
         nodes_walk_residential: -0.004132989734135098
         stories: -0.2578021076734373
     Std. Error:
@@ -52,8 +52,8 @@ fit_parameters:
         b_total_jobs: 0.0013504086903075026
         building_type_id_is_11: 1.180340808875923
         building_type_id_is_33: 2949092534.7609525
-        nodes_drv_drv_20min_pop: 1.4889803903036505
-        nodes_drv_drv_45min_jobs: 1.2821921053128007
+        nodes_drv_log_sum_20min_pop: 1.4889803903036505
+        nodes_drv_log_sum_45min_jobs: 1.2821921053128007
         nodes_walk_residential: 0.002161640906979832
         stories: 0.3310893652843796
     T-Score:
@@ -62,8 +62,8 @@ fit_parameters:
         b_total_jobs: 3.474368283369346
         building_type_id_is_11: -0.40083873854150204
         building_type_id_is_33: -7.036657367813018e-09
-        nodes_drv_drv_20min_pop: 0.9577394082446056
-        nodes_drv_drv_45min_jobs: -0.23779380137636538
+        nodes_drv_log_sum_20min_pop: 0.9577394082446056
+        nodes_drv_log_sum_45min_jobs: -0.23779380137636538
         nodes_walk_residential: -1.911968690447094
         stories: -0.7786481074437582
 

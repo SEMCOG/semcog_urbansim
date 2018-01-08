@@ -20,11 +20,11 @@ model_expression:
     - b_ln_building_sqft
     - walk_nearest_hospital
     - nodes_walk_percent_race1
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - nodes_walk_lowinc_hhs
     - zones_ln_empden_13
     - crime_ucr_rate
-    - nodes_walk_sum_nonresidential_units
+    - nodes_walk_log_sum_nonresidential_units
     - nodes_walk_households
 
 ytransform: np.exp
@@ -37,11 +37,11 @@ fit_parameters:
         b_ln_building_sqft: -0.23498544973498367
         building_age_gt_90: 1.035751057810571
         crime_ucr_rate: -0.0001562895905443126
-        nodes_drv_drv_10min_pop: 0.16645499800068297
+        nodes_drv_log_sum_10min_pop: 0.16645499800068297
         nodes_walk_households: -0.0018800806651088889
         nodes_walk_lowinc_hhs: 0.0024449270033224226
         nodes_walk_percent_race1: -0.2680504449906567
-        nodes_walk_sum_nonresidential_units: -0.04302931745240751
+        nodes_walk_log_sum_nonresidential_units: -0.04302931745240751
         vacant_job_spaces: -0.0012384396453912821
         walk_nearest_hospital: 4.047614548799859e-05
         zones_employment: -2.6621523982684873e-05
@@ -52,11 +52,11 @@ fit_parameters:
         b_ln_building_sqft: 0.01159576110321696
         building_age_gt_90: 0.3177291253787099
         crime_ucr_rate: 2.148878051010272e-05
-        nodes_drv_drv_10min_pop: 0.02865215797437303
+        nodes_drv_log_sum_10min_pop: 0.02865215797437303
         nodes_walk_households: 0.00042121288568540985
         nodes_walk_lowinc_hhs: 0.0008729253526480746
         nodes_walk_percent_race1: 0.07659944726043942
-        nodes_walk_sum_nonresidential_units: 0.008512994060544196
+        nodes_walk_log_sum_nonresidential_units: 0.008512994060544196
         vacant_job_spaces: 0.0001572333738498575
         walk_nearest_hospital: 1.6407035722085487e-05
         zones_employment: 5.7565160009078544e-06
@@ -67,11 +67,11 @@ fit_parameters:
         b_ln_building_sqft: -20.26477155257991
         building_age_gt_90: 3.2598555658881807
         crime_ucr_rate: -7.273078640774181
-        nodes_drv_drv_10min_pop: 5.809509990471332
+        nodes_drv_log_sum_10min_pop: 5.809509990471332
         nodes_walk_households: -4.463492758654729
         nodes_walk_lowinc_hhs: 2.800843160191855
         nodes_walk_percent_race1: -3.4993783190011887
-        nodes_walk_sum_nonresidential_units: -5.054545691725392
+        nodes_walk_log_sum_nonresidential_units: -5.054545691725392
         vacant_job_spaces: -7.876442609276266
         walk_nearest_hospital: 2.4669992906466165
         zones_employment: -4.624589591775028

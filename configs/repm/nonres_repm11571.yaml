@@ -18,7 +18,7 @@ model_expression:
     - b_ln_building_sqft
     - b_ln_parcel_sqft
     - nodes_walk_quarter_mile_to_transit
-    - nodes_drv_drv_10min_pop
+    - nodes_drv_log_sum_10min_pop
     - stories
     - nodes_walk_percent_hh_with_children
     - drv_nearest_healthcenter
@@ -40,7 +40,7 @@ fit_parameters:
         bldg_empratio_3: 1.3084135376991828
         drv_nearest_healthcenter: -0.014666433392734306
         drv_nearest_urgentcare: 0.03681235601142606
-        nodes_drv_drv_10min_pop: 0.21563469271218685
+        nodes_drv_log_sum_10min_pop: 0.21563469271218685
         nodes_walk_households: 0.003925229108617164
         nodes_walk_percent_hh_with_children: -0.9839921498317716
         nodes_walk_percent_mid_income: 0.5023477783003114
@@ -56,7 +56,7 @@ fit_parameters:
         bldg_empratio_3: 0.21747623024634352
         drv_nearest_healthcenter: 0.004868069774394978
         drv_nearest_urgentcare: 0.004837693757565772
-        nodes_drv_drv_10min_pop: 0.02549908018152679
+        nodes_drv_log_sum_10min_pop: 0.02549908018152679
         nodes_walk_households: 0.0008078778177721764
         nodes_walk_percent_hh_with_children: 0.11153056329468462
         nodes_walk_percent_mid_income: 0.1067050721907891
@@ -72,7 +72,7 @@ fit_parameters:
         bldg_empratio_3: 6.016351930586131
         drv_nearest_healthcenter: -3.012782082515879
         drv_nearest_urgentcare: 7.609484571828143
-        nodes_drv_drv_10min_pop: 8.45656749879185
+        nodes_drv_log_sum_10min_pop: 8.45656749879185
         nodes_walk_households: 4.85869152768852
         nodes_walk_percent_hh_with_children: -8.822623330897022
         nodes_walk_percent_mid_income: 4.707815364222907

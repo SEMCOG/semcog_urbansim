@@ -24,7 +24,7 @@ model_expression:
     - nodes_walk_quarter_mile_to_transit
     - stories
     - year_built
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - nodes_walk_ave_unit_sqft
     - zones_a_ln_retail_emp_15min_drive_alone
     - nodes_walk_households
@@ -39,7 +39,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: 0.1216516989421405
         building_age_gt_50: 0.13073936811817877
         crime_other_rate: -2.1238832382469543e-05
-        nodes_drv_drv_20min_pop: 0.13992730666453876
+        nodes_drv_log_sum_20min_pop: 0.13992730666453876
         nodes_drv_elem_school_perf: 2.140478264958885
         nodes_walk_ave_unit_sqft: 0.00013535110597589817
         nodes_walk_households: 0.0005481736497329429
@@ -56,7 +56,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: 0.038485606123590345
         building_age_gt_50: 0.01550509388966326
         crime_other_rate: 1.3902498390796909e-06
-        nodes_drv_drv_20min_pop: 0.03821147423096217
+        nodes_drv_log_sum_20min_pop: 0.03821147423096217
         nodes_drv_elem_school_perf: 0.10185859934208268
         nodes_walk_ave_unit_sqft: 1.8208934829225656e-05
         nodes_walk_households: 2.350709830322788e-05
@@ -73,7 +73,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: 3.1609661687924464
         building_age_gt_50: 8.432026858304832
         crime_other_rate: -15.276989635567299
-        nodes_drv_drv_20min_pop: 3.6619185592990764
+        nodes_drv_log_sum_20min_pop: 3.6619185592990764
         nodes_drv_elem_school_perf: 21.014212631869075
         nodes_walk_ave_unit_sqft: 7.433224801192505
         nodes_walk_households: 23.319494505949734

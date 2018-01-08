@@ -22,7 +22,7 @@ model_expression:
     - b_total_jobs
     - b_is_pre_1945
     - parcels_total_units
-    - nodes_drv_drv_20min_pop
+    - nodes_drv_log_sum_20min_pop
     - zones_transit_jobs_50min
     - parcel_sqft
 
@@ -36,7 +36,7 @@ fit_parameters:
         b_is_newerthan2010: 1.0574292722771415
         b_is_pre_1945: 0.07033284531956409
         b_total_jobs: 0.0018235494039412345
-        nodes_drv_drv_20min_pop: -0.15625338525137167
+        nodes_drv_log_sum_20min_pop: -0.15625338525137167
         nodes_walk_percent_race2: 17.248733080210158
         parcel_sqft: 3.7733259852601546e-07
         parcels_total_units: -0.0035424466192862034
@@ -50,7 +50,7 @@ fit_parameters:
         b_is_newerthan2010: 0.0743325120131963
         b_is_pre_1945: 0.03561377756492379
         b_total_jobs: 0.0008279115471929457
-        nodes_drv_drv_20min_pop: 0.053358380602390065
+        nodes_drv_log_sum_20min_pop: 0.053358380602390065
         nodes_walk_percent_race2: 1.8409071338250496
         parcel_sqft: 2.2281412740897014e-08
         parcels_total_units: 0.0002580917233864038
@@ -64,7 +64,7 @@ fit_parameters:
         b_is_newerthan2010: 14.225663086556464
         b_is_pre_1945: 1.9748774246525116
         b_total_jobs: 2.202589648766252
-        nodes_drv_drv_20min_pop: -2.928375701948733
+        nodes_drv_log_sum_20min_pop: -2.928375701948733
         nodes_walk_percent_race2: 9.369692128016595
         parcel_sqft: 16.934859692869935
         parcels_total_units: -13.725533592499614
