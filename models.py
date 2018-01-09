@@ -675,7 +675,7 @@ def random_demolition_events(buildings, households, jobs, iter_var, demolition_r
     sample(demolition_rates.type81units, b[b.building_type_id == 81], 'residential_units', 'wh')
     sample(demolition_rates.type82units, b[b.building_type_id == 82], 'residential_units', 'wh')
     sample(demolition_rates.type83units, b[b.building_type_id == 83], 'residential_units', 'wh')
-    sample(demolition_rates.type84units, b[b.building_type_id == 84], 'residential_units', 'wh')
+    # sample(demolition_rates.type84units, b[b.building_type_id == 84], 'residential_units', 'wh')
 
     drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep='first')]
