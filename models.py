@@ -765,7 +765,7 @@ def add_extra_columns_res(df):
     if 'ave_unit_size' in df.columns:
         df['sqft_per_unit'] = df['ave_unit_size']
     else:
-        df['sqft_per_unit'] = 2000
+        df['sqft_per_unit'] = misc.reindex(orca.get_table('parcels').ave_unit_size, df.parcel_id)
     return df
 
 

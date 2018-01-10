@@ -144,6 +144,18 @@ def total_job_spaces(parcels, buildings):
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
+def residential_sqft(parcels, buildings):
+    return buildings.residential_sqft.groupby(buildings.parcel_id).sum(). \
+        reindex(parcels.index).fillna(0)
+
+
+@orca.column('parcels', cache=True, cache_scope='iteration')
+def non_residential_sqft(parcels, buildings):
+    return buildings.non_residential_sqft.groupby(buildings.parcel_id).sum(). \
+        reindex(parcels.index).fillna(0)
+
+
+@orca.column('parcels', cache=True, cache_scope='iteration')
 def total_sqft(parcels, buildings):
     return buildings.building_sqft.groupby(buildings.parcel_id).sum(). \
         reindex(parcels.index).fillna(0)
@@ -153,8 +165,9 @@ def total_sqft(parcels, buildings):
 def land_cost(parcels, nodes_walk):
     if len(nodes_walk) == 0:
         return pd.Series(index=parcels.index)
-    return (parcels.total_sqft * parcel_average_price("residential", parcels)). \
-        reindex(parcels.index).fillna(0)
+    res = parcels.residential_sqft * parcel_average_price("residential", parcels)
+    non_res = parcels.non_residential_sqft * parcel_average_price("ave_nonres_sqft_price", parcels)
+    return (res + non_res).reindex(parcels.index).fillna(0)
 
 
 @orca.column('parcels', cache=True, cache_scope='iteration')
