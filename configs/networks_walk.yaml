@@ -20,15 +20,6 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
-  - name: ave_unit_sqft
-    dataframe: buildings
-    filters:
-    - sqft_per_unit > 0
-    varname: sqft_per_unit
-    radius: 500
-    decay: flat
-    aggregation: average
-
   - name: ave_lot_sqft
     dataframe: buildings
     varname: land_area

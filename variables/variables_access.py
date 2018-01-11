@@ -1,6 +1,6 @@
 import numpy as np
 import orca
-
+from urbansim.utils import misc
 
 #####################
 # TRANSIT VARIABLES
@@ -125,6 +125,20 @@ def walk_nearest_urgentcare(poi):
     cats = ['UrgentCare']
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable('net_walk'), t, cats, 7920, 1, 7921)
+
+
+@orca.column('nodes_walk', cache=True, cache_scope='iteration')
+def ave_unit_sqft(nodes_walk, buildings):
+    b = buildings.to_frame(['sqft_per_unit', 'x', 'y'])
+    b = b[b.sqft_per_unit > 0]
+    net = orca.get_injectable('net_walk')
+    net.set_pois('build', b.x, b.y)
+    ner = net.nearest_pois(10560, 'build', num_pois=5, include_poi_ids=True)
+    st = ner[ner.columns[ner.columns.str.startswith('poi') > 0]].unstack()
+    st = st[st > 0].astype(int)
+    lu = misc.reindex(orca.get_table('buildings').sqft_per_unit, st)
+    lu = lu[lu > 500]
+    return lu.groupby(level=1).mean().reindex(nodes_walk.index).fillna(2000)
 
 
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
