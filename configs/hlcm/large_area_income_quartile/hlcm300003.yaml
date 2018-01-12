@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: zones_logsum_job_high_income + has_children:nodes_walk_percent_hh_with_children
     + is_race4:nodes_walk_percent_race4 + nodes_walk_ave_lot_sqft + ln_income:sqft_price_res
-    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + persons:nodes_walk_hhsize
+    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + hhsize_gt_2:nodes_walk_hhsize
 
 fitted: true
 
@@ -30,36 +30,36 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        crime_ucr_rate: -7.81886156515343e-05
-        has_children:nodes_walk_percent_hh_with_children: 0.11366506000852182
-        is_race4:nodes_walk_percent_race4: 0.0663474569461648
-        ln_income:nodes_walk_ln_popden: 0.022510372029243865
-        ln_income:sqft_price_res: -0.0002540051426146093
-        nodes_walk_ave_lot_sqft: 0.6866648187868721
-        persons:nodes_walk_hhsize: 0.01944506240444595
-        zones_logsum_job_high_income: -7.866059624798313e-07
+        crime_ucr_rate: -9.352997195484374e-05
+        has_children:nodes_walk_percent_hh_with_children: 0.022189418898918928
+        hhsize_gt_2:nodes_walk_hhsize: 0.027753063128214697
+        is_race4:nodes_walk_percent_race4: 0.012188064971929664
+        ln_income:nodes_walk_ln_popden: 0.020412175818551953
+        ln_income:sqft_price_res: -0.00024775984994579204
+        nodes_walk_ave_lot_sqft: 0.6032551224403065
+        zones_logsum_job_high_income: -4.880676591133665e-07
     Std. Error:
-        crime_ucr_rate: 1.7290466980319054e-05
-        has_children:nodes_walk_percent_hh_with_children: 0.15213473259573923
-        is_race4:nodes_walk_percent_race4: 0.5600633967993601
-        ln_income:nodes_walk_ln_popden: 0.002343916001441574
-        ln_income:sqft_price_res: 2.2589697997378605e-05
-        nodes_walk_ave_lot_sqft: 0.013605163995263105
-        persons:nodes_walk_hhsize: 0.011280901707337835
-        zones_logsum_job_high_income: 1.5069508838768374e-07
+        crime_ucr_rate: 1.7148688930387973e-05
+        has_children:nodes_walk_percent_hh_with_children: 0.15303547533275694
+        hhsize_gt_2:nodes_walk_hhsize: 0.017202452542432932
+        is_race4:nodes_walk_percent_race4: 0.5779091969759707
+        ln_income:nodes_walk_ln_popden: 0.0023578163190481932
+        ln_income:sqft_price_res: 2.2701383421748305e-05
+        nodes_walk_ave_lot_sqft: 0.013650766312006953
+        zones_logsum_job_high_income: 1.5165903603161714e-07
     T-Score:
-        crime_ucr_rate: -4.522065004984123
-        has_children:nodes_walk_percent_hh_with_children: 0.747134188683651
-        is_race4:nodes_walk_percent_race4: 0.11846419052794024
-        ln_income:nodes_walk_ln_popden: 9.603745191977595
-        ln_income:sqft_price_res: -11.244291209386024
-        nodes_walk_ave_lot_sqft: 50.47089612634934
-        persons:nodes_walk_hhsize: 1.7237152586656803
-        zones_logsum_job_high_income: -5.219851362747669
+        crime_ucr_rate: -5.454059627211846
+        has_children:nodes_walk_percent_hh_with_children: 0.14499526237737198
+        hhsize_gt_2:nodes_walk_hhsize: 1.6133201390764946
+        is_race4:nodes_walk_percent_race4: 0.021089930798309203
+        ln_income:nodes_walk_ln_popden: 8.657237484382147
+        ln_income:sqft_price_res: -10.913865703375325
+        nodes_walk_ave_lot_sqft: 44.19203352046946
+        zones_logsum_job_high_income: -3.2181904348357886
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -18064.656903618157
+    convergence: -18150.30739488355
     'null': -18416.075573766913
-    ratio: 0.019082169202723098
+    ratio: 0.014431314522945327

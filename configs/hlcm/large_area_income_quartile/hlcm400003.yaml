@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ave_income
     + is_race4:nodes_walk_percent_race4 + persons:sqft_per_unit + nodes_walk_population
-    + zones_a_ln_emp_26min_drive_alone + persons:nodes_walk_hhsize
+    + zones_a_ln_emp_26min_drive_alone + hhsize_gt_2:nodes_walk_hhsize
 
 fitted: true
 
@@ -30,33 +30,33 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_drv_elem_school_perf: 0.5026352746321764
-        is_race4:nodes_walk_percent_race4: 10.704693215284923
-        ln_income:nodes_walk_ave_income: 0.11187021819280323
-        nodes_walk_population: 2.4239795915104735e-06
-        persons:nodes_walk_hhsize: 0.06557623076780365
-        persons:sqft_per_unit: 1.1737598717579198e-05
-        zones_a_ln_emp_26min_drive_alone: -0.07676789441008569
+        has_children:nodes_drv_elem_school_perf: 0.35995170409932703
+        hhsize_gt_2:nodes_walk_hhsize: 0.08339144960080994
+        is_race4:nodes_walk_percent_race4: 10.902766205841942
+        ln_income:nodes_walk_ave_income: 0.11779011907894109
+        nodes_walk_population: -1.461263185475035e-05
+        persons:sqft_per_unit: 4.721221678926047e-06
+        zones_a_ln_emp_26min_drive_alone: -0.07511011097679358
     Std. Error:
-        has_children:nodes_drv_elem_school_perf: 0.07241519401658286
-        is_race4:nodes_walk_percent_race4: 0.43512783692973955
-        ln_income:nodes_walk_ave_income: 0.0019648008933858298
-        nodes_walk_population: 4.655201282378829e-05
-        persons:nodes_walk_hhsize: 0.013001789793895465
-        persons:sqft_per_unit: 6.175248810741601e-06
-        zones_a_ln_emp_26min_drive_alone: 0.021086350988276988
+        has_children:nodes_drv_elem_school_perf: 0.07379614503465369
+        hhsize_gt_2:nodes_walk_hhsize: 0.01560954324463187
+        is_race4:nodes_walk_percent_race4: 0.4524736933508887
+        ln_income:nodes_walk_ave_income: 0.0019887769310335986
+        nodes_walk_population: 4.591819321644206e-05
+        persons:sqft_per_unit: 5.477211691747243e-06
+        zones_a_ln_emp_26min_drive_alone: 0.021067296287068858
     T-Score:
-        has_children:nodes_drv_elem_school_perf: 6.9410195119697455
-        is_race4:nodes_walk_percent_race4: 24.601260380896797
-        ln_income:nodes_walk_ave_income: 56.93717799569178
-        nodes_walk_population: 0.05207034979745943
-        persons:nodes_walk_hhsize: 5.04363105444088
-        persons:sqft_per_unit: 1.9007491159161247
-        zones_a_ln_emp_26min_drive_alone: -3.6406438673417227
+        has_children:nodes_drv_elem_school_perf: 4.877649149969805
+        hhsize_gt_2:nodes_walk_hhsize: 5.342337587583692
+        is_race4:nodes_walk_percent_race4: 24.095911797875416
+        ln_income:nodes_walk_ave_income: 59.22741622798476
+        nodes_walk_population: -0.31823185607220195
+        persons:sqft_per_unit: 0.8619753890542007
+        zones_a_ln_emp_26min_drive_alone: -3.5652468144617258
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -17450.766788602537
-    'null': -18411.470403580926
-    ratio: 0.05217962465352777
+    convergence: -17444.443693377725
+    'null': -18416.075573766913
+    ratio: 0.05275998550816363

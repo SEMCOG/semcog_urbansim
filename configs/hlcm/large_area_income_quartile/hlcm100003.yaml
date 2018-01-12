@@ -23,7 +23,7 @@ prediction_sample_size: 100
 model_expression: zones_logsum_job_high_income + walk_nearest_healthcenter + has_children:nodes_walk_percent_hh_with_children
     + popden + is_race4:nodes_walk_percent_race4 + nodes_walk_log_sum_residential_units
     + ln_income:sqft_price_res + is_young:nodes_walk_retail_jobs + ln_income:nodes_walk_ln_popden
-    + zones_transit_jobs_50min
+    + zones_transit_jobs_50min + hhsize_gt_2:nodes_walk_hhsize
 
 fitted: true
 
@@ -31,42 +31,45 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_walk_percent_hh_with_children: 5.061663055272788
-        is_race4:nodes_walk_percent_race4: 1.3940800534665625
-        is_young:nodes_walk_retail_jobs: 0.0019570588855421607
-        ln_income:nodes_walk_ln_popden: 0.009524174615466889
-        ln_income:sqft_price_res: -0.0011127467708403427
-        nodes_walk_log_sum_residential_units: 0.4041227965937882
-        popden: -0.01232279207056517
-        walk_nearest_healthcenter: -6.97305698525835e-05
-        zones_logsum_job_high_income: 1.886629492987477e-07
-        zones_transit_jobs_50min: 8.684433823682351e-07
+        has_children:nodes_walk_percent_hh_with_children: 2.7739863647470675
+        hhsize_gt_2:nodes_walk_hhsize: 0.31439920007785516
+        is_race4:nodes_walk_percent_race4: 1.7722582886923925
+        is_young:nodes_walk_retail_jobs: 0.0024972297518660075
+        ln_income:nodes_walk_ln_popden: 0.015118354419803533
+        ln_income:sqft_price_res: -0.0010429162670850581
+        nodes_walk_log_sum_residential_units: 0.40192808916123124
+        popden: -0.013967189625761194
+        walk_nearest_healthcenter: -2.2030801898972678e-05
+        zones_logsum_job_high_income: 5.996349167387395e-08
+        zones_transit_jobs_50min: 2.4688420046126495e-06
     Std. Error:
-        has_children:nodes_walk_percent_hh_with_children: 0.1092954471717227
-        is_race4:nodes_walk_percent_race4: 0.6354004177951168
-        is_young:nodes_walk_retail_jobs: 0.0005864960334563027
-        ln_income:nodes_walk_ln_popden: 0.002430225605939632
-        ln_income:sqft_price_res: 3.189934131619418e-05
-        nodes_walk_log_sum_residential_units: 0.018560520297781383
-        popden: 0.0029147127618893644
-        walk_nearest_healthcenter: 1.0676957439635084e-05
-        zones_logsum_job_high_income: 1.213795975977442e-07
-        zones_transit_jobs_50min: 4.0612137369329265e-07
+        has_children:nodes_walk_percent_hh_with_children: 0.1708634941308842
+        hhsize_gt_2:nodes_walk_hhsize: 0.020932772615821358
+        is_race4:nodes_walk_percent_race4: 0.6248688494932225
+        is_young:nodes_walk_retail_jobs: 0.00040553474515112427
+        ln_income:nodes_walk_ln_popden: 0.0022943880319743503
+        ln_income:sqft_price_res: 3.0172688233105294e-05
+        nodes_walk_log_sum_residential_units: 0.01832952661146778
+        popden: 0.002972791550508737
+        walk_nearest_healthcenter: 1.101603959083225e-05
+        zones_logsum_job_high_income: 1.2192421309905418e-07
+        zones_transit_jobs_50min: 3.9675824223808364e-07
     T-Score:
-        has_children:nodes_walk_percent_hh_with_children: 46.31174661209822
-        is_race4:nodes_walk_percent_race4: 2.1940181567776054
-        is_young:nodes_walk_retail_jobs: 3.3368663620944554
-        ln_income:nodes_walk_ln_popden: 3.919049569796803
-        ln_income:sqft_price_res: -34.883064192784445
-        nodes_walk_log_sum_residential_units: 21.773247199438405
-        popden: -4.2277895206995755
-        walk_nearest_healthcenter: -6.5309401340993585
-        zones_logsum_job_high_income: 1.554321756148695
-        zones_transit_jobs_50min: 2.1383838394678856
+        has_children:nodes_walk_percent_hh_with_children: 16.23510264060355
+        hhsize_gt_2:nodes_walk_hhsize: 15.019472377024089
+        is_race4:nodes_walk_percent_race4: 2.8362084141811823
+        is_young:nodes_walk_retail_jobs: 6.15786879354913
+        ln_income:nodes_walk_ln_popden: 6.5892753139903695
+        ln_income:sqft_price_res: -34.56491045901494
+        nodes_walk_log_sum_residential_units: 21.92790341403399
+        popden: -4.698341403510439
+        walk_nearest_healthcenter: -1.9998840524599344
+        zones_logsum_job_high_income: 0.4918095442220173
+        zones_transit_jobs_50min: 6.222534888465319
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -16832.998234100858
-    'null': -18402.260063208952
-    ratio: 0.08527549462500361
+    convergence: -16958.976568510396
+    'null': -18406.86523339494
+    ratio: 0.07866025238548979

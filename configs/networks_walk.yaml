@@ -119,10 +119,9 @@ variable_definitions:
   - name: hhsize
     dataframe: households
     varname: persons
-    radius: 500
+    radius: 1500
     aggregation: average
     decay: flat
-    apply: np.log1p
 
   - name: ave_income
     dataframe: households

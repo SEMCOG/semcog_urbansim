@@ -21,7 +21,7 @@ estimation_sample_size: 4000
 prediction_sample_size: 100
 
 model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ln_popden
-    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income + persons:nodes_walk_hhsize
+    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income + hhsize_gt_2:nodes_walk_hhsize
 
 fitted: true
 
@@ -29,30 +29,30 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_drv_elem_school_perf: 0.0693307462779237
-        ln_income:nodes_walk_ln_popden: 0.0008575054621455873
-        ln_income:sqft_price_res: -0.0005145837767858436
-        nodes_walk_percent_mid_income: 3.4884887845778274
-        persons:nodes_walk_hhsize: 0.003335791016741051
-        stories: 0.8363357703163329
+        has_children:nodes_drv_elem_school_perf: -0.16096714464509648
+        hhsize_gt_2:nodes_walk_hhsize: 0.2130089763585608
+        ln_income:nodes_walk_ln_popden: 0.004421931581581331
+        ln_income:sqft_price_res: -0.00042839652713002046
+        nodes_walk_percent_mid_income: 3.686822976770867
+        stories: 0.8442119012929488
     Std. Error:
-        has_children:nodes_drv_elem_school_perf: 0.09273050082899054
-        ln_income:nodes_walk_ln_popden: 0.0021822395231514773
-        ln_income:sqft_price_res: 2.3326917548979236e-05
-        nodes_walk_percent_mid_income: 0.12961168547091423
-        persons:nodes_walk_hhsize: 0.010538815223666181
-        stories: 0.015339673328602088
+        has_children:nodes_drv_elem_school_perf: 0.09493051427175989
+        hhsize_gt_2:nodes_walk_hhsize: 0.01772857183875453
+        ln_income:nodes_walk_ln_popden: 0.002202480176205458
+        ln_income:sqft_price_res: 2.264334491217339e-05
+        nodes_walk_percent_mid_income: 0.13081398610230657
+        stories: 0.016366025104520378
     T-Score:
-        has_children:nodes_drv_elem_school_perf: 0.7476584905518884
-        ln_income:nodes_walk_ln_popden: 0.3929474528566975
-        ln_income:sqft_price_res: -22.059656004929863
-        nodes_walk_percent_mid_income: 26.914924930597163
-        persons:nodes_walk_hhsize: 0.31652429100855
-        stories: 54.521093924269934
+        has_children:nodes_drv_elem_school_perf: -1.6956312296412082
+        hhsize_gt_2:nodes_walk_hhsize: 12.015010475515277
+        ln_income:nodes_walk_ln_popden: 2.007705508251
+        ln_income:sqft_price_res: -18.91931288383583
+        nodes_walk_percent_mid_income: 28.183706395793862
+        stories: 51.58319725782244
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -17412.61435781248
-    'null': -18416.075573766913
-    ratio: 0.054488330694289266
+    convergence: -17489.133951631484
+    'null': -18420.6807439529
+    ratio: 0.050570703942481754
