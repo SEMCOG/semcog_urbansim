@@ -34,13 +34,6 @@ variable_definitions:
     radius: 1500
     decay: flat
 
-  - name: hhsize
-    dataframe: households
-    varname: persons
-    radius: 1500
-    aggregation: average
-    decay: flat
-
   - name: households
     dataframe: households
     radius: 1500
