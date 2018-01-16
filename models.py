@@ -121,6 +121,7 @@ def increase_property_values(buildings, income_growth_rates):
 def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = annual_relocation_rates_for_households.to_frame()
     relocation_rates = relocation_rates.rename(columns={'age_max': 'age_of_head_max', 'age_min': 'age_of_head_min'})
+    relocation_rates.probability_of_relocating *= .2
     reloc = relocation.RelocationModel(relocation_rates, 'probability_of_relocating')
     _print_number_unplaced(households, 'building_id')
     print "un-placing"
