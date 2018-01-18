@@ -400,24 +400,32 @@ def main(run_name):
     p = orca.get_table('parcels')
     p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
         columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
-    whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id'])
+    p.index.name = 'parcel_id'
+    p = p.reset_index()
+    whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
     e['parcel_id'] = e.parcel_id.astype(p.index.dtype)
     e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
-    e = e[['large_area_id', 'b_city_id', 'b_zone_id']]
+    e = e[['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']]
     whatnot = whatnot.append(e, ignore_index=True)
-    b = orca.get_table('buildings').to_frame(['large_area_id', 'b_city_id', 'b_zone_id'])
+    b = orca.get_table('buildings').to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
     whatnot = whatnot.append(b, ignore_index=True)
-    whatnot = whatnot.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id']).reset_index(drop=True)
+    b = store_la['/2045/buildings']
+    interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(store_la['/2045/dropped_buildings'].parcel_id)
+    acres = orca.get_table('parcels').acres
+    interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
+    whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
+    whatnot = whatnot.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index(drop=True)
     whatnot.index.name = "whatnot_id"
     orca.add_table('whatnots', whatnot)
 
     @orca.column('buildings', cache=True, cache_scope='iteration')
     def whatnot_id(buildings, whatnots):
         # TODO: add school_id back in at some point
-        buildings = buildings.to_frame(['large_area_id', 'b_city_id', 'b_zone_id']).reset_index()
-        whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id']).reset_index()
-        m = pd.merge(buildings, whatnots, 'left', ['large_area_id', 'b_city_id', 'b_zone_id'])
+        buildings = buildings.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
+        buildings.loc[~buildings.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
+        whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
+        m = pd.merge(buildings, whatnots, 'left', ['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
         return m.set_index('building_id').whatnot_id
 
     @orca.column('jobs', cache=True, cache_scope='iteration')
@@ -536,7 +544,7 @@ def main(run_name):
     start = time.clock()
 
     whatnots_output = []
-    whatnots_local = orca.get_table('whatnots').local
+    whatnots_local = orca.get_table('whatnots').local.fillna(0)
     for i, y in enumerate(year_names):
         df = dict_ind['whatnots'][i].copy()
         df.index.name = 'whatnot_id'
@@ -548,7 +556,7 @@ def main(run_name):
 
         df[whatnots_local.columns] = whatnots_local
 
-        df.set_index(['large_area_id', 'b_city_id', 'b_zone_id'], inplace=True)
+        df.set_index(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'], inplace=True)
 
         df = df.fillna(0)
         df = df.sort_index().sort_index(1)
