@@ -544,7 +544,7 @@ def main(run_name):
     start = time.clock()
 
     whatnots_output = []
-    whatnots_local = orca.get_table('whatnots').local
+    whatnots_local = orca.get_table('whatnots').local.fillna(0)
     for i, y in enumerate(year_names):
         df = dict_ind['whatnots'][i].copy()
         df.index.name = 'whatnot_id'
