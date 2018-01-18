@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: zones_logsum_job_high_income + has_children:nodes_walk_percent_hh_with_children
     + is_race4:nodes_walk_percent_race4 + nodes_walk_ave_lot_sqft + ln_income:sqft_price_res
-    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + hhsize_gt_3:city_id_is_1025
+    + ln_income:nodes_walk_ln_popden + crime_ucr_rate + persons:nodes_walk_hhsize
 
 fitted: true
 
@@ -32,7 +32,7 @@ fit_parameters:
     Coefficient:
         crime_ucr_rate: -0.00010448198615809468
         has_children:nodes_walk_percent_hh_with_children: 1.4049312508369838
-        hhsize_gt_3:city_id_is_1025: 100.0
+        persons:nodes_walk_hhsize: 100.0
         is_race4:nodes_walk_percent_race4: 10.575059018996908
         ln_income:nodes_walk_ln_popden: 0.020787929981589476
         ln_income:sqft_price_res: -0.0002650349870502208
@@ -41,7 +41,7 @@ fit_parameters:
     Std. Error:
         crime_ucr_rate: 1.7213860703916765e-05
         has_children:nodes_walk_percent_hh_with_children: 0.11148971745975395
-        hhsize_gt_3:city_id_is_1025: 0.11062827020654063
+        persons:nodes_walk_hhsize: 0.11062827020654063
         is_race4:nodes_walk_percent_race4: 0.5844139433444181
         ln_income:nodes_walk_ln_popden: 0.0024259299885128
         ln_income:sqft_price_res: 2.2785952016200586e-05
@@ -50,7 +50,7 @@ fit_parameters:
     T-Score:
         crime_ucr_rate: -6.069642827673244
         has_children:nodes_walk_percent_hh_with_children: 12.601442382739396
-        hhsize_gt_3:city_id_is_1025: 0.14233212710139503
+        persons:nodes_walk_hhsize: 0.14233212710139503
         is_race4:nodes_walk_percent_race4: 18.095151800244796
         ln_income:nodes_walk_ln_popden: 8.569056023885247
         ln_income:sqft_price_res: -11.631508170551028

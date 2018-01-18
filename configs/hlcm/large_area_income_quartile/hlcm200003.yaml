@@ -21,7 +21,7 @@ estimation_sample_size: 4000
 prediction_sample_size: 100
 
 model_expression: has_children:nodes_drv_elem_school_perf + ln_income:nodes_walk_ln_popden
-    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income + hhsize_gt_3:city_id_is_1025
+    + stories + ln_income:sqft_price_res + nodes_walk_percent_mid_income + persons:nodes_walk_hhsize
 
 fitted: true
 
@@ -30,21 +30,21 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         has_children:nodes_drv_elem_school_perf: 0.4067539936178705
-        hhsize_gt_3:city_id_is_1025: 100.0
+        persons:nodes_walk_hhsize: 100.0
         ln_income:nodes_walk_ln_popden: 0.007804496983425459
         ln_income:sqft_price_res: -0.0005465846016099124
         nodes_walk_percent_mid_income: 3.5833212829378587
         stories: 0.8282883426542078
     Std. Error:
         has_children:nodes_drv_elem_school_perf: 0.07289987722427768
-        hhsize_gt_3:city_id_is_1025: 0.11380115549629262
+        persons:nodes_walk_hhsize: 0.11380115549629262
         ln_income:nodes_walk_ln_popden: 0.002237553545072224
         ln_income:sqft_price_res: 2.307817549353777e-05
         nodes_walk_percent_mid_income: 0.1317731835652264
         stories: 0.015234960110947266
     T-Score:
         has_children:nodes_drv_elem_school_perf: 5.579625221678839
-        hhsize_gt_3:city_id_is_1025: 3.8492536314602597
+        persons:nodes_walk_hhsize: 3.8492536314602597
         ln_income:nodes_walk_ln_popden: 3.4879598750221392
         ln_income:sqft_price_res: -23.68404737033758
         nodes_walk_percent_mid_income: 27.193099430311253
