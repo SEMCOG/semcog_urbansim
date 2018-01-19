@@ -66,16 +66,15 @@ def hu_filter(buildings, parcels):
         hu_filter.loc[dfb.sample(y, replace=False).index.values] = 1
     return hu_filter
 
+
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def large_hh_city(buildings, parcels):
     large_hh_city = buildings.parcel_id * 0
     p = parcels.to_frame(parcels.local_columns)
     b = buildings.to_frame(buildings.local_columns)
-    lh_index = b.loc[(b.parcel_id.isin(p.loc[p.city_id.isin([1020,1025, 1030, 1090, 1130, 1135, 1145, 1120])].index))].index
+    lh_index = b.loc[(b.parcel_id.isin(p.loc[p.city_id.isin([1025, 1030, 1090])].index))].index
     large_hh_city.loc[lh_index] = 1
     return large_hh_city
-
-#large_city ids: [1020,1025, 1030, 1090, 1130, 1135, 1145, 1120]
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
