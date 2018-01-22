@@ -650,8 +650,9 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
 
 
 @orca.step()
-def random_demolition_events(buildings, households, jobs, iter_var, demolition_rates):
+def random_demolition_events(buildings, households, jobs, year, demolition_rates):
     demolition_rates = demolition_rates.to_frame()
+    demolition_rates *= 0.1 + (1.0 - 0.1) * (2045 - year) / (2045 - 2015)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(buildings.local_columns + ['b_total_jobs', 'b_total_households'])
     b = buildings.copy()
@@ -681,7 +682,7 @@ def random_demolition_events(buildings, households, jobs, iter_var, demolition_r
     drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep='first')]
     buildings_idx = drop_buildings.index
-    drop_buildings['year_demo'] = iter_var
+    drop_buildings['year_demo'] = year
 
     if orca.is_table("dropped_buildings"):
         prev_drops = orca.get_table("dropped_buildings").to_frame()
