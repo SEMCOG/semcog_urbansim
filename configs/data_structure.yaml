@@ -108,7 +108,7 @@ columns:
   b_zone_id: int32
   building_type_id: int8
   non_residential_sqft: int32
-  parcel_id: int32
+  parcel_id: float32
   residential_units: int32
   year_built: int32
 ---
@@ -138,6 +138,34 @@ columns:
   year: int32
 ---
 name: households
+indexs:
+- household_id
+columns:
+  age_of_head: int64
+  building_id: int64
+  cars: int64
+  children: float64
+  income: float64
+  persons: float64
+  race_id: int64
+  workers: float64
+---
+name: households_new
+indexs:
+- household_id
+columns:
+  age_of_head: int64
+  building_id: int64
+  cars: int64
+  children: float64
+  city_id: float64
+  income: float64
+  large_area_id: float64
+  persons: float64
+  race_id: int64
+  workers: float64
+---
+name: households_old
 indexs:
 - household_id
 columns:
@@ -271,6 +299,33 @@ columns:
   zone_id: int32
 ---
 name: persons
+indexs:
+- person_id
+columns:
+  age: int64
+  household_id: int64
+  member_id: int64
+  race_id: int64
+  relate: int64
+  sex: int64
+  worker: int64
+---
+name: persons_new
+indexs:
+- person_id
+columns:
+  age: int64
+  building_id: int64
+  city_id: float64
+  household_id: int64
+  large_area_id: float64
+  member_id: int64
+  race_id: int64
+  relate: int64
+  sex: int64
+  worker: int64
+---
+name: persons_old
 indexs:
 - person_id
 columns:

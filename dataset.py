@@ -45,7 +45,7 @@ def buildings(store):
 
     df['hu_filter'] = 0
     cites = [3130, 6020, 6040]
-    sample = df.b_city_id.isin(cites)
+    sample = df[df.b_city_id.isin(cites)]
     sample = sample[sample.residential_units > 0]
     sample = sample[~(sample.index.isin(store['households'].building_id))]
     for c in cites:
