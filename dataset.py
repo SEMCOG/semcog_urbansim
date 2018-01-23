@@ -42,6 +42,15 @@ def buildings(store):
     df.loc[df.sqft_price_res < 0, 'sqft_price_res'] = 0
     df.fillna(0, inplace=True)
     orca.add_injectable("max_building_id", 10000000)
+
+    df['hu_filter'] = 0
+    cites = [3130, 6020, 6040]
+    sample = df.b_city_id.isin(cites)
+    sample = sample[sample.residential_units > 0]
+    sample = sample[~(sample.index.isin(store['households'].building_id))]
+    for c in cites:
+        df.hu_filter.loc[sample[sample.b_city_id == c].sample(frac=0.9, replace=False).index.values] = 1
+
     return df
 
 

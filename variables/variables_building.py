@@ -56,18 +56,6 @@ def zone_id(buildings, parcels):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
-def hu_filter(buildings, parcels):
-    hu_filter = buildings.parcel_id * 0
-    p = parcels.to_frame(parcels.local_columns)
-    b = buildings.to_frame(buildings.local_columns)
-    # TODO: use a table for the rest of the region and update hlcm configs
-    for x, y in zip([6470001, 6470002, 6480001, 6480002], [85, 110, 825, 280]):
-        dfb = b.loc[(b.parcel_id.isin(p.loc[p.census_bg_id == x].index)) & (b.residential_units > 0)]
-        hu_filter.loc[dfb.sample(y, replace=False).index.values] = 1
-    return hu_filter
-
-
-@orca.column('buildings', cache=True, cache_scope='iteration')
 def large_hh_city(buildings, parcels):
     large_hh_city = buildings.parcel_id * 0
     p = parcels.to_frame(parcels.local_columns)
