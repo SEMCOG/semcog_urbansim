@@ -60,6 +60,10 @@ def parcel_is_allowed(form=None):
         ].parcel_id
     )
 
+    wold_have_bean_in_events = (orca.get_table('parcels').non_residential_sqft >= 50000) & (
+            orca.get_injectable('year') <= 2020)
+    wold_have_bean_in_events = wold_have_bean_in_events.reindex(index, fill_value=False)
+
     gq = index.isin(
         buildings[
             buildings.index.isin(orca.get_table('group_quarters').building_id)
@@ -76,7 +80,7 @@ def parcel_is_allowed(form=None):
 
     refiner = index.isin(parcel_refin)
 
-    protected = new_building | development | demolition | refiner | gq
+    protected = new_building | development | demolition | wold_have_bean_in_events | refiner | gq
 
     if form:
         columns = ['type%d' % typ for typ in form_to_btype[form]]
