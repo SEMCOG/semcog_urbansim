@@ -56,6 +56,16 @@ def make_indicators(tab, geo_id):
         return buildings.groupby(geo_id).residential_units.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def hu_filter(buildings):
+        buildings = buildings.to_frame([geo_id, 'hu_filter'])
+        return buildings.groupby(geo_id).hu_filter.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def parcel_is_allowed_residential():
+        import variables
+        variables.parcel_is_allowed('residential').groupby(orca.get_table('parcels')[geo_id]).sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def job_spaces(buildings):
         buildings = buildings.to_frame([geo_id, 'job_spaces'])
         return buildings.groupby(geo_id).job_spaces.sum()
@@ -456,7 +466,8 @@ def main(run_name):
     years = range(2015, 2045 + 1, spacing)
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
-                  'housing_units', 'buildings', 'household_size', 'vacant_units', 'job_spaces',
+                  'housing_units', 'hu_filter', 'parcel_is_allowed_residential', 'buildings',
+                  'household_size', 'vacant_units', 'job_spaces',
                   'res_sqft', 'nonres_sqft',
                   'building_sqft_type_11', 'building_sqft_type_12', 'building_sqft_type_13', 'building_sqft_type_14',
                   'building_sqft_type_21', 'building_sqft_type_22', 'building_sqft_type_23', 'building_sqft_type_24',
