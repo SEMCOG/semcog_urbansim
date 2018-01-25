@@ -429,6 +429,17 @@ def main(run_name):
     whatnot.index.name = "whatnot_id"
     orca.add_table('whatnots', whatnot)
 
+    @orca.column('parcels', cache=True, cache_scope='iteration')
+    def whatnot_id(parcels, whatnots):
+        # TODO: add school_id back in at some point
+        parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
+            columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
+        parcels['parcel_id'] = parcels.index
+        parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
+        whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
+        m = pd.merge(parcels, whatnots, 'left', ['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
+        return m.whatnot_id
+
     @orca.column('buildings', cache=True, cache_scope='iteration')
     def whatnot_id(buildings, whatnots):
         # TODO: add school_id back in at some point
