@@ -22,6 +22,12 @@ def orca_year_dataset(hdf, year):
     orca.clear_cache()
 
 
+@orca.column("parcels", cache=True, cache_scope='iteration')
+def parcel_is_allowed_residential():
+    import variables
+    return variables.parcel_is_allowed('residential')
+
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def seniors(persons):
     persons = persons.to_frame(['household_id', 'age'])
@@ -61,9 +67,9 @@ def make_indicators(tab, geo_id):
         return buildings.groupby(geo_id).hu_filter.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
-    def parcel_is_allowed_residential():
-        import variables
-        variables.parcel_is_allowed('residential').groupby(orca.get_table('parcels')[geo_id]).sum()
+    def parcel_is_allowed_residential(parcels):
+        parcels = parcels.to_frame([geo_id, 'parcel_is_allowed_residential'])
+        return parcels.groupby(geo_id).parcel_is_allowed_residential.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def job_spaces(buildings):

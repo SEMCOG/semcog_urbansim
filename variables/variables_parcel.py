@@ -41,8 +41,9 @@ def parcel_is_allowed(form=None):
     index = orca.get_table('parcels').index
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
-        ["parcel_id", "building_type_id", "residential_units", "building_age"])
+        ["b_city_id", "parcel_id", "building_type_id", "residential_units", "building_age"])
     zoning = orca.get_table('zoning')
+    year = orca.get_injectable('year')
 
     # lone_house = buildings[
     #                  (buildings.building_type_id == 81) &
@@ -52,6 +53,16 @@ def parcel_is_allowed(form=None):
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     new_building = new_building.reindex(index, fill_value=False)
 
+    if form and form == 'residential':
+        count_hu = buildings.groupby("b_city_id").residential_units.sum()
+        hu_target = orca.get_table('extreme_hu_controls')
+        city_is_full = count_hu > (hu_target.end - hu_target.base) * (year - 2020) + hu_target.base
+        city_is_full = city_is_full[city_is_full]
+        p_city = orca.get_table('parcels').city_id
+        city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
+    else:
+        city_is_full = False
+
     development = index.isin(orca.get_table('events_addition').parcel_id)
 
     demolition = index.isin(
@@ -60,8 +71,7 @@ def parcel_is_allowed(form=None):
         ].parcel_id
     )
 
-    wold_have_bean_in_events = (orca.get_table('parcels').non_residential_sqft >= 50000) & (
-            orca.get_injectable('year') <= 2020)
+    wold_have_bean_in_events = (orca.get_table('parcels').non_residential_sqft >= 50000) & (year <= 2020)
     wold_have_bean_in_events = wold_have_bean_in_events.reindex(index, fill_value=False)
 
     gq = index.isin(
@@ -80,7 +90,7 @@ def parcel_is_allowed(form=None):
 
     refiner = index.isin(parcel_refin)
 
-    protected = new_building | development | demolition | wold_have_bean_in_events | refiner | gq
+    protected = new_building | development | demolition | wold_have_bean_in_events | refiner | gq | city_is_full
 
     if form:
         columns = ['type%d' % typ for typ in form_to_btype[form]]
