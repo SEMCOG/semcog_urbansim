@@ -46,11 +46,11 @@ def buildings(store):
 
     df['hu_filter'] = 0
     cites = [1155, 1100, 3130, 6020, 6040]
-    sample = df[df.b_city_id.isin(cites)]
-    sample = sample[sample.residential_units > 0]
+    sample = df[df.residential_units > 0]
     sample = sample[~(sample.index.isin(store['households'].building_id))]
-    for c in cites:
-        df.hu_filter.loc[sample[sample.b_city_id == c].sample(frac=0.9, replace=False).index.values] = 1
+    for c in sample.b_city_id.unique():
+        frac = 0.9 if c in cites else 0.5
+        df.loc[sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values, 'hu_filter'] = 1
 
     return df
 
