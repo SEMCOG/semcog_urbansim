@@ -110,6 +110,9 @@ def hhsize_gt_3(households):
 def hhsize_is_1(households):
     return (households.persons == 1).astype('int32')
 
+@orca.column('households', cache=True, cache_scope='iteration')
+def hhsize_lt_3(households):
+    return (households.persons < 3).astype('int32')
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def has_children(households):

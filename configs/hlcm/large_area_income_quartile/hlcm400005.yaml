@@ -24,7 +24,7 @@ model_expression: has_children:nodes_walk_percent_hh_with_children + improvement
     + has_workers:zones_a_ln_emp_50min_transit + ln_income:nodes_walk_ave_income +
     b_ln_parcel_sqft + nodes_drv_log_sum_60min_jobs + building_age_gt_100 + is_race1:nodes_walk_percent_race1
     + persons:nodes_walk_ln_popden + nodes_walk_race_4_hhs + is_young:nodes_walk_retail_jobs
-    + nodes_walk_ave_unit_sqft + parcels_total_units
+    + nodes_walk_ave_unit_sqft + parcels_total_units + hhsize_lt_3:small_hh_city
 
 fitted: true
 
@@ -33,6 +33,7 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         b_ln_parcel_sqft: 0.3425897404591365
+        hhsize_lt_3:small_hh_city: 3.0
         building_age_gt_100: 0.4562624463873152
         has_children:nodes_walk_percent_hh_with_children: 0.34821275652938377
         has_workers:zones_a_ln_emp_50min_transit: -0.02294625004397072

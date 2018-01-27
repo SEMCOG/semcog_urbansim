@@ -24,7 +24,7 @@ model_expression: zones_logsum_job_low_income + has_children:nodes_walk_percent_
     + improvement_value + nodes_drv_log_sum_60min_jobs + building_type_id_is_82 +
     persons:nodes_walk_ln_popden + building_age_le_10 + is_race2:nodes_walk_percent_race2
     + is_young:nodes_walk_retail_jobs + ln_income:nodes_walk_ln_popden + nodes_walk_ave_unit_sqft
-    + zones_transit_jobs_30min
+    + zones_transit_jobs_30min  + hhsize_lt_3:small_hh_city
 
 fitted: true
 
@@ -33,6 +33,7 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         building_age_le_10: 0.49285458301245855
+        hhsize_lt_3:small_hh_city: 3.0
         building_type_id_is_82: 1.1754124659942993
         has_children:nodes_walk_percent_hh_with_children: 0.6503358012580346
         improvement_value: 5.373582344756107e-07

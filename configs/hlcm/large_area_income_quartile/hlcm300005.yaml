@@ -22,7 +22,7 @@ prediction_sample_size: 100
 
 model_expression: residential_units + zones_logsum_pop_high_income + persons:nodes_walk_ln_popden
     + drv_nearest_urgentcare + ln_income:nodes_walk_ln_popden + nodes_walk_ave_unit_sqft
-    + parcel_sqft
+    + parcel_sqft + hhsize_lt_3:small_hh_city
 
 fitted: true
 
@@ -31,6 +31,7 @@ choice_mode: individual
 fit_parameters:
     Coefficient:
         drv_nearest_urgentcare: 0.0
+        hhsize_lt_3:small_hh_city: 3.0
         ln_income:nodes_walk_ln_popden: 0.0
         nodes_walk_ave_unit_sqft: 0.0
         parcel_sqft: 0.0
