@@ -41,7 +41,7 @@ def parcel_is_allowed(form=None):
     index = orca.get_table('parcels').index
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
-        ["b_city_id", "parcel_id", "building_type_id", "residential_units", "building_age"])
+        ["b_city_id", "city_id", "parcel_id", "building_type_id", "residential_units", "building_age"])
     zoning = orca.get_table('zoning')
     year = orca.get_injectable('year')
 

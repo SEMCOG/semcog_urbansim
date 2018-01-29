@@ -117,7 +117,7 @@ indexs:
 - objectid
 columns:
   building_id: int32
-  year_built: float16
+  year_built: int32
 ---
 name: group_quarters
 indexs:
@@ -133,8 +133,8 @@ name: group_quarters_control_totals
 indexs:
 - None
 columns:
-  city_id: int32
-  count: int32
+  city_id: float32
+  count: float32
   year: int32
 ---
 name: households
@@ -301,7 +301,7 @@ columns:
   amount: int32
   location_capacity_attribute: float64
   location_expression: object
-  transaction_id: int8
+  transaction_id: int32
   year: int32
 ---
 name: remi_pop_total
