@@ -60,9 +60,10 @@ def large_hh_city(buildings, parcels):
     large_hh_city = buildings.parcel_id * 0
     p = parcels.to_frame(parcels.local_columns)
     b = buildings.to_frame(buildings.local_columns)
-    lh_index = b.loc[(b.parcel_id.isin(p.loc[p.city_id.isin([1025, 1030, 1090])].index))].index
+    lh_index = b.loc[(b.parcel_id.isin(p.loc[p.city_id.isin([1025, 1030, 1090, 6135, 5090])].index))].index
     large_hh_city.loc[lh_index] = 1
     return large_hh_city
+
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def small_hh_city(buildings, parcels):
@@ -72,6 +73,7 @@ def small_hh_city(buildings, parcels):
     lh_index = b.loc[(b.parcel_id.isin(p.loc[p.city_id.isin([508, 515, 527, 529, 532, 538, 551])].index))].index
     small_hh_city.loc[lh_index] = 1
     return small_hh_city
+
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def city_id(buildings, parcels):
