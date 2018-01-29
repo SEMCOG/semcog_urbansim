@@ -45,7 +45,7 @@ def buildings(store):
     orca.add_injectable("max_building_id", 10000000)
 
     df['hu_filter'] = 0
-    cites = [1155, 1100, 3130, 6020, 6040]
+    cites = [551, 1155, 1100, 3130, 6020, 6040]
     sample = df[df.residential_units > 0]
     sample = sample[~(sample.index.isin(store['households'].building_id))]
     for c in sample.b_city_id.unique():
