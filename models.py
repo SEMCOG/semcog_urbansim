@@ -351,20 +351,23 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 
 
 @orca.step()
-def refiner(jobs, households, buildings, persons, year, refiner_events):
+def refiner(jobs, households, buildings, persons, year, refiner_events, group_quarters):
+    location_ids = ['b_zone_id', 'zone_id', 'b_city_id', 'city_id', 'large_area_id']
     jobs_columns = jobs.local_columns
-    jobs = jobs.to_frame(jobs_columns + ['b_zone_id', 'zone_id', 'b_city_id', 'city_id', 'large_area_id'])
+    jobs = jobs.to_frame(jobs_columns + location_ids)
+    group_quarters_columns = group_quarters.local_columns
+    group_quarters = group_quarters.to_frame(group_quarters_columns + location_ids)
     households_columns = households.local_columns
-    households = households.to_frame(households_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
+    households = households.to_frame(households_columns + location_ids)
     households["household_id_old"] = households.index.values
-    buildings = buildings.to_frame(buildings.local_columns + ['b_zone_id', 'b_city_id', 'zone_id', 'city_id', 'large_area_id'])
-    dic_agent = {'jobs': jobs, 'households': households}
+    buildings = buildings.to_frame(buildings.local_columns + location_ids)
+    dic_agent = {'jobs': jobs, 'households': households, 'gq': group_quarters}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
     assert refinements.action.isin(
         {'clone', 'subtract_pop', 'subtract', 'add_pop', 'add', 'target_pop', 'target'}).all(), "Unknown action"
-    assert refinements.agents.isin({'jobs', 'households'}).all(), "Unknown agents"
+    assert refinements.agents.isin({'jobs', 'households', 'gq'}).all(), "Unknown agents"
 
     def add_agents(agents, agents_pool, agent_expression, location_expression, number_of_agents):
         """Move from pool to data"""
@@ -494,6 +497,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
 
         for _, record in trecords[trecords.action == 'subtract_pop'].iterrows():
             print record
+            assert agent_type == 'households'
             agents, pool = subtract_pop_agents(agents,
                                                pool,
                                                record.agent_expression,
@@ -510,6 +514,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
 
         for _, record in trecords[trecords.action == 'add_pop'].iterrows():
             print record
+            assert agent_type == 'households'
             agents, pool = add_pop_agents(agents,
                                           pool,
                                           record.agent_expression,
@@ -526,6 +531,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
 
         for _, record in trecords[trecords.action == 'target_pop'].iterrows():
             print record
+            assert agent_type == 'households'
             diff = target_agents(dic_agent[record.agents],
                                  record.agent_expression,
                                  record.location_expression,
@@ -575,6 +581,10 @@ def refiner(jobs, households, buildings, persons, year, refiner_events):
     assert households.index.duplicated().sum() == 0, "duplicated index in households"
     households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
     orca.add_table('households', households[households_columns])
+
+    group_quarters = dic_agent['gq']
+    assert group_quarters.index.duplicated().sum() == 0, "duplicated index in group_quarters"
+    orca.add_table('group_quarters', group_quarters[group_quarters_columns])
 
     persons_columns = persons.local_columns
     persons = persons.to_frame(persons_columns)
