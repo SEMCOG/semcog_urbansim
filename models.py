@@ -338,6 +338,10 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 
     for city_id, local_gqpop in gqpop.groupby('city_id'):
         diff = target_gq.loc[city_id]['count'] - len(local_gqpop)
+        protected = (((local_gqpop.gq_code > 100) & (local_gqpop.gq_code < 200)) |
+                     ((local_gqpop.gq_code > 500) & (local_gqpop.gq_code < 600)) |
+                     (local_gqpop.gq_code == 701))
+        local_gqpop = local_gqpop[~protected]
         if diff > 0:
             newgq = local_gqpop.sample(diff, replace=True)
             newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
