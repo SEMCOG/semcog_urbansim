@@ -53,14 +53,18 @@ def parcel_is_allowed(form=None):
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     new_building = new_building.reindex(index, fill_value=False)
 
+    count_hu = buildings.groupby("b_city_id").residential_units.sum()
+    hu_target = orca.get_table('extreme_hu_controls').to_frame()
+    hu_target['c0'] = (hu_target.end - hu_target.base) * (year - 2015) + hu_target.base
+    hu_target['c5'] = (hu_target.end - hu_target.base) * (year - 2015 + 5) + hu_target.base
+    p_city = orca.get_table('parcels').city_id
     if form == 'residential':
-        count_hu = buildings.groupby("b_city_id").residential_units.sum()
-        hu_target = orca.get_table('extreme_hu_controls').to_frame()
-        hu_target['c0'] = (hu_target.end - hu_target.base) * (year - 2015) + hu_target.base
-        hu_target['c5'] = (hu_target.end - hu_target.base) * (year - 2015 + 5) + hu_target.base
         city_is_full = count_hu > hu_target[['c0', 'c5']].max(1).reindex(count_hu.index, fill_value=0)
         city_is_full = city_is_full[city_is_full]
-        p_city = orca.get_table('parcels').city_id
+        city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
+    elif form is None:
+        city_is_full = count_hu < hu_target[['c0', 'c5']].min(1).reindex(count_hu.index, fill_value=0)
+        city_is_full = city_is_full[city_is_full]
         city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
     else:
         city_is_full = False

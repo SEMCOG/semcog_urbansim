@@ -28,6 +28,12 @@ def parcel_is_allowed_residential():
     return variables.parcel_is_allowed('residential')
 
 
+@orca.column("parcels", cache=True, cache_scope='iteration')
+def parcel_is_allowed_demolition():
+    import variables
+    return variables.parcel_is_allowed()
+
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def seniors(persons):
     persons = persons.to_frame(['household_id', 'age'])
@@ -70,6 +76,11 @@ def make_indicators(tab, geo_id):
     def parcel_is_allowed_residential(parcels):
         parcels = parcels.to_frame([geo_id, 'parcel_is_allowed_residential'])
         return parcels.groupby(geo_id).parcel_is_allowed_residential.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
+    def parcel_is_allowed_demolition(parcels):
+        parcels = parcels.to_frame([geo_id, 'parcel_is_allowed_demolition'])
+        return parcels.groupby(geo_id).parcel_is_allowed_demolition.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def job_spaces(buildings):
@@ -483,8 +494,8 @@ def main(run_name):
     years = range(2015, 2045 + 1, spacing)
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
-                  'housing_units', 'hu_filter', 'parcel_is_allowed_residential', 'buildings',
-                  'household_size', 'vacant_units', 'job_spaces',
+                  'housing_units', 'hu_filter', 'parcel_is_allowed_residential', 'parcel_is_allowed_demolition',
+                  'buildings', 'household_size', 'vacant_units', 'job_spaces',
                   'res_sqft', 'nonres_sqft',
                   'building_sqft_type_11', 'building_sqft_type_12', 'building_sqft_type_13', 'building_sqft_type_14',
                   'building_sqft_type_21', 'building_sqft_type_22', 'building_sqft_type_23', 'building_sqft_type_24',
