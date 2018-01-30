@@ -343,13 +343,17 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
                      (local_gqpop.gq_code == 701))
         local_gqpop = local_gqpop[~protected]
         if diff > 0:
-            newgq = local_gqpop.sample(diff, replace=True)
-            newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
-            gqpop = gqpop.append(newgq)
+            diff = min(len(local_gqpop), abs(diff))
+            if diff > 0:
+                newgq = local_gqpop.sample(diff, replace=True)
+                newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
+                gqpop = gqpop.append(newgq)
 
         elif diff < 0:
-            removegq = local_gqpop.sample(min(len(local_gqpop), abs(diff)))
-            gqpop.drop(removegq.index, inplace=True)
+            diff = min(len(local_gqpop), abs(diff))
+            if diff > 0:
+                removegq = local_gqpop.sample()
+                gqpop.drop(removegq.index, inplace=True)
 
     orca.add_table('group_quarters', gqpop[group_quarters.local_columns])
 
@@ -392,9 +396,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             agents_pool.drop(agents_sample.index, inplace=True)
             agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
         else:
-            agents_sample = agents.query(agent_expression).sample(number_of_agents, replace=True)
-            agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
-            agents_sample.building_id = new_building_ids
+            agents_sample = agents.query(agent_expression)
+            if len(agents_sample) > 0:
+                agents_sample = agents_sample.sample(number_of_agents, replace=True)
+                agents_sample.index = agents.index.values.max() + 1 + np.arange(len(agents_sample))
+                agents_sample.building_id = new_building_ids
+
         agents = agents.append(agents_sample)
         return agents, agents_pool
 
