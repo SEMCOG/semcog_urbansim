@@ -338,7 +338,8 @@ def make_indicators(tab, geo_id):
             return df[hh_name] + df[gq_name]
 
     for (a, b) in [(00, 04), (05, 17), (18, 24), (25, 34), (35, 64), (65, pd.np.inf),
-                   (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf)]:
+                   (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf),
+                   (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
         make_pop_age(a, b)
 
     @orca.column(tab, cache=True, cache_scope='iteration')
@@ -525,12 +526,15 @@ def main(run_name):
                   'hh_pop_age_00_04', 'hh_pop_age_05_17', 'hh_pop_age_18_24', 'hh_pop_age_25_34',
                   'hh_pop_age_35_64', 'hh_pop_age_65_inf',
                   'hh_pop_age_00_17', 'hh_pop_age_25_44', 'hh_pop_age_45_64', 'hh_pop_age_65_84', 'hh_pop_age_85_inf',
+                  'hh_pop_age_35_59', 'hh_pop_age_60_64', 'hh_pop_age_65_74', 'hh_pop_age_75_inf',
                   'gq_pop_age_00_04', 'gq_pop_age_05_17', 'gq_pop_age_18_24', 'gq_pop_age_25_34',
                   'gq_pop_age_35_64', 'gq_pop_age_65_inf',
                   'gq_pop_age_00_17', 'gq_pop_age_25_44', 'gq_pop_age_45_64', 'gq_pop_age_65_84', 'gq_pop_age_85_inf',
+                  'gq_pop_age_35_59', 'gq_pop_age_60_64', 'gq_pop_age_65_74', 'gq_pop_age_75_inf',
                   'pop_age_00_04', 'pop_age_05_17', 'pop_age_18_24', 'pop_age_25_34',
                   'pop_age_35_64', 'pop_age_65_inf',
                   'pop_age_00_17', 'pop_age_25_44', 'pop_age_45_64', 'pop_age_65_84', 'pop_age_85_inf',
+                  'pop_age_35_59', 'pop_age_60_64', 'pop_age_65_74', 'pop_age_75_inf',
                   'hh_pop_age_median',
                   'pct_hh_pop_age_05_17', 'pct_hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
