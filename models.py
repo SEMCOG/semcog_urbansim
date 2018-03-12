@@ -368,7 +368,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
     households_columns = households.local_columns
     households = households.to_frame(households_columns + location_ids)
     households["household_id_old"] = households.index.values
-    buildings = buildings.to_frame(buildings.local_columns + location_ids)
+    buildings = buildings.to_frame(buildings.local_columns + location_ids + ["gq_building"])
     dic_agent = {'jobs': jobs, 'households': households, 'gq': group_quarters}
 
     refinements = refiner_events.to_frame()
@@ -583,36 +583,39 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                                diff)
         dic_agent[agent_type] = agents
 
-    jobs = dic_agent['jobs']
-    assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
-    jobs['large_area_id'] = misc.reindex(buildings.large_area_id, jobs.building_id)
-    orca.add_table('jobs', jobs[jobs_columns])
+    if refinements.agents.isin({'jobs'}).sum() > 0:
+	    jobs = dic_agent['jobs']
+	    assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
+	    jobs['large_area_id'] = misc.reindex(buildings.large_area_id, jobs.building_id)
+	    orca.add_table('jobs', jobs[jobs_columns])
 
-    households = dic_agent['households']
-    assert households.index.duplicated().sum() == 0, "duplicated index in households"
-    households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
-    orca.add_table('households', households[households_columns])
+    if refinements.agents.isin({'gq'}).sum() > 0:
+	    group_quarters = dic_agent['gq']
+	    assert group_quarters.index.duplicated().sum() == 0, "duplicated index in group_quarters"
+	    orca.add_table('group_quarters', group_quarters[group_quarters_columns])
 
-    group_quarters = dic_agent['gq']
-    assert group_quarters.index.duplicated().sum() == 0, "duplicated index in group_quarters"
-    orca.add_table('group_quarters', group_quarters[group_quarters_columns])
+    if refinements.agents.isin({'households'}).sum() > 0:
+	    households = dic_agent['households']
+	    assert households.index.duplicated().sum() == 0, "duplicated index in households"
+	    households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
+	    orca.add_table('households', households[households_columns])
 
-    persons_columns = persons.local_columns
-    persons = persons.to_frame(persons_columns)
-    pidmax = persons.index.values.max() + 1
+	    persons_columns = persons.local_columns
+	    persons = persons.to_frame(persons_columns)
+	    pidmax = persons.index.values.max() + 1
 
-    hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
-    hh_index_lookup.columns = ['household_id']
-    p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
-    new_p = (p.household_id_x != p.household_id_y).sum()
-    p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
-    p['household_id'] = p['household_id_y']
-    persons = p.set_index('person_id')
+	    hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
+	    hh_index_lookup.columns = ['household_id']
+	    p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
+	    new_p = (p.household_id_x != p.household_id_y).sum()
+	    p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+	    p['household_id'] = p['household_id_y']
+	    persons = p.set_index('person_id')
 
-    assert persons.household_id.isin(households.index).all(), "persons.household_id not in households"
-    assert len(persons.groupby('household_id').size()) == len(households.persons), "households with no persons"
-    assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
-    orca.add_table('persons', persons[persons_columns])
+	    assert persons.household_id.isin(households.index).all(), "persons.household_id not in households"
+	    assert len(persons.groupby('household_id').size()) == len(households.persons), "households with no persons"
+	    assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
+	    orca.add_table('persons', persons[persons_columns])
 
 
 @orca.step()

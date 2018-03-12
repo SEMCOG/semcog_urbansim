@@ -16,5 +16,5 @@ for i in xrange(start_num, 1, -1):
         print "runnum:", i
         break
 
-# data_out = '/runs/run4008.h5'
+data_out = './runs/run4032_hu_hh_base_2_gq_jobs_v5_hhpop_agegrp.h5'
 output_indicators.main(data_out)

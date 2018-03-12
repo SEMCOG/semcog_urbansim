@@ -66,7 +66,7 @@ def households(store, buildings):
     df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
                                                                       idx_invalid_building_id.sum())
     df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
-    return df
+    return df.fillna(0)
 
 
 @orca.table(cache=True)
@@ -80,7 +80,7 @@ def jobs(store, buildings):
     df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
                                                                       idx_invalid_building_id.sum())
     df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
-    return df
+    return df.fillna(0)
 
 
 @orca.table(cache=True)

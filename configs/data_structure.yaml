@@ -146,7 +146,7 @@ columns:
   cars: int64
   children: float64
   income: float64
-  persons: float64
+  persons: int64
   race_id: int64
   workers: float64
 ---
@@ -275,7 +275,7 @@ indexs:
 - person_id
 columns:
   age: int64
-  household_id: int64
+  household_id: float64
   member_id: int64
   race_id: int64
   relate: int64

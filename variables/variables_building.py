@@ -26,6 +26,11 @@ def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
 
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def gq_building(buildings, group_quarters):
+    return 1 * buildings.index.isin(group_quarters.building_id)
+
+
 # @orca.column('buildings', cache=True, cache_scope='iteration')
 # def _node_id(buildings, parcels):
 #     return misc.reindex(parcels._node_id, buildings.parcel_id)

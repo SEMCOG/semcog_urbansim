@@ -7,10 +7,11 @@ from urbansim.utils import misc
 
 
 def orca_year_dataset(hdf, year):
+    orca.clear_cache()
     if str(year) == '2015':
         year = 'base'
     orca.add_injectable("year", int(year if str(year) != 'base' else 2015))
-    for tbl in ['households', 'persons', 'group_quarters', 'jobs', 'base_job_space', 'buildings', 'parcels', 'dropped_buildings']:
+    for tbl in ['parcels', 'buildings', 'jobs', 'households', 'persons', 'group_quarters', 'base_job_space', 'dropped_buildings']:
         name = str(year) + '/' + tbl
         if name in hdf:
             df = hdf[name]
@@ -18,8 +19,12 @@ def orca_year_dataset(hdf, year):
             stub_name = str(2020) + '/' + tbl
             print "No table named " + name + ". Using the structuer from " + stub_name + "."
             df = hdf[stub_name].iloc[0:0]
-        orca.add_table(tbl, df)
-    orca.clear_cache()
+
+        if tbl in {'households', 'jobs'} and 'large_area_id' not in df.columns:
+            print 'impute large_area_id'
+            df['large_area_id'] = misc.reindex(orca.get_table('buildings').large_area_id, df.building_id)
+
+        orca.add_table(tbl, df.fillna(0))
 
 
 @orca.column("parcels", cache=True, cache_scope='iteration')
@@ -240,7 +245,9 @@ def make_indicators(tab, geo_id):
 
     make_hh_size(1)
     make_hh_size(2)
+    make_hh_size(3)
     make_hh_size(3, True)
+    make_hh_size(4, True)
 
     def make_hh_size_age(r, a, b, plus=False):
         hh_name = 'hh_size_' + str(r)
@@ -337,7 +344,7 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
-    for (a, b) in [(00, 04), (05, 17), (18, 24), (25, 34), (35, 64), (65, pd.np.inf),
+    for (a, b) in [(00, 04), (05, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
                    (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf),
                    (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
         make_pop_age(a, b)
@@ -431,6 +438,13 @@ def main(run_name):
     p.index.name = 'parcel_id'
     p = p.reset_index()
     whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
+    # fenton
+    fenton = p.head(1)
+    fenton.large_area_id = 93
+    fenton.b_city_id = 7027
+    fenton.b_zone_id = 72214
+    fenton.parcel_id = 0
+    whatnot = whatnot.append(fenton, ignore_index=True)
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
     e['parcel_id'] = e.parcel_id.astype(p.index.dtype)
     e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
@@ -439,9 +453,12 @@ def main(run_name):
     b = orca.get_table('buildings').to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
     whatnot = whatnot.append(b, ignore_index=True)
     b = store_la['/2045/buildings']
-    interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(store_la['/2045/dropped_buildings'].parcel_id)
-    acres = orca.get_table('parcels').acres
-    interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
+    if spacing == 1:
+        interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(store_la['/2045/dropped_buildings'].parcel_id)
+        acres = orca.get_table('parcels').acres
+        interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
+    else:
+        interesting_parcel_ids = set()
     whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
     whatnot = whatnot.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index(drop=True)
     whatnot.index.name = "whatnot_id"
@@ -511,9 +528,9 @@ def main(run_name):
                   'with_children', 'without_children',
                   'with_seniors', 'without_seniors',
                   'pct_with_children', 'pct_with_seniors',
-                  'hh_size_1', 'hh_size_2', 'hh_size_3p',
-                  'with_children_hh_size_1', 'with_children_hh_size_2', 'with_children_hh_size_3p',
-                  'without_children_hh_size_1', 'without_children_hh_size_2', 'without_children_hh_size_3p',
+                  'hh_size_1', 'hh_size_2', 'hh_size_3','hh_size_3p','hh_size_4p',
+                  'with_children_hh_size_1', 'with_children_hh_size_2', 'with_children_hh_size_3', 'with_children_hh_size_3p', 'with_children_hh_size_4p',
+                  'without_children_hh_size_1', 'without_children_hh_size_2', 'without_children_hh_size_3', 'without_children_hh_size_3p', 'without_children_hh_size_4p',
                   'hh_size_1_age_15_34', 'hh_size_1_age_35_44', 'hh_size_1_age_65_inf',
                   'hh_size_2p_age_15_34', 'hh_size_2p_age_35_44', 'hh_size_2p_age_65_inf',
                   'hh_pop_race_1', 'hh_pop_race_2', 'hh_pop_race_3', 'hh_pop_race_4',
@@ -524,15 +541,15 @@ def main(run_name):
                   'pct_pop_race_1', 'pct_pop_race_2', 'pct_pop_race_3', 'pct_pop_race_4',
                   'hh_no_car_or_lt_workers', 'pct_hh_no_car_or_lt_workers',
                   'hh_pop_age_00_04', 'hh_pop_age_05_17', 'hh_pop_age_18_24', 'hh_pop_age_25_34',
-                  'hh_pop_age_35_64', 'hh_pop_age_65_inf',
+                  'hh_pop_age_35_64', 'hh_pop_age_65_inf', 'hh_pop_age_18_64',
                   'hh_pop_age_00_17', 'hh_pop_age_25_44', 'hh_pop_age_45_64', 'hh_pop_age_65_84', 'hh_pop_age_85_inf',
                   'hh_pop_age_35_59', 'hh_pop_age_60_64', 'hh_pop_age_65_74', 'hh_pop_age_75_inf',
                   'gq_pop_age_00_04', 'gq_pop_age_05_17', 'gq_pop_age_18_24', 'gq_pop_age_25_34',
-                  'gq_pop_age_35_64', 'gq_pop_age_65_inf',
+                  'gq_pop_age_35_64', 'gq_pop_age_65_inf', 'gq_pop_age_18_64',
                   'gq_pop_age_00_17', 'gq_pop_age_25_44', 'gq_pop_age_45_64', 'gq_pop_age_65_84', 'gq_pop_age_85_inf',
                   'gq_pop_age_35_59', 'gq_pop_age_60_64', 'gq_pop_age_65_74', 'gq_pop_age_75_inf',
                   'pop_age_00_04', 'pop_age_05_17', 'pop_age_18_24', 'pop_age_25_34',
-                  'pop_age_35_64', 'pop_age_65_inf',
+                  'pop_age_35_64', 'pop_age_65_inf', 'pop_age_18_64',
                   'pop_age_00_17', 'pop_age_25_44', 'pop_age_45_64', 'pop_age_65_84', 'pop_age_85_inf',
                   'pop_age_35_59', 'pop_age_60_64', 'pop_age_65_74', 'pop_age_75_inf',
                   'hh_pop_age_median',
@@ -704,7 +721,7 @@ def main(run_name):
     print "runtime geom:", end - start
 
     start = time.clock()
-    for year in [2015, 2030, 2045]:
+    for year in range(2015, 2046, 5):
         print "buildings for", year
         orca_year_dataset(store_la, year)
         buildings = orca.get_table('buildings')
