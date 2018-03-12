@@ -306,18 +306,21 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
 
 
 @orca.step()
-def government_jobs_scaling_model(jobs):
+def jobs_scaling_model(jobs):
     wrap_jobs = jobs
     jobs = jobs.to_frame(jobs.local_columns + ['large_area_id'])
-    government_sectors = {1, 7, 12, 13, 15, 18}
+    regional_sectors = {1, 7, 12, 13, 15, 18}
+    la_sectors = []
 
-    # todo: use .sample
     def random_choice(chooser_ids, alternative_ids, probabilities):
         return pd.Series(np.random.choice(
             alternative_ids, size=len(chooser_ids), replace=True, p=probabilities), index=chooser_ids)
 
     jobs_to_place = jobs[jobs.building_id.isnull() | (jobs.building_id == -1)]
-    jobs_to_place = jobs_to_place[jobs_to_place.sector_id.isin(government_sectors)]
+    selected = jobs_to_place.sector_id.isin(regional_sectors)
+    for (sec, la) in la_sectors:
+        selected |= ((jobs_to_place.sector_id == sec) & (jobs_to_place.large_area_id == la))
+    jobs_to_place = jobs_to_place[selected]
 
     if len(jobs_to_place) > 0:
         for (large_area_id, sector), segment in jobs_to_place.groupby(['large_area_id', 'sector_id']):
