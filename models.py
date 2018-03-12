@@ -15,7 +15,6 @@ import utils
 import lcm_utils
 import variables
 
-
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 location_choice_models = {}
@@ -45,6 +44,7 @@ for name, model in location_choice_models.items():
     lcm_utils.register_choice_model_step(model.name,
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
+
 
 @orca.step()
 def elcm_home_based(jobs, households):
@@ -80,6 +80,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
     """
     Generator function for single-model REPMs.
     """
+
     @orca.step(model_name)
     def func():
         buildings = orca.get_table('buildings')
@@ -87,6 +88,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
         print yaml_file
         return utils.hedonic_simulate(yaml_file, buildings,
                                       nodes_walk, dep_var)
+
     return func
 
 
@@ -232,8 +234,6 @@ def households_transition(households, persons, annual_household_control_totals, 
     orca.add_table("persons", pd.concat(out_p_fixed, verify_integrity=True))
 
 
-
-
 @orca.step()
 def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_area):
     from numpy.random import choice
@@ -244,7 +244,7 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
-    colls = ['persons', 'race_id', 'workers', 'children', 'large_area_id'] # , 'age_of_head'
+    colls = ['persons', 'race_id', 'workers', 'children', 'large_area_id']  # , 'age_of_head'
     same = {tuple(idx): df[['income', 'cars']] for idx, df in hh.groupby(colls)}
 
     new_employ = []
@@ -308,7 +308,7 @@ def jobs_transition(jobs, annual_employment_control_totals, iter_var):
 @orca.step()
 def government_jobs_scaling_model(jobs):
     wrap_jobs = jobs
-    jobs = jobs.to_frame(jobs.local_columns+['large_area_id'])
+    jobs = jobs.to_frame(jobs.local_columns + ['large_area_id'])
     government_sectors = {1, 7, 12, 13, 15, 18}
 
     # todo: use .sample
@@ -584,38 +584,38 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         dic_agent[agent_type] = agents
 
     if refinements.agents.isin({'jobs'}).sum() > 0:
-	    jobs = dic_agent['jobs']
-	    assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
-	    jobs['large_area_id'] = misc.reindex(buildings.large_area_id, jobs.building_id)
-	    orca.add_table('jobs', jobs[jobs_columns])
+        jobs = dic_agent['jobs']
+        assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
+        jobs['large_area_id'] = misc.reindex(buildings.large_area_id, jobs.building_id)
+        orca.add_table('jobs', jobs[jobs_columns])
 
     if refinements.agents.isin({'gq'}).sum() > 0:
-	    group_quarters = dic_agent['gq']
-	    assert group_quarters.index.duplicated().sum() == 0, "duplicated index in group_quarters"
-	    orca.add_table('group_quarters', group_quarters[group_quarters_columns])
+        group_quarters = dic_agent['gq']
+        assert group_quarters.index.duplicated().sum() == 0, "duplicated index in group_quarters"
+        orca.add_table('group_quarters', group_quarters[group_quarters_columns])
 
     if refinements.agents.isin({'households'}).sum() > 0:
-	    households = dic_agent['households']
-	    assert households.index.duplicated().sum() == 0, "duplicated index in households"
-	    households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
-	    orca.add_table('households', households[households_columns])
+        households = dic_agent['households']
+        assert households.index.duplicated().sum() == 0, "duplicated index in households"
+        households['large_area_id'] = misc.reindex(buildings.large_area_id, households.building_id)
+        orca.add_table('households', households[households_columns])
 
-	    persons_columns = persons.local_columns
-	    persons = persons.to_frame(persons_columns)
-	    pidmax = persons.index.values.max() + 1
+        persons_columns = persons.local_columns
+        persons = persons.to_frame(persons_columns)
+        pidmax = persons.index.values.max() + 1
 
-	    hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
-	    hh_index_lookup.columns = ['household_id']
-	    p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
-	    new_p = (p.household_id_x != p.household_id_y).sum()
-	    p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
-	    p['household_id'] = p['household_id_y']
-	    persons = p.set_index('person_id')
+        hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
+        hh_index_lookup.columns = ['household_id']
+        p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
+        new_p = (p.household_id_x != p.household_id_y).sum()
+        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+        p['household_id'] = p['household_id_y']
+        persons = p.set_index('person_id')
 
-	    assert persons.household_id.isin(households.index).all(), "persons.household_id not in households"
-	    assert len(persons.groupby('household_id').size()) == len(households.persons), "households with no persons"
-	    assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
-	    orca.add_table('persons', persons[persons_columns])
+        assert persons.household_id.isin(households.index).all(), "persons.household_id not in households"
+        assert len(persons.groupby('household_id').size()) == len(households.persons), "households with no persons"
+        assert persons.index.duplicated().sum() == 0, "duplicated index in persons"
+        orca.add_table('persons', persons[persons_columns])
 
 
 @orca.step()
@@ -841,7 +841,7 @@ def register_btype_distributions(buildings):
     form_btype_dists = {}
     for form in form_to_btype.keys():
         bldgs = buildings.loc[buildings.building_type_id
-                                       .isin(form_to_btype[form])]
+            .isin(form_to_btype[form])]
         bldgs_by_type = bldgs.groupby('building_type_id').size()
         normed = bldgs_by_type / sum(bldgs_by_type)
         form_btype_dists[form] = normed.to_dict()
@@ -1054,12 +1054,15 @@ def travel_model(iter_var, travel_data, buildings, parcels, households, persons,
         # zonal_indicators['workers'] = hh.groupby('zone_id').workers.sum()
         zonal_indicators['Agegrp1'] = persons[persons.age <= 4].groupby('zone_id').size()  # ???
         zonal_indicators['Agegrp2'] = persons[(persons.age >= 5) * (persons.age <= 17)].groupby('zone_id').size()  # ???
-        zonal_indicators['Agegrp3'] = persons[(persons.age >= 18) * (persons.age <= 34)].groupby('zone_id').size()  # ???
+        zonal_indicators['Agegrp3'] = persons[(persons.age >= 18) * (persons.age <= 34)].groupby(
+            'zone_id').size()  # ???
         zonal_indicators['Age_18to34'] = persons[(persons.age >= 18) * (persons.age <= 34)].groupby('zone_id').size()
-        zonal_indicators['Agegrp4'] = persons[(persons.age >= 35) * (persons.age <= 64)].groupby('zone_id').size()  # ???
+        zonal_indicators['Agegrp4'] = persons[(persons.age >= 35) * (persons.age <= 64)].groupby(
+            'zone_id').size()  # ???
         zonal_indicators['Agegrp5'] = persons[persons.age >= 65].groupby('zone_id').size()  # ???
         enroll_ratios = pd.read_csv("data/schdic_taz10.csv")
-        school_age_by_district = pd.DataFrame({'children': persons[(persons.age >= 5) * (persons.age <= 17)].groupby('school_district_id').size()})
+        school_age_by_district = pd.DataFrame(
+            {'children': persons[(persons.age >= 5) * (persons.age <= 17)].groupby('school_district_id').size()})
         enroll_ratios = pd.merge(enroll_ratios, school_age_by_district, left_on='school_district_id', right_index=True)
         enroll_ratios['enrolled'] = enroll_ratios.enroll_ratio * enroll_ratios.children
         enrolled = enroll_ratios.groupby('zone_id').enrolled.sum()
@@ -1083,7 +1086,8 @@ def travel_model(iter_var, travel_data, buildings, parcels, households, persons,
         zonal_indicators['Education_Services'] = jobs[jobs.sector_id == 13].groupby('zone_id').size()
         # zonal_indicators['sector14'] = jobs[jobs.sector_id==14].groupby('zone_id').size()
         # zonal_indicators['sector15'] = jobs[jobs.sector_id==15].groupby('zone_id').size()
-        zonal_indicators['Health_Care_and_SocialSer'] = jobs[np.in1d(jobs.sector_id, [14, 15, 19])].groupby('zone_id').size()
+        zonal_indicators['Health_Care_and_SocialSer'] = jobs[np.in1d(jobs.sector_id, [14, 15, 19])].groupby(
+            'zone_id').size()
         zonal_indicators['Leisure_and_Hospitality'] = jobs[jobs.sector_id == 16].groupby('zone_id').size()
         zonal_indicators['Other_Services'] = jobs[jobs.sector_id == 17].groupby('zone_id').size()
         zonal_indicators['sector18'] = jobs[jobs.sector_id == 18].groupby('zone_id').size()
@@ -1201,7 +1205,8 @@ def travel_model(iter_var, travel_data, buildings, parcels, households, persons,
             orca.add_table("parcels", parcels)
 
         emp_btypes = orca.get_injectable('emp_btypes')
-        emp_parcels = buildings[np.in1d(buildings.building_type_id,emp_btypes)].groupby('parcel_id').size().index.values
+        emp_parcels = buildings[np.in1d(buildings.building_type_id, emp_btypes)].groupby(
+            'parcel_id').size().index.values
         parcels['emp'] = 0
         parcels.emp[np.in1d(parcels.index.values, emp_parcels)] = 1
         parcels['emp_acreage'] = parcels.emp * parcels.parcel_sqft / 43560.0
