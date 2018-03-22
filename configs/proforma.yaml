@@ -37,9 +37,17 @@ fars:
 
 uses:
 - retail
-- industrial
+- automotive
 - office
-- medical
+- financial
+- accommodations
+- eating
+- manufacturing
+- wholesale
+- healthcare
+- hospital
+- nursing
+- recreation
 - residential
 
 residential_uses:
@@ -47,25 +55,43 @@ residential_uses:
 - false
 - false
 - false
+- false
+- false
+- false
+- false
+- false
+- false
+- false
+- false
 - true
 
 forms:
-    industrial:
-        industrial: 1.0
-    medical:
-        medical: 1.0
-    mixedoffice:
-        office: 0.7
-        residential: 0.3
-    mixedresidential:
-        residential: 0.9
-        retail: 0.1
-    office:
-        office: 1.0
-    residential:
-        residential: 1.0
     retail:
         retail: 1.0
+    automotive:
+        automotive: 1.0
+    office:
+        office: 1.0
+    financial:
+        financial: 1.0
+    accommodations:
+        accommodations: 1.0
+    eating:
+        eating: 1.0
+    manufacturing:
+        manufacturing: 1.0
+    wholesale:
+        wholesale: 1.0
+    healthcare:
+        healthcare: 1.0
+    hospital:
+        hospital: 1.0
+    nursing:
+        nursing: 1.0
+    recreation:
+        recreation: 1.0
+    residential:
+        residential: 1.0
 
 profit_factor: 1.0
 
@@ -76,11 +102,20 @@ parcel_coverage: 0.85
 cap_rate: 0.01
 
 parking_rates:
-    industrial: 0.6
-    medical: 1.0
-    office: 1.0
-    residential: 1.0
     retail: 2.0
+    automotive: 2.0
+    office: 1.0
+    financial: 1.0
+    accommodations: 1.0
+    eating: 2.0
+    manufacturing: 0.6
+    wholesale: 1.0
+    healthcare: 1.0
+    hospital: 1.0
+    nursing: 1.0
+    recreation: 1.0
+    residential: 1.0
+
 
 sqft_per_rate: 1000.0
 
@@ -90,20 +125,20 @@ parking_configs:
 - underground
 
 costs:
-    industrial:
-    - 125.0
-    - 125.0
-    - 130.0
+    retail:
+    - 120.0
+    - 145.0
     - 999.0
     - 999.0
     - 999.0
     - 999.0
     - 999.0
     - 999.0
-    medical:
-    - 210.0
-    - 240.0
+    - 999.0
+    automotive:
+    - 120.0
     - 300.0
+    - 999.0
     - 999.0
     - 999.0
     - 999.0
@@ -120,6 +155,96 @@ costs:
     - 175.0
     - 999.0
     - 999.0
+    financial:
+    - 165.0
+    - 180.0
+    - 180.0
+    - 180.0
+    - 175.0
+    - 175.0
+    - 175.0
+    - 999.0
+    - 999.0
+    accommodations:
+    - 120.0
+    - 145.0
+    - 165.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    eating:
+    - 120.0
+    - 145.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    manufacturing:
+    - 125.0
+    - 125.0
+    - 130.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    wholesale:
+    - 120.0
+    - 145.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    healthcare:
+    - 210.0
+    - 240.0
+    - 300.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    hospital:
+    - 210.0
+    - 240.0
+    - 300.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    nursing:
+    - 210.0
+    - 240.0
+    - 300.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    recreation:
+    - 120.0
+    - 145.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
     residential:
     - 106.0
     - 96.0
@@ -130,16 +255,57 @@ costs:
     - 205.0
     - 205.0
     - 999.0
-    retail:
-    - 120.0
-    - 145.0
-    - 999.0
-    - 999.0
-    - 999.0
-    - 999.0
-    - 999.0
-    - 999.0
-    - 999.0
+
+#    industrial:
+#    - 125.0
+#    - 125.0
+#    - 130.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    medical:
+#    - 210.0
+#    - 240.0
+#    - 300.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    office:
+#    - 165.0
+#    - 180.0
+#    - 180.0
+#    - 180.0
+#    - 175.0
+#    - 175.0
+#    - 175.0
+#    - 999.0
+#    - 999.0
+#    residential:
+#    - 106.0
+#    - 96.0
+#    - 160.0
+#    - 180.0
+#    - 180.0
+#    - 205.0
+#    - 205.0
+#    - 205.0
+#    - 999.0
+#    retail:
+#    - 120.0
+#    - 145.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
+#    - 999.0
 
 heights_for_costs:
 - 12
@@ -169,12 +335,12 @@ max_retail_height: 2.0
 max_industrial_height: 2.0
 
 construction_months:
-    industrial:
+    retail:
     - 12.0
     - 14.0
     - 18.0
     - 24.0
-    medical:
+    automotive:
     - 12.0
     - 14.0
     - 18.0
@@ -184,16 +350,57 @@ construction_months:
     - 14.0
     - 18.0
     - 24.0
+    financial:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    accommodations:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    eating:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    manufacturing:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    wholesale:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    healthcare:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    hospital:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    nursing:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
+    recreation:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
     residential:
     - 12.0
     - 14.0
     - 18.0
     - 24.0
-    retail:
-    - 12.0
-    - 14.0
-    - 18.0
-    - 24.0
+
 
 loan_fees: 0.02
 
@@ -216,13 +423,20 @@ construction_sqft_for_months:
 - .inf
 
 forms_to_test:
-- industrial
-- medical
-- mixedoffice
-- mixedresidential
-- office
-- residential
 - retail
+- automotive
+- office
+- financial
+- accommodations
+- eating
+- manufacturing
+- wholesale
+- healthcare
+- hospital
+- nursing
+- recreation
+- residential
+
 
 pass_through: []
 
