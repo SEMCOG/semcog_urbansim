@@ -411,3 +411,8 @@ for var_to_log in vars_to_log:
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
+
+## General type dummies
+for gen_type in ['Residential', 'Retail', 'Office', 'Industrial', 
+                 'Institutional', 'TCU', 'Medical']:
+    make_dummy_variable('general_type', gen_type)

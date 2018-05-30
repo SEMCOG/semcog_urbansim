@@ -20,21 +20,32 @@ import variables
 location_choice_models = {}
 hlcm_step_names = []
 elcm_step_names = []
+large_area_ids = [3, 5, 93, 99, 115, 125, 147, 161]
 model_configs = lcm_utils.get_model_category_configs()
 for model_category_name, model_category_attributes in model_configs.items():
     if model_category_attributes['model_type'] == 'location_choice':
         model_config_files = model_category_attributes['config_filenames']
-
         for model_config in model_config_files:
-            model = lcm_utils.create_lcm_from_config(model_config,
-                                                     model_category_attributes)
-            location_choice_models[model.name] = model
-
-            if model_category_name == 'hlcm':
-                hlcm_step_names.append(model.name)
-
-            if model_category_name == 'elcm':
-                elcm_step_names.append(model.name)
+            for lid in large_area_ids:
+                model = lcm_utils.create_lcm_from_config(model_config,
+                                                         model_category_attributes)
+                submodel_id = int(model.name.split('lcm')[-1])
+                model.name = model.name + '_%s' % lid
+                model.choice_column = 'building_id'
+                if model_category_name == 'hlcm':
+                    qlid = submodel_id*100000 + lid
+                    model.choosers_predict_filters = "qlid == %s" % qlid
+                    model.alts_predict_filters = "(large_area_id == %s) & (hu_filter != 1 )" % lid
+                    model.prediction_sample_size = 30
+                    model.choice_mode = "individual"
+                    model.probability_mode = "full_product"
+                    hlcm_step_names.append(model.name)
+                if model_category_name == 'elcm':
+                    slid = submodel_id*100000 + lid
+                    model.choosers_predict_filters = "(slid == %s) & (home_based_status == 0)" % slid
+                    model.alts_predict_filters = "large_area_id == %s" % lid
+                    elcm_step_names.append(model.name)
+                location_choice_models[model.name] = model
 
 orca.add_injectable('location_choice_models', location_choice_models)
 orca.add_injectable('hlcm_step_names', sorted(hlcm_step_names, reverse=True))
