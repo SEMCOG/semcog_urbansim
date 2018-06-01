@@ -57,6 +57,58 @@ for name, model in location_choice_models.items():
                                          choice_function=lcm_utils.unit_choices)
 
 
+@orca.step('job_btype_summary')
+def job_btype_summary(jobs, buildings, year):
+    jobs = jobs.local
+    general_type_cols = [col for col in buildings.columns if 'general_type_is' in col]
+
+    gtype_sector_summaries = {}
+    for general_type_col in general_type_cols:
+        general_type_col_data = buildings.get_column(general_type_col)
+
+        jobs_by_gtype = misc.reindex(general_type_col_data, jobs.building_id)
+
+        jobs['gtype'] = jobs_by_gtype
+
+        gtype_building_jobs_by_sector = jobs[jobs.gtype == 1].sector_id.value_counts()
+        gtype_building_jobs_by_sector = gtype_building_jobs_by_sector * 1.0 / gtype_building_jobs_by_sector.sum()
+
+        gtype_sector_summaries[general_type_col] = gtype_building_jobs_by_sector
+        
+    gtype_sector_summaries = pd.DataFrame(gtype_sector_summaries).fillna(0)
+    if 'gtype_building_jobs_by_sector' not in orca.list_injectables():
+        orca.add_injectable('gtype_building_jobs_by_sector', {year:gtype_sector_summaries})
+    else:
+        record_of_jobs_by_btype = orca.get_injectable('gtype_building_jobs_by_sector')
+        record_of_jobs_by_btype[year] = gtype_sector_summaries
+        orca.add_injectable('gtype_building_jobs_by_sector', record_of_jobs_by_btype)
+        
+    ## Case Studies
+    job_btype_case_studies = {
+                    'beaumont_hospital' : [1636139],
+                    'detroit_airport' : [1494257, 1491257, 1495668, 1496225, 1494300,
+                                  1496239, 1494091, 1496883, 1497873, 1492793,
+                                   1488190, 1900214],
+                    'fiat_hq' : [2577724],
+                    'fiat_industrial' : [3234198, 3901455, 3217609, 3202329, 3209352],
+                    'river_raisin' : [5053463],
+                    'ford_hq' : [1414921, 1192694, 1904211]}
+
+    jobs_by_case_study = {}
+    for case_study, building_ids in job_btype_case_studies.items():
+        jobs_case_study = jobs[jobs.building_id.isin(building_ids)]
+        jobs_by_case_study[case_study] = jobs_case_study.sector_id.value_counts()
+
+    jobs_by_case_study = pd.DataFrame(jobs_by_case_study).fillna(0)
+
+    if 'jobs_by_case_study' not in orca.list_injectables():
+        orca.add_injectable('jobs_by_case_study', {year:jobs_by_case_study})
+    else:
+        record_of_jobs_by_case_study = orca.get_injectable('jobs_by_case_study')
+        record_of_jobs_by_case_study[year] = jobs_by_case_study
+        orca.add_injectable('jobs_by_case_study', record_of_jobs_by_case_study)
+
+
 @orca.step()
 def elcm_home_based(jobs, households):
     wrap_jobs = jobs
