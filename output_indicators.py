@@ -73,6 +73,12 @@ def make_indicators(tab, geo_id):
         return buildings.groupby(geo_id).residential_units.sum()
 
     @orca.column(tab, cache=True, cache_scope='iteration')
+    def events_parcels_hu(buildings, events_addition):
+        buildings = buildings.to_frame([geo_id, 'parcel_id', 'residential_units'])
+        buildings = buildings[buildings.parcel_id.isin(events_addition.parcel_id)]
+        return buildings.groupby(geo_id).residential_units.sum()
+
+    @orca.column(tab, cache=True, cache_scope='iteration')
     def hu_filter(buildings):
         buildings = buildings.to_frame([geo_id, 'hu_filter'])
         return buildings.groupby(geo_id).hu_filter.sum()
@@ -437,10 +443,10 @@ def main(run_name):
     p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
         columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
     p.index.name = 'parcel_id'
-    p = p.reset_index()
-    whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
+    p1 = p.reset_index()
+    whatnot = p1.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
     # fenton
-    fenton = p.head(1)
+    fenton = p1.head(1)
     fenton.large_area_id = 93
     fenton.b_city_id = 7027
     fenton.b_zone_id = 72214
@@ -513,7 +519,8 @@ def main(run_name):
     years = range(2015, 2045 + 1, spacing)
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
-                  'housing_units', 'hu_filter', 'parcel_is_allowed_residential', 'parcel_is_allowed_demolition',
+                  'housing_units', 'events_parcels_hu', 'hu_filter',
+                  'parcel_is_allowed_residential', 'parcel_is_allowed_demolition',
                   'buildings', 'household_size', 'vacant_units', 'job_spaces',
                   'res_sqft', 'nonres_sqft',
                   'building_sqft_type_11', 'building_sqft_type_12', 'building_sqft_type_13', 'building_sqft_type_14',
@@ -635,9 +642,16 @@ def main(run_name):
     whatnots_output.index.rename('city_id', 1, True)
     whatnots_output.index.rename('zone_id', 2, True)
     whatnots_output.columns = year_names
+
+    whatnots_output = whatnots_output.reset_index()
+
+    whatnots_output.loc[(whatnots_output.large_area_id == 0) & (whatnots_output.city_id == 1020), 'large_area_id'] = 3
+    whatnots_output.loc[(whatnots_output.large_area_id == 0) & (whatnots_output.city_id == 4035), 'large_area_id'] = 161
+    whatnots_output.loc[(whatnots_output.large_area_id == 0) & (whatnots_output.city_id == 4075), 'large_area_id'] = 161
+
     if spacing == 1:
-        whatnots_output[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_output.csv"))
-    whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
+        whatnots_output[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_output.csv"), index=False)
+    whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"), index=False)
     end = time.clock()
     print "runtime whatnots:", end - start
 
