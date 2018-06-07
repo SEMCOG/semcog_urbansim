@@ -441,11 +441,10 @@ def main(run_name):
 
     orca.add_table('cities', cities)
 
-    # TODO: add school_id back in at some point
-    whatnots_columns_names = ['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']
+    whatnots_columns_names = ['large_area_id', 'b_city_id', 'b_zone_id', 'b_school_id', 'parcel_id']
     p = orca.get_table('parcels')
-    p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
-        columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
+    p = p.to_frame(['large_area_id', 'city_id', 'zone_id', 'school_id']).rename(
+        columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id', 'school_id': 'b_school_id'})
     p.index.name = 'parcel_id'
     p1 = p.reset_index()
     whatnot = p1.drop_duplicates(whatnots_columns_names)
@@ -454,11 +453,13 @@ def main(run_name):
     fenton.large_area_id = 93
     fenton.b_city_id = 7027
     fenton.b_zone_id = 72214
+    fenton.b_school_id = 25100
     fenton.parcel_id = 0
     whatnot = whatnot.append(fenton, ignore_index=True)
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
     e['parcel_id'] = e.parcel_id.astype(p.index.dtype)
     e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
+    e['b_school_id'] = p.loc[e.parcel_id].b_school_id.values
     e = e[whatnots_columns_names]
     whatnot = whatnot.append(e, ignore_index=True)
 
@@ -481,9 +482,8 @@ def main(run_name):
 
     @orca.column('parcels', cache=True, cache_scope='iteration')
     def whatnot_id(parcels, whatnots):
-        # TODO: add school_id back in at some point
-        parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
-            columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
+        parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id', 'school_id']).rename(
+            columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id', 'school_id': 'b_school_id'})
         parcels['parcel_id'] = parcels.index
         parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
         whatnots = whatnots.to_frame(whatnots_columns_names).reset_index()
@@ -493,7 +493,6 @@ def main(run_name):
 
     @orca.column('buildings', cache=True, cache_scope='iteration')
     def whatnot_id(buildings, whatnots):
-        # TODO: add school_id back in at some point
         buildings = buildings.to_frame(whatnots_columns_names).reset_index()
         buildings.loc[~buildings.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
         whatnots = whatnots.to_frame(whatnots_columns_names).reset_index()
@@ -649,6 +648,7 @@ def main(run_name):
     whatnots_output = pd.concat(whatnots_output).unstack(fill_value=0)
     whatnots_output.index.rename('city_id', 1, True)
     whatnots_output.index.rename('zone_id', 2, True)
+    whatnots_output.index.rename('school_id', 3, True)
     whatnots_output.columns = year_names
 
     whatnots_output = whatnots_output.reset_index()
@@ -662,6 +662,7 @@ def main(run_name):
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"), index=False)
     end = time.clock()
     print "runtime whatnots:", end - start
+    quit()
 
     start = time.clock()
     geom = ['cities', 'large_areas', 'semmcds', 'zones']
