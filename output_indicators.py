@@ -424,6 +424,9 @@ def main(run_name):
     else:
         all_years_dir = outdir
 
+    years = range(2015, 2045 + 1, spacing)
+    year_names = ["yr" + str(i) for i in years]
+
     for tbl in ['semmcds', 'zones', 'large_areas']:
         orca.add_table(tbl, store_la['base/' + tbl])
 
@@ -458,11 +461,15 @@ def main(run_name):
     e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
     e = e[whatnots_columns_names]
     whatnot = whatnot.append(e, ignore_index=True)
-    b = orca.get_table('buildings').to_frame(whatnots_columns_names)
-    whatnot = whatnot.append(b, ignore_index=True)
-    b = store_la['/2045/buildings']
+
+    for year in years:
+        print 'preping whatnot for', year
+        orca_year_dataset(store_la, year)
+        b = orca.get_table('buildings').to_frame(whatnots_columns_names)
+        whatnot = whatnot.append(b, ignore_index=True)
+    b = orca.get_table('buildings').to_frame(["year_built", "parcel_id"])
     if spacing == 1:
-        interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(store_la['/2045/dropped_buildings'].parcel_id)
+        interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(orca.get_table('dropped_buildings').parcel_id)
         acres = orca.get_table('parcels').acres
         interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
     else:
@@ -519,8 +526,6 @@ def main(run_name):
 
         # geo level: school district
 
-    years = range(2015, 2045 + 1, spacing)
-    year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
                   'housing_units', 'events_parcels_hu', 'hu_filter',
                   'parcel_is_allowed_residential', 'parcel_is_allowed_demolition',
