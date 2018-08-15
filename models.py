@@ -565,7 +565,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                                    diff)
 
         for _, record in trecords[trecords.action == 'target'].iterrows():
-            print record
+            # print record
             diff = target_agents(dic_agent[record.agents],
                                  record.agent_expression,
                                  record.location_expression,
@@ -952,6 +952,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
 @orca.step()
 def build_networks(parcels):
     import yaml
+    #TODO: remove reserve line when update pandana
     pdna.network.reserve_num_graphs(2)
 
     # networks in semcog_networks.h5
