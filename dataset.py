@@ -25,7 +25,7 @@ for name in ['persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_s
     orca.add_table(name, store[name])
 
 orca.add_table("remi_pop_total", pd.read_csv("data/remi_hhpop_bylarge.csv", index_col='large_area_id'))
-orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
+orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies-nonres-build-test.csv"))
 orca.add_table('demolition_rates', pd.read_csv("data/DEMOLITION_RATES.csv", index_col='city_id'))
 orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv", index_col='b_city_id'))
 
