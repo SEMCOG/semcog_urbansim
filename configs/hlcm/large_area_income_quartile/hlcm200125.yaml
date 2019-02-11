@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 200125)
 
 choosers_predict_filters: qlid == 200125
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 125) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 125)
 
-alts_predict_filters: (large_area_id == 125) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 125
 
 interaction_predict_filters: null
 
@@ -31,45 +31,45 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_type_id_is_82: -0.1821971159708563
-        has_children:nodes_walk_percent_hh_with_children: 2.4980013621809865
-        is_race1:nodes_walk_percent_race1: 4.61013795367549
-        is_young:zones_empden: 0.025872753208752444
-        ln_income:nodes_walk_ln_popden: 0.04153035190400341
-        ln_income:sqft_price_res: -0.0005562030268535718
-        nodes_drv_log_sum_30min_jobs: -0.016603282315058997
-        nodes_walk_ave_lot_sqft: 1.0080399035927732
-        nodes_walk_log_sum_residential_units: 0.3089300780175276
-        vacant_residential_units: 0.015238570483459578
-        walk_nearest_healthcenter: -5.7498579517962465e-05
+        building_type_id_is_82: -0.4470569331430501
+        has_children:nodes_walk_percent_hh_with_children: 2.216176538195264
+        is_race1:nodes_walk_percent_race1: 3.0
+        is_young:zones_empden: 0.006778573048300407
+        ln_income:nodes_walk_ln_popden: 0.05446282551886875
+        ln_income:sqft_price_res: -0.0008162730717848828
+        nodes_drv_log_sum_30min_jobs: 0.06417451037722763
+        nodes_walk_ave_lot_sqft: 0.9374301927270071
+        nodes_walk_log_sum_residential_units: 0.06176316801898581
+        vacant_residential_units: 0.024697074569789437
+        walk_nearest_healthcenter: -4.551031343333095e-05
     Std. Error:
-        building_type_id_is_82: 0.08478045444795941
-        has_children:nodes_walk_percent_hh_with_children: 0.19391452365954795
-        is_race1:nodes_walk_percent_race1: 0.09706344347138561
-        is_young:zones_empden: 0.004496136895368274
-        ln_income:nodes_walk_ln_popden: 0.004757222751631727
-        ln_income:sqft_price_res: 3.161107349991859e-05
-        nodes_drv_log_sum_30min_jobs: 0.02086051324704031
-        nodes_walk_ave_lot_sqft: 0.03228322966389612
-        nodes_walk_log_sum_residential_units: 0.02991128821202031
-        vacant_residential_units: 0.003594033186563124
-        walk_nearest_healthcenter: 1.6716824324311315e-05
+        building_type_id_is_82: 0.11820640719079968
+        has_children:nodes_walk_percent_hh_with_children: 0.26781059889323294
+        is_race1:nodes_walk_percent_race1: 0.13394572686502887
+        is_young:zones_empden: 0.013011754353338739
+        ln_income:nodes_walk_ln_popden: 0.006775762777360162
+        ln_income:sqft_price_res: 5.641170855320863e-05
+        nodes_drv_log_sum_30min_jobs: 0.028797022669108902
+        nodes_walk_ave_lot_sqft: 0.0457676881293797
+        nodes_walk_log_sum_residential_units: 0.043465474589235616
+        vacant_residential_units: 0.00696813432063375
+        walk_nearest_healthcenter: 2.3162875121914627e-05
     T-Score:
-        building_type_id_is_82: -2.1490462295492168
-        has_children:nodes_walk_percent_hh_with_children: 12.881971474022647
-        is_race1:nodes_walk_percent_race1: 47.49613025046409
-        is_young:zones_empden: 5.754440714517709
-        ln_income:nodes_walk_ln_popden: 8.729957387376595
-        ln_income:sqft_price_res: -17.595195773879816
-        nodes_drv_log_sum_30min_jobs: -0.7959191664382789
-        nodes_walk_ave_lot_sqft: 31.224877872739988
-        nodes_walk_log_sum_residential_units: 10.32821040096091
-        vacant_residential_units: 4.239963765618928
-        walk_nearest_healthcenter: -3.43956354403642
+        building_type_id_is_82: -3.7820025476406305
+        has_children:nodes_walk_percent_hh_with_children: 8.275163669227217
+        is_race1:nodes_walk_percent_race1: 22.397131063561037
+        is_young:zones_empden: 0.5209576559951783
+        ln_income:nodes_walk_ln_popden: 8.03788847225367
+        ln_income:sqft_price_res: -14.469922870975589
+        nodes_drv_log_sum_30min_jobs: 2.228511992875875
+        nodes_walk_ave_lot_sqft: 20.482358428876847
+        nodes_walk_log_sum_residential_units: 1.4209707498346673
+        vacant_residential_units: 3.544287959067822
+        walk_nearest_healthcenter: -1.964795527057571
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -7977.770195659534
-    'null': -9205.735201790207
-    ratio: 0.13339130218430295
+    convergence: -3831.18359650812
+    'null': -4382.026634673841
+    ratio: 0.12570508673019987

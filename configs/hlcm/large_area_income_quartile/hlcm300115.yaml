@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 300115)
 
 choosers_predict_filters: qlid == 300115
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 115) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 115)
 
-alts_predict_filters: (large_area_id == 115) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 115
 
 interaction_predict_filters: null
 
@@ -29,27 +29,27 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        is_race1:nodes_walk_percent_race1: 5.131993227666398
-        ln_income:sqft_per_unit: 2.7851086332073123e-07
-        nodes_walk_percent_mid_income: 2.7851399598096123
-        residential_units: 0.03617865372824295
-        walk_nearest_library: 9.02484781387255e-06
+        is_race1:nodes_walk_percent_race1: 2.061237395759515
+        ln_income:sqft_per_unit: 5.6049303141549325e-06
+        nodes_walk_percent_mid_income: 2.2601763334728906
+        residential_units: 0.045479991342529245
+        walk_nearest_library: 1.263738910735759e-05
     Std. Error:
-        is_race1:nodes_walk_percent_race1: 0.15745024488421505
-        ln_income:sqft_per_unit: 1.912021662547076e-06
-        nodes_walk_percent_mid_income: 0.21883049183069928
-        residential_units: 0.0023523068545022907
-        walk_nearest_library: 1.0727742626256712e-05
+        is_race1:nodes_walk_percent_race1: 0.21369066078071816
+        ln_income:sqft_per_unit: 2.4860573225892323e-06
+        nodes_walk_percent_mid_income: 0.2974087088262255
+        residential_units: 0.003029020371097358
+        walk_nearest_library: 1.5017866960247065e-05
     T-Score:
-        is_race1:nodes_walk_percent_race1: 32.594380729228696
-        ln_income:sqft_per_unit: 0.14566302713836227
-        nodes_walk_percent_mid_income: 12.727385185261877
-        residential_units: 15.380074100025421
-        walk_nearest_library: 0.8412625216962012
+        is_race1:nodes_walk_percent_race1: 9.645893686831192
+        ln_income:sqft_per_unit: 2.2545458880720375
+        nodes_walk_percent_mid_income: 7.599563383308661
+        residential_units: 15.014752550525992
+        walk_nearest_library: 0.8414902822624076
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -9063.321841049501
-    'null': -9187.314521046252
-    ratio: 0.013496074365660249
+    convergence: -4324.427051300701
+    'null': -4382.026634673841
+    ratio: 0.013144507821419626

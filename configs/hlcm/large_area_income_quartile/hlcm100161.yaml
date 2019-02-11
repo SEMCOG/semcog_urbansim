@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 100161)
 
 choosers_predict_filters: qlid == 100161
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 161) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 161)
 
-alts_predict_filters: (large_area_id == 161) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 161
 
 interaction_predict_filters: null
 
@@ -31,45 +31,45 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_walk_percent_hh_with_children: 4.186780930397389
-        has_workers:zones_a_ln_emp_50min_transit: 0.022561356656481926
-        is_race2:nodes_walk_percent_race2: 7.27621522266404
-        is_young:zones_empden: 0.009096225012697199
-        ln_income:nodes_walk_ln_popden: 0.0354803273958288
-        nodes_drv_log_sum_60min_jobs: 0.06371630899842526
-        nodes_walk_ave_lot_sqft: 1.1293743663621367
-        persons:nodes_walk_ln_popden: 0.1550439620257251
-        residential_units: 0.035011496150146156
-        zones_employment: 3.88905345859962e-05
-        zones_transit_jobs_30min: 5.647140749417211e-06
+        has_children:nodes_walk_percent_hh_with_children: 3.0
+        has_workers:zones_a_ln_emp_50min_transit: 0.0554337824151162
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:zones_empden: 0.009939312946705497
+        ln_income:nodes_walk_ln_popden: 0.04706271757540082
+        nodes_drv_log_sum_60min_jobs: 0.4168216189274129
+        nodes_walk_ave_lot_sqft: 1.0509374263751579
+        persons:nodes_walk_ln_popden: 0.1002420171346053
+        residential_units: 0.04458856588654314
+        zones_employment: 1.1263297711090434e-05
+        zones_transit_jobs_30min: 5.928794979545127e-06
     Std. Error:
-        has_children:nodes_walk_percent_hh_with_children: 0.2706012841946656
-        has_workers:zones_a_ln_emp_50min_transit: 0.005004246375162781
-        is_race2:nodes_walk_percent_race2: 0.19794976262975003
-        is_young:zones_empden: 0.00215525769516516
-        ln_income:nodes_walk_ln_popden: 0.003188608591803094
-        nodes_drv_log_sum_60min_jobs: 0.018291982918524356
-        nodes_walk_ave_lot_sqft: 0.033836351808513215
-        persons:nodes_walk_ln_popden: 0.009331635914444978
-        residential_units: 0.0008468620517984932
-        zones_employment: 1.4659264180364912e-05
-        zones_transit_jobs_30min: 1.2000793993116138e-06
+        has_children:nodes_walk_percent_hh_with_children: 0.3740295855323743
+        has_workers:zones_a_ln_emp_50min_transit: 0.0070704887336856615
+        is_race2:nodes_walk_percent_race2: 0.29116683716135777
+        is_young:zones_empden: 0.003276906115950965
+        ln_income:nodes_walk_ln_popden: 0.004575811753156299
+        nodes_drv_log_sum_60min_jobs: 0.029160157743520976
+        nodes_walk_ave_lot_sqft: 0.049531865922416304
+        persons:nodes_walk_ln_popden: 0.012541656428931134
+        residential_units: 0.0013124486188961912
+        zones_employment: 2.951647371144642e-05
+        zones_transit_jobs_30min: 1.625406900892555e-06
     T-Score:
-        has_children:nodes_walk_percent_hh_with_children: 15.472139915587006
-        has_workers:zones_a_ln_emp_50min_transit: 4.508442423710211
-        is_race2:nodes_walk_percent_race2: 36.757888092412855
-        is_young:zones_empden: 4.2204813990932735
-        ln_income:nodes_walk_ln_popden: 11.127213132097028
-        nodes_drv_log_sum_60min_jobs: 3.483291520784197
-        nodes_walk_ave_lot_sqft: 33.377545332117826
-        persons:nodes_walk_ln_popden: 16.61487476013971
-        residential_units: 41.34262017738513
-        zones_employment: 2.6529663499814284
-        zones_transit_jobs_30min: 4.705639270748676
+        has_children:nodes_walk_percent_hh_with_children: 8.02075588681028
+        has_workers:zones_a_ln_emp_50min_transit: 7.840162752967151
+        is_race2:nodes_walk_percent_race2: 10.303371184876632
+        is_young:zones_empden: 3.033139368358464
+        ln_income:nodes_walk_ln_popden: 10.285107892154423
+        nodes_drv_log_sum_60min_jobs: 14.294216876108136
+        nodes_walk_ave_lot_sqft: 21.217400289770673
+        persons:nodes_walk_ln_popden: 7.992725498632437
+        residential_units: 33.97357065607907
+        zones_employment: 0.3815936084100234
+        zones_transit_jobs_30min: 3.6475758631819915
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -6337.224450208912
-    'null': -9191.91969123224
-    ratio: 0.3105657291312385
+    convergence: -3063.6598243894578
+    'null': -4382.026634673841
+    ratio: 0.3008577811582632

@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 400099)
 
 choosers_predict_filters: qlid == 400099
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 99) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 99)
 
-alts_predict_filters: (large_area_id == 99) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 99
 
 interaction_predict_filters: null
 
@@ -31,42 +31,42 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_type_id_is_83: 1.328768793126849
-        building_type_id_is_84: 0.047376742804797325
-        crime_ucr_rate: -0.00010504576841680612
-        has_children:sqft_per_unit: 0.0002024123650215284
-        is_race4:nodes_walk_percent_race4: 18.948286296114535
-        is_young:zones_empden: 0.03617044691186979
-        ln_income:nodes_walk_ave_income: 0.12717681967232303
-        nodes_walk_population: -8.459898270975261e-05
-        persons:nodes_walk_ln_popden: 0.03588200897068566
-        residential_units: 0.024794669204224684
+        building_type_id_is_83: 1.4514103529503342
+        building_type_id_is_84: -1.3414536900330452
+        crime_ucr_rate: -6.06513351849583e-05
+        has_children:sqft_per_unit: 0.00018517514084068917
+        is_race4:nodes_walk_percent_race4: 3.0
+        is_young:zones_empden: 0.029824453269964225
+        ln_income:nodes_walk_ave_income: 0.13915878208614824
+        nodes_walk_population: 0.0005405916851511515
+        persons:nodes_walk_ln_popden: 0.030339826350626493
+        residential_units: 0.017537118980647227
     Std. Error:
-        building_type_id_is_83: 0.14942049584862224
-        building_type_id_is_84: 0.16993280084533355
-        crime_ucr_rate: 2.909371309557312e-05
-        has_children:sqft_per_unit: 2.2743771581621947e-05
-        is_race4:nodes_walk_percent_race4: 1.1496137065280603
-        is_young:zones_empden: 0.026538277315842244
-        ln_income:nodes_walk_ave_income: 0.0004624663414210734
-        nodes_walk_population: 8.687064638663583e-05
-        persons:nodes_walk_ln_popden: 0.007925601853345848
-        residential_units: 0.002559916926675658
+        building_type_id_is_83: 0.13942928483960967
+        building_type_id_is_84: 0.25091771367036947
+        crime_ucr_rate: 2.7610055745028976e-05
+        has_children:sqft_per_unit: 2.289562039076453e-05
+        is_race4:nodes_walk_percent_race4: 1.2137932766230712
+        is_young:zones_empden: 0.024002597589777873
+        ln_income:nodes_walk_ave_income: 0.00046102304011502395
+        nodes_walk_population: 0.00014338212803040052
+        persons:nodes_walk_ln_popden: 0.0071554396078899445
+        residential_units: 0.0020917793633121588
     T-Score:
-        building_type_id_is_83: 8.892814774708173
-        building_type_id_is_84: 0.27879692778039866
-        crime_ucr_rate: -3.6106002720151182
-        has_children:sqft_per_unit: 8.899683339463682
-        is_race4:nodes_walk_percent_race4: 16.482307220692515
-        is_young:zones_empden: 1.3629538376357815
-        ln_income:nodes_walk_ave_income: 274.9969203845889
-        nodes_walk_population: -0.9738500428928236
-        persons:nodes_walk_ln_popden: 4.527354469053706
-        residential_units: 9.685731964913163
+        building_type_id_is_83: 10.409652137425374
+        building_type_id_is_84: -5.346189674736605
+        crime_ucr_rate: -2.196711797507986
+        has_children:sqft_per_unit: 8.08779747743301
+        is_race4:nodes_walk_percent_race4: 2.4715905564631115
+        is_young:zones_empden: 1.2425510680004792
+        ln_income:nodes_walk_ave_income: 301.84778194909416
+        nodes_walk_population: 3.7702863849010027
+        persons:nodes_walk_ln_popden: 4.24010655015134
+        residential_units: 8.383828279517328
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8734.284803823897
-    'null': -9210.340371976195
-    ratio: 0.05168707658196503
+    convergence: -8341.88456909481
+    'null': -8764.053269347662
+    ratio: 0.048170485422468934

@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 100099)
 
 choosers_predict_filters: qlid == 100099
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 99) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 99)
 
-alts_predict_filters: (large_area_id == 99) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 99
 
 interaction_predict_filters: null
 
@@ -31,45 +31,45 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_age_gt_70: 0.07270404341763466
-        is_race2:nodes_walk_percent_race2: 8.63952542968907
-        is_young:zones_empden: -0.03191949653061001
-        ln_income:nodes_walk_ln_popden: 0.013921853077243227
-        nodes_walk_ave_lot_sqft: 0.7373496285630374
-        nodes_walk_race_1_hhs: 0.0021783035082794883
-        nodes_walk_retail_jobs: -0.0002402184180519045
-        persons:nodes_walk_ln_popden: 0.09552057604976738
-        residential_units: 0.0712967962550802
-        vacant_residential_units: -0.08997050881185276
-        zones_a_ln_retail_emp_15min_drive_alone: 0.0377195508829632
+        building_age_gt_70: 0.29650818378743626
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:zones_empden: 0.09702455098559358
+        ln_income:nodes_walk_ln_popden: 0.04690785884435618
+        nodes_walk_ave_lot_sqft: 0.7202426573189536
+        nodes_walk_race_1_hhs: 0.0011240694208682375
+        nodes_walk_retail_jobs: 0.0009911146818406158
+        persons:nodes_walk_ln_popden: 0.10589457022139037
+        residential_units: 0.06300449900439939
+        vacant_residential_units: -0.07614949067481794
+        zones_a_ln_retail_emp_15min_drive_alone: 0.03676011888139612
     Std. Error:
-        building_age_gt_70: 0.0893310900648822
-        is_race2:nodes_walk_percent_race2: 0.22731657337109681
-        is_young:zones_empden: 0.014737677437478499
-        ln_income:nodes_walk_ln_popden: 0.0034791505356543467
-        nodes_walk_ave_lot_sqft: 0.030065672455733224
-        nodes_walk_race_1_hhs: 0.0001755281822855659
-        nodes_walk_retail_jobs: 0.0004655572019220577
-        persons:nodes_walk_ln_popden: 0.0073835413502227176
-        residential_units: 0.0015557735701272266
-        vacant_residential_units: 0.010289737441413998
-        zones_a_ln_retail_emp_15min_drive_alone: 0.022437824462163868
+        building_age_gt_70: 0.08912369084945981
+        is_race2:nodes_walk_percent_race2: 0.23827900046461822
+        is_young:zones_empden: 0.012841532212438025
+        ln_income:nodes_walk_ln_popden: 0.0036213753044072312
+        nodes_walk_ave_lot_sqft: 0.028373133569791233
+        nodes_walk_race_1_hhs: 0.00017977021927024356
+        nodes_walk_retail_jobs: 0.000452383447934349
+        persons:nodes_walk_ln_popden: 0.007078168919947015
+        residential_units: 0.001339024570509634
+        vacant_residential_units: 0.01011824142076459
+        zones_a_ln_retail_emp_15min_drive_alone: 0.0213520017330263
     T-Score:
-        building_age_gt_70: 0.813871669592623
-        is_race2:nodes_walk_percent_race2: 38.00657955363839
-        is_young:zones_empden: -2.1658430689653625
-        ln_income:nodes_walk_ln_popden: 4.001509257668511
-        nodes_walk_ave_lot_sqft: 24.524634519605836
-        nodes_walk_race_1_hhs: 12.409992970448572
-        nodes_walk_retail_jobs: -0.5159804575252198
-        persons:nodes_walk_ln_popden: 12.936959586050953
-        residential_units: 45.82723194690199
-        vacant_residential_units: -8.74371278413195
-        zones_a_ln_retail_emp_15min_drive_alone: 1.6810698803071742
+        building_age_gt_70: 3.3269289115087566
+        is_race2:nodes_walk_percent_race2: 12.590282795170053
+        is_young:zones_empden: 7.555527594411027
+        ln_income:nodes_walk_ln_popden: 12.953050954776515
+        nodes_walk_ave_lot_sqft: 25.384670873498205
+        nodes_walk_race_1_hhs: 6.252812203440968
+        nodes_walk_retail_jobs: 2.1908730002527608
+        persons:nodes_walk_ln_popden: 14.960729451224097
+        residential_units: 47.052533905647316
+        vacant_residential_units: -7.525961034942736
+        zones_a_ln_retail_emp_15min_drive_alone: 1.7216240116980344
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -7547.641539913904
-    'null': -9205.735201790207
-    ratio: 0.18011528960270973
+    convergence: -7381.400433790638
+    'null': -8764.053269347662
+    ratio: 0.15776408393053265

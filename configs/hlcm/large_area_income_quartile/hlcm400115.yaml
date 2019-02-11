@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 400115)
 
 choosers_predict_filters: qlid == 400115
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 115) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 115)
 
-alts_predict_filters: (large_area_id == 115) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 115
 
 interaction_predict_filters: null
 
@@ -30,33 +30,33 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_type_id_is_84: -0.34098204820039996
-        has_children:sqft_per_unit: 7.868198444668361e-05
-        ln_income:nodes_walk_ave_income: 0.14916408058178102
-        nodes_walk_ave_lot_sqft: 0.174234540540095
-        nodes_walk_race_3_hhs: 0.02005417769492627
-        persons:sqft_per_unit: 1.9502940009270388e-05
-        vacant_residential_units: 0.02906712927312091
+        building_type_id_is_84: -0.3941309594371651
+        has_children:sqft_per_unit: 0.00010159776149988903
+        ln_income:nodes_walk_ave_income: 0.1235809698109329
+        nodes_walk_ave_lot_sqft: 0.4417455542548669
+        nodes_walk_race_3_hhs: 0.01807196984804555
+        persons:sqft_per_unit: 1.8239025889504824e-05
+        vacant_residential_units: -0.00561679020686296
     Std. Error:
-        building_type_id_is_84: 0.14793530015220777
-        has_children:sqft_per_unit: 2.107900158676881e-05
-        ln_income:nodes_walk_ave_income: 0.0032084738950879225
-        nodes_walk_ave_lot_sqft: 0.05597149656882026
-        nodes_walk_race_3_hhs: 0.008628815844260966
-        persons:sqft_per_unit: 5.939314828252001e-06
-        vacant_residential_units: 0.023691693022877706
+        building_type_id_is_84: 0.179886519050685
+        has_children:sqft_per_unit: 2.7490089476472526e-05
+        ln_income:nodes_walk_ave_income: 0.004278066257975021
+        nodes_walk_ave_lot_sqft: 0.07525427476756374
+        nodes_walk_race_3_hhs: 0.011438533568908149
+        persons:sqft_per_unit: 7.68273337865604e-06
+        vacant_residential_units: 0.034265332135467334
     T-Score:
-        building_type_id_is_84: -2.304940388464215
-        has_children:sqft_per_unit: 3.732718749642864
-        ln_income:nodes_walk_ave_income: 46.49066361741224
-        nodes_walk_ave_lot_sqft: 3.1129155234551096
-        nodes_walk_race_3_hhs: 2.324093833601087
-        persons:sqft_per_unit: 3.2837020049011776
-        vacant_residential_units: 1.2268911827049445
+        building_type_id_is_84: -2.1909977552354234
+        has_children:sqft_per_unit: 3.6957959553693622
+        ln_income:nodes_walk_ave_income: 28.88710981989996
+        nodes_walk_ave_lot_sqft: 5.870039351508959
+        nodes_walk_race_3_hhs: 1.5799201653932453
+        persons:sqft_per_unit: 2.374028225445905
+        vacant_residential_units: -0.16392049505480022
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8831.562358550975
-    'null': -9210.340371976195
-    ratio: 0.04112530027421224
+    convergence: -4205.539755674028
+    'null': -4382.026634673841
+    ratio: 0.04027517258870994
