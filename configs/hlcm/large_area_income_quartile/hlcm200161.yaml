@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 200161)
 
 choosers_predict_filters: qlid == 200161
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 161) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 161)
 
-alts_predict_filters: (large_area_id == 161) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 161
 
 interaction_predict_filters: null
 
@@ -22,8 +22,8 @@ prediction_sample_size: 100
 
 model_expression: year_built + has_children:nodes_walk_percent_hh_with_children +
     nodes_walk_log_sum_residential_units + nodes_walk_percent_low_income + is_race2:nodes_walk_percent_race2
-    + has_workers:nodes_drv_log_sum_45min_jobs + ln_income:nodes_walk_ln_popden +
-    is_young:nodes_walk_retail_jobs + zones_a_ln_retail_emp_15min_drive_alone
+    + has_workers:nodes_drv_log_sum_45min_jobs + ln_income:nodes_walk_ln_popden + is_young:nodes_walk_retail_jobs
+    + zones_a_ln_retail_emp_15min_drive_alone
 
 fitted: true
 
@@ -31,39 +31,39 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        has_children:nodes_walk_percent_hh_with_children: 3.1144441015316633
-        has_workers:nodes_drv_log_sum_45min_jobs: -0.143204440514971
-        is_race2:nodes_walk_percent_race2: 5.81080496826221
-        is_young:nodes_walk_retail_jobs: 0.0036926098238969033
-        ln_income:nodes_walk_ln_popden: -0.002901789693784022
-        nodes_walk_log_sum_residential_units: 0.5006033843650272
-        nodes_walk_percent_low_income: 2.6145126163265107
-        year_built: 0.00021350711222084415
-        zones_a_ln_retail_emp_15min_drive_alone: 0.028048713000873082
+        has_children:nodes_walk_percent_hh_with_children: 3.0
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.02867868341752963
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:nodes_walk_retail_jobs: 0.0037530876924577587
+        ln_income:nodes_walk_ln_popden: 0.015104967901390348
+        nodes_walk_percent_low_income: 2.783646749712442
+        nodes_walk_log_sum_residential_units: 0.4506145943121032
+        year_built: 0.0003151814089459239
+        zones_a_ln_retail_emp_15min_drive_alone: 0.020198981283146476
     Std. Error:
-        has_children:nodes_walk_percent_hh_with_children: 0.20954912481975632
-        has_workers:nodes_drv_log_sum_45min_jobs: 0.0037824206984586567
-        is_race2:nodes_walk_percent_race2: 0.22664162487782438
-        is_young:nodes_walk_retail_jobs: 0.00039688733570346493
-        ln_income:nodes_walk_ln_popden: 0.0031155315715967755
-        nodes_walk_log_sum_residential_units: 0.02260854426070496
-        nodes_walk_percent_low_income: 0.2194029846843725
-        year_built: 3.648142492027937e-05
-        zones_a_ln_retail_emp_15min_drive_alone: 0.011052654059617115
+        has_children:nodes_walk_percent_hh_with_children: 0.2860210432467423
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.006048603042876374
+        is_race2:nodes_walk_percent_race2: 0.2890950110541622
+        is_young:nodes_walk_retail_jobs: 0.0005184821668935
+        ln_income:nodes_walk_ln_popden: 0.004408300451795756
+        nodes_walk_percent_low_income: 0.31283938983147397
+        nodes_walk_log_sum_residential_units: 0.030654566797190013
+        year_built: 5.3765730900153685e-05
+        zones_a_ln_retail_emp_15min_drive_alone: 0.01548168400270844
     T-Score:
-        has_children:nodes_walk_percent_hh_with_children: 14.862596559210411
-        has_workers:nodes_drv_log_sum_45min_jobs: -37.860526877226285
-        is_race2:nodes_walk_percent_race2: 25.63873680042066
-        is_young:nodes_walk_retail_jobs: 9.303924544107508
-        ln_income:nodes_walk_ln_popden: -0.9313947321987156
-        nodes_walk_log_sum_residential_units: 22.142221037871362
-        nodes_walk_percent_low_income: 11.916486095609326
-        year_built: 5.852488291984434
-        zones_a_ln_retail_emp_15min_drive_alone: 2.53773553841282
+        has_children:nodes_walk_percent_hh_with_children: 10.488738751337202
+        has_workers:nodes_drv_log_sum_45min_jobs: 4.741373043368319
+        is_race2:nodes_walk_percent_race2: 10.37721124643672
+        is_young:nodes_walk_retail_jobs: 7.238605167357029
+        ln_income:nodes_walk_ln_popden: 3.4264833049746466
+        nodes_walk_percent_low_income: 8.898005942320715
+        nodes_walk_log_sum_residential_units: 14.699754111462743
+        year_built: 5.862124510708046
+        zones_a_ln_retail_emp_15min_drive_alone: 1.304701819234443
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8315.21107656035
-    'null': -9205.735201790207
-    ratio: 0.0967357962954093
+    convergence: -3876.4435840470323
+    'null': -4382.026634673841
+    ratio: 0.11537653528307223

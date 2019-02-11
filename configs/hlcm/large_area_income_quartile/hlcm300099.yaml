@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 300099)
 
 choosers_predict_filters: qlid == 300099
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 99) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 99)
 
-alts_predict_filters: (large_area_id == 99) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 99
 
 interaction_predict_filters: null
 
@@ -21,9 +21,8 @@ estimation_sample_size: 2000
 prediction_sample_size: 100
 
 model_expression: nodes_walk_race_1_hhs + has_children:nodes_walk_percent_hh_with_children
-    + drv_nearest_library + building_type_id_is_82 + nodes_drv_log_sum_45min_jobs
-    + is_race1:nodes_walk_percent_race1 + vacant_job_spaces + nodes_walk_ave_lot_sqft
-    + is_young:zones_empden + ln_income:nodes_walk_ln_popden
+    + drv_nearest_library + building_type_id_is_82 + nodes_drv_log_sum_45min_jobs + is_race1:nodes_walk_percent_race1
+    + vacant_job_spaces + nodes_walk_ave_lot_sqft + is_young:zones_empden + ln_income:nodes_walk_ln_popden
 
 fitted: true
 
@@ -31,42 +30,42 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_type_id_is_82: 0.6263777326003493
-        drv_nearest_library: -0.030806883715826034
-        has_children:nodes_walk_percent_hh_with_children: 2.8843902594649617
-        is_race1:nodes_walk_percent_race1: 2.230117658940014
-        is_young:zones_empden: 0.0159544872783642
-        ln_income:nodes_walk_ln_popden: 0.0079853797552517
-        nodes_drv_log_sum_45min_jobs: 0.3257802421625443
-        nodes_walk_ave_lot_sqft: 0.737239220101413
-        nodes_walk_race_1_hhs: 0.0011238357451321464
-        vacant_job_spaces: -0.02033503128114545
+        building_type_id_is_82: 0.7972829109779339
+        drv_nearest_library: -0.017070015331431748
+        has_children:nodes_walk_percent_hh_with_children: 3.0
+        is_race1:nodes_walk_percent_race1: 2.673776064900127
+        is_young:zones_empden: 0.0879369620144789
+        ln_income:nodes_walk_ln_popden: 0.026634292235157845
+        nodes_drv_log_sum_45min_jobs: 0.17236460294719977
+        nodes_walk_ave_lot_sqft: 0.6286151909644552
+        nodes_walk_race_1_hhs: 0.0009220663075827845
+        vacant_job_spaces: -0.005980946837534781
     Std. Error:
-        building_type_id_is_82: 0.08601625248061097
-        drv_nearest_library: 0.010895846456250736
-        has_children:nodes_walk_percent_hh_with_children: 0.156430696134727
-        is_race1:nodes_walk_percent_race1: 0.10936470113048496
-        is_young:zones_empden: 0.01714687255410169
-        ln_income:nodes_walk_ln_popden: 0.00438146829518824
-        nodes_drv_log_sum_45min_jobs: 0.02222472333276557
-        nodes_walk_ave_lot_sqft: 0.03576103921993439
-        nodes_walk_race_1_hhs: 0.0002155501813731678
-        vacant_job_spaces: 0.002185826262369882
+        building_type_id_is_82: 0.11560854679222761
+        drv_nearest_library: 0.01516585089848377
+        has_children:nodes_walk_percent_hh_with_children: 0.20961607540860416
+        is_race1:nodes_walk_percent_race1: 0.1571609055740462
+        is_young:zones_empden: 0.021330402220801552
+        ln_income:nodes_walk_ln_popden: 0.006388133179771597
+        nodes_drv_log_sum_45min_jobs: 0.03175779836096544
+        nodes_walk_ave_lot_sqft: 0.04651612241020616
+        nodes_walk_race_1_hhs: 0.00029397784993289713
+        vacant_job_spaces: 0.0020425068962163606
     T-Score:
-        building_type_id_is_82: 7.282085821415458
-        drv_nearest_library: -2.827397012203005
-        has_children:nodes_walk_percent_hh_with_children: 18.438774043303887
-        is_race1:nodes_walk_percent_race1: 20.39156725970678
-        is_young:zones_empden: 0.9304604806517758
-        ln_income:nodes_walk_ln_popden: 1.8225350994828156
-        nodes_drv_log_sum_45min_jobs: 14.658461087893565
-        nodes_walk_ave_lot_sqft: 20.615710174620745
-        nodes_walk_race_1_hhs: 5.213800971879136
-        vacant_job_spaces: -9.303132472705368
+        building_type_id_is_82: 6.896401114796604
+        drv_nearest_library: -1.125556056544005
+        has_children:nodes_walk_percent_hh_with_children: 14.311879440315378
+        is_race1:nodes_walk_percent_race1: 17.012984591389877
+        is_young:zones_empden: 4.122611524349137
+        ln_income:nodes_walk_ln_popden: 4.169338911013457
+        nodes_drv_log_sum_45min_jobs: 5.427473308699472
+        nodes_walk_ave_lot_sqft: 13.513920730987884
+        nodes_walk_race_1_hhs: 3.1365162640425246
+        vacant_job_spaces: -2.928238258883815
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8942.216637398169
-    'null': -9205.735201790207
-    ratio: 0.02862547733730081
+    convergence: -4223.530972923355
+    'null': -4382.026634673841
+    ratio: 0.03616948845001322

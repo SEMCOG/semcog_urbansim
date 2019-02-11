@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 100115)
 
 choosers_predict_filters: qlid == 100115
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 115) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 115)
 
-alts_predict_filters: (large_area_id == 115) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 115
 
 interaction_predict_filters: null
 
@@ -30,33 +30,33 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        b_ln_parcels_parcel_far: 1.7528634647391474
-        has_workers:nodes_drv_log_sum_45min_jobs: 0.28036832133099543
-        is_race2:nodes_walk_percent_race2: 16.739812227041654
-        ln_income:nodes_walk_ln_popden: 0.025242481048927817
-        nodes_drv_log_sum_15min_retail_jobs: -0.046139854148572405
-        persons:nodes_walk_ln_popden: 0.037821909522255004
-        residential_units: 0.079598692720156
+        b_ln_parcels_parcel_far: 1.9370402374324893
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.2161761280959346
+        is_race2:nodes_walk_percent_race2: 3.0
+        ln_income:nodes_walk_ln_popden: 0.015365292641546546
+        nodes_drv_log_sum_15min_retail_jobs: 0.056032934261943994
+        persons:nodes_walk_ln_popden: 0.045114381012454394
+        residential_units: 0.061760640458254745
     Std. Error:
-        b_ln_parcels_parcel_far: 0.21344556939392528
-        has_workers:nodes_drv_log_sum_45min_jobs: 0.003626713002883785
-        is_race2:nodes_walk_percent_race2: 0.918328972646909
-        ln_income:nodes_walk_ln_popden: 0.0034084977293289856
-        nodes_drv_log_sum_15min_retail_jobs: 0.00607478422408861
-        persons:nodes_walk_ln_popden: 0.01090019898023282
-        residential_units: 0.0017672200130207751
+        b_ln_parcels_parcel_far: 0.3310349516835647
+        has_workers:nodes_drv_log_sum_45min_jobs: 0.005638925421666033
+        is_race2:nodes_walk_percent_race2: 1.3987776167409935
+        ln_income:nodes_walk_ln_popden: 0.004745144628956851
+        nodes_drv_log_sum_15min_retail_jobs: 0.008298243619273882
+        persons:nodes_walk_ln_popden: 0.013826792395287614
+        residential_units: 0.0022037861443974433
     T-Score:
-        b_ln_parcels_parcel_far: 8.212226984689215
-        has_workers:nodes_drv_log_sum_45min_jobs: 77.30645383521117
-        is_race2:nodes_walk_percent_race2: 18.22855722257387
-        ln_income:nodes_walk_ln_popden: 7.405749703667012
-        nodes_drv_log_sum_15min_retail_jobs: -7.5953074951390045
-        persons:nodes_walk_ln_popden: 3.469836614069513
-        residential_units: 45.041756053959
+        b_ln_parcels_parcel_far: 5.851467428382306
+        has_workers:nodes_drv_log_sum_45min_jobs: 38.33640488759379
+        is_race2:nodes_walk_percent_race2: 2.1447297726923082
+        ln_income:nodes_walk_ln_popden: 3.238108391424178
+        nodes_drv_log_sum_15min_retail_jobs: 6.752384821747016
+        persons:nodes_walk_ln_popden: 3.2628233449017485
+        residential_units: 28.024788437510242
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8348.296523533274
-    'null': -9210.340371976195
-    ratio: 0.09359522163435086
+    convergence: -4035.4368575819385
+    'null': -4382.026634673841
+    ratio: 0.07909348937987448

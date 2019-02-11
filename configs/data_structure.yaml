@@ -1,3 +1,9 @@
+name: _job_space
+indexs:
+- building_id
+columns:
+  base_job_space: int64
+---
 name: annual_employment_control_totals
 indexs:
 - year
@@ -121,10 +127,10 @@ columns:
 ---
 name: group_quarters
 indexs:
-- personid
+- None
 columns:
   age: int8
-  building_id: int32
+  building_id: int64
   gq_code: int32
   race_id: int8
   type: object
@@ -139,16 +145,17 @@ columns:
 ---
 name: households
 indexs:
-- household_id
+- None
 columns:
-  age_of_head: int64
+  age_of_head: float64
   building_id: int64
   cars: int64
   children: float64
   income: float64
+  large_area_id: float64
   persons: int64
   race_id: int64
-  workers: float64
+  workers: int64
 ---
 name: income_growth_rates
 indexs:
@@ -167,11 +174,12 @@ name: jobs
 indexs:
 - None
 columns:
-  building_id: int32
-  home_based_status: int8
-  sector_id: int8
-  semcog_id: int32
-  sqft: int32
+  building_id: int64
+  home_based_status: object
+  large_area_id: float64
+  sector_id: object
+  semcog_id: object
+  sqft: object
 ---
 name: land_use_types
 indexs:
@@ -263,6 +271,8 @@ columns:
   county_id: int32
   land_use_type_id: int8
   large_area_id: int32
+  nodeid_drv: int64
+  nodeid_walk: int64
   parcel_sqft: int32
   pptytax: float64
   school_id: int32
@@ -274,8 +284,8 @@ name: persons
 indexs:
 - person_id
 columns:
-  age: int64
-  household_id: float64
+  age: float64
+  household_id: int64
   member_id: int64
   race_id: int64
   relate: int64
@@ -368,6 +378,15 @@ indexs:
 - semmcd_id
 columns:
   city_name: object
+---
+name: target_vacancies
+indexs:
+- None
+columns:
+  large_area_id: int64
+  non_res_target_vacancy_rate: float64
+  res_target_vacancy_rate: float64
+  year: int64
 ---
 name: transit_stops
 indexs:

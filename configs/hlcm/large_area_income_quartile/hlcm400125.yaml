@@ -6,9 +6,9 @@ choosers_fit_filters: (building_id>1) & (qlid == 400125)
 
 choosers_predict_filters: qlid == 400125
 
-alts_fit_filters: (residential_units>0) & (large_area_id == 125) & (hu_filter != 1 )
+alts_fit_filters: (residential_units>0) & (large_area_id == 125)
 
-alts_predict_filters: (large_area_id == 125) & (hu_filter != 1 )
+alts_predict_filters: large_area_id == 125
 
 interaction_predict_filters: null
 
@@ -30,39 +30,39 @@ choice_mode: individual
 
 fit_parameters:
     Coefficient:
-        building_age_le_10: 0.07714184511294365
-        has_children:nodes_walk_percent_hh_with_children: 3.2303693398505025
-        is_race2:nodes_walk_percent_race2: 6.277876698528245
-        is_young:zones_empden: 0.04133109197040464
-        ln_income:nodes_walk_ave_income: 0.09009496774042829
-        parcels_total_units: 0.0017349714120575808
-        persons:sqft_per_unit: 2.4642572773849884e-05
-        walk_nearest_healthcenter: 1.0032353334994189e-05
-        zones_logsum_job_high_income: 3.584978866994399e-07
+        building_age_le_10: 0.260537747858736
+        has_children:nodes_walk_percent_hh_with_children: 1.8932618507608336
+        is_race2:nodes_walk_percent_race2: 3.0
+        is_young:zones_empden: 0.03156603560811767
+        ln_income:nodes_walk_ave_income: 0.08471659205709925
+        parcels_total_units: 0.0017667616435269795
+        persons:sqft_per_unit: 3.329659629403504e-05
+        walk_nearest_healthcenter: 2.0399208750555435e-06
+        zones_logsum_job_high_income: 4.6907264939181714e-07
     Std. Error:
-        building_age_le_10: 0.11351782812546454
-        has_children:nodes_walk_percent_hh_with_children: 0.15506266469120714
-        is_race2:nodes_walk_percent_race2: 0.22404943955711554
-        is_young:zones_empden: 0.00884097399206507
-        ln_income:nodes_walk_ave_income: 0.001522608048230896
-        parcels_total_units: 0.000231043829763455
-        persons:sqft_per_unit: 5.214933583027906e-06
-        walk_nearest_healthcenter: 1.9919584795919524e-05
-        zones_logsum_job_high_income: 1.4515695423365017e-07
+        building_age_le_10: 0.12127394673823894
+        has_children:nodes_walk_percent_hh_with_children: 0.15878176688884843
+        is_race2:nodes_walk_percent_race2: 0.21553709317329628
+        is_young:zones_empden: 0.007258780799873437
+        ln_income:nodes_walk_ave_income: 0.001578919399374606
+        parcels_total_units: 0.0002151501216262315
+        persons:sqft_per_unit: 5.583248723319796e-06
+        walk_nearest_healthcenter: 2.084488602824513e-05
+        zones_logsum_job_high_income: 1.428964993406835e-07
     T-Score:
-        building_age_le_10: 0.6795570914877206
-        has_children:nodes_walk_percent_hh_with_children: 20.83267010974874
-        is_race2:nodes_walk_percent_race2: 28.02005089116889
-        is_young:zones_empden: 4.674947806372921
-        ln_income:nodes_walk_ave_income: 59.171477416731626
-        parcels_total_units: 7.509273949595893
-        persons:sqft_per_unit: 4.725385737231549
-        walk_nearest_healthcenter: 0.5036426932477674
-        zones_logsum_job_high_income: 2.4697258811478506
+        building_age_le_10: 2.1483406359412704
+        has_children:nodes_walk_percent_hh_with_children: 11.923672899333388
+        is_race2:nodes_walk_percent_race2: 13.918717914544473
+        is_young:zones_empden: 4.348669077962521
+        ln_income:nodes_walk_ave_income: 53.654792062631344
+        parcels_total_units: 8.211762234540018
+        persons:sqft_per_unit: 5.963659858992796
+        walk_nearest_healthcenter: 0.09786193468707004
+        zones_logsum_job_high_income: 3.2826042034345995
 
 probability_mode: full_product
 
 log_likelihoods:
-    convergence: -8761.717834144465
-    'null': -9210.340371976195
-    ratio: 0.04870857315943822
+    convergence: -8371.037433641959
+    'null': -8764.053269347662
+    ratio: 0.0448440719866775
