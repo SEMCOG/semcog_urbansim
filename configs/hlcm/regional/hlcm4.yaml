@@ -1,0 +1,91 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: income_quartile == 4
+
+choosers_predict_filters: null
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 30
+
+estimation_sample_size: 8000
+
+prediction_sample_size: null
+
+model_expression:
+- ln_income:nodes_walk_ln_popden
+- has_children:nodes_drv_elem_school_perf
+- ln_income:sqft_price_res
+- children:nodes_walk_percent_hh_with_children
+- is_race1:nodes_walk_percent_race1
+- is_race2:nodes_walk_percent_race2
+- nodes_walk_ave_lot_sqft
+- nodes_walk_percent_high_income
+- is_young:zones_empden
+- hhsize_lt_3:small_hh_city
+- zones_a_ln_emp_26min_drive_alone
+- nodes_walk_log_sum_residential_units
+- crime_ucr_rate
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        children:nodes_walk_percent_hh_with_children: 1.2368573417053312
+        crime_ucr_rate: -8.333115318347974e-05
+        has_children:nodes_drv_elem_school_perf: 0.2276731737096069
+        hhsize_lt_3:small_hh_city: 1.2917235327024181
+        is_race1:nodes_walk_percent_race1: 3.345623880654631
+        is_race2:nodes_walk_percent_race2: 5.368043802299389
+        is_young:zones_empden: 0.042754109528262516
+        ln_income:nodes_walk_ln_popden: 0.008242638345245358
+        ln_income:sqft_price_res: -4.4748146010208365e-05
+        nodes_walk_ave_lot_sqft: 0.6603663776813069
+        nodes_walk_log_sum_residential_units: 0.19876012618899902
+        nodes_walk_percent_high_income: 3.4194981650272007
+        zones_a_ln_emp_26min_drive_alone: 0.052044423294147
+    Std. Error:
+        children:nodes_walk_percent_hh_with_children: 0.032673788789849334
+        crime_ucr_rate: 1.1081931495043308e-05
+        has_children:nodes_drv_elem_school_perf: 0.04400470484423493
+        hhsize_lt_3:small_hh_city: 0.262342238745287
+        is_race1:nodes_walk_percent_race1: 0.056926558226218386
+        is_race2:nodes_walk_percent_race2: 0.12796373615348586
+        is_young:zones_empden: 0.005608467734984918
+        ln_income:nodes_walk_ln_popden: 0.0019165788208545395
+        ln_income:sqft_price_res: 1.6301112463925646e-05
+        nodes_walk_ave_lot_sqft: 0.017427900158328975
+        nodes_walk_log_sum_residential_units: 0.017068323477398287
+        nodes_walk_percent_high_income: 0.10712232224111992
+        zones_a_ln_emp_26min_drive_alone: 0.012617160285679408
+    T-Score:
+        children:nodes_walk_percent_hh_with_children: 37.8547266024313
+        crime_ucr_rate: -7.519551372497822
+        has_children:nodes_drv_elem_school_perf: 5.17383708209179
+        hhsize_lt_3:small_hh_city: 4.923810740048524
+        is_race1:nodes_walk_percent_race1: 58.77087926797853
+        is_race2:nodes_walk_percent_race2: 41.94972703720294
+        is_young:zones_empden: 7.623135506613998
+        ln_income:nodes_walk_ln_popden: 4.300704075176119
+        ln_income:sqft_price_res: -2.7450976802494917
+        nodes_walk_ave_lot_sqft: 37.891333533128545
+        nodes_walk_log_sum_residential_units: 11.644970664646431
+        nodes_walk_percent_high_income: 31.921434239731166
+        zones_a_ln_emp_26min_drive_alone: 4.124891981694002
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -23873.100119662213
+    'null': -27199.375461154115
+    ratio: 0.12229234256655841

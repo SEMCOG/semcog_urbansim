@@ -1,0 +1,91 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: income_quartile == 2
+
+choosers_predict_filters: null
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 30
+
+estimation_sample_size: 8000
+
+prediction_sample_size: null
+
+model_expression:
+- residential_units
+- building_age
+- building_type_id_is_81
+- nodes_drv_log_sum_30min_jobs
+- sqft_price_res
+- children:nodes_walk_percent_hh_with_children
+- is_race4:nodes_walk_percent_race4
+- is_race1:nodes_walk_percent_race1
+- is_race2:nodes_walk_percent_race2
+- persons:large_hh_city
+- nodes_walk_percent_mid_income
+- zones_logsum_pop_high_income
+- nodes_walk_ave_lot_sqft
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        building_age: 0.004427303785305786
+        building_type_id_is_81: -1.3276104659596648
+        children:nodes_walk_percent_hh_with_children: 1.7849726791874239
+        is_race1:nodes_walk_percent_race1: 3.500070734038257
+        is_race2:nodes_walk_percent_race2: 5.1536057505258395
+        is_race4:nodes_walk_percent_race4: 1.8142147204544643
+        nodes_drv_log_sum_30min_jobs: 0.08965995018590484
+        nodes_walk_ave_lot_sqft: 0.495529617357607
+        nodes_walk_percent_mid_income: 3.927698835943723
+        persons:large_hh_city: 0.14491375752514565
+        residential_units: 0.038311361765277385
+        sqft_price_res: -0.00036786433321992835
+        zones_logsum_pop_high_income: 1.1158599865699746e-07
+    Std. Error:
+        building_age: 0.0005873410008976065
+        building_type_id_is_81: 0.04143511595890765
+        children:nodes_walk_percent_hh_with_children: 0.04142482961785689
+        is_race1:nodes_walk_percent_race1: 0.07046707269277261
+        is_race2:nodes_walk_percent_race2: 0.0894064326054595
+        is_race4:nodes_walk_percent_race4: 0.5331347652906278
+        nodes_drv_log_sum_30min_jobs: 0.01797227189851634
+        nodes_walk_ave_lot_sqft: 0.019915793577301007
+        nodes_walk_percent_mid_income: 0.1533900056918227
+        persons:large_hh_city: 0.01633728139282681
+        residential_units: 0.0008858195519481345
+        sqft_price_res: 0.00024684638140658915
+        zones_logsum_pop_high_income: 7.184870710392875e-08
+    T-Score:
+        building_age: 7.537876256790756
+        building_type_id_is_81: -32.04070835173462
+        children:nodes_walk_percent_hh_with_children: 43.08943924824209
+        is_race1:nodes_walk_percent_race1: 49.669591772289394
+        is_race2:nodes_walk_percent_race2: 57.64244921020527
+        is_race4:nodes_walk_percent_race4: 3.402919559120256
+        nodes_drv_log_sum_30min_jobs: 4.988793330758952
+        nodes_walk_ave_lot_sqft: 24.881238873774333
+        nodes_walk_percent_mid_income: 25.60596316708469
+        persons:large_hh_city: 8.870126800213697
+        residential_units: 43.24962311005814
+        sqft_price_res: -1.4902561306499624
+        zones_logsum_pop_high_income: 1.5530689855781112
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -21464.968658701622
+    'null': -27189.171869009126
+    ratio: 0.2105324589467209

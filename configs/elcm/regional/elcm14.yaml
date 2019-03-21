@@ -1,0 +1,63 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (sector_id == 14) & (home_based_status == 0)
+
+choosers_predict_filters: null
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 30
+
+estimation_sample_size: 5000
+
+prediction_sample_size: null
+
+model_expression:
+- general_type_is_Medical
+- b_ln_non_residential_sqft
+- zones_ln_empden_14
+- nodes_walk_medical
+- nodes_drv_log_sum_60min_jobs
+- nodes_drv_log_sum_20min_pop
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        b_ln_non_residential_sqft: 0.5902134358173138
+        general_type_is_Medical: 2.9913327742830456
+        nodes_drv_log_sum_20min_pop: 0.08920963830635847
+        nodes_drv_log_sum_60min_jobs: 0.07519991324027894
+        nodes_walk_medical: 0.004672338377289369
+        zones_ln_empden_14: 0.6659517092428744
+    Std. Error:
+        b_ln_non_residential_sqft: 0.013161690840267201
+        general_type_is_Medical: 0.035699294978741095
+        nodes_drv_log_sum_20min_pop: 0.029242348477869724
+        nodes_drv_log_sum_60min_jobs: 0.028683663052756582
+        nodes_walk_medical: 0.000254043613250381
+        zones_ln_empden_14: 0.02165870659734254
+    T-Score:
+        b_ln_non_residential_sqft: 44.8432836616706
+        general_type_is_Medical: 83.79248878904701
+        nodes_drv_log_sum_20min_pop: 3.0507001985107767
+        nodes_drv_log_sum_60min_jobs: 2.621698389845366
+        nodes_walk_medical: 18.391874991497595
+        zones_ln_empden_14: 30.747529001781885
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -9514.07515501527
+    'null': -17005.986908309435
+    ratio: 0.44054554397154566

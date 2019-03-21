@@ -1,0 +1,87 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: income_quartile == 1
+
+choosers_predict_filters: null
+
+alts_fit_filters: null
+
+alts_predict_filters: null
+
+interaction_predict_filters: null
+
+choice_column: null
+
+sample_size: 30
+
+estimation_sample_size: 8000
+
+prediction_sample_size: null
+
+model_expression:
+- residential_units
+- building_age
+- building_type_id_is_81
+- nodes_drv_log_sum_30min_jobs
+- sqft_price_res
+- zones_empden
+- children:nodes_walk_percent_hh_with_children
+- is_race4:nodes_walk_percent_race4
+- is_race1:nodes_walk_percent_race1
+- is_race2:nodes_walk_percent_race2
+- persons:large_hh_city
+- nodes_walk_lowinc_hhs
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        building_age: 0.004588866629711052
+        building_type_id_is_81: -1.4226204170494163
+        children:nodes_walk_percent_hh_with_children: 1.8850016866849837
+        is_race1:nodes_walk_percent_race1: 3.86290902699131
+        is_race2:nodes_walk_percent_race2: 4.4430722986353794
+        is_race4:nodes_walk_percent_race4: 8.941112404026809
+        nodes_drv_log_sum_30min_jobs: 0.10634366992571322
+        nodes_walk_lowinc_hhs: 0.002030496731371881
+        persons:large_hh_city: 0.16922202515205426
+        residential_units: 0.06275998404127545
+        sqft_price_res: -0.003934417447062108
+        zones_empden: 0.00546925072043283
+    Std. Error:
+        building_age: 0.0006474493487140474
+        building_type_id_is_81: 0.03843222258830158
+        children:nodes_walk_percent_hh_with_children: 0.038050174777886886
+        is_race1:nodes_walk_percent_race1: 0.066549810499728
+        is_race2:nodes_walk_percent_race2: 0.07671005292657362
+        is_race4:nodes_walk_percent_race4: 0.5416755563838251
+        nodes_drv_log_sum_30min_jobs: 0.0040599624897581735
+        nodes_walk_lowinc_hhs: 0.00013696262047930134
+        persons:large_hh_city: 0.017785827665547687
+        residential_units: 0.0007972509949250796
+        sqft_price_res: 0.00027450742062111217
+        zones_empden: 0.0018433092362673067
+    T-Score:
+        building_age: 7.087607144598074
+        building_type_id_is_81: -37.01634517183633
+        children:nodes_walk_percent_hh_with_children: 49.53989561647073
+        is_race1:nodes_walk_percent_race1: 58.0453798137727
+        is_race2:nodes_walk_percent_race2: 57.92033937048981
+        is_race4:nodes_walk_percent_race4: 16.506398154121687
+        nodes_drv_log_sum_30min_jobs: 26.19326414812454
+        nodes_walk_lowinc_hhs: 14.825188976862067
+        persons:large_hh_city: 9.514430721705935
+        residential_units: 78.72048381347359
+        sqft_price_res: -14.332645136367999
+        zones_empden: 2.967082577803407
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -18280.38498068601
+    'null': -27185.770671627462
+    ratio: 0.3275752524549762
