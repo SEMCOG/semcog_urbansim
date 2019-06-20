@@ -1,0 +1,31 @@
+alts_fit_filters: (residential_units >0) & (large_area_id == 147)
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 147)
+choice_column: null
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (hh_type_large_area_id == 40147)
+choosers_predict_filters: hh_type_large_area_id == 40147
+estimation_sample_size: 2000
+fit_parameters:
+  Coefficient: {st_b_ln_residential_units: 0.09581272398933019, st_b_ln_sqft_per_unit: 0.021326299628900935,
+    st_zones_mean_age_of_head: 0.23919348311566038, st_zones_mean_hh_size: 0.1822519306811976,
+    st_zones_population: 0.04513172395275519, st_zones_prop_income_1: 0.5489308339502215,
+    st_zones_prop_office_buildings: -0.033587505880955784, st_zones_prop_race_1: -0.04122309379996521}
+  Std. Error: {st_b_ln_residential_units: 0.015011547284197367, st_b_ln_sqft_per_unit: 0.4912227986514647,
+    st_zones_mean_age_of_head: 0.09146399173406723, st_zones_mean_hh_size: 0.08457214669870372,
+    st_zones_population: 0.12014762337859158, st_zones_prop_income_1: 0.11104212436825957,
+    st_zones_prop_office_buildings: 0.05214462000906088, st_zones_prop_race_1: 0.11835314183525204}
+  T-Score: {st_b_ln_residential_units: 6.382601485070903, st_b_ln_sqft_per_unit: 0.04341471871307117,
+    st_zones_mean_age_of_head: 2.6151655813483257, st_zones_mean_hh_size: 2.154987638311788,
+    st_zones_population: 0.37563559464295615, st_zones_prop_income_1: 4.943446796188353,
+    st_zones_prop_office_buildings: -0.6441221716664053, st_zones_prop_race_1: -0.34830586802121305}
+fitted: true
+interaction_predict_filters: null
+log_likelihoods: {convergence: -919.0340816054164, 'null': -967.0857390574963, ratio: 0.04968707066129441}
+model_expression: [st_b_ln_residential_units, st_b_ln_sqft_per_unit, st_zones_population,
+  st_zones_prop_income_1, st_zones_mean_age_of_head, st_zones_mean_hh_size, st_zones_prop_race_1,
+  st_zones_prop_office_buildings]
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 1000
