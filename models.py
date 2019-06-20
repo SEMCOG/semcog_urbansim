@@ -668,7 +668,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
-        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
+        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
         orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
@@ -1071,7 +1071,9 @@ def neighborhood_vars(jobs, households, buildings):
     for var in orca.get_table('nodes_drv').columns:
         if var not in building_vars:
             variables.make_disagg_var('nodes_drv', 'buildings', var, 'nodeid_drv')
-
+    node_cols_to_st = [x for x in orca.get_table('buildings').columns if 'nodes_' in x]
+    for node_col in node_cols_to_st:
+        variables.register_standardized_variable('buildings', node_col)
 
 @orca.step()
 def travel_model(iter_var, travel_data, buildings, parcels, households, persons, jobs):
