@@ -1,0 +1,31 @@
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 99)
+alts_predict_filters: large_area_id == 99
+choice_column: building_id
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (slid == 900099) & (home_based_status == 0)
+choosers_predict_filters: (slid == 900099) & (home_based_status == 0)
+estimation_sample_size: 5000
+fit_parameters:
+  Coefficient: {st_b_ln_non_residential_sqft: -0.47550060878799594, st_building_age: -0.2865040541559758,
+    st_is_office: 0.18314733881975764, st_jobs_within_30_min: 0.00800649397426483,
+    st_stories: -0.016201369201342058, st_zones_ln_empden: -0.3147437066726281, st_zones_ln_empden_11: -0.004004314777590724,
+    st_zones_ln_empden_9: 0.22573482324160932, st_zones_ln_popden: 0.1267358349113729}
+  Std. Error: {st_b_ln_non_residential_sqft: 0.007545290140073213, st_building_age: 0.017752093899460114,
+    st_is_office: 0.0036391782230415105, st_jobs_within_30_min: 0.019617585263712833,
+    st_stories: 0.0015588097459037012, st_zones_ln_empden: 0.018631498439578103, st_zones_ln_empden_11: 0.0016393842040875076,
+    st_zones_ln_empden_9: 0.0062153441707750254, st_zones_ln_popden: 0.014136605350761186}
+  T-Score: {st_b_ln_non_residential_sqft: -63.019526083245104, st_building_age: -16.13916959760387,
+    st_is_office: 50.32656484372147, st_jobs_within_30_min: 0.40812841471751643, st_stories: -10.393423087016632,
+    st_zones_ln_empden: -16.893096800203217, st_zones_ln_empden_11: -2.44257250228878,
+    st_zones_ln_empden_9: 36.31895789504786, st_zones_ln_popden: 8.965082618264422}
+fitted: true
+interaction_predict_filters: null
+log_likelihoods: {convergence: -13259.32947570259, 'null': -17002.58571092777, ratio: 0.22015805706654046}
+model_expression: [st_is_office, st_b_ln_non_residential_sqft, st_stories, st_zones_ln_empden_9,
+  st_zones_ln_empden_11, st_jobs_within_30_min, st_zones_ln_popden, st_zones_ln_empden,
+  st_building_age]
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 30
