@@ -31,7 +31,7 @@ orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv"
 
 
 @orca.table(cache=True)
-def buildings(store):
+def buildings(store, parcels):
     df = store['buildings']
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.improvement_value < 0, 'improvement_value'] = 0
@@ -51,7 +51,10 @@ def buildings(store):
     for c in sample.b_city_id.unique():
         frac = 0.9 if c in cites else 0.5
         df.loc[sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values, 'hu_filter'] = 1
-
+    #removebuildings with parcel_id with null positions (x,y)
+    parcels = parcels.local
+    df['large_area_id'] = misc.reindex(parcels.large_area_id, df.parcel_id)
+    df = df[df.large_area_id.notnull()]
     return df
 
 
@@ -66,6 +69,7 @@ def households(store, buildings):
     df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
                                                                       idx_invalid_building_id.sum())
     df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
+    df.index.name = 'household_id'
     return df.fillna(0)
 
 
