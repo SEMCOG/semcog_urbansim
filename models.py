@@ -940,8 +940,8 @@ def residential_developer(households, parcels, target_vacancies):
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate)
-        target_units = parcel_utils.compute_units_to_build(households.large_area_id == lid,
-                                                           'residential_units',
+        target_units = parcel_utils.compute_units_to_build((households.large_area_id == lid).sum(),
+                                                           la_orig_buildings.residential_units.sum(),
                                                            target_vacancy)
         register_btype_distributions(la_orig_buildings)
         run_developer(
@@ -966,8 +966,8 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate)
         num_jobs = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
-        target_units = parcel_utils.compute_units_to_build((jobs.large_area_id == lid) & (jobs.home_based_status == 0),
-                                                           'job_spaces',
+        target_units = parcel_utils.compute_units_to_build(num_jobs,
+                                                           la_orig_buildings.job_spaces.sum(),
                                                            target_vacancy)
         register_btype_distributions(la_orig_buildings)
         run_developer(
