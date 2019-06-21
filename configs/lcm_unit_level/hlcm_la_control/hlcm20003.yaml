@@ -1,0 +1,30 @@
+alts_fit_filters: (residential_units >0) & (large_area_id == 3)
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 3)
+choice_column: null
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (hh_type_large_area_id == 20003)
+choosers_predict_filters: hh_type_large_area_id == 20003
+estimation_sample_size: 2000
+fit_parameters:
+  Coefficient: {st_b_ln_residential_units: 0.02050573281503961, st_b_ln_sqft_per_unit: -1.0515380666049714,
+    st_zones_mean_hh_size: -0.10652901683038726, st_zones_prop_hh_with_children: 0.027655093128726292,
+    st_zones_prop_income_1: 0.3358206544828613, st_zones_prop_race_4: -0.05239268519744169,
+    st_zones_prop_retail_buildings: -0.04166675947085345}
+  Std. Error: {st_b_ln_residential_units: 0.0061633777456015885, st_b_ln_sqft_per_unit: 0.09694643341986103,
+    st_zones_mean_hh_size: 0.04215024810156892, st_zones_prop_hh_with_children: 0.03927182599419919,
+    st_zones_prop_income_1: 0.020410312486638073, st_zones_prop_race_4: 0.022528160907240066,
+    st_zones_prop_retail_buildings: 0.01550715620127632}
+  T-Score: {st_b_ln_residential_units: 3.327028402514068, st_b_ln_sqft_per_unit: -10.846588466549477,
+    st_zones_mean_hh_size: -2.527363933272365, st_zones_prop_hh_with_children: 0.7041967728419657,
+    st_zones_prop_income_1: 16.45347932339162, st_zones_prop_race_4: -2.3256530088349914,
+    st_zones_prop_retail_buildings: -2.686937497116593}
+fitted: true
+interaction_predict_filters: null
+log_likelihoods: {convergence: -12070.642386652047, 'null': -12429.216196844227, ratio: 0.02884926969757129}
+model_expression: [st_b_ln_residential_units, st_b_ln_sqft_per_unit, st_zones_prop_income_1,
+  st_zones_prop_hh_with_children, st_zones_mean_hh_size, st_zones_prop_race_4, st_zones_prop_retail_buildings]
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 500
