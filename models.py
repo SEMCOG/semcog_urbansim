@@ -65,10 +65,12 @@ for model_category_name, model_category_attributes in model_configs.items():
             if model_category_name == 'elcm':
                 elcm_step_names_lacontrol.append(model.name)
 
+
 def merge_two_dicts(x, y):
     z = x.copy()
     z.update(y)
     return z
+
 
 lcm_models_updated = merge_two_dicts(orca.get_injectable('location_choice_models'), location_choice_models_lacontrol)
 orca.add_injectable('location_choice_models', lcm_models_updated)
@@ -79,6 +81,7 @@ for name, model in location_choice_models_lacontrol.items():
     lcm_utils.register_choice_model_step(model.name,
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
+
 
 @orca.step()
 def elcm_home_based(jobs, households):
@@ -668,7 +671,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
-        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
+        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
         orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
@@ -796,15 +799,18 @@ def cost_shifter_callback(self, form, df, costs):
         costs[:, geo_df.index] *= shifter
     return costs
 
+
 def parcel_custom_callback(parcels, df):
-    parcels['max_height'] = orca.get_table('parcels').max_height
-    parcels['max_far'] = orca.get_table('parcels').max_far
-    parcels['parcel_size'] = orca.get_table('parcels').parcel_size
-    parcels['land_cost'] = orca.get_table('parcels').land_cost
-    parcels['max_dua'] = orca.get_table('parcels').max_dua
-    parcels['ave_unit_size'] = orca.get_table('parcels').ave_unit_size
+    orca_parcels = orca.get_table('parcels')
+    parcels['max_height'] = orca_parcels.max_height
+    parcels['max_far'] = orca_parcels.max_far
+    parcels['parcel_size'] = orca_parcels.parcel_size
+    parcels['land_cost'] = orca_parcels.land_cost
+    parcels['max_dua'] = orca_parcels.max_dua
+    parcels['ave_unit_size'] = orca_parcels.ave_unit_size
     parcels = parcels[parcels.parcel_size > 2000]
     return parcels
+
 
 @orca.step('feasibility')
 def feasibility(parcels):
@@ -940,8 +946,8 @@ def residential_developer(households, parcels, target_vacancies):
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate)
-        target_units = parcel_utils.compute_units_to_build(households.large_area_id == lid,
-                                                           'residential_units',
+        target_units = parcel_utils.compute_units_to_build((households.large_area_id == lid).sum(),
+                                                           la_orig_buildings.residential_units.sum(),
                                                            target_vacancy)
         register_btype_distributions(la_orig_buildings)
         run_developer(
@@ -966,8 +972,8 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate)
         num_jobs = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
-        target_units = parcel_utils.compute_units_to_build((jobs.large_area_id == lid) & (jobs.home_based_status == 0),
-                                                           'job_spaces',
+        target_units = parcel_utils.compute_units_to_build(num_jobs,
+                                                           la_orig_buildings.job_spaces.sum(),
                                                            target_vacancy)
         register_btype_distributions(la_orig_buildings)
         run_developer(
@@ -1074,6 +1080,7 @@ def neighborhood_vars(jobs, households, buildings):
     node_cols_to_st = [x for x in orca.get_table('buildings').columns if 'nodes_' in x]
     for node_col in node_cols_to_st:
         variables.register_standardized_variable('buildings', node_col)
+
 
 @orca.step()
 def travel_model(iter_var, travel_data, buildings, parcels, households, persons, jobs):

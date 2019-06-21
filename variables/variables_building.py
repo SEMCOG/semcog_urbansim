@@ -118,11 +118,6 @@ def large_area_id(buildings, parcels):
     return misc.reindex(parcels.large_area_id, buildings.parcel_id)
 
 
-# @orca.column('buildings', cache=True, cache_scope='iteration')
-# def popden(buildings, zones):
-#     return misc.reindex(zones.popden, buildings.zone_id).fillna(0)
-
-
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def residential_sqft(buildings):
     return buildings.sqft_per_unit * buildings.residential_units
@@ -339,6 +334,7 @@ def jobs_non_home_based(jobs):
     jobs = jobs.to_frame(["building_id", "home_based_status"])
     return jobs[jobs.home_based_status == 0].groupby("building_id").size()
 
+
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def mean_zonal_hhsize(buildings, households):
     buildings = buildings.to_frame(['zone_id'])
@@ -447,9 +443,8 @@ def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog
 geographic_levels = [('parcels', 'parcel_id'),
                      ('zones', 'zone_id')]
 vars_to_dummify = ['city_id', 'building_type_id']
-vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit', 'residential_units',
-               'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value',
-               ]
+vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
+               'residential_units', 'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value',]
 
 for geography in geographic_levels:
     geography_name = geography[0]
@@ -473,9 +468,11 @@ emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
 
+
 # --- STANDARIZE VARIABLES
 def standardize(series):
     return (series - series.mean()) / series.std()
+
 
 def register_standardized_variable(table_name, column_to_s):
     """
@@ -496,8 +493,10 @@ def register_standardized_variable(table_name, column_to_s):
         return standardize(orca.get_table(table_name)[column_to_s])
     return column_func
 
+
 for var in orca.get_table('buildings').columns:
     register_standardized_variable('buildings', var)
+
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def popden(buildings, zones):
