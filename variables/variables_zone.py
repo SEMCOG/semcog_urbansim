@@ -11,30 +11,42 @@ import pandas as pd
 def popden(parcels, households):
     return households.persons.groupby(households.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ln_popden(zones):
     return np.log1p(zones.popden).fillna(0)
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def households(households):
     return households.zone_id.groupby(households.zone_id).size()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def population(households):
     return households.persons.groupby(households.zone_id).sum()
+
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ln_population(zones):
     return np.log1p(zones.population).fillna(0)
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def buildings(buildings):
     return buildings.zone_id.groupby(buildings.zone_id).size()
+
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def bldg_sqft_den(parcels, buildings):
     return buildings.building_sqft.groupby(buildings.zone_id).sum() / parcels.acres.groupby(parcels.zone_id).sum()
+
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ln_bldg_sqft_den(zones):
     return np.log1p(zones.bldg_sqft_den).fillna(0)
+
+
 @orca.column('zones', cache=True)
 def jobs_within_30_min(jobs, travel_data):
     from urbansim.utils import misc
@@ -46,12 +58,16 @@ def jobs_within_30_min(jobs, travel_data):
                               "am_auto_total_time",
                               30, agg=np.sum)
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def empden(zones, parcels,):
     return zones.employment / parcels.acres.groupby(parcels.zone_id).sum()
+
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ln_empden(zones):
     return np.log1p(zones.empden).fillna(0)
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def percent_vacant_job_spaces(buildings):
@@ -61,6 +77,7 @@ def percent_vacant_job_spaces(buildings):
 
     return (vacant_job_spaces * 1.0 / job_spaces).replace([np.inf, -np.inf], np.nan).fillna(0)
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def percent_vacant_residential_units(buildings):
     buildings = buildings.to_frame(buildings.local_columns + ['vacant_residential_units', 'zone_id'])
@@ -68,6 +85,7 @@ def percent_vacant_residential_units(buildings):
     vacant_du = buildings.groupby('zone_id').vacant_residential_units.sum()
 
     return (vacant_du * 1.0 / du).replace([np.inf, -np.inf], np.nan).fillna(0)
+
 
 def make_employment_density_variable(sector_id):
     """
@@ -86,29 +104,36 @@ def make_employment_density_variable(sector_id):
 
     return func
 
+
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_density_variable(sector)
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def z_total_jobs(jobs):
     return jobs.zone_id.value_counts()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_age_of_head(households):
     return households.age_of_head.groupby(households.zone_id).mean()
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_hh_size(households):
     return households.persons.groupby(households.zone_id).mean()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_children(households):
     return households.children.groupby(households.zone_id).mean()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_income(households):
     return households.income.groupby(households.zone_id).mean()
+
 
 def prop_household_var(qry, variable, col_name):
     col_name_ = "prop_" + col_name
@@ -117,6 +142,7 @@ def prop_household_var(qry, variable, col_name):
         households = households.to_frame([variable, 'zone_id'])
         return households.query(qry).groupby('zone_id').size() / zones.households
     return func
+
 
 prop_household_var('race_id == 1', 'race_id', 'race_1')
 prop_household_var('race_id == 2', 'race_id', 'race_2')
@@ -135,21 +161,26 @@ prop_household_var('income_quartile == 2', 'income_quartile', 'income_2')
 prop_household_var('income_quartile == 3', 'income_quartile', 'income_3')
 prop_household_var('income_quartile == 4', 'income_quartile', 'income_4')
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_sqft_per_unit(buildings):
     return buildings.sqft_per_unit.groupby(buildings.zone_id).mean()
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def sum_residential_units(buildings):
     return buildings.residential_units.groupby(buildings.zone_id).sum()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def sum_non_residential_units(buildings):
     return buildings.non_residential_units.groupby(buildings.zone_id).sum()
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_non_residential_sqft(buildings):
     return buildings.non_residential_sqft.groupby(buildings.zone_id).mean()
+
 
 def prop_building_var(qry, variable, col_name):
     col_name_ = "prop_" + col_name
@@ -159,11 +190,13 @@ def prop_building_var(qry, variable, col_name):
         return buildings.query(qry).groupby('zone_id').size() / zones.buildings
     return func
 
+
 prop_building_var('is_office == 1', 'is_office', 'office_buildings')
 prop_building_var('is_industrial == 1', 'is_industrial', 'industrial_buildings')
 prop_building_var('is_retail == 1', 'is_retail', 'retail_buildings')
 prop_building_var('is_medical == 1', 'is_medical', 'medical_buildings')
 prop_building_var('general_type == "Residential"', 'general_type', 'residential_buildings')
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def mean_parcels_size(parcels):
@@ -184,6 +217,7 @@ def retail_jobs(jobs, travel_data):
     zone_ids = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({'zone_id': jobs.zone_id, 'sector_id': jobs.sector_id})
     return j.loc[j.sector_id == 5, :].groupby('zone_id').size().reindex(index=zone_ids).fillna(0)
+
 
 def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
     td = travel_data.to_frame()
@@ -289,10 +323,12 @@ def a_ln_retail_emp_15min_drive_alone(zones, travel_data):
     temp = pd.merge(drvtime,zemp, left_on = 'to_zone_id', right_index = True, how='left' )
     return np.log1p(temp[temp.midday_auto_total_time <=15].groupby('from_zone_id').employment.sum().fillna(0))
 
+
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ave_res_sqft_price(zones, buildings):
     buildings = buildings.to_frame(['sqft_price_res', 'zone_id'])
     return buildings.groupby('zone_id').sqft_price_res.mean()
+
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def ave_nonres_sqft_price(zones, buildings):

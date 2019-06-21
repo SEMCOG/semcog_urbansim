@@ -55,6 +55,7 @@ def buildings(store, parcels):
     parcels = parcels.local
     df['large_area_id'] = misc.reindex(parcels.large_area_id, df.parcel_id)
     df = df[df.large_area_id.notnull()]
+    del df['large_area_id']
     return df
 
 

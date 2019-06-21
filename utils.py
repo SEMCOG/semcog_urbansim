@@ -508,12 +508,13 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         except:
             import pdb; pdb.set_trace()
 
+
 def _convert_network_columns(yaml_file):
     cfg = yaml.safe_load(open(misc.config(yaml_file)))
     for variable in cfg['variable_definitions']:
         if 'varname' in variable.keys():
             col = variable["varname"]
-            df = orca.get_table(variable["dataframe"]).to_frame(col)
+            df = orca.get_table(variable["dataframe"]).to_frame([col])
             orca.add_column(variable["dataframe"], col, df[col].astype(float))
         variable["radius"] = float(variable["radius"])
         if 'aggregation' in variable.keys():
