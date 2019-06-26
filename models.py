@@ -1058,7 +1058,6 @@ def neighborhood_vars(jobs, households, buildings):
         orca.add_table("households", h)
 
     building_vars = set(orca.get_table('buildings').columns)
-    utils._convert_network_columns("networks_walk.yaml")
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
@@ -1068,7 +1067,6 @@ def neighborhood_vars(jobs, households, buildings):
         if var not in building_vars:
             variables.make_disagg_var('nodes_walk', 'buildings', var, 'nodeid_walk')
 
-    utils._convert_network_columns("networks_drv.yaml")
     nodes = networks.from_yaml(orca.get_injectable('net_drv'), "networks_drv.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
