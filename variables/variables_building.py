@@ -159,7 +159,7 @@ def job_spaces(buildings, base_job_space):
     return job_spaces
 
 
-@orca.column('buildings', cache=True, cache_scope='iteration')
+@orca.column('buildings')
 def non_residential_units(buildings):
     return buildings.job_spaces
 
