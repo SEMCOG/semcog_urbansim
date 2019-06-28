@@ -47,19 +47,20 @@ def enable_logging():
 
 
 def deal_with_nas(df):
-    df_cnt = len(df)
-    fail = False
-
     df = df.replace([np.inf, -np.inf], np.nan)
     # df[df.isnull().any(axis=1)].to_csv('nulls.csv')
-    for col in df.columns:
-        s_cnt = df[col].count()
-        if df_cnt != s_cnt:
-            fail = True
-            print "Found %d nas or inf (out of %d) in column %s" % \
-                  (df_cnt-s_cnt, df_cnt, col)
+    any_null = df.isnull().values.any()
+    if any_null:
+        df_cnt = len(df)
+        fail = False
+        for col in df.columns:
+            s_cnt = df[col].count()
+            if df_cnt != s_cnt:
+                fail = True
+                print "Found %d nas or inf (out of %d) in column %s" % \
+                      (df_cnt-s_cnt, df_cnt, col)
 
-    assert not fail, "NAs were found in dataframe, please fix"
+        assert not fail, "NAs were found in dataframe, please fix"
     return df
 
 
