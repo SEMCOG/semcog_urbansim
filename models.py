@@ -1020,7 +1020,7 @@ def build_networks(parcels):
         nodes, edges = st[n_dic_net['nodes']], st[n_dic_net['edges']]
         net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
                            edges[[n_dic_net[n['cost']]]])
-        net.precompute(n['prev'])
+        net.precompute(n['prev'] + 1)
         # net.init_pois(num_categories=10, max_dist=n['prev'], max_pois=5)
 
         orca.add_injectable(n['net'], net)
