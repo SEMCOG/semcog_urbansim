@@ -45,6 +45,65 @@ for name, model in location_choice_models.items():
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
 
+# RUN 7b Register LARGE AREA CONTROL and Unit Level location choice models
+location_choice_models_lacontrol = {}
+hlcm_step_names_lacontrol = []
+elcm_step_names_lacontrol = []
+model_configs = lcm_utils.get_model_category_configs('yaml_configs_la_control_unit_level.yaml')
+for model_category_name, model_category_attributes in model_configs.items():
+    if model_category_attributes['model_type'] == 'location_choice':
+        model_config_files = model_category_attributes['config_filenames']
+
+        for model_config in model_config_files:
+            model = lcm_utils.create_lcm_from_config(model_config,
+                                                     model_category_attributes)
+            location_choice_models_lacontrol[model.name] = model
+
+            if model_category_name == 'hlcm':
+                hlcm_step_names_lacontrol.append(model.name)
+
+            if model_category_name == 'elcm':
+                elcm_step_names_lacontrol.append(model.name)
+
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+
+lcm_models_updated = merge_two_dicts(orca.get_injectable('location_choice_models'), location_choice_models_lacontrol)
+orca.add_injectable('location_choice_models', lcm_models_updated)
+orca.add_injectable('hlcm_step_names_lacontrol_unitlevel', sorted(hlcm_step_names_lacontrol, reverse=True))
+orca.add_injectable('elcm_step_names_lacontrol_unitlevel', sorted(elcm_step_names_lacontrol, reverse=True))
+
+for name, model in location_choice_models_lacontrol.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                         model.choosers,
+                                         choice_function=lcm_utils.unit_choices)
+
+# HLCM CALIBRATION MODELS - LARGE AREA CONTROL
+location_choice_models_calib = {}
+hlcm_step_names_calib = []
+model_configs = lcm_utils.get_model_category_configs('yaml_configs_la_control_unit_level_calib.yaml')
+for model_category_name, model_category_attributes in model_configs.items():
+    if model_category_attributes['model_type'] == 'location_choice':
+        model_config_files = model_category_attributes['config_filenames']
+
+        for model_config in model_config_files:
+            model = lcm_utils.create_lcm_from_config(model_config,
+                                                     model_category_attributes)
+            location_choice_models_calib[model.name] = model
+
+            if model_category_name == 'hlcm':
+                hlcm_step_names_calib.append(model.name)
+
+lcm_models_updated = merge_two_dicts(orca.get_injectable('location_choice_models'), location_choice_models_calib)
+orca.add_injectable('location_choice_models', lcm_models_updated)
+orca.add_injectable('hlcm_step_names_lacontrol_calib', sorted(hlcm_step_names_calib, reverse=True))
+
+for name, model in location_choice_models_calib.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                         model.choosers,
+                                         choice_function=lcm_utils.unit_choices)
 
 @orca.step()
 def elcm_home_based(jobs, households):
@@ -209,19 +268,19 @@ def households_transition(households, persons, annual_household_control_totals, 
     # fix indexes
     out_hh_fixed = []
     out_p_fixed = []
-    hhidmax = region_hh.index.values.max() + 1
-    pidmax = region_p.index.values.max() + 1
+    hhidmax = int(region_hh.index.values.max() + 1)
+    pidmax = int(region_p.index.values.max() + 1)
     for hh, p in out:
         hh.index.name = 'household_id'
         hh = hh.reset_index()
         hh['household_id_old'] = hh['household_id']
-        new_hh = (hh.building_id == -1).sum()
+        new_hh = int((hh.building_id == -1).sum())
         hh.loc[hh.building_id == -1, 'household_id'] = range(hhidmax, hhidmax + new_hh)
         hhidmax += new_hh
         hhid_map = hh[['household_id_old', 'household_id']].set_index('household_id_old')
         p.index.name = 'person_id'
         p = pd.merge(p.reset_index(), hhid_map, left_on='household_id', right_index=True)
-        new_p = (p.household_id_x != p.household_id_y).sum()
+        new_p = int((p.household_id_x != p.household_id_y).sum())
         p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
         pidmax += new_p
         p['household_id'] = p['household_id_y']
@@ -605,12 +664,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
         persons_columns = persons.local_columns
         persons = persons.to_frame(persons_columns)
-        pidmax = persons.index.values.max() + 1
+        pidmax = int(persons.index.values.max() + 1)
 
         hh_index_lookup = households[["household_id_old"]].reset_index().set_index("household_id_old")
         hh_index_lookup.columns = ['household_id']
         p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
-        new_p = (p.household_id_x != p.household_id_y).sum()
+        new_p = int((p.household_id_x != p.household_id_y).sum())
         p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
         p['household_id'] = p['household_id_y']
         persons = p.set_index('person_id')
@@ -634,7 +693,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
-        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
+        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
         orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
@@ -738,8 +797,9 @@ def parcel_average_price(use):
     # Copied from variables.py
     parcels_wrapper = orca.get_table('parcels')
     if len(orca.get_table('nodes_walk')) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels_wrapper.index)
+        # if nodes isn't generated yet, get average on zones
+        return misc.reindex(orca.get_table('zones')[use],
+                            parcels_wrapper.zone_id)
     return misc.reindex(orca.get_table('nodes_walk')[use],
                         parcels_wrapper.nodeid_walk)
 
@@ -762,6 +822,15 @@ def cost_shifter_callback(self, form, df, costs):
         costs[:, geo_df.index] *= shifter
     return costs
 
+def parcel_custom_callback(parcels, df):
+    parcels['max_height'] = orca.get_table('parcels').max_height
+    parcels['max_far'] = orca.get_table('parcels').max_far
+    parcels['parcel_size'] = orca.get_table('parcels').parcel_size
+    parcels['land_cost'] = orca.get_table('parcels').land_cost
+    parcels['max_dua'] = orca.get_table('parcels').max_dua
+    parcels['ave_unit_size'] = orca.get_table('parcels').ave_unit_size
+    parcels = parcels[parcels.parcel_size > 2000]
+    return parcels
 
 @orca.step('feasibility')
 def feasibility(parcels):
@@ -769,7 +838,8 @@ def feasibility(parcels):
                                  parcel_average_price,
                                  variables.parcel_is_allowed,
                                  cfg='proforma.yaml',
-                                 modify_costs=cost_shifter_callback
+                                 modify_costs=cost_shifter_callback,
+                                 parcel_custom_callback=parcel_custom_callback
                                  )
     feasibility = orca.get_table('feasibility').to_frame()
     for lid, df in parcels.large_area_id.to_frame().groupby('large_area_id'):
@@ -782,9 +852,10 @@ def add_extra_columns_nonres(df):
                 'sqft_price_res', 'sqft_per_unit', 'hu_filter']:
         df[col] = 0
     df['year_built'] = orca.get_injectable('year')
-    p = orca.get_table('parcels').to_frame(['zone_id', 'city_id'])
+    p = orca.get_table('parcels').to_frame(['zone_id', 'city_id', 'large_area_id'])
     for col in ['zone_id', 'city_id']:
         df['b_' + col] = misc.reindex(p[col], df.parcel_id)
+    df['large_area_id'] = misc.reindex(p['large_area_id'], df.parcel_id)
     return df.fillna(0)
 
 
@@ -877,7 +948,6 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
 
     if new_buildings is None or len(new_buildings) == 0:
         return
-
     parcel_utils.add_buildings(dev.feasibility,
                                buildings,
                                new_buildings,
@@ -941,7 +1011,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
 @orca.step()
 def build_networks(parcels):
     import yaml
-    pdna.network.reserve_num_graphs(2)
+    # pdna.network.reserve_num_graphs(2)
 
     # networks in semcog_networks.h5
     with open(r"configs/available_networks.yaml", 'r') as stream:
@@ -970,7 +1040,7 @@ def build_networks(parcels):
         net = pdna.Network(nodes["x"], nodes["y"], edges["from"], edges["to"],
                            edges[[n_dic_net[n['cost']]]])
         net.precompute(n['prev'])
-        net.init_pois(num_categories=10, max_dist=n['prev'], max_pois=5)
+        # net.init_pois(num_categories=10, max_dist=n['prev'], max_pois=5)
 
         orca.add_injectable(n['net'], net)
 
@@ -1007,7 +1077,7 @@ def neighborhood_vars(jobs, households, buildings):
         orca.add_table("households", h)
 
     building_vars = set(orca.get_table('buildings').columns)
-
+    utils._convert_network_columns("networks_walk.yaml")
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
@@ -1017,7 +1087,9 @@ def neighborhood_vars(jobs, households, buildings):
         if var not in building_vars:
             variables.make_disagg_var('nodes_walk', 'buildings', var, 'nodeid_walk')
 
+    utils._convert_network_columns("networks_drv.yaml")
     nodes = networks.from_yaml(orca.get_injectable('net_drv'), "networks_drv.yaml")
+
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
     orca.add_table("nodes_drv", nodes)
@@ -1025,7 +1097,9 @@ def neighborhood_vars(jobs, households, buildings):
     for var in orca.get_table('nodes_drv').columns:
         if var not in building_vars:
             variables.make_disagg_var('nodes_drv', 'buildings', var, 'nodeid_drv')
-
+    node_cols_to_st = [x for x in orca.get_table('buildings').columns if 'nodes_' in x]
+    for node_col in node_cols_to_st:
+        variables.register_standardized_variable('buildings', node_col)
 
 @orca.step()
 def travel_model(iter_var, travel_data, buildings, parcels, households, persons, jobs):
