@@ -25,6 +25,29 @@ def hedonic_id(buildings):
 def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
 
+@orca.column('buildings', cache=True)
+def is_medical(buildings):
+    return (buildings.general_type == 'Medical').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_tcu(buildings):
+    return (buildings.general_type == 'TCU').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_institutional(buildings):
+    return (buildings.general_type == 'Institutional').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_retail(buildings):
+    return (buildings.general_type == 'Retail').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_office(buildings):
+    return (buildings.general_type == 'Office').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_industrial(buildings):
+    return (buildings.general_type == 'Industrial').astype('int')
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def gq_building(buildings, group_quarters):
@@ -96,11 +119,6 @@ def large_area_id(buildings, parcels):
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
-def popden(buildings, zones):
-    return misc.reindex(zones.popden, buildings.zone_id).fillna(0)
-
-
-@orca.column('buildings', cache=True, cache_scope='iteration')
 def residential_sqft(buildings):
     return buildings.sqft_per_unit * buildings.residential_units
 
@@ -141,7 +159,7 @@ def job_spaces(buildings, base_job_space):
     return job_spaces
 
 
-@orca.column('buildings', cache=True, cache_scope='iteration')
+@orca.column('buildings')
 def non_residential_units(buildings):
     return buildings.job_spaces
 
@@ -317,6 +335,44 @@ def jobs_non_home_based(jobs):
     return jobs[jobs.home_based_status == 0].groupby("building_id").size()
 
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mean_zonal_hhsize(buildings, households):
+    buildings = buildings.to_frame(['zone_id'])
+    households = households.to_frame(['zone_id', 'persons'])
+    buildings['mean_zonal_hhsize'] = misc.reindex(households.groupby('zone_id').persons.mean(), buildings.zone_id)
+    buildings.mean_zonal_hhsize = buildings.mean_zonal_hhsize.fillna(buildings.mean_zonal_hhsize.mean())
+    return buildings.mean_zonal_hhsize
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile(buildings, households):
+    buildings = buildings.to_frame(['zone_id'])
+    households = households.to_frame(['zone_id', 'income_quartile'])
+    mode_income_quartile = households.income_quartile.groupby(households.zone_id).agg(lambda x: x.value_counts().index[0])
+    buildings['mode_income_quartile'] = misc.reindex(mode_income_quartile, buildings.zone_id)
+    buildings.mode_income_quartile = buildings.mode_income_quartile.fillna(0)
+    return buildings.mode_income_quartile
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_1(buildings):
+    return (buildings.mode_income_quartile == 1).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_2(buildings):
+    return (buildings.mode_income_quartile == 2).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_3(buildings):
+    return (buildings.mode_income_quartile == 3).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_4(buildings):
+    return (buildings.mode_income_quartile == 4).astype('int')
+
 ### Variable generation functions
 
 def make_dummy_variable(geog_var, geog_id):
@@ -388,7 +444,7 @@ geographic_levels = [('parcels', 'parcel_id'),
                      ('zones', 'zone_id')]
 vars_to_dummify = ['city_id', 'building_type_id']
 vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
-               'parcels_parcel_far', 'sqft_price_nonres']
+               'residential_units', 'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value',]
 
 for geography in geographic_levels:
     geography_name = geography[0]
@@ -440,3 +496,8 @@ def register_standardized_variable(table_name, column_to_s):
 
 for var in orca.get_table('buildings').columns:
     register_standardized_variable('buildings', var)
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def popden(buildings, zones):
+    return misc.reindex(zones.popden, buildings.zone_id).fillna(0)

@@ -832,6 +832,18 @@ def parcel_custom_callback(parcels, df):
     parcels = parcels[parcels.parcel_size > 2000]
     return parcels
 
+def parcel_custom_callback(parcels, df):
+    orca_parcels = orca.get_table('parcels')
+    parcels['max_height'] = orca_parcels.max_height
+    parcels['max_far'] = orca_parcels.max_far
+    parcels['parcel_size'] = orca_parcels.parcel_size
+    parcels['land_cost'] = orca_parcels.land_cost
+    parcels['max_dua'] = orca_parcels.max_dua
+    parcels['ave_unit_size'] = orca_parcels.ave_unit_size
+    parcels = parcels[parcels.parcel_size > 2000]
+    return parcels
+
+
 @orca.step('feasibility')
 def feasibility(parcels):
     parcel_utils.run_feasibility(parcels,
@@ -1078,7 +1090,6 @@ def neighborhood_vars(jobs, households, buildings):
         orca.add_table("households", h)
 
     building_vars = set(orca.get_table('buildings').columns)
-
     nodes = networks.from_yaml(orca.get_injectable('net_walk'), "networks_walk.yaml")
     # print nodes.describe()
     # print pd.Series(nodes.index).describe()
