@@ -464,12 +464,12 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         return score, residuals
 
 
-def get_model_category_configs():
+def get_model_category_configs(yaml_file_name = 'yaml_configs.yaml'):
     """
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs.yaml')) as f:
+    with open(os.path.join(misc.configs_dir(), yaml_file_name)) as f:
         yaml_configs = yaml.load(f)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
