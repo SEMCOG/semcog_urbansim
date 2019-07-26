@@ -411,3 +411,32 @@ for var_to_log in vars_to_log:
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
+
+
+# --- STANDARIZE VARIABLES
+def standardize(series):
+    return (series - series.mean()) / series.std()
+
+
+def register_standardized_variable(table_name, column_to_s):
+    """
+    Register standardized variable with orca.
+    Parameters
+    ----------
+    table_name : str
+        Name of the orca table that this column is part of.
+    column_to_ln : str
+        Name of the orca column to standardize.
+    Returns
+    -------
+    column_func : function
+    """
+    new_col_name = 'st_' + column_to_s
+    @orca.column(table_name, new_col_name, cache=True, cache_scope='iteration')
+    def column_func():
+        return standardize(orca.get_table(table_name)[column_to_s])
+    return column_func
+
+
+for var in orca.get_table('buildings').columns:
+    register_standardized_variable('buildings', var)
