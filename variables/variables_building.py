@@ -2,6 +2,7 @@ import numpy as np
 import orca
 import pandas as pd
 from urbansim.utils import misc
+import variables
 
 
 #####################
@@ -20,10 +21,62 @@ def hedonic_id(buildings):
     hedonic_id.loc[hedonic_id == 584] = 384
     return hedonic_id
 
-
+orca.add_injectable("building_type_map", {
+    11: "Institutional",
+    12: "Institutional",
+    13: "Institutional",
+    14: "Institutional",
+    21: "Retail",
+    22: "Retail",
+    23: "Office",
+    24: "Office",
+    25: "Retail",
+    26: "Retail",
+    31: "Industrial",
+    32: "Industrial",
+    33: "TCU",
+    41: "TCU",
+    42: "TCU",
+    43: "TCU",
+    51: "Medical",
+    52: "Medical",
+    53: "Medical",
+    61: "Institutional",
+    62: "Retail",
+    71: "Others",
+    81: "Residential",
+    82: "Residential",
+    83: "Residential",
+    84: "Residential",
+    99: "Others",
+})
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
+
+@orca.column('buildings', cache=True)
+def is_medical(buildings):
+    return (buildings.general_type == 'Medical').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_tcu(buildings):
+    return (buildings.general_type == 'TCU').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_institutional(buildings):
+    return (buildings.general_type == 'Institutional').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_retail(buildings):
+    return (buildings.general_type == 'Retail').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_office(buildings):
+    return (buildings.general_type == 'Office').astype('int')
+
+@orca.column('buildings', cache=True)
+def is_industrial(buildings):
+    return (buildings.general_type == 'Industrial').astype('int')
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
@@ -317,6 +370,44 @@ def jobs_non_home_based(jobs):
     return jobs[jobs.home_based_status == 0].groupby("building_id").size()
 
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mean_zonal_hhsize(buildings, households):
+    buildings = buildings.to_frame(['zone_id'])
+    households = households.to_frame(['zone_id', 'persons'])
+    buildings['mean_zonal_hhsize'] = misc.reindex(households.groupby('zone_id').persons.mean(), buildings.zone_id)
+    buildings.mean_zonal_hhsize = buildings.mean_zonal_hhsize.fillna(buildings.mean_zonal_hhsize.mean())
+    return buildings.mean_zonal_hhsize
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile(buildings, households):
+    buildings = buildings.to_frame(['zone_id'])
+    households = households.to_frame(['zone_id', 'income_quartile'])
+    mode_income_quartile = households.income_quartile.groupby(households.zone_id).agg(lambda x: x.value_counts().index[0])
+    buildings['mode_income_quartile'] = misc.reindex(mode_income_quartile, buildings.zone_id)
+    buildings.mode_income_quartile = buildings.mode_income_quartile.fillna(0)
+    return buildings.mode_income_quartile
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_1(buildings):
+    return (buildings.mode_income_quartile == 1).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_2(buildings):
+    return (buildings.mode_income_quartile == 2).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_3(buildings):
+    return (buildings.mode_income_quartile == 3).astype('int')
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def mode_income_quartile_is_4(buildings):
+    return (buildings.mode_income_quartile == 4).astype('int')
+
 ### Variable generation functions
 
 def make_dummy_variable(geog_var, geog_id):
@@ -388,7 +479,7 @@ geographic_levels = [('parcels', 'parcel_id'),
                      ('zones', 'zone_id')]
 vars_to_dummify = ['city_id', 'building_type_id']
 vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
-               'parcels_parcel_far', 'sqft_price_nonres']
+               'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value']
 
 for geography in geographic_levels:
     geography_name = geography[0]
@@ -411,3 +502,57 @@ for var_to_log in vars_to_log:
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
+
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def ln_empden(buildings, zones):
+    return np.log1p(misc.reindex(zones.empden, buildings.zone_id).fillna(0))
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def zone_mean_age_of_head(buildings, zones):
+    return misc.reindex(zones.mean_age_of_head, buildings.zone_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def zone_prop_race_1(buildings, zones):
+    return misc.reindex(zones.prop_race_1, buildings.zone_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def zone_prop_race_2(buildings, zones):
+    return misc.reindex(zones.prop_race_2, buildings.zone_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def zone_prop_race_3(buildings, zones):
+    return misc.reindex(zones.prop_race_3, buildings.zone_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def zone_prop_race_4(buildings, zones):
+    return misc.reindex(zones.prop_race_4, buildings.zone_id).fillna(0)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def ln_residential_units(buildings):
+    return np.log1p(buildings.residential_units)
+
+def standardize(series):
+    return (series - series.mean()) / series.std()
+
+def register_standardized_variable(table_name, column_to_s):
+    """
+    Register standardized variable with orca.
+    Parameters
+    ----------
+    table_name : str
+        Name of the orca table that this column is part of.
+    column_to_ln : str
+        Name of the orca column to standardize.
+    Returns
+    -------
+    column_func : function
+    """
+    new_col_name = 'st_' + column_to_s
+    @orca.column(table_name, new_col_name, cache=True, cache_scope='iteration')
+    def column_func():
+        return standardize(orca.get_table(table_name)[column_to_s])
+    return column_func
+
+for var in orca.get_table('buildings').columns:
+    register_standardized_variable('buildings', var)
