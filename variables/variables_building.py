@@ -2,6 +2,7 @@ import numpy as np
 import orca
 import pandas as pd
 from urbansim.utils import misc
+import variables
 
 
 #####################
@@ -19,6 +20,36 @@ def hedonic_id(buildings):
     hedonic_id.loc[hedonic_id == 571] = 371
     hedonic_id.loc[hedonic_id == 584] = 384
     return hedonic_id
+
+orca.add_injectable("building_type_map", {
+    11: "Institutional",
+    12: "Institutional",
+    13: "Institutional",
+    14: "Institutional",
+    21: "Retail",
+    22: "Retail",
+    23: "Office",
+    24: "Office",
+    25: "Retail",
+    26: "Retail",
+    31: "Industrial",
+    32: "Industrial",
+    33: "TCU",
+    41: "TCU",
+    42: "TCU",
+    43: "TCU",
+    51: "Medical",
+    52: "Medical",
+    53: "Medical",
+    61: "Institutional",
+    62: "Retail",
+    71: "Others",
+    81: "Residential",
+    82: "Residential",
+    83: "Residential",
+    84: "Residential",
+    99: "Others",
+})
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
@@ -48,6 +79,7 @@ def is_office(buildings):
 @orca.column('buildings', cache=True)
 def is_industrial(buildings):
     return (buildings.general_type == 'Industrial').astype('int')
+
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def gq_building(buildings, group_quarters):

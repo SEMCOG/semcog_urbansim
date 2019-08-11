@@ -1,0 +1,159 @@
+name: hlcm20093
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id > 1) & household_type == 2
+
+choosers_predict_filters: hh_type_large_area_id == 20093
+
+alts_fit_filters: (residential_units > 0)
+
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 93)
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 1000
+
+estimation_sample_size: 2000
+
+prediction_sample_size: null
+
+model_expression:
+- st_b_ln_sqft_per_unit
+- st_building_age
+- st_city_id_is_7005
+- st_city_id_is_7010
+- st_city_id_is_7015
+- st_city_id_is_7020
+- st_city_id_is_7025
+- st_city_id_is_7030
+- st_city_id_is_7035
+- st_city_id_is_7040
+- st_city_id_is_7045
+- st_city_id_is_7050
+- st_city_id_is_7055
+- st_city_id_is_7060
+- st_city_id_is_7065
+- st_city_id_is_7070
+- st_city_id_is_7075
+- st_city_id_is_7080
+- st_city_id_is_7085
+- st_city_id_is_7090
+- st_city_id_is_7095
+- st_city_id_is_7100
+- st_jobs_within_30_min
+- st_ln_empden
+- st_ln_residential_units
+- st_mean_zonal_hhsize
+- st_mode_income_quartile_is_1
+- st_popden
+- st_zone_mean_age_of_head
+- st_zone_prop_race_1
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        st_b_ln_sqft_per_unit: -0.038112762036860155
+        st_building_age: 0.04346789936406207
+        st_city_id_is_7005: 0.03576013641969904
+        st_city_id_is_7010: 0.010225995227628461
+        st_city_id_is_7015: 0.05763047398641297
+        st_city_id_is_7020: 0.043454883621369934
+        st_city_id_is_7025: -0.0017034524066221418
+        st_city_id_is_7030: 0.05390862654569267
+        st_city_id_is_7035: 0.0362975194861246
+        st_city_id_is_7040: -0.006705980394252973
+        st_city_id_is_7045: 0.05042782680766461
+        st_city_id_is_7050: 0.025242473719079478
+        st_city_id_is_7055: -0.04502710445104255
+        st_city_id_is_7060: -0.02165912823106026
+        st_city_id_is_7065: 0.03665602467214038
+        st_city_id_is_7070: 0.025334356505217204
+        st_city_id_is_7075: 0.0036791457969063703
+        st_city_id_is_7080: -0.01715063461376993
+        st_city_id_is_7085: -0.036800480703818174
+        st_city_id_is_7090: 0.026198590205643656
+        st_city_id_is_7095: 0.03509956842713145
+        st_city_id_is_7100: 0.038877354526571394
+        st_jobs_within_30_min: -0.02692378009373151
+        st_ln_empden: 0.04352718365177435
+        st_ln_residential_units: 0.03286455258185614
+        st_mean_zonal_hhsize: -0.04410315361247936
+        st_mode_income_quartile_is_1: 0.03597632556706211
+        st_popden: 0.0426040143670152
+        st_zone_mean_age_of_head: 0.06540901440268145
+        st_zone_prop_race_1: -0.10901847614970143
+    Std. Error:
+        st_b_ln_sqft_per_unit: 0.09652975139963209
+        st_building_age: 0.02718409731213641
+        st_city_id_is_7005: 0.0
+        st_city_id_is_7010: 0.0
+        st_city_id_is_7015: 0.0
+        st_city_id_is_7020: 0.0
+        st_city_id_is_7025: 0.0
+        st_city_id_is_7030: 0.0
+        st_city_id_is_7035: 0.0
+        st_city_id_is_7040: 0.0
+        st_city_id_is_7045: 0.0
+        st_city_id_is_7050: 0.0
+        st_city_id_is_7055: 0.0
+        st_city_id_is_7060: 0.0
+        st_city_id_is_7065: 0.0
+        st_city_id_is_7070: 0.0
+        st_city_id_is_7075: 0.0
+        st_city_id_is_7080: 0.0
+        st_city_id_is_7085: 0.0
+        st_city_id_is_7090: 0.0
+        st_city_id_is_7095: 0.0
+        st_city_id_is_7100: 0.0
+        st_jobs_within_30_min: 0.03533537275267524
+        st_ln_empden: 0.028895156306026393
+        st_ln_residential_units: 0.0064407376101322964
+        st_mean_zonal_hhsize: 0.025253925396126305
+        st_mode_income_quartile_is_1: 0.026674489138600082
+        st_popden: 0.022770543534857166
+        st_zone_mean_age_of_head: 0.026520887126616956
+        st_zone_prop_race_1: 0.03236856976391456
+    T-Score:
+        st_b_ln_sqft_per_unit: -14.34063732419352
+        st_building_age: 2.2095593589602256
+        st_city_id_is_7005: 0.0
+        st_city_id_is_7010: 0.0
+        st_city_id_is_7015: 0.0
+        st_city_id_is_7020: 0.0
+        st_city_id_is_7025: 0.0
+        st_city_id_is_7030: 0.0
+        st_city_id_is_7035: 0.0
+        st_city_id_is_7040: 0.0
+        st_city_id_is_7045: 0.0
+        st_city_id_is_7050: 0.0
+        st_city_id_is_7055: 0.0
+        st_city_id_is_7060: 0.0
+        st_city_id_is_7065: 0.0
+        st_city_id_is_7070: 0.0
+        st_city_id_is_7075: 0.0
+        st_city_id_is_7080: 0.0
+        st_city_id_is_7085: 0.0
+        st_city_id_is_7090: 0.0
+        st_city_id_is_7095: 0.0
+        st_city_id_is_7100: 0.0
+        st_jobs_within_30_min: -1.8726769491096764
+        st_ln_empden: -0.048843353510058925
+        st_ln_residential_units: 64.97492072668696
+        st_mean_zonal_hhsize: -4.415417941664101
+        st_mode_income_quartile_is_1: 7.402953876612925
+        st_popden: -0.9348877160919243
+        st_zone_mean_age_of_head: 0.9509962575588654
+        st_zone_prop_race_1: -4.368260772867309
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -11606.288621353506
+    'null': -13815.510557964428
+    ratio: 0.15990881606162144
