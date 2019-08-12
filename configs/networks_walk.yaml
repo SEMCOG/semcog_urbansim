@@ -1,285 +1,180 @@
-name: Neighborhood Accessibility Variables
-
 model_type: networks
-
+name: Neighborhood Accessibility Variables
 node_col: nodeid_walk
-
 variable_definitions:
-
-  - name: log_sum_residential_units
-    dataframe: buildings
-    varname: residential_units
-    radius: 500
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_nonresidential_units
-    dataframe: buildings
-    varname: job_spaces
-    radius: 500
-    decay: flat
-    apply: np.log1p
-
-  - name: ave_lot_sqft
-    dataframe: buildings
-    varname: land_area
-    radius: 500
-    apply: np.log1p
-    decay: flat
-    aggregation: average
-
-  - name: population
-    dataframe: households
-    varname: persons
-    radius: 1500
-    decay: flat
-
-  - name: households
-    dataframe: households
-    radius: 1500
-    aggregation: count
-
-  - name: midinc_hhs
-    dataframe: households
-    filters:
-    - (income_quartile == 2) | (income_quartile == 3)
-    add_fields:
-    - income_quartile
-    varname: income_quartile
-    radius: 1500
-    aggregation: count
-
-  - name: lowinc_hhs
-    dataframe: households
-    filters:
-    - income_quartile == 1
-    add_fields:
-    - income_quartile
-    varname: income_quartile
-    radius: 1500
-    aggregation: count
-
-  - name: highinc_hhs
-    dataframe: households
-    filters:
-    - income_quartile == 4
-    add_fields:
-    - income_quartile
-    varname: income_quartile
-    radius: 1500
-    aggregation: count
-
-  - name: race_1_hhs
-    dataframe: households
-    filters:
-    - race_id == 1
-    varname: race_id
-    radius: 1500
-    aggregation: count
-
-  - name: race_2_hhs
-    dataframe: households
-    filters:
-    - race_id == 2
-    varname: race_id
-    radius: 1500
-    aggregation: count
-
-  - name: race_3_hhs
-    dataframe: households
-    filters:
-    - race_id == 3
-    varname: race_id
-    radius: 1500
-    aggregation: count
-
-  - name: race_4_hhs
-    dataframe: households
-    filters:
-    - race_id == 4
-    varname: race_id
-    radius: 1500
-    aggregation: count
-
-  - name: hhs_with_children
-    dataframe: households
-    filters:
-    - children > 0
-    varname: children
-    radius: 1500
-    aggregation: count
-
-  - name: hhsize
-    dataframe: households
-    varname: persons
-    radius: 1500
-    aggregation: average
-    decay: flat
-
-  - name: ave_income
-    dataframe: households
-    varname: income
-    filters:
-    - income >= 0
-    radius: 1500
-    aggregation: average
-    decay: flat
-    apply: np.log1p
-
-  - name: max_industrial_far
-    dataframe: parcels
-    varname: parcel_far
-    radius: 5000
-    filters:
-    - land_use_type_id == 5
-    aggregation: max
-
-  - name: max_office_far
-    dataframe: parcels
-    varname: parcel_far
-    radius: 5000
-    filters:
-    - land_use_type_id == 3
-    aggregation: max
-
-  - name: max_retail_far
-    dataframe: parcels
-    varname: parcel_far
-    radius: 5000
-    filters:
-    - land_use_type_id == 2
-    aggregation: max
-
-
-  - name: max_medical_far
-    dataframe: parcels
-    varname: parcel_far
-    radius: 5000
-    filters:
-    - land_use_type_id == 8
-    aggregation: max
-
-  - name: jobs
-    dataframe: jobs
-    aggregation: count
-    radius: 1500
-
-  - name: retail_jobs
-    dataframe: jobs
-    filters:
-    - sector_id == 5
-    aggregation: count
-    radius: 1500
-
-  - name: node_r1500_sqft
-    dataframe: parcels
-    varname: parcel_sqft
-    radius: 1500
-    decay: flat
-    aggregation: sum
- 
-  - aggregation: average
-    dataframe: buildings
-    filters:
-    - 81 <= building_type_id <= 84
-    - 0 < sqft_price_res < 500
-    decay: flat
-    name: residential
-    radius: 2000
-    varname: sqft_price_res
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    filters:
-    - 21 <= building_type_id <= 71
-    name: ave_nonres_sqft_price
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Retail"
-    name: retail
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Office"
-    name: office
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Industrial"
-    name: industrial
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: average
-    dataframe: buildings
-    decay: flat
-    add_fields:
-    - general_type
-    filters:
-    - general_type == "Medical"
-    name: medical
-    radius: 2000
-    varname: sqft_price_nonres
-
-  - aggregation: count
-    name: quarter_mile_to_transit
-    dataframe: transit_stops
-    radius: 1320
-
-  - name: log_15min_retail_jobs
-    dataframe: jobs
-    filters:
-    - sector_id == 5
-    aggregation: count
-    radius: 15
-    decay: flat
-    apply: np.log1p
-
-  - name: log_15min_shopping_jobs
-    dataframe: jobs
-    filters:
-    - (sector_id == 16) | (sector_id == 5)
-    aggregation: count
-    radius: 15
-    decay: flat
-    apply: np.log1p
-
-  - name: log_30min_retail_jobs
-    dataframe: jobs
-    filters:
-    - sector_id == 5
-    aggregation: count
-    radius: 30
-    decay: flat
-    apply: np.log1p
-
-  - name: log_30min_shopping_jobs
-    dataframe: jobs
-    filters:
-    - (sector_id == 16) | (sector_id == 5)
-    aggregation: count
-    radius: 30
-    decay: flat
-    apply: np.log1p
- 
-
+- {apply: np.log1p, dataframe: buildings, decay: flat, name: log_sum_residential_units,
+  radius: 500.0, varname: residential_units}
+- {apply: np.log1p, dataframe: buildings, decay: flat, name: log_sum_nonresidential_units,
+  radius: 500.0, varname: job_spaces}
+- {aggregation: ave, apply: np.log1p, dataframe: buildings, decay: flat, name: ave_lot_sqft,
+  radius: 500.0, varname: land_area}
+- {dataframe: households, decay: flat, name: population, radius: 1500.0, varname: persons}
+- {aggregation: count, dataframe: households, name: households, radius: 1500.0}
+- add_fields: [income_quartile]
+  aggregation: count
+  dataframe: households
+  filters: [(income_quartile == 2) | (income_quartile == 3)]
+  name: midinc_hhs
+  radius: 1500.0
+  varname: income_quartile
+- add_fields: [income_quartile]
+  aggregation: count
+  dataframe: households
+  filters: [income_quartile == 1]
+  name: lowinc_hhs
+  radius: 1500.0
+  varname: income_quartile
+- add_fields: [income_quartile]
+  aggregation: count
+  dataframe: households
+  filters: [income_quartile == 4]
+  name: highinc_hhs
+  radius: 1500.0
+  varname: income_quartile
+- aggregation: count
+  dataframe: households
+  filters: [race_id == 1]
+  name: race_1_hhs
+  radius: 1500.0
+  varname: race_id
+- aggregation: count
+  dataframe: households
+  filters: [race_id == 2]
+  name: race_2_hhs
+  radius: 1500.0
+  varname: race_id
+- aggregation: count
+  dataframe: households
+  filters: [race_id == 3]
+  name: race_3_hhs
+  radius: 1500.0
+  varname: race_id
+- aggregation: count
+  dataframe: households
+  filters: [race_id == 4]
+  name: race_4_hhs
+  radius: 1500.0
+  varname: race_id
+- aggregation: count
+  dataframe: households
+  filters: [children > 0]
+  name: hhs_with_children
+  radius: 1500.0
+  varname: children
+- {aggregation: ave, dataframe: households, decay: flat, name: hhsize, radius: 1500.0,
+  varname: persons}
+- aggregation: ave
+  apply: np.log1p
+  dataframe: households
+  decay: flat
+  filters: [income >= 0]
+  name: ave_income
+  radius: 1500.0
+  varname: income
+- aggregation: max
+  dataframe: parcels
+  filters: [land_use_type_id == 5]
+  name: max_industrial_far
+  radius: 5000.0
+  varname: parcel_far
+- aggregation: max
+  dataframe: parcels
+  filters: [land_use_type_id == 3]
+  name: max_office_far
+  radius: 5000.0
+  varname: parcel_far
+- aggregation: max
+  dataframe: parcels
+  filters: [land_use_type_id == 2]
+  name: max_retail_far
+  radius: 5000.0
+  varname: parcel_far
+- aggregation: max
+  dataframe: parcels
+  filters: [land_use_type_id == 8]
+  name: max_medical_far
+  radius: 5000.0
+  varname: parcel_far
+- {aggregation: count, dataframe: jobs, name: jobs, radius: 1500.0}
+- aggregation: count
+  dataframe: jobs
+  filters: [sector_id == 5]
+  name: retail_jobs
+  radius: 1500.0
+- {aggregation: sum, dataframe: parcels, decay: flat, name: node_r1500_sqft, radius: 1500.0,
+  varname: parcel_sqft}
+- aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [81 <= building_type_id <= 84, 0 < sqft_price_res < 500]
+  name: residential
+  radius: 2000.0
+  varname: sqft_price_res
+- aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [21 <= building_type_id <= 71]
+  name: ave_nonres_sqft_price
+  radius: 2000.0
+  varname: sqft_price_nonres
+- add_fields: [general_type]
+  aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [general_type == "Retail"]
+  name: retail
+  radius: 2000.0
+  varname: sqft_price_nonres
+- add_fields: [general_type]
+  aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [general_type == "Office"]
+  name: office
+  radius: 2000.0
+  varname: sqft_price_nonres
+- add_fields: [general_type]
+  aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [general_type == "Industrial"]
+  name: industrial
+  radius: 2000.0
+  varname: sqft_price_nonres
+- add_fields: [general_type]
+  aggregation: ave
+  dataframe: buildings
+  decay: flat
+  filters: [general_type == "Medical"]
+  name: medical
+  radius: 2000.0
+  varname: sqft_price_nonres
+- {aggregation: count, dataframe: transit_stops, name: quarter_mile_to_transit, radius: 1320.0}
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [sector_id == 5]
+  name: log_15min_retail_jobs
+  radius: 15.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [(sector_id == 16) | (sector_id == 5)]
+  name: log_15min_shopping_jobs
+  radius: 15.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [sector_id == 5]
+  name: log_30min_retail_jobs
+  radius: 30.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [(sector_id == 16) | (sector_id == 5)]
+  name: log_30min_shopping_jobs
+  radius: 30.0
