@@ -206,3 +206,87 @@ def make_employment_density_variable(sector_id):
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_density_variable(sector)
+
+@orca.column('zones', cache=True, cache_scope='iteration')
+def mean_age_of_head(households):
+    return households.age_of_head.groupby(households.zone_id).mean()
+
+@orca.column('zones', cache=True, cache_scope='iteration')
+def prop_race_1(zones, households):
+    households = households.to_frame(['race_id', 'zone_id'])
+    return households.query('race_id == 1').groupby('zone_id').size() / zones.households
+
+@orca.column('zones', cache=True, cache_scope='iteration')
+def prop_race_2(zones, households):
+    households = households.to_frame(['race_id', 'zone_id'])
+    return households.query('race_id == 2').groupby('zone_id').size() / zones.households
+
+@orca.column('zones', cache=True, cache_scope='iteration')
+def prop_race_3(zones, households):
+    households = households.to_frame(['race_id', 'zone_id'])
+    return households.query('race_id == 3').groupby('zone_id').size() / zones.households
+
+@orca.column('zones', cache=True, cache_scope='iteration')
+def prop_race_4(zones, households):
+    households = households.to_frame(['race_id', 'zone_id'])
+    return households.query('race_id == 4').groupby('zone_id').size() / zones.households
+
+##########  Parcel vars to add for proforma calibration
+
+from urbansim.utils import misc
+
+def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog_id_name, name_based_on_geography=True):
+    """
+    Generator function for disaggregating variables. Registers with orca.
+    """
+    if name_based_on_geography:
+        var_name = from_geog_name + '_' + var_to_disaggregate
+    else:
+        var_name = var_to_disaggregate
+
+    @orca.column(to_geog_name, var_name, cache=True, cache_scope='iteration')
+    def func():
+        print 'Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name)
+
+        from_geog = orca.get_table(from_geog_name)
+        to_geog = orca.get_table(to_geog_name)
+        return misc.reindex(from_geog[var_to_disaggregate], to_geog[from_geog_id_name]).fillna(0)
+
+    return func
+
+
+geographic_levels = [('zones', 'zone_id')]
+
+for geography in geographic_levels:
+    geography_name = geography[0]
+    geography_id = geography[1]
+    if geography_name != 'parcels':
+        parcel_vars = orca.get_table('parcels').columns
+        for var in orca.get_table(geography_name).columns:
+            if var not in parcel_vars:
+                make_disagg_var(geography_name, 'parcels', var, geography_id)
+
+def standardize(series):
+    return (series - series.mean()) / series.std()
+
+def register_standardized_variable(table_name, column_to_s):
+    """
+    Register standardized variable with orca.
+    Parameters
+    ----------
+    table_name : str
+        Name of the orca table that this column is part of.
+    column_to_ln : str
+        Name of the orca column to standardize.
+    Returns
+    -------
+    column_func : function
+    """
+    new_col_name = 'st_' + column_to_s
+    @orca.column(table_name, new_col_name, cache=True, cache_scope='iteration')
+    def column_func():
+        return standardize(orca.get_table(table_name)[column_to_s])
+    return column_func
+
+for var in orca.get_table('parcels').columns:
+    register_standardized_variable('parcels', var)
