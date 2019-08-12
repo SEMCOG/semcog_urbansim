@@ -1,0 +1,31 @@
+alts_fit_filters: (residential_units >0) & (large_area_id == 115)
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 115)
+choice_column: null
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (hh_type_large_area_id == 120115)
+choosers_predict_filters: hh_type_large_area_id == 120115
+estimation_sample_size: 2000
+fit_parameters:
+  Coefficient: {st_b_ln_residential_units: 0.1101117389863436, st_b_ln_sqft_per_unit: 0.28300781263304897,
+    st_zones_households: 0.13652130869316687, st_zones_prop_hh_with_children: 0.23154624130405815,
+    st_zones_prop_income_2: 0.19545503461906003, st_zones_prop_income_3: 0.10907080618793474,
+    st_zones_prop_race_1: 0.2518438717014165, st_zones_prop_retail_buildings: 0.09020824659030736}
+  Std. Error: {st_b_ln_residential_units: 0.014879452158097124, st_b_ln_sqft_per_unit: 0.4982525860684466,
+    st_zones_households: 0.08669503007466749, st_zones_prop_hh_with_children: 0.08267141623430943,
+    st_zones_prop_income_2: 0.11621666785616912, st_zones_prop_income_3: 0.11297823460862894,
+    st_zones_prop_race_1: 0.12024927987798811, st_zones_prop_retail_buildings: 0.03993022128011929}
+  T-Score: {st_b_ln_residential_units: 7.400254916403144, st_b_ln_sqft_per_unit: 0.5680006899034363,
+    st_zones_households: 1.5747305073380296, st_zones_prop_hh_with_children: 2.800801677907681,
+    st_zones_prop_income_2: 1.6818158550282742, st_zones_prop_income_3: 0.9654143257395549,
+    st_zones_prop_race_1: 2.0943482734944596, st_zones_prop_retail_buildings: 2.259147174704509}
+fitted: true
+interaction_predict_filters: null
+log_likelihoods: {convergence: -835.6099615506664, 'null': -863.4694098727647, ratio: 0.03226454580041638}
+model_expression: [st_b_ln_residential_units, st_b_ln_sqft_per_unit, st_zones_households,
+  st_zones_prop_retail_buildings, st_zones_prop_income_3, st_zones_prop_income_2,
+  st_zones_prop_hh_with_children, st_zones_prop_race_1]
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 1000

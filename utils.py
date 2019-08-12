@@ -1,5 +1,5 @@
 import os
-
+import yaml
 import numpy as np
 import orca
 import pandas as pd
@@ -47,19 +47,19 @@ def enable_logging():
 
 
 def deal_with_nas(df):
-    df_cnt = len(df)
-    fail = False
-
-    df = df.replace([np.inf, -np.inf], np.nan)
     # df[df.isnull().any(axis=1)].to_csv('nulls.csv')
-    for col in df.columns:
-        s_cnt = df[col].count()
-        if df_cnt != s_cnt:
-            fail = True
-            print "Found %d nas or inf (out of %d) in column %s" % \
-                  (df_cnt-s_cnt, df_cnt, col)
+    with pd.option_context('mode.use_inf_as_null', True):
+        if df.isnull().values.any():
+            df_cnt = len(df)
+            fail = False
+            for col in df.columns:
+                s_cnt = df[col].count()
+                if df_cnt != s_cnt:
+                    fail = True
+                    print "Found %d nas or inf (out of %d) in column %s" % \
+                          (df_cnt-s_cnt, df_cnt, col)
 
-    assert not fail, "NAs were found in dataframe, please fix"
+            assert not fail, "NAs were found in dataframe, please fix"
     return df
 
 
@@ -113,10 +113,10 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     cfg = misc.config(cfg)
     df = to_frame([tbl, nodes], cfg)
     price_or_rent, _ = yaml_to_class(cfg).predict_from_cfg(df, cfg)
-
-    if price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum() > 0:
-        print "Hedonic output %d nas or inf (out of %d) in column %s" % \
-              (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname)
+    with pd.option_context('mode.use_inf_as_null', True):
+        if price_or_rent.isnull().values.any():
+            print "Hedonic output %d nas or inf (out of %d) in column %s" % \
+                  (price_or_rent.isnull().sum(), len(price_or_rent), out_fname)
     price_or_rent[price_or_rent > 700] = 700
     price_or_rent[price_or_rent < 1] = 1
     tbl.update_col_from_series(out_fname, price_or_rent)

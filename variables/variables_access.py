@@ -34,7 +34,7 @@ def nodeid_walk(schools):
 # 'GroceryStores', 'HealthCenters', 'Hospitals', 'Libraries',       'Park_Entrance_points', 'UrgentCare'
 
 def get_nearest(net, dfpoi, cats, searchdis, numpoi, maxdis):
-    net.set_pois(''.join(cats), dfpoi['point_x'], dfpoi['point_y'])
+    net.set_pois(''.join(cats), maxdis+100, numpoi, dfpoi['point_x'], dfpoi['point_y'])
     return net.nearest_pois(searchdis, ''.join(cats), num_pois=numpoi, max_distance=maxdis)[1]
 
 
@@ -130,9 +130,9 @@ def walk_nearest_urgentcare(poi):
 @orca.column('nodes_walk', cache=True, cache_scope='iteration')
 def ave_unit_sqft(nodes_walk, buildings):
     b = buildings.to_frame(['sqft_per_unit', 'x', 'y'])
-    b = b[b.sqft_per_unit > 0]
+    b = b[(b.sqft_per_unit > 0) & (b.x.notnull())]
     net = orca.get_injectable('net_walk')
-    net.set_pois('build', b.x, b.y)
+    net.set_pois('build', 15000, 5, b.x, b.y)
     ner = net.nearest_pois(10560, 'build', num_pois=5, include_poi_ids=True)
     st = ner[ner.columns[ner.columns.str.startswith('poi') > 0]].unstack()
     st = st[st > 0].astype(int)

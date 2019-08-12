@@ -1,85 +1,46 @@
-name: Neighborhood Accessibility Variables
-
 model_type: networks
-
+name: Neighborhood Accessibility Variables
 node_col: nodeid_drv
-
 variable_definitions:
-
-
-  - name: log_sum_30min_jobs
-    dataframe: jobs
-    radius: 30
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_45min_jobs
-    dataframe: jobs
-    radius: 45
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_60min_jobs
-    dataframe: jobs
-    radius: 60
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_10min_pop
-    dataframe: households
-    varname: persons 
-    radius: 10
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_20min_pop
-    dataframe: households
-    varname: persons 
-    radius: 20
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_15min_retail_jobs
-    dataframe: jobs
-    filters:
-    - sector_id == 5
-    aggregation: count
-    radius: 15
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_15min_shopping_jobs
-    dataframe: jobs
-    filters:
-    - (sector_id == 16) | (sector_id == 5)
-    aggregation: count
-    radius: 15
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_30min_retail_jobs
-    dataframe: jobs
-    filters:
-    - sector_id == 5
-    aggregation: count
-    radius: 30
-    decay: flat
-    apply: np.log1p
-
-  - name: log_sum_30min_shopping_jobs
-    dataframe: jobs
-    filters:
-    - (sector_id == 16) | (sector_id == 5)
-    aggregation: count
-    radius: 30
-    decay: flat
-    apply: np.log1p
-
-  - name: elem_school_perf
-    dataframe: schools
-    varname: totalachievementindex    
-    filters:
-    - is_grade_school == True
-    aggregation: average
-    radius: 30
-    decay: flat
+- {apply: np.log1p, dataframe: jobs, decay: flat, name: log_sum_30min_jobs, radius: 30.0}
+- {apply: np.log1p, dataframe: jobs, decay: flat, name: log_sum_45min_jobs, radius: 45.0}
+- {apply: np.log1p, dataframe: jobs, decay: flat, name: log_sum_60min_jobs, radius: 60.0}
+- {apply: np.log1p, dataframe: households, decay: flat, name: log_sum_10min_pop, radius: 10.0,
+  varname: persons}
+- {apply: np.log1p, dataframe: households, decay: flat, name: log_sum_20min_pop, radius: 20.0,
+  varname: persons}
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [sector_id == 5]
+  name: log_sum_15min_retail_jobs
+  radius: 15.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [(sector_id == 16) | (sector_id == 5)]
+  name: log_sum_15min_shopping_jobs
+  radius: 15.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [sector_id == 5]
+  name: log_sum_30min_retail_jobs
+  radius: 30.0
+- aggregation: count
+  apply: np.log1p
+  dataframe: jobs
+  decay: flat
+  filters: [(sector_id == 16) | (sector_id == 5)]
+  name: log_sum_30min_shopping_jobs
+  radius: 30.0
+- aggregation: ave
+  dataframe: schools
+  decay: flat
+  filters: [is_grade_school == True]
+  name: elem_school_perf
+  radius: 30.0
+  varname: totalachievementindex

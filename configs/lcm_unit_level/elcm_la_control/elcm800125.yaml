@@ -1,0 +1,27 @@
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 125)
+alts_predict_filters: large_area_id == 125
+choice_column: building_id
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (slid == 800125) & (home_based_status == 0)
+choosers_predict_filters: (slid == 800125) & (home_based_status == 0)
+estimation_sample_size: 5000
+fit_parameters:
+  Coefficient: {st_b_ln_non_residential_sqft: -0.373330537514193, st_building_age: -0.2588214722364256,
+    st_is_office: 0.08648849128188774, st_jobs_within_30_min: 0.00039751448834874763,
+    st_zones_ln_empden_8: 0.08476264800390282, st_zones_popden: -0.057428188407906325}
+  Std. Error: {st_b_ln_non_residential_sqft: 0.00533999326421892, st_building_age: 0.015980648421480798,
+    st_is_office: 0.003340158090888207, st_jobs_within_30_min: 0.01631574174980115,
+    st_zones_ln_empden_8: 0.0016231585573688247, st_zones_popden: 0.011170510075327926}
+  T-Score: {st_b_ln_non_residential_sqft: -69.91217386278858, st_building_age: -16.195930566154253,
+    st_is_office: 25.893532260590973, st_jobs_within_30_min: 0.024363862485969563,
+    st_zones_ln_empden_8: 52.22080592132966, st_zones_popden: -5.1410533646755106}
+fitted: true
+interaction_predict_filters: null
+log_likelihoods: {convergence: -23966.732642687435, 'null': -26422.708706977835, ratio: 0.0929494432810295}
+model_expression: [st_is_office, st_b_ln_non_residential_sqft, st_zones_ln_empden_8,
+  st_jobs_within_30_min, st_zones_popden, st_building_age]
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 200
