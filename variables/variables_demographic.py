@@ -9,52 +9,26 @@ from urbansim.utils import misc
 #####################
 
 
-## @orca.column('households', cache=True)
-## def school_district_id(households, buildings):
-##     return misc.reindex(buildings.school_district_id, households.building_id)
+# @orca.column('households', cache=True)
+# def school_district_id(households, buildings):
+#     return misc.reindex(buildings.school_district_id, households.building_id)
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def qlid(households):
-    return (households.income_quartile*100000 + households.large_area_id).fillna(0).astype('int')
+    return (households.income_quartile * 100000 + households.large_area_id).fillna(0).astype('int')
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def income_quartile(households):
     return pd.Series(pd.qcut(households.income, 4, labels=False),
                      index=households.index) + 1
-orca.add_injectable("household_type_map", {
-                1:'income_quartile ==1 & persons <=2 & age_of_head >= 65',
-                2:'income_quartile ==1 & persons <=2 & age_of_head >= 35 & age_of_head < 65',
-                3:'income_quartile ==1 & persons <=2 & age_of_head < 35',
-                4:'income_quartile ==1 & persons > 2 & age_of_head >= 65',
-                5:'income_quartile ==1 & persons > 2 & age_of_head >=35 & age_of_head < 65',
-                6:'income_quartile ==1 & persons > 2 & age_of_head < 35',
-                7:'income_quartile in [2,3] & persons <=2 & age_of_head >= 65',
-                8:'income_quartile in [2,3] & persons <=2 & age_of_head >= 35 & age_of_head < 65',
-                9:'income_quartile in [2,3] & persons <=2 & age_of_head < 35',
-                10:'income_quartile in [2,3] & persons > 2 & age_of_head >= 65',
-                11:'income_quartile in [2,3] & persons > 2 & age_of_head >=35 & age_of_head < 65',
-                12:'income_quartile in [2,3] & persons > 2 & age_of_head < 35',
-                13:'income_quartile ==4 & persons <=2 & age_of_head >= 65',
-                14:'income_quartile ==4 & persons <=2 & age_of_head >= 35 & age_of_head < 65',
-                15:'income_quartile ==4 & persons <=2 & age_of_head < 35',
-                16:'income_quartile ==4 & persons > 2 & age_of_head >= 65',
-                17:'income_quartile ==4 & persons > 2 & age_of_head >= 35 & age_of_head < 65',
-                18:'income_quartile ==4 & persons > 2 & age_of_head < 35'
-                })
-@orca.column('households', cache=True, cache_scope='iteration')
-def household_type(households, household_type_map):
-    df = households.to_frame(['income_quartile', 'age_of_head', 'persons'])
-    df['household_type'] = 0
-    for i, q in household_type_map.iteritems():
-        idx = df.query(q).index.values
-        df.loc[idx, 'household_type']= i
-    return df.household_type.fillna(0)
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def hh_type_large_area_id(households):
-    return (households.household_type*10000 + households.large_area_id).fillna(0).astype('int')
+    return (households.household_type * 10000 + households.large_area_id).fillna(0).astype('int')
+
 
 orca.add_injectable("household_type_map", {
     1: 'income_quartile ==1 & persons <=2 & age_of_head >= 65',
@@ -90,7 +64,7 @@ def household_type(households, household_type_map):
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def hh_type_large_area_id(households):
-    return (households.household_type*10000 + households.large_area_id).fillna(0).astype('int')
+    return (households.household_type * 10000 + households.large_area_id).fillna(0).astype('int')
 
 
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -178,9 +152,11 @@ def hhsize_gt_3(households):
 def hhsize_is_1(households):
     return (households.persons == 1).astype('int32')
 
+
 @orca.column('households', cache=True, cache_scope='iteration')
 def hhsize_lt_3(households):
     return (households.persons < 3).astype('int32')
+
 
 @orca.column('households', cache=True, cache_scope='iteration')
 def has_children(households):
@@ -259,6 +235,7 @@ def semmcd(households, persons):
 @orca.column('persons', cache=True, cache_scope='iteration')
 def large_area_id(households, persons):
     return misc.reindex(households.large_area_id, persons.household_id)
+
 
 ##@orca.column('persons', cache=True)
 ##def school_district_id(persons, households):

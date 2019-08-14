@@ -413,6 +413,7 @@ def register_standardized_variable(table_name, column_to_s):
     new_col_name = 'st_' + column_to_s
     @orca.column(table_name, new_col_name, cache=True, cache_scope='iteration')
     def column_func():
+        print "standardizing", column_to_s, "on", table_name
         return standardize(orca.get_table(table_name)[column_to_s])
     return column_func
 
