@@ -7,43 +7,43 @@ choosers_predict_filters: hh_type_large_area_id == 30099
 estimation_sample_size: 2000
 fit_parameters:
   Coefficient:
-    st_b_ln_residential_units: 0.021153547850182194
-    st_b_ln_sqft_per_unit: -0.03604171570004219
-    st_building_age: 0.06271656508967595
-    st_city_id_is_3005: 0.07343583639427104
-    st_city_id_is_3010: 0.09007876090576919
-    st_city_id_is_3015: 0.0811410229675092
-    st_city_id_is_3020: 0.12832207044881822
-    st_city_id_is_3025: 0.05064229786055266
-    st_city_id_is_3030: -0.29054537117717527
-    st_city_id_is_3035: 0.09911637180740278
-    st_city_id_is_3040: 0.15632218958692998
-    st_city_id_is_3045: 0.032803027942119416
-    st_city_id_is_3050: 0.09828379659624609
-    st_city_id_is_3055: 0.1011487771253806
-    st_city_id_is_3060: -0.05501774100732007
-    st_city_id_is_3065: 0.06429309927400466
-    st_city_id_is_3070: 0.11546965270515054
-    st_city_id_is_3075: 0.11576884882544583
-    st_city_id_is_3080: 0.10414146818127533
-    st_city_id_is_3085: 0.10146988591744018
-    st_city_id_is_3090: 0.07747815860438059
-    st_city_id_is_3095: 0.09965955818792613
-    st_city_id_is_3100: 0.11388236998139474
-    st_city_id_is_3105: 0.09131197084737389
-    st_city_id_is_3110: 0.03519542319684943
-    st_city_id_is_3115: 0.03322697470360183
-    st_city_id_is_3120: 0.11302285126861257
-    st_city_id_is_3125: 0.09201137843074811
-    st_city_id_is_3130: -0.13814351248367404
-    st_city_id_is_3135: 0.039093813529183064
-    st_jobs_within_30_min: -0.11238357429424665
-    st_mean_zonal_hhsize: -0.058161043366788207
-    st_mode_income_quartile_is_1: -0.10361339471201848
-    st_zones_ln_empden: 0.01777731877639093
-    st_zones_mean_age_of_head: 0.07164644201772681
-    st_zones_popden: 0.033917935293733076
-    st_zones_prop_race_1: 0.14197092001069167
+    st_b_ln_residential_units: 0.10194774154906884
+    st_b_ln_sqft_per_unit: -0.08587351496088846
+    st_building_age: 0.07963163858554706
+    st_city_id_is_3005: 0.02317851778748652
+    st_city_id_is_3010: 0.002272436117999538
+    st_city_id_is_3015: -0.04877933332118617
+    st_city_id_is_3020: 0.01034264992480536
+    st_city_id_is_3025: 0.07522750459846549
+    st_city_id_is_3030: 0.1257500072959259
+    st_city_id_is_3035: -0.033363278594145195
+    st_city_id_is_3040: 0.026578901445991295
+    st_city_id_is_3045: -0.045083597984464416
+    st_city_id_is_3050: 0.07995099713099
+    st_city_id_is_3055: 0.013132592222341864
+    st_city_id_is_3060: -0.10019315600579125
+    st_city_id_is_3065: -0.05092030408700709
+    st_city_id_is_3070: 0.02318587037641028
+    st_city_id_is_3075: -0.012232649729966886
+    st_city_id_is_3080: 0.029910013981960304
+    st_city_id_is_3085: 0.018025412248632945
+    st_city_id_is_3090: 0.04028880751605607
+    st_city_id_is_3095: -0.011450231960389886
+    st_city_id_is_3100: 0.05087771217068692
+    st_city_id_is_3105: 0.018016224969400994
+    st_city_id_is_3110: -0.015987742148310984
+    st_city_id_is_3115: 0.0633204570228299
+    st_city_id_is_3120: 0.0009615148804974154
+    st_city_id_is_3125: -0.026855608955157453
+    st_city_id_is_3130: 0.05283240831346894
+    st_city_id_is_3135: -0.10503106803759274
+    st_jobs_within_30_min: 0.07743323331512926
+    st_mean_zonal_hhsize: -0.1023974691832645
+    st_mode_income_quartile_is_1: 0.08098958876958996
+    st_zones_ln_empden: 0.09507163879950042
+    st_zones_mean_age_of_head: 0.12282105568093256
+    st_zones_popden: 0.09235244796066179
+    st_zones_prop_race_1: -0.08732866677852484
   Std. Error:
     st_b_ln_residential_units: 0.006061077322088085
     st_b_ln_sqft_per_unit: 0.11601796791824802
@@ -157,13 +157,13 @@ model_expression:
 - st_city_id_is_3130
 - st_city_id_is_3135
 - st_jobs_within_30_min
-- st_zones_ln_empden
-- st_b_ln_residential_units
 - st_mean_zonal_hhsize
 - st_mode_income_quartile_is_1
-- st_zones_popden
-- st_zones_mean_age_of_head
 - st_zones_prop_race_1
+- st_zones_popden
+- st_b_ln_residential_units
+- st_zones_ln_empden
+- st_zones_mean_age_of_head
 model_type: discretechoice
 name: hlcm30099
 prediction_sample_size: null

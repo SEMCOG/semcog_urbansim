@@ -7,43 +7,43 @@ choosers_predict_filters: hh_type_large_area_id == 10099
 estimation_sample_size: 2000
 fit_parameters:
   Coefficient:
-    st_b_ln_residential_units: 0.036101176502302386
-    st_b_ln_sqft_per_unit: -0.04448813213176377
-    st_building_age: 0.043221193473341905
-    st_city_id_is_3005: 0.008863321771816937
-    st_city_id_is_3010: 0.010624707881167867
-    st_city_id_is_3015: -0.01851811024315662
-    st_city_id_is_3020: 0.021185638544015596
-    st_city_id_is_3025: 0.047919421210533275
-    st_city_id_is_3030: 0.058973056858997654
-    st_city_id_is_3035: 0.01226957580433345
-    st_city_id_is_3040: 0.021733279388943514
-    st_city_id_is_3045: -0.037426264234046484
-    st_city_id_is_3050: 0.03943593223484234
-    st_city_id_is_3055: 0.008963905213208027
-    st_city_id_is_3060: -0.046656861238953865
-    st_city_id_is_3065: 0.012065411953360345
-    st_city_id_is_3070: 0.03813548895508115
-    st_city_id_is_3075: 0.026374588794096293
-    st_city_id_is_3080: 0.02240356048402516
-    st_city_id_is_3085: 0.014293091622889395
-    st_city_id_is_3090: 0.013758186671297272
-    st_city_id_is_3095: -0.020655799177399813
-    st_city_id_is_3100: 0.030486822791497024
-    st_city_id_is_3105: 0.055056294753703286
-    st_city_id_is_3110: -0.017735763406085937
-    st_city_id_is_3115: 0.05962829247140079
-    st_city_id_is_3120: -0.050211511271390556
-    st_city_id_is_3125: -0.06367759222048698
-    st_city_id_is_3130: 0.04806532542442589
-    st_city_id_is_3135: -0.03521780067845166
-    st_jobs_within_30_min: 0.04738471272186736
-    st_mean_zonal_hhsize: -0.047103368031350464
-    st_mode_income_quartile_is_1: 0.039588964248814765
-    st_zones_ln_empden: 0.04598231063086152
-    st_zones_mean_age_of_head: 0.05592550472391352
-    st_zones_popden: 0.04420468531833775
-    st_zones_prop_race_1: -0.042211520959116976
+    st_b_ln_residential_units: 0.0312569838181043
+    st_b_ln_sqft_per_unit: -0.042196809112768685
+    st_building_age: 0.043921638418569005
+    st_city_id_is_3005: 0.005893153196549758
+    st_city_id_is_3010: 0.006485422584460661
+    st_city_id_is_3015: -0.021773547655550077
+    st_city_id_is_3020: 0.023094587625897046
+    st_city_id_is_3025: 0.04134335897038131
+    st_city_id_is_3030: 0.04076798744818215
+    st_city_id_is_3035: 0.01672887862055446
+    st_city_id_is_3040: 0.04105486031876086
+    st_city_id_is_3045: -0.03967834664944641
+    st_city_id_is_3050: 0.03607364367964366
+    st_city_id_is_3055: 0.0025998047833192877
+    st_city_id_is_3060: -0.04775463227250143
+    st_city_id_is_3065: 0.009151726163847577
+    st_city_id_is_3070: 0.02652185758515063
+    st_city_id_is_3075: 0.024625632815088918
+    st_city_id_is_3080: 0.015076892318141839
+    st_city_id_is_3085: 0.010481240675567247
+    st_city_id_is_3090: 0.009719003776968166
+    st_city_id_is_3095: 0.016788696810869495
+    st_city_id_is_3100: 0.02115330272375651
+    st_city_id_is_3105: 0.04396019735938235
+    st_city_id_is_3110: -0.006706687492139483
+    st_city_id_is_3115: 0.06647209173056623
+    st_city_id_is_3120: -0.017481327732929906
+    st_city_id_is_3125: -0.07221191481021338
+    st_city_id_is_3130: 0.04063500947562006
+    st_city_id_is_3135: -0.03566318847020943
+    st_jobs_within_30_min: 0.047992513605178304
+    st_mean_zonal_hhsize: -0.04521389116224768
+    st_mode_income_quartile_is_1: 0.03676926924594078
+    st_zones_ln_empden: 0.04109118459165309
+    st_zones_mean_age_of_head: 0.058097906646469875
+    st_zones_popden: 0.047671529540344454
+    st_zones_prop_race_1: -0.03876054785344306
   Std. Error:
     st_b_ln_residential_units: 0.005972206030878784
     st_b_ln_sqft_per_unit: 0.0934235740553436
@@ -157,13 +157,13 @@ model_expression:
 - st_city_id_is_3130
 - st_city_id_is_3135
 - st_jobs_within_30_min
-- st_zones_ln_empden
-- st_b_ln_residential_units
 - st_mean_zonal_hhsize
 - st_mode_income_quartile_is_1
-- st_zones_popden
-- st_zones_mean_age_of_head
 - st_zones_prop_race_1
+- st_zones_popden
+- st_b_ln_residential_units
+- st_zones_ln_empden
+- st_zones_mean_age_of_head
 model_type: discretechoice
 name: hlcm10099
 prediction_sample_size: null

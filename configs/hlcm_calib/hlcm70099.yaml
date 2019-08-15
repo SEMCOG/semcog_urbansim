@@ -7,43 +7,43 @@ choosers_predict_filters: hh_type_large_area_id == 70099
 estimation_sample_size: 2000
 fit_parameters:
   Coefficient:
-    st_b_ln_residential_units: 0.035268032899296024
-    st_b_ln_sqft_per_unit: -0.02989994079025965
-    st_building_age: 0.02914924644565146
-    st_city_id_is_3005: 0.0032643762741677014
-    st_city_id_is_3010: 0.01419564288194578
-    st_city_id_is_3015: -0.013475405179701765
-    st_city_id_is_3020: 0.01045600748149574
-    st_city_id_is_3025: 0.05299044566412853
-    st_city_id_is_3030: 0.0656942716179109
-    st_city_id_is_3035: 0.0073252228573323945
-    st_city_id_is_3040: 0.0353005717794215
-    st_city_id_is_3045: -0.04334360679353966
-    st_city_id_is_3050: 0.052895945327250636
-    st_city_id_is_3055: 0.02472093590446003
-    st_city_id_is_3060: -0.038350509722567726
-    st_city_id_is_3065: 0.0090403684931008
-    st_city_id_is_3070: 0.03131692869325015
-    st_city_id_is_3075: 0.015749102635253604
-    st_city_id_is_3080: 0.011047113175361088
-    st_city_id_is_3085: 0.019959042126993544
-    st_city_id_is_3090: 0.0003721337957821924
-    st_city_id_is_3095: -0.011787786138547305
-    st_city_id_is_3100: 0.014412138778873877
-    st_city_id_is_3105: 0.048541612482265344
-    st_city_id_is_3110: 0.005362578952177592
-    st_city_id_is_3115: 0.027672853605908345
-    st_city_id_is_3120: 0.03153636501039898
-    st_city_id_is_3125: -0.0070789844643800405
-    st_city_id_is_3130: -0.0029050123818754364
-    st_city_id_is_3135: -0.01565144354561321
-    st_jobs_within_30_min: 0.028774837131380765
-    st_mean_zonal_hhsize: -0.04321432925246143
-    st_mode_income_quartile_is_3: 0.03880302296569884
-    st_zones_ln_empden: 0.03466167739501565
-    st_zones_mean_age_of_head: 0.04816668717153625
-    st_zones_popden: 0.03463194327728854
-    st_zones_prop_race_1: -0.028669002296371714
+    st_b_ln_residential_units: 0.025693513452937387
+    st_b_ln_sqft_per_unit: -0.02316170509074248
+    st_building_age: 0.022131957024888644
+    st_city_id_is_3005: 0.0005606364631966674
+    st_city_id_is_3010: 0.009742633151673324
+    st_city_id_is_3015: -0.012161924441827378
+    st_city_id_is_3020: -0.0011701296702396025
+    st_city_id_is_3025: 0.04258874071196616
+    st_city_id_is_3030: 0.04895728823476711
+    st_city_id_is_3035: -0.000962715610071463
+    st_city_id_is_3040: 0.029536533300161857
+    st_city_id_is_3045: -0.03917167437833365
+    st_city_id_is_3050: 0.040165295360174214
+    st_city_id_is_3055: 0.02230580259204094
+    st_city_id_is_3060: -0.029788319930103693
+    st_city_id_is_3065: 0.005907827877204851
+    st_city_id_is_3070: 0.020245515554477782
+    st_city_id_is_3075: 0.012130455625800162
+    st_city_id_is_3080: 0.003538938020678443
+    st_city_id_is_3085: 0.02102316932771863
+    st_city_id_is_3090: -0.005084468587090737
+    st_city_id_is_3095: -0.015317210092582764
+    st_city_id_is_3100: 0.006297759145487258
+    st_city_id_is_3105: 0.026211121640165057
+    st_city_id_is_3110: 0.013068734111166396
+    st_city_id_is_3115: 0.021782263826769673
+    st_city_id_is_3120: 0.02585291656760357
+    st_city_id_is_3125: 0.0004909174193034192
+    st_city_id_is_3130: -0.006890974847732553
+    st_city_id_is_3135: -0.015787680973030575
+    st_jobs_within_30_min: 0.02186582554861474
+    st_mean_zonal_hhsize: -0.03289216426482809
+    st_mode_income_quartile_is_3: 0.03070196336841605
+    st_zones_ln_empden: 0.026203719051195853
+    st_zones_mean_age_of_head: 0.034601579074549325
+    st_zones_popden: 0.025947963970513844
+    st_zones_prop_race_1: -0.020750165142605928
   Std. Error:
     st_b_ln_residential_units: 0.008082641527535855
     st_b_ln_sqft_per_unit: 0.07730907866338618
@@ -157,13 +157,13 @@ model_expression:
 - st_city_id_is_3130
 - st_city_id_is_3135
 - st_jobs_within_30_min
-- st_zones_ln_empden
-- st_b_ln_residential_units
 - st_mean_zonal_hhsize
 - st_mode_income_quartile_is_3
-- st_zones_popden
-- st_zones_mean_age_of_head
 - st_zones_prop_race_1
+- st_zones_popden
+- st_b_ln_residential_units
+- st_zones_ln_empden
+- st_zones_mean_age_of_head
 model_type: discretechoice
 name: hlcm70099
 prediction_sample_size: null
