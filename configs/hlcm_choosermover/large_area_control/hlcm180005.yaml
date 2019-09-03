@@ -1,0 +1,55 @@
+alts_fit_filters: (residential_units >0) & (large_area_id == 5)
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 5)
+choice_column: building_id
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (hh_type_large_area_id == 180005)
+choosers_predict_filters: hh_type_large_area_id == 180005
+estimation_sample_size: 2000
+fit_parameters:
+  Coefficient:
+    st_b_ln_residential_units: -0.12651830691712326
+    st_b_ln_sqft_per_unit: 1.344522356973483
+    st_jobs_within_30_min: -0.05648692808941749
+    st_zones_mean_age_of_head: -0.3872178020447043
+    st_zones_mean_hh_size: -0.0896788777676762
+    st_zones_prop_income_4: 0.3074840787999536
+    st_zones_prop_race_1: 1.0304889639037658
+    st_zones_sum_residential_units: 0.056188268137995205
+  Std. Error:
+    st_b_ln_residential_units: 0.01242263552858166
+    st_b_ln_sqft_per_unit: 0.09244424576232023
+    st_jobs_within_30_min: 0.03396836289542983
+    st_zones_mean_age_of_head: 0.024874044440498122
+    st_zones_mean_hh_size: 0.03194592354869283
+    st_zones_prop_income_4: 0.03686769024300108
+    st_zones_prop_race_1: 0.05807105954560247
+    st_zones_sum_residential_units: 0.024905625022655815
+  T-Score:
+    st_b_ln_residential_units: -10.184498017834734
+    st_b_ln_sqft_per_unit: 14.544143292924165
+    st_jobs_within_30_min: -1.6629275971676973
+    st_zones_mean_age_of_head: -15.567142809082718
+    st_zones_mean_hh_size: -2.8072088018048773
+    st_zones_prop_income_4: 8.340204574066748
+    st_zones_prop_race_1: 17.745310176311417
+    st_zones_sum_residential_units: 2.2560473020405074
+fitted: true
+interaction_predict_filters: null
+log_likelihoods:
+  convergence: -9660.291104597403
+  'null': -10713.92843770141
+  ratio: 0.0983427637426012
+model_expression:
+- st_b_ln_residential_units
+- st_b_ln_sqft_per_unit
+- st_zones_sum_residential_units
+- st_jobs_within_30_min
+- st_zones_prop_income_4
+- st_zones_mean_age_of_head
+- st_zones_mean_hh_size
+- st_zones_prop_race_1
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 1000
