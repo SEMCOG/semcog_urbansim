@@ -1,0 +1,39 @@
+alts_fit_filters: (non_residential_sqft>0) & (large_area_id == 115)
+alts_predict_filters: large_area_id == 115
+choice_column: building_id
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (slid == 200115) & (home_based_status == 0)
+choosers_predict_filters: (slid == 200115) & (home_based_status == 0)
+estimation_sample_size: null
+fit_parameters:
+  Coefficient:
+    st_b_ln_non_residential_sqft: -1.0524476511386585
+    st_building_age: -0.4237750242362227
+    st_is_industrial: 0.07948383226132259
+    st_zones_ln_empden_2: 0.17908517740565466
+  Std. Error:
+    st_b_ln_non_residential_sqft: 0.006790889555372213
+    st_building_age: 0.023996210695880767
+    st_is_industrial: 0.0037908634052430325
+    st_zones_ln_empden_2: 0.006509291806407336
+  T-Score:
+    st_b_ln_non_residential_sqft: -154.97935028350983
+    st_building_age: -17.660080985576972
+    st_is_industrial: 20.967210834183795
+    st_zones_ln_empden_2: 27.512236773495776
+fitted: true
+interaction_predict_filters: null
+log_likelihoods:
+  convergence: -13757.082349561724
+  'null': -15286.137032078948
+  ratio: 0.10002884831585668
+model_expression:
+- st_is_industrial
+- st_b_ln_non_residential_sqft
+- st_zones_ln_empden_2
+- st_building_age
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 300

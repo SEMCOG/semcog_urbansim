@@ -1,0 +1,55 @@
+alts_fit_filters: (residential_units >0) & (large_area_id == 99)
+alts_predict_filters: (vacant_residential_units > 0) & (large_area_id == 99)
+choice_column: building_id
+choice_mode: aggregate
+choosers_fit_filters: (building_id > 0) (hh_type_large_area_id == 170099)
+choosers_predict_filters: hh_type_large_area_id == 170099
+estimation_sample_size: 2000
+fit_parameters:
+  Coefficient:
+    st_b_ln_residential_units: -0.2078072339331341
+    st_b_ln_sqft_per_unit: 1.4742508630800149
+    st_zones_mean_age_of_head: -0.13216059644186945
+    st_zones_mean_hh_size: 0.029509611971537206
+    st_zones_prop_income_4: 0.5126098372765469
+    st_zones_prop_race_1: 0.4872936020083169
+    st_zones_sum_residential_units: 0.03636109997703483
+    st_zones_z_total_jobs: 0.095709474901285
+  Std. Error:
+    st_b_ln_residential_units: 0.01394435068485614
+    st_b_ln_sqft_per_unit: 0.07496916128689778
+    st_zones_mean_age_of_head: 0.03273221368619139
+    st_zones_mean_hh_size: 0.02927432385470872
+    st_zones_prop_income_4: 0.0307460393207545
+    st_zones_prop_race_1: 0.0415072218397589
+    st_zones_sum_residential_units: 0.023571270268591148
+    st_zones_z_total_jobs: 0.023544094262899336
+  T-Score:
+    st_b_ln_residential_units: -14.902611002089696
+    st_b_ln_sqft_per_unit: 19.664763987931487
+    st_zones_mean_age_of_head: -4.037630870582502
+    st_zones_mean_hh_size: 1.0080373544405754
+    st_zones_prop_income_4: 16.67238605690977
+    st_zones_prop_race_1: 11.739971513621
+    st_zones_sum_residential_units: 1.5426024801678255
+    st_zones_z_total_jobs: 4.065116025809644
+fitted: true
+interaction_predict_filters: null
+log_likelihoods:
+  convergence: -12191.136855080758
+  'null': -13815.510557964428
+  ratio: 0.11757608928518704
+model_expression:
+- st_b_ln_residential_units
+- st_b_ln_sqft_per_unit
+- st_zones_sum_residential_units
+- st_zones_z_total_jobs
+- st_zones_prop_income_4
+- st_zones_mean_age_of_head
+- st_zones_mean_hh_size
+- st_zones_prop_race_1
+model_type: discretechoice
+name: MNLDiscreteChoiceModel
+prediction_sample_size: null
+probability_mode: single_chooser
+sample_size: 1000

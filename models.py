@@ -44,7 +44,68 @@ for name, model in location_choice_models.items():
     lcm_utils.register_choice_model_step(model.name,
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
+# RUN 7 Register LARGE AREA CONTROL and Unit Level location choice models
+location_choice_models_lacontrol = {}
+hlcm_step_names_lacontrol = []
+elcm_step_names_lacontrol = []
+model_configs = lcm_utils.get_model_category_configs('yaml_configs_la_control_unit_level.yaml')
+for model_category_name, model_category_attributes in model_configs.items():
+    if model_category_attributes['model_type'] == 'location_choice':
+        model_config_files = model_category_attributes['config_filenames']
 
+        for model_config in model_config_files:
+            model = lcm_utils.create_lcm_from_config(model_config,
+                                                     model_category_attributes)
+            location_choice_models_lacontrol[model.name] = model
+
+            if model_category_name == 'hlcm':
+                hlcm_step_names_lacontrol.append(model.name)
+
+            if model_category_name == 'elcm':
+                elcm_step_names_lacontrol.append(model.name)
+
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+lcm_models_updated = merge_two_dicts(orca.get_injectable('location_choice_models'), location_choice_models_lacontrol)
+orca.add_injectable('location_choice_models', lcm_models_updated)
+orca.add_injectable('hlcm_step_names_lacontrol_unitlevel', sorted(hlcm_step_names_lacontrol, reverse=True))
+orca.add_injectable('elcm_step_names_lacontrol_unitlevel', sorted(elcm_step_names_lacontrol, reverse=True))
+
+for name, model in location_choice_models_lacontrol.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                         model.choosers,
+                                         choice_function=lcm_utils.unit_choices)
+
+# BOTH LOCATION CHOICE MODELS WHERE CHOOSER IS MOVER IN ESTIMATION
+location_choice_models = {}
+hlcm_step_names = []
+elcm_step_names = []
+model_configs = lcm_utils.get_model_category_configs('yaml_configs_unitlevel_choosermover.yaml')
+for model_category_name, model_category_attributes in model_configs.items():
+    if model_category_attributes['model_type'] == 'location_choice':
+        model_config_files = model_category_attributes['config_filenames']
+
+        for model_config in model_config_files:
+            model = lcm_utils.create_lcm_from_config(model_config,
+                                                     model_category_attributes)
+            location_choice_models[model.name] = model
+
+            if model_category_name == 'hlcm':
+                hlcm_step_names.append(model.name)
+            if model_category_name == 'elcm':
+                elcm_step_names.append(model.name)
+
+lcm_models_updated = merge_two_dicts(orca.get_injectable('location_choice_models'), location_choice_models)
+orca.add_injectable('location_choice_models', lcm_models_updated)
+orca.add_injectable('hlcm_step_names_choosermover', sorted(hlcm_step_names, reverse=True))
+orca.add_injectable('elcm_step_names_choosermover', sorted(elcm_step_names, reverse=True))
+
+for name, model in location_choice_models.items():
+    lcm_utils.register_choice_model_step(model.name,
+                                         model.choosers,
+                                         choice_function=lcm_utils.unit_choices)
 
 @orca.step()
 def elcm_home_based(jobs, households):
