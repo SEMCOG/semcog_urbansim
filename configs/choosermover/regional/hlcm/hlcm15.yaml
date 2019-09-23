@@ -1,0 +1,67 @@
+name: MNLDiscreteChoiceModel
+
+model_type: discretechoice
+
+choosers_fit_filters: (building_id_16 == -1) & household_type == 15
+
+choosers_predict_filters: (building_id == -1) & household_type == 15
+
+alts_fit_filters: occupied == 0
+
+alts_predict_filters: vacant_residential_units > 0
+
+interaction_predict_filters: null
+
+choice_column: building_id
+
+sample_size: 1000
+
+estimation_sample_size: 2000
+
+prediction_sample_size: null
+
+model_expression:
+- st_b_ln_residential_units
+- st_b_ln_sqft_per_unit
+- st_zones_sum_residential_units
+- st_zones_prop_income_4
+- st_zones_mean_age_of_head
+- st_zones_mean_hh_size
+- st_zones_prop_race_1
+
+fitted: true
+
+choice_mode: aggregate
+
+fit_parameters:
+    Coefficient:
+        st_b_ln_residential_units: -0.02254105718826101
+        st_b_ln_sqft_per_unit: 0.5455014860004804
+        st_zones_mean_age_of_head: -0.33432672916533696
+        st_zones_mean_hh_size: -0.5288863099530104
+        st_zones_prop_income_4: 0.6314868293066908
+        st_zones_prop_race_1: 0.4081591103795897
+        st_zones_sum_residential_units: 0.0452792508493509
+    Std. Error:
+        st_b_ln_residential_units: 0.012339305909260967
+        st_b_ln_sqft_per_unit: 0.15735730142896726
+        st_zones_mean_age_of_head: 0.03627407838420585
+        st_zones_mean_hh_size: 0.050450408557419085
+        st_zones_prop_income_4: 0.0637264026026925
+        st_zones_prop_race_1: 0.06530493587497865
+        st_zones_sum_residential_units: 0.041111054066241055
+    T-Score:
+        st_b_ln_residential_units: -1.826768649227131
+        st_b_ln_sqft_per_unit: 3.466642354989327
+        st_zones_mean_age_of_head: -9.216684311706915
+        st_zones_mean_hh_size: -10.4832909202523
+        st_zones_prop_income_4: 9.909343749462016
+        st_zones_prop_race_1: 6.250049937434735
+        st_zones_sum_residential_units: 1.101388711084706
+
+probability_mode: single_chooser
+
+log_likelihoods:
+    convergence: -3598.699982518276
+    'null': -3868.3429562300284
+    ratio: 0.06970503307559328
