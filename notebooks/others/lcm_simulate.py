@@ -42,7 +42,7 @@ orca.add_injectable('elcm1_model', elcm1_model)
 def choice_model_simulate(elcm1_model, jobs):
     choices = elcm1_model.simulate(choice_function=utils.unit_choices)
 
-    print 'There are %s unplaced agents.' % choices.isnull().sum()
+    print('There are %s unplaced agents.' % choices.isnull().sum())
 
     jobs.update_col_from_series(elcm1_model.choice_column, choices, cast=True)
 
@@ -62,7 +62,7 @@ model = utils.SimulationChoiceModel.from_yaml(str_or_buffer=misc.config('hlcm/hl
 model.set_simulation_params('hlcm1', 'residential_units',
                             'vacant_residential_units', 'households', 'buildings', lids)
 
-print '** Score is %s' % model.score()
+print('** Score is %s' % model.score())
 
 
 # ## Plotting probabilities example

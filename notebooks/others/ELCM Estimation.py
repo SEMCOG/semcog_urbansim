@@ -33,7 +33,7 @@ def estimate_elcm(yaml_config):
     j = orca.get_table('jobs').to_frame(model.columns_used()).fillna(0)
     b = orca.get_table('buildings').to_frame(model.columns_used()).fillna(0)
 
-    print model.fit(j, b, j[model.choice_column])
+    print(model.fit(j, b, j[model.choice_column]))
 
     return model.fit_parameters
 

@@ -14,6 +14,7 @@ from urbansim_parcels import utils as parcel_utils
 import utils
 import lcm_utils
 import variables
+from functools import reduce
 
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
@@ -21,7 +22,7 @@ location_choice_models = {}
 hlcm_step_names = []
 elcm_step_names = []
 model_configs = lcm_utils.get_model_category_configs()
-for model_category_name, model_category_attributes in model_configs.items():
+for model_category_name, model_category_attributes in list(model_configs.items()):
     if model_category_attributes['model_type'] == 'location_choice':
         model_config_files = model_category_attributes['config_filenames']
 
@@ -40,7 +41,7 @@ orca.add_injectable('location_choice_models', location_choice_models)
 orca.add_injectable('hlcm_step_names', sorted(hlcm_step_names, reverse=True))
 orca.add_injectable('elcm_step_names', sorted(elcm_step_names, reverse=True))
 
-for name, model in location_choice_models.items():
+for name, model in list(location_choice_models.items()):
     lcm_utils.register_choice_model_step(model.name,
                                          model.choosers,
                                          choice_function=lcm_utils.unit_choices)
@@ -85,7 +86,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
     def func():
         buildings = orca.get_table('buildings')
         nodes_walk = orca.get_table('nodes_walk')
-        print yaml_file
+        print(yaml_file)
         return utils.hedonic_simulate(yaml_file, buildings,
                                       nodes_walk, dep_var)
 
@@ -126,7 +127,7 @@ def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates.probability_of_relocating *= .2
     reloc = relocation.RelocationModel(relocation_rates, 'probability_of_relocating')
     _print_number_unplaced(households, 'building_id')
-    print "un-placing"
+    print("un-placing")
     hh = households.to_frame(households.local_columns)
     idx_reloc = reloc.find_movers(hh)
     households.update_col_from_series('building_id',
@@ -140,7 +141,7 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, 'job_relocation_probability')
     _print_number_unplaced(jobs, 'building_id')
-    print "un-placing"
+    print("un-placing")
     j = jobs.to_frame(jobs.local_columns)
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
     jobs.update_col_from_series('building_id',
@@ -149,7 +150,8 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     _print_number_unplaced(jobs, 'building_id')
 
 
-def presses_trans((ct, hh, p, target, iter_var)):
+def presses_trans(xxx_todo_changeme1):
+    (ct, hh, p, target, iter_var) = xxx_todo_changeme1
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
     tran = transition.TabularTotalsTransition(ct_finite, 'total_number_of_households')
@@ -191,14 +193,15 @@ def households_transition(households, persons, annual_household_control_totals, 
     region_p = persons.to_frame(persons.local_columns)
     region_target = remi_pop_total.to_frame()
 
-    def cut_to_la((large_area_id, hh)):
+    def cut_to_la(xxx_todo_changeme):
+        (large_area_id, hh) = xxx_todo_changeme
         p = region_p[region_p.household_id.isin(hh.index)]
         target = int(region_target.loc[large_area_id, str(iter_var)])
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
         return ct, hh, p, target, iter_var
 
-    arg_per_la = map(cut_to_la, region_hh.groupby('large_area_id'))
+    arg_per_la = list(map(cut_to_la, region_hh.groupby('large_area_id')))
     # cunks_per_la = map(presses_trans, arg_per_la)
     pool = Pool(8)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
@@ -216,13 +219,13 @@ def households_transition(households, persons, annual_household_control_totals, 
         hh = hh.reset_index()
         hh['household_id_old'] = hh['household_id']
         new_hh = (hh.building_id == -1).sum()
-        hh.loc[hh.building_id == -1, 'household_id'] = range(hhidmax, hhidmax + new_hh)
+        hh.loc[hh.building_id == -1, 'household_id'] = list(range(hhidmax, hhidmax + new_hh))
         hhidmax += new_hh
         hhid_map = hh[['household_id_old', 'household_id']].set_index('household_id_old')
         p.index.name = 'person_id'
         p = pd.merge(p.reset_index(), hhid_map, left_on='household_id', right_index=True)
         new_p = (p.household_id_x != p.household_id_y).sum()
-        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = list(range(pidmax, pidmax + new_p))
         pidmax += new_p
         p['household_id'] = p['household_id_y']
 
@@ -494,7 +497,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         return len(local_agents) - number_of_agents
 
     for tid, trecords in refinements.groupby("transaction_id"):
-        print '** processing transcaction ', tid
+        print('** processing transcaction ', tid)
         agent_types = trecords.agents.drop_duplicates()
         assert len(agent_types) == 1, "different agents in same transaction_id"
         agent_type = agent_types.iloc[0]
@@ -502,7 +505,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         pool = pd.DataFrame(data=None, columns=agents.columns)
 
         for _, record in trecords[trecords.action == 'clone'].iterrows():
-            print record
+            print(record)
             agents, pool = clone_agents(agents,
                                         pool,
                                         record.agent_expression,
@@ -510,7 +513,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                         record.amount)
 
         for _, record in trecords[trecords.action == 'subtract_pop'].iterrows():
-            print record
+            print(record)
             assert agent_type == 'households'
             agents, pool = subtract_pop_agents(agents,
                                                pool,
@@ -519,7 +522,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                                record.amount)
 
         for _, record in trecords[trecords.action == 'subtract'].iterrows():
-            print record
+            print(record)
             agents, pool = subtract_agents(agents,
                                            pool,
                                            record.agent_expression,
@@ -527,7 +530,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                            record.amount)
 
         for _, record in trecords[trecords.action == 'add_pop'].iterrows():
-            print record
+            print(record)
             assert agent_type == 'households'
             agents, pool = add_pop_agents(agents,
                                           pool,
@@ -536,7 +539,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                           record.amount)
 
         for _, record in trecords[trecords.action == 'add'].iterrows():
-            print record
+            print(record)
             agents, pool = add_agents(agents,
                                       pool,
                                       record.agent_expression,
@@ -544,7 +547,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                       record.amount)
 
         for _, record in trecords[trecords.action == 'target_pop'].iterrows():
-            print record
+            print(record)
             assert agent_type == 'households'
             diff = target_agents(dic_agent[record.agents],
                                  record.agent_expression,
@@ -565,20 +568,20 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                                                    diff)
 
         for _, record in trecords[trecords.action == 'target'].iterrows():
-            print record
+            print(record)
             diff = target_agents(dic_agent[record.agents],
                                  record.agent_expression,
                                  record.location_expression,
                                  record.amount)
             if diff < 0:
-                print 'add: ', abs(diff)
+                print('add: ', abs(diff))
                 agents, pool = add_agents(agents,
                                           pool,
                                           record.agent_expression,
                                           record.location_expression,
                                           abs(diff))
             elif diff > 0:
-                print 'subtract: ', abs(diff)
+                print('subtract: ', abs(diff))
                 agents, pool = subtract_agents(agents,
                                                pool,
                                                record.agent_expression,
@@ -611,7 +614,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         hh_index_lookup.columns = ['household_id']
         p = pd.merge(persons.reset_index(), hh_index_lookup, left_on='household_id', right_index=True)
         new_p = (p.household_id_x != p.household_id_y).sum()
-        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = range(pidmax, pidmax + new_p)
+        p.loc[p.household_id_x != p.household_id_y, 'person_id'] = list(range(pidmax, pidmax + new_p))
         p['household_id'] = p['household_id_y']
         persons = p.set_index('person_id')
 
@@ -688,7 +691,7 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     buildings_idx = []
 
     def sample(targets, type_b, accounting, weights):
-        for b_city_id, target in targets[targets > 0].iteritems():
+        for b_city_id, target in targets[targets > 0].items():
             rel_b = type_b[type_b.b_city_id == b_city_id]
             rel_b = rel_b[rel_b[accounting] <= target]
             size = min(len(rel_b), int(target))
@@ -817,7 +820,7 @@ def probable_type(row):
     form_to_btype_dists = orca.get_injectable("form_btype_distributions")
     btype_dists = form_to_btype_dists[form]
     # keys() and values() guaranteed to be in same order
-    btype = np.random.choice(a=btype_dists.keys(), p=btype_dists.values())
+    btype = np.random.choice(a=list(btype_dists.keys()), p=list(btype_dists.values()))
     return btype
 
 
@@ -842,7 +845,7 @@ def register_btype_distributions(buildings):
     """
     form_to_btype = orca.get_injectable("form_to_btype")
     form_btype_dists = {}
-    for form in form_to_btype.keys():
+    for form in list(form_to_btype.keys()):
         bldgs = buildings.loc[buildings.building_type_id
             .isin(form_to_btype[form])]
         bldgs_by_type = bldgs.groupby('building_type_id').size()
@@ -862,15 +865,15 @@ def run_developer(target_units, lid, forms, buildings, supply_fname,
     copied form parcel_utils and modified
     """
     from developer import develop
-    print 'processing large area id:', lid
+    print('processing large area id:', lid)
     cfg = misc.config(cfg)
     dev = develop.Developer.from_yaml(orca.get_table('feasibility_' + str(lid)).to_frame(), forms,
                                       target_units, parcel_size,
                                       ave_unit_size, current_units,
                                       orca.get_injectable('year'), str_or_buffer=cfg)
 
-    print("{:,} feasible buildings before running developer".format(
-        len(dev.feasibility)))
+    print(("{:,} feasible buildings before running developer".format(
+        len(dev.feasibility))))
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
     orca.add_table('feasibility_' + str(lid), dev.feasibility)
@@ -989,7 +992,7 @@ def neighborhood_vars(jobs, households, buildings):
     idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
 
     if idx_invalid_building_id.sum() > 0:
-        print("we have jobs with bad building id's there are #", idx_invalid_building_id.sum())
+        print(("we have jobs with bad building id's there are #", idx_invalid_building_id.sum()))
         j.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
             b.index.values,
             idx_invalid_building_id.sum())
@@ -998,7 +1001,7 @@ def neighborhood_vars(jobs, households, buildings):
         orca.add_table("jobs", j)
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
-        print("we have households with bad building id's there are #", idx_invalid_building_id.sum())
+        print(("we have households with bad building id's there are #", idx_invalid_building_id.sum()))
         h.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(
             b.index.values,
             idx_invalid_building_id.sum())
@@ -1237,4 +1240,4 @@ def _print_number_unplaced(df, fieldname="building_id"):
     of unplaced agents.
     """
     counts = (df[fieldname] == -1).sum()
-    print "Total currently unplaced: %d" % counts
+    print("Total currently unplaced: %d" % counts)

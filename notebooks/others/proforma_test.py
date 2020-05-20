@@ -110,7 +110,7 @@ orca.run([
 #     "gq_pop_scaling_model",
 #     "refiner",
 #     "travel_model",
-], iter_vars=range(2016, 2017), data_out=utils.get_run_filename(), out_interval=1)
+], iter_vars=list(range(2016, 2017)), data_out=utils.get_run_filename(), out_interval=1)
 
 
 # In[ ]:
@@ -543,7 +543,7 @@ hf["buildings"] = hf["buildings"][hf["buildings"]["improvement_value"].notnull()
 
 lacal = hf["buildings"]
 for c in lacal.columns:
-    print c, lacal[c].dtype
+    print(c, lacal[c].dtype)
     if lacal[c].dtype == np.float64:
         lacal[c] = lacal[c].astype(np.int32)
 del hf["buildings"]
@@ -559,8 +559,8 @@ hf['/zoning']['future_use'].unique()
 # In[ ]:
 
 
-for item in hf.keys():
-    print item, hf[item].shape
+for item in list(hf.keys()):
+    print(item, hf[item].shape)
 
 
 # In[ ]:

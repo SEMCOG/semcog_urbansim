@@ -86,7 +86,7 @@ dicpkl['nodes']=dfnodes[['x','y']].values.astype('float32')
 # In[13]:
 
 
-print dicpkl['edgeids'].size, dicpkl['edges'].size, dicpkl['edgeweights'].size, dicpkl['nodeids'].size, dicpkl['nodes'].size
+print(dicpkl['edgeids'].size, dicpkl['edges'].size, dicpkl['edgeweights'].size, dicpkl['nodeids'].size, dicpkl['nodes'].size)
 
 
 # In[14]:

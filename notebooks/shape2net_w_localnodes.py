@@ -78,7 +78,7 @@ dicpkl['edgeweights']=df_edges['edgeweights'].values.astype('float32')
 dicpkl['nodeids']=df_nodes[i].index.values.astype('int32')
 dicpkl['nodes']=df_nodes[i][['x','y']].values.astype('float32')
 
-print 'pickle'+str(i), [(key, dicpkl[key].size) for key in dicpkl.keys()]
+print('pickle'+str(i), [(key, dicpkl[key].size) for key in list(dicpkl.keys())])
 
 #save to pickle 
 with open(fn_pkls[i], 'wb') as handle:

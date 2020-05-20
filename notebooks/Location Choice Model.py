@@ -171,7 +171,7 @@ hids = np.random.choice(households.index, size=1000, replace=False)
 
 #Simulate
 new_assignments = hlcm.predict(households.loc[hids], vacant_residential_units)
-print new_assignments
+print(new_assignments)
 
 
 # ## Employment Location Choice Model (ELCM)
@@ -225,7 +225,7 @@ jids = np.random.choice(jobs.index, size=1000, replace=False)
 
 #Simulate
 new_assignments = elcm.predict(jobs.loc[jids], vacant_job_spaces)
-print new_assignments
+print(new_assignments)
 
 
 # ## Development Project Location Choice Model (DPLCM)
@@ -276,7 +276,7 @@ bids = np.random.choice(buildings.index, size=1000, replace=False)
 
 #Simulate
 new_assignments = dplcm.predict(buildings.loc[bids], parcels.reset_index())
-print new_assignments
+print(new_assignments)
 
 
 # ## Real Estate Price Model (REPM)
@@ -332,7 +332,7 @@ fits = hmg.fit(buildings)
 
 ##Simulate
 new_unit_price_res = hmg.predict(buildings)
-print new_unit_price_res
+print(new_unit_price_res)
 
 
 # ## Additional Examples (for illustration only)

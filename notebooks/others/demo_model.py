@@ -86,7 +86,7 @@ def jobs_transition(jobs, annual_employment_control_totals,iter_var):
     
 @orca.step('print_year')
 def print_year(iter_var):
-    print '*** the year is {} ***'.format(iter_var)
+    print('*** the year is {} ***'.format(iter_var))
 
 
 # #### A demonstration of running the above models
@@ -119,9 +119,9 @@ orca.get_table('jobs').to_frame().describe()
 # In[ ]:
 
 
-print orca._TABLES
-print orca._MODELS
-print orca._INJECTABLES
+print(orca._TABLES)
+print(orca._MODELS)
+print(orca._INJECTABLES)
 
 ##show add_injectable and how it updates the _INJECTABLES list, then show the dictionaries up at top of sim (empty dicts)
 

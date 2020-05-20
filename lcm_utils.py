@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import os
 import copy
@@ -475,7 +475,7 @@ def get_model_category_configs():
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
         model_category_configs = yaml.load(f)['models']
 
-    for model_category, category_attributes in model_category_configs.items():
+    for model_category, category_attributes in list(model_category_configs.items()):
         category_attributes['config_filenames'] = yaml_configs[model_category]
 
     return model_category_configs

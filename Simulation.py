@@ -8,14 +8,14 @@ from urbansim.utils import misc, networks
 import output_indicators
 
 data_out = utils.get_run_filename()
-print data_out
+print(data_out)
 
 import sys,statvfs
 
 f = os.statvfs("/home")
 freespace=f[statvfs.F_BAVAIL] * f[statvfs.F_BSIZE] / (1048576 * 1024.0)
 if freespace < 10:
-    print freespace, 'GB available. Disk space is too small, stop running'
+    print(freespace, 'GB available. Disk space is too small, stop running')
     sys.exit()
 
 
@@ -48,7 +48,7 @@ orca.run([
     "gq_pop_scaling_model",
     # "travel_model", Fixme: on hold
 ],
-    iter_vars=range(2016, 2045 + 1),
+    iter_vars=list(range(2016, 2045 + 1)),
     data_out=data_out,
     out_base_tables=['jobs', 'base_job_space', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',

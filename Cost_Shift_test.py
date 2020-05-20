@@ -8,7 +8,7 @@ from urbansim.utils import misc, networks
 import output_indicators
 
 data_out = os.path.join(misc.runs_dir(), "cost_shift_%d.h5" % misc.get_run_number())
-print data_out
+print(data_out)
 
 orca.run(["refiner",
           'build_networks',
@@ -39,7 +39,7 @@ orca.run([
     "refiner",
     # "travel_model", Fixme: on hold
 ],
-    iter_vars=range(2016, 2025 + 1),
+    iter_vars=list(range(2016, 2025 + 1)),
     data_out=data_out,
     out_base_tables=['jobs', 'base_job_space', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',

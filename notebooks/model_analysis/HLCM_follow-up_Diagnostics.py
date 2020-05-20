@@ -60,7 +60,7 @@ buildings['has_children:nodes_drv_elem_school_perf'] = .41 * buildings.nodes_drv
 
 
 expvars = []
-for submodel_id in model_coeffs.keys():
+for submodel_id in list(model_coeffs.keys()):
     expvars.extend(model_coeffs[submodel_id].index)
     
 expvars = list(set(expvars))
@@ -357,21 +357,21 @@ plt.plot(coeffs, errors)
 
 
 result = opt.minimize_scalar(growth_share_deviation, method='Brent', args=(w, x, quartile_changes, idx_mode_1, .09, 3, 18, vacant_spaces))
-print result.x
+print(result.x)
 
 
 # In[41]:
 
 
 result = opt.minimize_scalar(growth_share_deviation, method='Brent', args=(w, x, quartile_changes, idx_mode_1, .19, 2, 18, vacant_spaces))
-print result.x
+print(result.x)
 
 
 # In[42]:
 
 
 result = opt.minimize_scalar(growth_share_deviation, method='Brent', args=(w, x, quartile_changes, idx_mode_1, .31, 1, 18, vacant_spaces))
-print result.x
+print(result.x)
 
 
 # In[ ]:
