@@ -46,16 +46,16 @@ hh = hh.to_frame(hh_vars)
 
 model_configs = lcm_utils.get_model_category_configs()
 
-for model_category_name, model_category_attributes in model_configs.items():
+for model_category_name, model_category_attributes in list(model_configs.items()):
     if model_category_name == 'elcm':
         for yaml_config in model_category_attributes['config_filenames']:
-            print yaml_config
+            print(yaml_config)
             model = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config(yaml_config))
             
             # Patsy-form specification
             patsy_str = ' + '
             patsy_str = patsy_str.join(model.model_expression) + ' - 1'
-            print patsy_str
+            print(patsy_str)
             
             # Pylogit-form specification
             vars_for_dict = OrderedDict([(varname, 'all_same') for varname in model.model_expression])
@@ -81,9 +81,9 @@ for model_category_name, model_category_attributes in model_configs.items():
                          choice_col = data.choice_col,
                          model_expression = vars_for_dict,
                          alternative_id_col='building_id') #patsy_str
-            print model._estimation_engine
+            print(model._estimation_engine)
             
             results = model.fit()
-            print results
-            print ''
+            print(results)
+            print('')
 

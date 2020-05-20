@@ -47,7 +47,7 @@ refinement.columns.sort_values().unique()
 
 
 for year in refinement.columns.sort_values().unique():
-    print "year", year
+    print("year", year)
     b_city_id = hdf[str(year) + '/buildings'][['b_city_id']]
     households = hdf[str(year) + '/households']
     households_col = households.columns
@@ -66,7 +66,7 @@ for year in refinement.columns.sort_values().unique():
         
         sample_size = min(10 * abs(target), len(hh_main), len(hh_other))
         
-        print year, main_city, target, len(hh_main), len(hh_other), sample_size
+        print(year, main_city, target, len(hh_main), len(hh_other), sample_size)
 
         hh_main_sample = hh_main.sample(sample_size)
         hh_other_sample = hh_other.sample(sample_size)
@@ -93,7 +93,7 @@ for year in refinement.columns.sort_values().unique():
         ref = (gole - post).astype(int)
     
     hdf[str(year) + '/households'] = households[households_col]
-    print "done"
+    print("done")
 
 
 # In[10]:

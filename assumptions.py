@@ -88,7 +88,7 @@ orca.add_injectable("form_to_btype", {
 })
 
 seed = 271828
-print "using seed", seed
+print("using seed", seed)
 random.seed(seed)
 pd.np.random.seed(seed)
 

@@ -158,7 +158,7 @@ model_coeffs[(3, 14)]
 
 
 for large_area_id in large_area_ids:
-    print large_area_id
+    print(large_area_id)
     w = get_submodel_coeffs(large_area_id)
     proba = np.transpose(calculate_proba(w, x))
 
@@ -166,7 +166,7 @@ for large_area_id in large_area_ids:
     proba_df['building_type_id'] = buildings.building_type_id.values
 
     summed_proba_btype = proba_df.groupby('building_type_id').sum()
-    print summed_proba_btype
+    print(summed_proba_btype)
 
 
 # ## Summed capacity-weighted probabilities by building type
@@ -224,7 +224,7 @@ summed_capac_weighted_proba_btype[14].plot.bar()
 
 
 for large_area_id in large_area_ids:
-    print large_area_id
+    print(large_area_id)
     w = get_submodel_coeffs(large_area_id)
     capac_weighted_proba = np.transpose(capacity_weighted_proba(w, x, vacant_job_spaces))
 
@@ -232,8 +232,8 @@ for large_area_id in large_area_ids:
     proba_df['building_type_id'] = buildings.building_type_id.values
 
     summed_capac_weighted_proba_btype = proba_df.groupby('building_type_id').sum()
-    print summed_capac_weighted_proba_btype
-    print''
+    print(summed_capac_weighted_proba_btype)
+    print('')
 
 
 # ## What building type dummy coefficient value may result in closer fit between simulated / observed sector shares by building type
@@ -287,16 +287,16 @@ plt.plot(coeffs, errors)
 
 
 for large_area_id in large_area_ids:
-    print large_area_id
+    print(large_area_id)
     w = get_submodel_coeffs(large_area_id)
 
     result = opt.minimize_scalar(growth_share_deviation, method='Brent', args=(w, x, sectoral_changes, idx_medical, .44, -1, -3, vacant_job_spaces))
-    print result.x
+    print(result.x)
 
     result = opt.minimize_scalar(growth_share_deviation, method='Brent', args=(w, x, sectoral_changes, idx_tcu, .331, 3, -1, vacant_job_spaces))
-    print result.x
+    print(result.x)
 
-    print ''
+    print('')
 
 
 # ## Suggested next steps

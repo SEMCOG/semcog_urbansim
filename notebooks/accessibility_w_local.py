@@ -63,7 +63,7 @@ parcels=pstore.parcels
 t1=time.time()
 x, y = parcels.centroid_x, parcels.centroid_y
 parcels["node_ids"] = net_local.get_node_ids(x, y)
-print time.time()-t1
+print(time.time()-t1)
 
 
 # In[14]:

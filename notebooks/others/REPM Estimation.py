@@ -32,7 +32,7 @@ def estimate_repm(yaml_config):
 
     b = orca.get_table('buildings').to_frame(model.columns_used()).fillna(0)
 
-    print model.fit(b)
+    print(model.fit(b))
     
     model.to_yaml(str_or_buffer=misc.config(yaml_config)) #  .replace('.yaml', '_new.yaml')
 
@@ -65,8 +65,8 @@ estimate_repm(repm_configs[0])
 
 
 for i, lcm in list(enumerate(repm_configs))[:]:
-    print 
-    print i, lcm
+    print() 
+    print(i, lcm)
     estimate_repm(lcm)
 
 

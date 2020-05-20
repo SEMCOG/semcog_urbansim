@@ -14,7 +14,7 @@ networks.NETWORKS = networks.Networks(
     twoway=[1],
     impedances=None)
 
-print networks.NETWORKS.external_nodeids
+print(networks.NETWORKS.external_nodeids)
 
 dset = dataset.SemcogDataset("data/semcog_data.h5")
 
@@ -25,7 +25,7 @@ parcels = networks.NETWORKS.addnodeid(parcels)
 dset.save_tmptbl("parcels", parcels)
 nodes = networks.from_yaml(dset, "networks.yaml")
 
-print networks.NETWORKS.external_nodeids
+print(networks.NETWORKS.external_nodeids)
 
 
 # In[1]:

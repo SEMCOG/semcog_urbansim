@@ -53,7 +53,7 @@ refinement.loc[5070, '2020']
 
 
 for ind in refinement[str(2020)].index:
-    print ind
+    print(ind)
 
 
 # In[ ]:
@@ -73,11 +73,11 @@ for year in ['2020', '2025', '2030', '2035', '2040', '2045']:
         amount = refinement.loc[city_id, year]
         pre = len(dfpc)
         
-        print city_id, 'before: ', pre,  'add:', amount
+        print(city_id, 'before: ', pre,  'add:', amount)
         
         if amount >0:
             p_add = dfpc.sample(amount)
-            p_add.index=range(dfp.index.max()+1, dfp.index.max()+1+len(p_add))
+            p_add.index=list(range(dfp.index.max()+1, dfp.index.max()+1+len(p_add)))
             dfp = pd.concat([dfp,p_add])
         elif amount<0:
             p_remove = dfpc.sample(amount).index
@@ -88,7 +88,7 @@ for year in ['2020', '2025', '2030', '2035', '2040', '2045']:
     dfh['persons'] = dfp.groupby('household_id').size()
     dfh['workers'] = dfp.groupby('household_id').worker.sum()
     dfh.fillna(0, inplace=True)
-    print 'after:', len(dfp), dfh.persons.sum()
+    print('after:', len(dfp), dfh.persons.sum())
     
     st['/' + year + '/households'] = dfh
     st['/' + year + '/persons'] =  dfp
@@ -222,7 +222,7 @@ dfh['workers'] = hhpersons
 # In[ ]:
 
 
-1633176426+range(10)
+1633176426+list(range(10))
 
 
 # In[ ]:
@@ -241,7 +241,7 @@ refinement.columns.sort_values().unique()
 
 
 for year in refinement.columns.sort_values().unique():
-    print "year", year
+    print("year", year)
     b_city_id = hdf[str(year) + '/buildings'][['b_city_id']]
     households = hdf[str(year) + '/households']
     households_col = households.columns
@@ -260,7 +260,7 @@ for year in refinement.columns.sort_values().unique():
         
         sample_size = min(10 * abs(target), len(hh_main), len(hh_other))
         
-        print year, main_city, target, len(hh_main), len(hh_other), sample_size
+        print(year, main_city, target, len(hh_main), len(hh_other), sample_size)
 
         hh_main_sample = hh_main.sample(sample_size)
         hh_other_sample = hh_other.sample(sample_size)
@@ -287,7 +287,7 @@ for year in refinement.columns.sort_values().unique():
         ref = (gole - post).astype(int)
     
     hdf[str(year) + '/households'] = households[households_col]
-    print "done"
+    print("done")
 
 
 # In[ ]:

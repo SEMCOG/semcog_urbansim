@@ -33,7 +33,7 @@ def estimate_hlcm(yaml_config):
     hh = orca.get_table('households').to_frame(model.columns_used()).fillna(0)
     b = orca.get_table('buildings').to_frame(model.columns_used()).fillna(0)
 
-    print model.fit(hh, b, hh[model.choice_column])
+    print(model.fit(hh, b, hh[model.choice_column]))
 
     return model.fit_parameters
 

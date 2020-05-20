@@ -26,7 +26,7 @@ def jobs_within_30_min(jobs, travel_data):
 
 @orca.column('zones', cache=True, cache_scope='iteration')
 def households(households):
-    print type(households)
+    print(type(households))
     return households.zone_id.groupby(households.zone_id).size()
 
 
@@ -65,7 +65,7 @@ def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
     unique_zone_ids = np.unique(zones.zone_id.values)
 
     zones.index = zones.index.values + 1
-    zone_id_xref = dict(zip(zones.zone_id, zones.index.values))
+    zone_id_xref = dict(list(zip(zones.zone_id, zones.index.values)))
     apply_xref = lambda x: zone_id_xref[x]
 
     td = td[td.from_zone_id.isin(unique_zone_ids)]
@@ -246,7 +246,7 @@ def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog
 
     @orca.column(to_geog_name, var_name, cache=True, cache_scope='iteration')
     def func():
-        print 'Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name)
+        print('Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name))
 
         from_geog = orca.get_table(from_geog_name)
         to_geog = orca.get_table(to_geog_name)

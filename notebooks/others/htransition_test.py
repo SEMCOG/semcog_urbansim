@@ -69,13 +69,13 @@ def households_transition(households, persons, annual_household_control_totals, 
 orca.run([
     "households_transition",  # households transition
 #     "households_relocation",  # households relocation model
-], iter_vars=range(2012, 2014))
+], iter_vars=list(range(2012, 2014)))
 
 
 # In[13]:
 
 
-print orca.get_injectable('iter_var')
+print(orca.get_injectable('iter_var'))
 hh_sim = orca.get_table('households').to_frame()
 
 store = orca.get_injectable('store')

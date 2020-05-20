@@ -12,5 +12,5 @@ orca.run(['build_networks'])
 orca.run([
     "neighborhood_vars",  # neighborhood variables
     "refiner",
-], iter_vars=range(2016, 2017),
+], iter_vars=list(range(2016, 2017)),
     out_interval=1)
