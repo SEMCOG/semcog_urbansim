@@ -2,7 +2,6 @@ import orca
 import shutil
 
 import os
-
 import models, utils
 from urbansim.utils import misc, networks
 import output_indicators
@@ -10,20 +9,23 @@ import output_indicators
 data_out = utils.get_run_filename()
 print(data_out)
 
-import sys,statvfs
+import sys
 
 f = os.statvfs("/home")
-freespace=f[statvfs.F_BAVAIL] * f[statvfs.F_BSIZE] / (1048576 * 1024.0)
+freespace=f.f_bavail * f.f_bsize / (1048576 * 1024.0)
+print ("freespace:", freespace)
 if freespace < 10:
     print(freespace, 'GB available. Disk space is too small, stop running')
     sys.exit()
 
 
-orca.run(["refiner",
-          'build_networks',
-          "neighborhood_vars"] +
-          orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
-          ["increase_property_values"])  # Hack to make more feasibility
+orca.run([
+    "refiner",
+    'build_networks',
+    "neighborhood_vars"] +
+    orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
+    ["increase_property_values"]
+    )  # increase feasibility based on projected income
 
 orca.run([
     "neighborhood_vars",
@@ -66,8 +68,8 @@ orca.run([
     out_interval=1,
     compress=True)
 
-output_indicators.main(data_out)
+#output_indicators.main(data_out)
 
-dir_out = data_out.replace('.h5', '')
-shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))
-shutil.copy(data_out, '/mnt/hgfs/J')
+#dir_out = data_out.replace('.h5', '')
+#shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))
+#shutil.copy(data_out, '/mnt/hgfs/J')

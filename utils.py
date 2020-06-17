@@ -100,7 +100,7 @@ def to_frame(tables, cfg, additional_columns=[]):
 
 def yaml_to_class(cfg):
     import yaml
-    model_type = yaml.load(open(cfg))["model_type"]
+    model_type = yaml.load(open(cfg), Loader=yaml.FullLoader)["model_type"]
     return {
         "regression": RegressionModel,
         "segmented_regression": SegmentedRegressionModel,

@@ -267,7 +267,9 @@ for geography in geographic_levels:
                 make_disagg_var(geography_name, 'parcels', var, geography_id)
 
 def standardize(series):
-    return (series - series.mean()) / series.std()
+    if series.dtype != np.object:
+        series= (series - series.mean()) / series.std()
+    return series
 
 def register_standardized_variable(table_name, column_to_s):
     """
@@ -283,6 +285,7 @@ def register_standardized_variable(table_name, column_to_s):
     column_func : function
     """
     new_col_name = 'st_' + column_to_s
+    
     @orca.column(table_name, new_col_name, cache=True, cache_scope='iteration')
     def column_func():
         return standardize(orca.get_table(table_name)[column_to_s])
