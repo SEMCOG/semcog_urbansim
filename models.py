@@ -190,7 +190,9 @@ def households_transition(households, persons, annual_household_control_totals, 
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ['large_area_id'])
+    region_hh.index = region_hh.index.astype(int)
     region_p = persons.to_frame(persons.local_columns)
+    region_p.index = region_p.index.astype(int)
     region_target = remi_pop_total.to_frame()
 
     def cut_to_la(xxx_todo_changeme):
@@ -349,7 +351,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
                      (local_gqpop.gq_code == 701))
         local_gqpop = local_gqpop[~protected]
         if diff > 0:
-            diff = min(len(local_gqpop), abs(diff))
+            diff = int(min(len(local_gqpop), abs(diff)))
             if diff > 0:
                 newgq = local_gqpop.sample(diff, replace=True)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
@@ -637,7 +639,11 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
         max_id = orca.get_injectable("max_building_id")
-        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
+        
+        #all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
+        #?addtional "max_id" by SEMCOG? still needed?
+        all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
+        
         orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
         orca.add_table("buildings", all_buildings)
 
@@ -750,7 +756,7 @@ def parcel_average_price(use):
 @orca.injectable('cost_shifters')
 def shifters():
     with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
-        cfg = yaml.load(f)
+        cfg = yaml.load(f, Loader=yaml.FullLoader)
         return cfg
 
 
@@ -948,9 +954,9 @@ def build_networks(parcels):
 
     # networks in semcog_networks.h5
     with open(r"configs/available_networks.yaml", 'r') as stream:
-        dic_net = yaml.load(stream)
+        dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks.h5"), "r")
+    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks_py3.h5"), "r")
 
     lstnet = [
         {
