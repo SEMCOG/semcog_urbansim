@@ -638,13 +638,9 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev['b_zone_id'] = zone
         sched_dev['b_city_id'] = city
         b = buildings.to_frame(buildings.local_columns)
-        max_id = orca.get_injectable("max_building_id")
-        
-        #all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False, max_id)
-        #?addtional "max_id" by SEMCOG? still needed?
+
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
-        
-        orca.add_injectable("max_building_id", max(all_buildings.index.max(), max_id))
+
         orca.add_table("buildings", all_buildings)
 
         # Todo: maybe we need to impute some columns
