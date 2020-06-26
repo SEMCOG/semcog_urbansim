@@ -37,7 +37,6 @@ orca.run([
     "jobs_scaling_model",
     "gq_pop_scaling_model",
     "refiner",
-    # "travel_model", Fixme: on hold
 ],
     iter_vars=list(range(2016, 2025 + 1)),
     data_out=data_out,
