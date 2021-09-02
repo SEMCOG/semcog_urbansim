@@ -132,6 +132,10 @@ def ave_unit_sqft(nodes_walk, buildings):
     b = buildings.to_frame(['sqft_per_unit', 'x', 'y'])
     b = b[b.sqft_per_unit > 0]
     net = orca.get_injectable('net_walk')
+    if (b.isna().sum().sum() > 0):
+        print("Warning buildings contains NaN x, y values, filled them with -1")
+        b.x = b.x.fillna(-1)
+        b.y = b.y.fillna(-1)
     net.set_pois('build', b.x, b.y)
     ner = net.nearest_pois(10560, 'build', num_pois=5, include_poi_ids=True)
     st = ner[ner.columns[ner.columns.str.startswith('poi') > 0]].unstack()

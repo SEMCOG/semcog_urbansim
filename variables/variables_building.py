@@ -100,12 +100,12 @@ def nodeid_drv(buildings, parcels):
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def x(buildings, parcels):
-    return misc.reindex(parcels.x, buildings.parcel_id)
+    return misc.reindex(parcels.x.fillna(-1), buildings.parcel_id)
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def y(buildings, parcels):
-    return misc.reindex(parcels.y, buildings.parcel_id)
+    return misc.reindex(parcels.y.fillna(-1), buildings.parcel_id)
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
