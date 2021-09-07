@@ -900,9 +900,20 @@ def residential_developer(households, parcels, target_vacancies):
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].res_target_vacancy_rate)
-        target_units = parcel_utils.compute_units_to_build((households.large_area_id == lid).sum(),
-                                                           la_orig_buildings.residential_units.sum(),
-                                                           target_vacancy)
+        num_agents = (households.large_area_id == lid).sum()
+        num_units = la_orig_buildings.residential_units.sum()
+        
+        print("Number of agents: {:,}".format(num_agents))
+        print("Number of agent spaces: {:,}".format(int(num_units)))
+        assert target_vacancy < 1.0
+        target_units = int(max(
+            (num_agents / (1 - target_vacancy) - num_units), 0))
+        print("Current vacancy = {:.2f}".format(1 - num_agents /
+                                                float(num_units)))
+        print("Target vacancy = {:.2f}, target of new units = {:,}".format(
+            target_vacancy,
+            target_units))
+
         register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
@@ -925,10 +936,20 @@ def non_residential_developer(jobs, parcels, target_vacancies):
     for lid, _ in parcels.large_area_id.to_frame().groupby('large_area_id'):
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
         target_vacancy = float(target_vacancies[target_vacancies.large_area_id == lid].non_res_target_vacancy_rate)
-        num_jobs = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
-        target_units = parcel_utils.compute_units_to_build(num_jobs,
-                                                           la_orig_buildings.job_spaces.sum(),
-                                                           target_vacancy)
+        num_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+        num_units = la_orig_buildings.job_spaces.sum()
+
+        print("Number of agents: {:,}".format(num_agents))
+        print("Number of agent spaces: {:,}".format(int(num_units)))
+        assert target_vacancy < 1.0
+        target_units = int(max(
+            (num_agents / (1 - target_vacancy) - num_units), 0))
+        print("Current vacancy = {:.2f}".format(1 - num_agents /
+                                                float(num_units)))
+        print("Target vacancy = {:.2f}, target of new units = {:,}".format(
+            target_vacancy,
+            target_units))
+
         register_btype_distributions(la_orig_buildings)
         run_developer(
             target_units,
