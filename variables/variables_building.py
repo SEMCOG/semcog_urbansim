@@ -100,12 +100,12 @@ def nodeid_drv(buildings, parcels):
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def x(buildings, parcels):
-    return misc.reindex(parcels.x, buildings.parcel_id)
+    return misc.reindex(parcels.x.fillna(-1), buildings.parcel_id)
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
 def y(buildings, parcels):
-    return misc.reindex(parcels.y, buildings.parcel_id)
+    return misc.reindex(parcels.y.fillna(-1), buildings.parcel_id)
 
 
 @orca.column('buildings', cache=True, cache_scope='iteration')
@@ -466,7 +466,7 @@ def make_disagg_var(from_geog_name, to_geog_name, var_to_disaggregate, from_geog
 
     @orca.column(to_geog_name, var_name, cache=True, cache_scope='iteration')
     def func():
-        print 'Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name)
+        print('Disaggregating {} to {} from {}'.format(var_to_disaggregate, to_geog_name, from_geog_name))
 
         from_geog = orca.get_table(from_geog_name)
         to_geog = orca.get_table(to_geog_name)

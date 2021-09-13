@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import os
 import copy
@@ -143,7 +143,7 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     @orca.injectable(injectable_name, cache=True)
     def func():
         with open(os.path.join(misc.configs_dir(), yaml_file)) as f:
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
             return config
     return func
 
@@ -470,12 +470,12 @@ def get_model_category_configs():
     of model category attributes, including individual model config filename(s)
     """
     with open(os.path.join(misc.configs_dir(), 'yaml_configs.yaml')) as f:
-        yaml_configs = yaml.load(f)
+        yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
-        model_category_configs = yaml.load(f)['models']
+        model_category_configs = yaml.load(f, Loader=yaml.FullLoader)['models']
 
-    for model_category, category_attributes in model_category_configs.items():
+    for model_category, category_attributes in list(model_category_configs.items()):
         category_attributes['config_filenames'] = yaml_configs[model_category]
 
     return model_category_configs

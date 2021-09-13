@@ -79,4 +79,4 @@ pf.to_yaml('configs/proforma.yaml')
 
 # Test that pro forma can be loaded
 npf = SqFtProForma.from_yaml(str_or_buffer='configs/proforma.yaml')
-print(npf.get_debug_info('mixedoffice', 'deck'))
+print((npf.get_debug_info('mixedoffice', 'deck')))

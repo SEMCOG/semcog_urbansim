@@ -1,44 +1,48 @@
+#!/usr/bin/env python
+
 import orca
 import shutil
 
-import os
-
 import models, utils
 from urbansim.utils import misc, networks
-import output_indicators
+import variables
 
-data_out = os.path.join(misc.runs_dir(), "cost_shift_%d.h5" % misc.get_run_number())
-print(data_out)
+data_out = utils.get_run_filename()
 
-orca.run(["refiner",
-          'build_networks',
-          "neighborhood_vars"] +
-          orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
-          ["increase_property_values"])  # Hack to make more feasibility
+orca.run([
+    "refiner",
+    'build_networks',
+    "neighborhood_vars"] +
+    orca.get_injectable('repm_step_names') + # In place of ['nrh_simulate', 'rsh_simulate']
+    ["increase_property_values"]
+    )  # increase feasibility based on projected income
+
 
 orca.run([
     "neighborhood_vars",
+    "scheduled_demolition_events",
+    "random_demolition_events",
+    "scheduled_development_events",
+    "refiner",       
     "households_transition",
     "fix_lpr",
     "households_relocation",
     "jobs_transition",
     "jobs_relocation",
-    "scheduled_demolition_events",
-    "random_demolition_events",
-    "scheduled_development_events",
     "feasibility",
     "residential_developer",
-    "non_residential_developer"] +
+    "non_residential_developer"
+    ] + 
     orca.get_injectable('repm_step_names') +  # In place of ['nrh_simulate', 'rsh_simulate']
     ["increase_property_values"] +  # Hack to make more feasibility
     orca.get_injectable('hlcm_step_names') +
-    orca.get_injectable('elcm_step_names') +
-    ["elcm_home_based",
-    "jobs_scaling_model",
-    "gq_pop_scaling_model",
-    "refiner",
-],
-    iter_vars=list(range(2016, 2025 + 1)),
+    orca.get_injectable('elcm_step_names') + 
+    [
+        "elcm_home_based",
+        "jobs_scaling_model",
+        "gq_pop_scaling_model",
+    ],
+    iter_vars=list(range(2020, 2022)),
     data_out=data_out,
     out_base_tables=['jobs', 'base_job_space', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',

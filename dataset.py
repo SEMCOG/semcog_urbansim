@@ -42,7 +42,6 @@ def buildings(store):
     df.loc[df.sqft_price_res > 1000, 'sqft_price_res'] = 0
     df.loc[df.sqft_price_res < 0, 'sqft_price_res'] = 0
     df.fillna(0, inplace=True)
-    orca.add_injectable("max_building_id", 10000000)
 
     df['hu_filter'] = 0
     cites = [551, 1155, 1100, 3130, 6020, 6040]
