@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 
 def order_rep(dumper, data):
-    return dumper.represent_mapping(u'tag:yaml.org,2002:map', data.items(), flow_style=False)
+    return dumper.represent_mapping('tag:yaml.org,2002:map', list(data.items()), flow_style=False)
 
 
 yaml.add_representer(OrderedDict, order_rep)

@@ -28,12 +28,12 @@ def transcad_interaction(zonal_indicators, taz_table):
                   ["DataTable", datatable],
                   ["JoinField", joinfield]
               ]
-    print 'Importing UrbanSim data into Transcad'
+    print('Importing UrbanSim data into Transcad')
     transcad_operation('SEMCOGImportTabFile', dbname, macro_args)
     
     ####Run TM      
     loops = 1
-    print 'Running Transcad model'
+    print('Running Transcad model')
     transcad_operation('SEMCOG Run Loops', dbname, loops)
     
     #Import skims from travel model
@@ -42,21 +42,21 @@ def transcad_interaction(zonal_indicators, taz_table):
                                   'AMTransitSkim':{'Generalized Cost':'generalized_cost'} }
     matrices = []
     row_index_name, col_index_name = "ZoneID", "ZoneID"  #default values
-    if matrix_attribute_name_map.has_key('row_index_name'):
+    if 'row_index_name' in matrix_attribute_name_map:
         row_index_name = matrix_attribute_name_map['row_index_name']
-    if matrix_attribute_name_map.has_key('col_index_name'):
+    if 'col_index_name' in matrix_attribute_name_map:
         col_index_name = matrix_attribute_name_map['col_index_name']
-    for key, val in matrix_attribute_name_map.iteritems():
+    for key, val in matrix_attribute_name_map.items():
         if (key != 'row_index_name') and (key != 'col_index_name'):
-            if val.has_key('row_index_name'):
+            if 'row_index_name' in val:
                 row_index_name = val['row_index_name']
-            if val.has_key('col_index_name'):
+            if 'col_index_name' in val:
                 col_index_name = val['col_index_name']
             matrix_file_name = file_locations[key]  #replace internal matrix name with absolute file name
-            matrices.append([matrix_file_name, row_index_name, col_index_name, val.items()])
+            matrices.append([matrix_file_name, row_index_name, col_index_name, list(val.items())])
     macro_args =[ ("ExportTo", tm_output_full_name) ]
     macro_args.append(("Matrix", matrices))
-    print 'Exporting matrices from Transcad to csv'
+    print('Exporting matrices from Transcad to csv')
     transcad_operation('SEMCOGExportMatrices', dbname, macro_args)
     
     #Read/process outputted csv
@@ -97,7 +97,7 @@ def transcad_interaction(zonal_indicators, taz_table):
                         v = value  #string
                 return_dict[headers[col_index]].append(v)
         text_file.close()
-        for item, value in return_dict.iteritems():
+        for item, value in return_dict.items():
             try:
                 return_dict[item] = np.array(value)
             except:

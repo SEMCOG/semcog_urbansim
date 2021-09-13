@@ -23,7 +23,7 @@ def change_store(store_name):
 def change_scenario(scenario):
     assert scenario in orca.get_injectable("scenario_inputs"), \
         "Invalid scenario name"
-    print "Changing scenario to '%s'" % scenario
+    print("Changing scenario to '%s'" % scenario)
     orca.add_injectable("scenario", scenario)
 
 
@@ -56,8 +56,8 @@ def deal_with_nas(df):
         s_cnt = df[col].count()
         if df_cnt != s_cnt:
             fail = True
-            print "Found %d nas or inf (out of %d) in column %s" % \
-                  (df_cnt-s_cnt, df_cnt, col)
+            print("Found %d nas or inf (out of %d) in column %s" % \
+                  (df_cnt-s_cnt, df_cnt, col))
 
     assert not fail, "NAs were found in dataframe, please fix"
     return df
@@ -79,8 +79,8 @@ def fill_nas_from_config(dfname, df):
             val = df[fname].dropna().quantile()
         else:
             assert 0, "Fill type not found!"
-        print "Filling column {} with value {} ({} values)".\
-            format(fname, val, fill_cnt)
+        print("Filling column {} with value {} ({} values)".\
+            format(fname, val, fill_cnt))
         df[fname] = df[fname].fillna(val).astype(dtyp)
     return df
 
@@ -100,7 +100,7 @@ def to_frame(tables, cfg, additional_columns=[]):
 
 def yaml_to_class(cfg):
     import yaml
-    model_type = yaml.load(open(cfg))["model_type"]
+    model_type = yaml.load(open(cfg), Loader=yaml.FullLoader)["model_type"]
     return {
         "regression": RegressionModel,
         "segmented_regression": SegmentedRegressionModel,
@@ -115,8 +115,8 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     price_or_rent, _ = yaml_to_class(cfg).predict_from_cfg(df, cfg)
 
     if price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum() > 0:
-        print "Hedonic output %d nas or inf (out of %d) in column %s" % \
-              (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname)
+        print("Hedonic output %d nas or inf (out of %d) in column %s" % \
+              (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname))
     price_or_rent[price_or_rent > 700] = 700
     price_or_rent[price_or_rent < 1] = 1
     tbl.update_col_from_series(out_fname, price_or_rent)
@@ -160,23 +160,23 @@ def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
     available_units = buildings[supply_fname]
     vacant_units = buildings[vacant_fname]
 
-    print "There are %d total available units" % available_units.sum()
-    print "    and %d total choosers" % len(choosers)
-    print "    but there are %d overfull buildings" % \
-          len(vacant_units[vacant_units < 0])
+    print("There are %d total available units" % available_units.sum())
+    print("    and %d total choosers" % len(choosers))
+    print("    but there are %d overfull buildings" % \
+          len(vacant_units[vacant_units < 0]))
 
     vacant_units = vacant_units[vacant_units > 0]
     units = locations_df.loc[np.repeat(vacant_units.index.values,
                              vacant_units.values.astype('int'))].reset_index()
 
-    print "    for a total of %d temporarily empty units" % vacant_units.sum()
-    print "    in %d buildings total in the region" % len(vacant_units)
+    print("    for a total of %d temporarily empty units" % vacant_units.sum())
+    print("    in %d buildings total in the region" % len(vacant_units))
 
     movers = choosers_df[choosers_df[out_fname] == -1]
 
     if len(movers) > vacant_units.sum():
-        print "WARNING: Not enough locations for movers"
-        print "    reducing locations to size of movers for performance gain"
+        print("WARNING: Not enough locations for movers")
+        print("    reducing locations to size of movers for performance gain")
         movers = movers.head(vacant_units.sum())
 
     new_units, _ = yaml_to_class(cfg).predict_from_cfg(movers, units, cfg)
@@ -193,15 +193,15 @@ def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
     _print_number_unplaced(choosers, out_fname)
 
     vacant_units = buildings[vacant_fname]
-    print "    and there are now %d empty units" % vacant_units.sum()
-    print "    and %d overfull buildings" % len(vacant_units[vacant_units < 0])
+    print("    and there are now %d empty units" % vacant_units.sum())
+    print("    and %d overfull buildings" % len(vacant_units[vacant_units < 0]))
 
 
 def simple_relocation(choosers, relocation_rate, fieldname):
-    print "Total agents: %d" % len(choosers)
+    print("Total agents: %d" % len(choosers))
     _print_number_unplaced(choosers, fieldname)
 
-    print "Assinging for relocation..."
+    print("Assinging for relocation...")
     chooser_ids = np.random.choice(choosers.index, size=int(relocation_rate *
                                    len(choosers)), replace=False)
     choosers.update_col_from_series(fieldname,
@@ -214,17 +214,17 @@ def simple_transition(tbl, rate, location_fname):
     transition = GrowthRateTransition(rate)
     df = tbl.to_frame(tbl.local_columns)
 
-    print "%d agents before transition" % len(df.index)
+    print("%d agents before transition" % len(df.index))
     df, added, copied, removed = transition.transition(df, None)
-    print "%d agents after transition" % len(df.index)
+    print("%d agents after transition" % len(df.index))
 
     df.loc[added, location_fname] = -1
     orca.add_table(tbl.name, df)
 
 
 def _print_number_unplaced(df, fieldname):
-    print "Total currently unplaced: %d" % \
-          df[fieldname].value_counts().get(-1, 0)
+    print("Total currently unplaced: %d" % \
+          df[fieldname].value_counts().get(-1, 0))
 
 
 def random_choices(model, choosers, alternatives):
@@ -274,10 +274,10 @@ def unit_choices(model, choosers, alternatives):
     vacant_units = alternatives[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]  ## must have positive index 
 
-    print "There are %d total available units" % available_units.sum()
-    print "    and %d total choosers" % len(choosers)
-    print "    but there are %d overfull alternatives" % \
-          len(vacant_units[vacant_units < 0])
+    print("There are %d total available units" % available_units.sum())
+    print("    and %d total choosers" % len(choosers))
+    print("    but there are %d overfull alternatives" % \
+          len(vacant_units[vacant_units < 0]))
 
     vacant_units = vacant_units[vacant_units > 0]
 
@@ -288,20 +288,20 @@ def unit_choices(model, choosers, alternatives):
     indexes = indexes[isin.values]
     units = alternatives.loc[indexes].reset_index()
 
-    print "    for a total of %d temporarily empty units" % vacant_units.sum()
-    print "    in %d alternatives total in the region" % len(vacant_units)
+    print("    for a total of %d temporarily empty units" % vacant_units.sum())
+    print("    in %d alternatives total in the region" % len(vacant_units))
 
     if missing > 0:
-        print "WARNING: %d indexes aren't found in the locations df -" % \
-            missing
-        print "    this is usually because of a few records that don't join "
-        print "    correctly between the locations df and the aggregations tables"
+        print("WARNING: %d indexes aren't found in the locations df -" % \
+            missing)
+        print("    this is usually because of a few records that don't join ")
+        print("    correctly between the locations df and the aggregations tables")
 
-    print "There are %d total movers for this LCM" % len(choosers)
+    print("There are %d total movers for this LCM" % len(choosers))
     
     if len(choosers) > vacant_units.sum():
-        print "WARNING: Not enough locations for movers"
-        print "    reducing locations to size of movers for performance gain"
+        print("WARNING: Not enough locations for movers")
+        print("    reducing locations to size of movers for performance gain")
         choosers = choosers.head(vacant_units.sum())
         
     choices = model.predict(choosers, units, debug=True)
@@ -403,7 +403,7 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         
         # By convention, choosers are denoted by a -1 value in the choice column
         choosers = choosers[choosers[self.choice_column] == -1]
-        print "%s agents are making a choice." % len(choosers)
+        print("%s agents are making a choice." % len(choosers))
 
         if choice_function:
             choices = choice_function(self, choosers, alternatives, **kwargs)

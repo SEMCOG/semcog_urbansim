@@ -101,7 +101,7 @@ def parcel_is_allowed(form=None):
     if form:
         columns = ['type%d' % typ for typ in form_to_btype[form]]
     else:
-        columns = ['type%d' % typ for typ in set(item for sublist in form_to_btype.values() for item in sublist)]
+        columns = ['type%d' % typ for typ in set(item for sublist in list(form_to_btype.values()) for item in sublist)]
 
     allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=0)
 

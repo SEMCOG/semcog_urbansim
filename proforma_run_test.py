@@ -16,5 +16,5 @@ orca.run([
     "feasibility",  # compute development feasibility
     "residential_developer",  # build actual buildings
     "non_residential_developer"
-], iter_vars=range(2016, 2017),
+], iter_vars=list(range(2016, 2017)),
     out_interval=1)

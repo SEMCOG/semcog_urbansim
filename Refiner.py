@@ -11,12 +11,12 @@ from urbansim.utils import misc, networks
 orca.add_table('refiner_events', pd.read_csv("data/add_pop_11032017.csv"))
 
 data_out = utils.get_run_filename()
-print data_out
+print(data_out)
 
 orca.run([
     "refiner",
 ],
-    iter_vars=range(2015, 2015 + 1),
+    iter_vars=list(range(2015, 2015 + 1)),
     data_out=data_out,
     out_base_tables=['jobs', 'base_job_space', 'employment_sectors', 'annual_relocation_rates_for_jobs',
                      'households', 'persons', 'annual_relocation_rates_for_households',

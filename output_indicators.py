@@ -17,11 +17,11 @@ def orca_year_dataset(hdf, year):
             df = hdf[name]
         else:
             stub_name = str(2020) + '/' + tbl
-            print "No table named " + name + ". Using the structuer from " + stub_name + "."
+            print("No table named " + name + ". Using the structuer from " + stub_name + ".")
             df = hdf[stub_name].iloc[0:0]
 
         if tbl in {'households', 'jobs'} and 'large_area_id' not in df.columns:
-            print 'impute large_area_id'
+            print('impute large_area_id')
             df['large_area_id'] = misc.reindex(orca.get_table('buildings').large_area_id, df.building_id)
 
         orca.add_table(tbl, df.fillna(0))
@@ -344,7 +344,7 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
-    for (a, b) in [(00, 04), (05, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
+    for (a, b) in [(00, 0o4), (0o5, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
                    (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf),
                    (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
         make_pop_age(a, b)
@@ -407,9 +407,9 @@ def main(run_name):
         runnum.write(os.path.basename(os.path.normpath(outdir)))
 
     store_la = pd.HDFStore(run_name, mode='r')
-    print store_la
+    print(store_la)
 
-    spacing = int(30.0 / len(set(j[1: 5] for j in store_la.keys()) & set(str(i) for i in range(2016, 2045 + 1))))
+    spacing = int(30.0 / len(set(j[1: 5] for j in list(store_la.keys())) & set(str(i) for i in range(2016, 2045 + 1))))
     if spacing == 1:
         all_years_dir = os.path.join(outdir, 'annual')
         if not (os.path.exists(all_years_dir)):
@@ -509,7 +509,7 @@ def main(run_name):
 
         # geo level: school district
 
-    years = range(2015, 2045 + 1, spacing)
+    years = list(range(2015, 2045 + 1, spacing))
     year_names = ["yr" + str(i) for i in years]
     indicators = ['hh', 'hh_pop', 'gq_pop', 'pop',
                   'housing_units', 'hu_filter', 'parcel_is_allowed_residential', 'parcel_is_allowed_demolition',
@@ -572,12 +572,12 @@ def main(run_name):
     start = time.clock()
     dict_ind = defaultdict(list)
     for year in years:
-        print 'processing ', year
+        print('processing ', year)
         orca_year_dataset(store_la, year)
         for tab in geom:
             dict_ind[tab].append(orca.get_table(tab).to_frame(indicators))
     end = time.clock()
-    print "runtime:", end - start
+    print("runtime:", end - start)
 
     # region should have same value no matter how you slice it.
     df = pd.DataFrame()
@@ -594,12 +594,12 @@ def main(run_name):
     df = df[df.columns[~df.columns.str.startswith('pct_')]]
 
     sumstd = df.groupby(level=0).std().sum().sort_values()
-    print sumstd[sumstd > 0]
+    print(sumstd[sumstd > 0])
 
-    print df[sumstd[sumstd > 0].index]
+    print(df[sumstd[sumstd > 0].index])
 
     # Todo: add part of fenton to semmcd table
-    print set(orca.get_table('semmcds').to_frame(indicators).hh_pop.index) ^ set(orca.get_table('semmcds').hh_pop.index)
+    print(set(orca.get_table('semmcds').to_frame(indicators).hh_pop.index) ^ set(orca.get_table('semmcds').hh_pop.index))
 
     start = time.clock()
 
@@ -635,12 +635,12 @@ def main(run_name):
         whatnots_output[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_output.csv"))
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
     end = time.clock()
-    print "runtime whatnots:", end - start
+    print("runtime whatnots:", end - start)
 
     start = time.clock()
     geom = ['cities', 'large_areas', 'semmcds', 'zones']
     for tab in geom:
-        print tab
+        print(tab)
 
         if spacing == 1:
             writer = pd.ExcelWriter(os.path.join(outdir, tab + "_by_indicator_for_year.xlsx"))
@@ -681,12 +681,12 @@ def main(run_name):
                     df["large_area_name"] = name
                     df.set_index("large_area_name", append=True, inplace=True)
                 if len(df.columns) > 0:
-                    print "saving:", ind
+                    print("saving:", ind)
                     df = df.fillna(0)
                     df = df.sort_index().sort_index(1)
                     df.to_excel(writer, ind)
                 else:
-                    print "somtning is wrong with:", ind
+                    print("somtning is wrong with:", ind)
             writer.save()
 
         writer = pd.ExcelWriter(os.path.join(all_years_dir, tab + "_by_year_for_indicator.xlsx"))
@@ -710,19 +710,19 @@ def main(run_name):
                 df["large_area_name"] = name
                 df.set_index("large_area_name", append=True, inplace=True)
             if len(df.columns) > 0:
-                print "saving:", ind
+                print("saving:", ind)
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(1)
                 df.to_excel(writer, ind)
             else:
-                print "somtning is wrong with:", ind
+                print("somtning is wrong with:", ind)
         writer.save()
     end = time.clock()
-    print "runtime geom:", end - start
+    print("runtime geom:", end - start)
 
     start = time.clock()
     for year in range(2015, 2046, 5):
-        print "buildings for", year
+        print("buildings for", year)
         orca_year_dataset(store_la, year)
         buildings = orca.get_table('buildings')
         df = buildings.to_frame(buildings.local_columns + ['city_id', 'large_area_id', 'x', 'y'])
@@ -743,14 +743,14 @@ def main(run_name):
         df = df.sort_index().sort_index(1)
         df.to_csv(os.path.join(outdir, "households_yr" + str(year) + ".csv"))
     end = time.clock()
-    print "runtime:", end - start
+    print("runtime:", end - start)
 
     start = time.clock()
     years = years[1:]
     year_names = ["yr" + str(i) for i in years]
     writer = pd.ExcelWriter(os.path.join(outdir, "buildings_dif_by_year.xlsx"))
     for year, year_name in zip(years, year_names):
-        print "buildings for", year
+        print("buildings for", year)
         orca_year_dataset(store_la, year)
         buildings = orca.get_table('buildings')
         df = buildings.to_frame(buildings.local_columns + ['city_id', 'large_area_id'])
@@ -768,6 +768,6 @@ def main(run_name):
 
     writer.save()
     end = time.clock()
-    print "runtime:", end - start
+    print("runtime:", end - start)
 
     store_la.close()

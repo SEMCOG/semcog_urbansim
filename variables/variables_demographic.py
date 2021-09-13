@@ -47,7 +47,7 @@ orca.add_injectable("household_type_map", {
 def household_type(households, household_type_map):
     df = households.to_frame(['income_quartile', 'age_of_head', 'persons'])
     df['household_type'] = 0
-    for i, q in household_type_map.iteritems():
+    for i, q in household_type_map.items():
         idx = df.query(q).index.values
         df.loc[idx, 'household_type']= i
     return df.household_type.fillna(0)

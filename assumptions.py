@@ -1,6 +1,7 @@
 import os
 import random
 import pandas as pd
+import numpy as np
 from urbansim.utils import misc
 import orca
 import verify_data_structure
@@ -88,13 +89,14 @@ orca.add_injectable("form_to_btype", {
 })
 
 seed = 271828
-print "using seed", seed
+print("using seed", seed)
 random.seed(seed)
-pd.np.random.seed(seed)
+np.random.seed(seed)
 
 
 def verify():
-    hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear.h5"), mode="r")
+    # hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear_py2.h5"), mode="r")
+    hdf_store = pd.HDFStore( "/media/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5", mode="r")
 
     new = verify_data_structure.yaml_from_store(hdf_store)
     with open(r"configs/data_structure.yaml", "w") as out:
