@@ -447,7 +447,7 @@ def main(run_name):
     whatnot = whatnot.append(fenton, ignore_index=True)
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
     e['parcel_id'] = e.parcel_id.astype(p.index.dtype)
-    e['large_area_id'] = p.loc[e.parcel_id].large_area_id.values
+    e['large_area_id'] = p.reindex(e.parcel_id).large_area_id.values
     e = e[['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']]
     whatnot = whatnot.append(e, ignore_index=True)
     b = orca.get_table('buildings').to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])

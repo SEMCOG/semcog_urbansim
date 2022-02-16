@@ -29,6 +29,10 @@ orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 orca.add_table('demolition_rates', pd.read_csv("data/DEMOLITION_RATES.csv", index_col='city_id'))
 orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv", index_col='b_city_id'))
 
+@orca.table('historical_mcd')
+def historical_mcd():
+    historical_mcd = pd.read_csv("/media/urbansim/RDF2050/model_improvements/2021_fall/timeseries/MCD_test2/sem_hist_2000_2020.csv")
+    return historical_mcd
 
 @orca.table(cache=True)
 def buildings(store):

@@ -16,6 +16,22 @@ import lcm_utils
 import variables
 from functools import reduce
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# from neuralprophet import NeuralProphet, utils
+import neuralprophet
+neuralprophet.utils.set_random_seed(0)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 location_choice_models = {}
@@ -65,6 +81,129 @@ def elcm_home_based(jobs, households):
 
     _print_number_unplaced(wrap_jobs, 'building_id')
 
+@orca.step()
+def city_total():
+    # hh = orca.get_table(
+    #             'households'
+    #         ).to_frame(['household_id', 'semmcd']
+    #         ).reset_index().astype('Int64')
+    hh = pd.read_pickle('data/cache/city_total_hh.pkl')
+    hh_group_by_mcd = hh.groupby(by='semmcd').count()
+    h_mcd = orca.get_table('historical_mcd').to_frame()
+    # np.random.seed = 0
+    # mcd_list = np.random.choice( h_mcd['semmcd'].value_counts().index, size=25, replace=False)
+    mcd_list = [7015, 7065, 5050, 2205, 2065, 1045, 6035, 6065, 2150, 7040, 1180,
+       2145, 6075, 1085, 2180, 4115, 1020, 1125, 4015, 3060, 3120, 6060,
+       1095, 1155, 3105]
+    fig, axes = plt.subplots(5, 5, figsize=(25, 25))
+    for ind, mcd in enumerate(mcd_list):
+        print('running city_total on mcd %s' % mcd)
+        h_mcd_local = h_mcd[ h_mcd['semmcd'] == mcd ][['year', 'hh']]
+        h_mcd_local = h_mcd_local.rename(columns={'year': 'ds', 'hh': 'y'})
+        df_train, df_test = train_test_split(h_mcd_local, test_size=2, shuffle=False)
+        # nn model
+        nn_yhat = city_total_nn(df_train, df_test)
+        # rf model
+        rf_yhat = city_total_rf(df_train, df_test)
+        # poly model
+        poly_yhat = city_total_poly_reg(df_train, df_test)
+        # poly model
+        svr_yhat = city_total_svr(df_train, df_test)
+        # validation curve
+        city_model_validation_curve(fig, ind, mcd, 
+                                        h_mcd_local, nn_yhat, rf_yhat, poly_yhat, svr_yhat)
+        # fig.add_subplot(ax)
+        print(nn_yhat, poly_yhat, rf_yhat)
+    fig.savefig('data/plots/city_model_validation_curve_5x5.png')
+
+def city_total_nn(df_train, df_test):
+    n_test = len(df_test)
+    m = neuralprophet.NeuralProphet( trend_reg=2,
+                       learning_rate=0.01)
+    m.fit(df_train, freq='y', validation_df=df_test)
+    # future = m.make_future_dataframe(freq='y', periods=20)
+    m = m.highlight_nth_step_ahead_of_each_forecast(1)
+    # future = m.make_future_dataframe( df_test,periods=3)
+    forecast = m.predict(pd.concat(( df_train, df_test)))
+    # fig1 = m.plot(forecast)
+    # fig1.savefig('data/plots/timeseries.png')
+    # return forecast on test data
+    return forecast['yhat1'].to_numpy()
+
+def city_total_poly_reg(df_train, df_test):
+    degree = 8
+    X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+    X = np.reshape(X, (len(X), -1))
+    y = df_train['y'].to_numpy()
+    polyreg=make_pipeline(PolynomialFeatures(degree),LinearRegression())
+    polyreg.fit(X,y)
+    yhat_train = polyreg.predict(
+        df_train['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_train), -1))
+    )
+    yhat_test = polyreg.predict(
+        df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test))
+
+def city_total_svr(df_train, df_test):
+    X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+    X = np.reshape(X, (len(X), -1))
+    y = df_train['y'].to_numpy()
+    svr_reg=make_pipeline(StandardScaler(), 
+                        SVR(C=1.0, epsilon=0.2))
+    svr_reg.fit(X,y)
+    yhat_train = svr_reg.predict(
+        df_train['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_train), -1))
+    )
+    yhat_test = svr_reg.predict(
+        df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test))
+
+def city_total_rf(df_train, df_test, previous_model=None):
+    if not previous_model:
+        rf = RandomForestRegressor(
+            n_estimators=10, # default 100
+            criterion="mse", 
+            random_state=0,
+            warm_start=True, # able to reuse the previous model with new data
+            ccp_alpha=0.01, # pruning param, higher the number more pruning done
+        )
+        X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+        X = np.reshape(X, (len(X), -1))
+        y = df_train['y'].to_numpy()
+        rf.fit(X, y)
+    else:
+        # continue to fit the previous model
+        rf = previous_model
+    yhat_train = rf.predict(
+        df_train['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_train), -1))
+    )
+    yhat_test = rf.predict(
+        df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test))
+
+def city_model_validation_curve(fig, fig_ind, mcd, actual, nn, nf, poly, svr):
+    # fig, ax = plt.subplots(figsize=(5, 5))
+    # remove the axes placeholder
+    # fig.delaxes(fig.axes[fig_ind])
+    # add a new axes to the same index
+    # ax = fig.add_subplot(5, 5, fig_ind+1)
+    ax = fig.axes[fig_ind]
+    X = actual['ds'].apply(lambda x: pd.to_datetime(x))
+    ax.plot(X, actual['y'], 'o', color='black', label='actual')  # Plot some data on the (implicit) axes.
+    ax.plot(X, nn, '1-', color='blue', label='NN')  
+    ax.plot(X, nf, '<-', color='red', label='NF')  
+    ax.plot(X, poly, 'x-', color='green', label='poly')  
+    ax.plot(X, poly, 'p-', color='yellow', label='svr')  
+    ax.set_xlabel('year')
+    ax.set_ylabel('hh')
+    ax.set_title("city_total for mcd %s" % mcd)
+    ax.legend()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+    # fig.savefig('data/plots/city_model_validation_curve.png')
+    return ax
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
