@@ -24,6 +24,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
 
+from statsmodels.tsa.ar_model import AutoReg
+from statsmodels.tsa.arima_model import ARMA
+from statsmodels.tsa.statespace import sarimax
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -100,37 +104,51 @@ def city_total():
         print('running city_total on mcd %s' % mcd)
         h_mcd_local = h_mcd[ h_mcd['semmcd'] == mcd ][['year', 'hh']]
         h_mcd_local = h_mcd_local.rename(columns={'year': 'ds', 'hh': 'y'})
-        df_train, df_test = train_test_split(h_mcd_local, test_size=2, shuffle=False)
+        df_train, df_test = train_test_split(h_mcd_local, test_size=1, shuffle=False)
+        h_mcd_local['ds'] = h_mcd_local.astype(df_train['ds'].dtype)
+        # future prediction
+        future_prediction = pd.Series(
+            pd.date_range("2021-01-01", periods=10, freq="Y")
+        )
         # nn model
-        nn_yhat = city_total_nn(df_train, df_test)
+        nn_yhat = city_total_nn(df_train, df_test, future_prediction)
         # rf model
-        rf_yhat = city_total_rf(df_train, df_test)
+        # rf_yhat = city_total_rf(df_train, df_test, future_prediction)
         # poly model
-        poly_yhat = city_total_poly_reg(df_train, df_test)
-        # poly model
-        svr_yhat = city_total_svr(df_train, df_test)
+        poly_yhat = city_total_poly_reg(df_train, df_test, future_prediction)
+        # svr model
+        # svr_yhat = city_total_svr(df_train, df_test, future_prediction)
+        # auto regression
+        autoreg_yhat = city_total_autoreg(df_train, df_test, future_prediction)
+        # ARMA 
+        arma_yhat = city_total_arma(df_train, df_test, future_prediction)
+        # sarimax 
+        sarimax_yhat = city_total_sarimax(df_train, df_test, future_prediction)
         # validation curve
+        future = pd.DataFrame({'ds': future_prediction})
+        future['y'] = np.nan
+        actual = pd.concat((h_mcd_local, future), ignore_index=True)
         city_model_validation_curve(fig, ind, mcd, 
-                                        h_mcd_local, nn_yhat, rf_yhat, poly_yhat, svr_yhat)
+                                        actual, nn_yhat, arma_yhat, poly_yhat, autoreg_yhat, sarimax_yhat)
         # fig.add_subplot(ax)
-        print(nn_yhat, poly_yhat, rf_yhat)
     fig.savefig('data/plots/city_model_validation_curve_5x5.png')
 
-def city_total_nn(df_train, df_test):
+def city_total_nn(df_train, df_test, future_predict):
     n_test = len(df_test)
     m = neuralprophet.NeuralProphet( trend_reg=2,
                        learning_rate=0.01)
     m.fit(df_train, freq='y', validation_df=df_test)
     # future = m.make_future_dataframe(freq='y', periods=20)
     m = m.highlight_nth_step_ahead_of_each_forecast(1)
-    # future = m.make_future_dataframe( df_test,periods=3)
-    forecast = m.predict(pd.concat(( df_train, df_test)))
+    future = pd.DataFrame({'ds': future_predict}) 
+    future['y'] = np.nan
+    forecast = m.predict(pd.concat(( df_train, df_test, future), ignore_index=True))
     # fig1 = m.plot(forecast)
     # fig1.savefig('data/plots/timeseries.png')
     # return forecast on test data
     return forecast['yhat1'].to_numpy()
 
-def city_total_poly_reg(df_train, df_test):
+def city_total_poly_reg(df_train, df_test, future_predict):
     degree = 8
     X = df_train['ds'].apply(lambda x: x.year).to_numpy()
     X = np.reshape(X, (len(X), -1))
@@ -143,14 +161,16 @@ def city_total_poly_reg(df_train, df_test):
     yhat_test = polyreg.predict(
         df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
     )
-    return np.concatenate((yhat_train, yhat_test))
+    yhat_future = polyreg.predict(
+        future_predict.apply(lambda x: x.year).to_numpy().reshape((len(future_predict), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test, yhat_future))
 
-def city_total_svr(df_train, df_test):
+def city_total_svr(df_train, df_test, future_predict):
     X = df_train['ds'].apply(lambda x: x.year).to_numpy()
     X = np.reshape(X, (len(X), -1))
     y = df_train['y'].to_numpy()
-    svr_reg=make_pipeline(StandardScaler(), 
-                        SVR(C=1.0, epsilon=0.2))
+    svr_reg=SVR(C=1.0, epsilon=0.1)
     svr_reg.fit(X,y)
     yhat_train = svr_reg.predict(
         df_train['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_train), -1))
@@ -158,9 +178,42 @@ def city_total_svr(df_train, df_test):
     yhat_test = svr_reg.predict(
         df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
     )
-    return np.concatenate((yhat_train, yhat_test))
+    yhat_future = svr_reg.predict(
+        future_predict.apply(lambda x: x.year).to_numpy().reshape((len(future_predict), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test, yhat_future))
 
-def city_total_rf(df_train, df_test, previous_model=None):
+def city_total_autoreg(df_train, df_test, future_predict):
+    X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+    X = np.reshape(X, (len(X), -1))
+    y = df_train['y'].to_numpy()
+    autoreg = AutoReg(y, lags=2)
+    autoreg_fit = autoreg.fit()
+    print('Autoreg Coefficients: %s' % autoreg_fit.params)
+    out = autoreg_fit.predict(start=0, end=len(df_train)+len(df_test)+len(future_predict)+1)
+    return out
+
+def city_total_arma(df_train, df_test, future_predict):
+    X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+    X = np.reshape(X, (len(X), -1))
+    y = df_train['y'].to_numpy()
+    arma = ARMA(y, order=(0,1))
+    arma_fit = arma.fit(transparams=True)
+    print('Arma Coefficients: %s' % arma_fit.params)
+    out = arma_fit.predict(start=0, end=len(df_train)+len(df_test)+len(future_predict)-1)
+    return out
+
+def city_total_sarimax(df_train, df_test, future_predict):
+    X = df_train['ds'].apply(lambda x: x.year).to_numpy()
+    X = np.reshape(X, (len(X), -1))
+    y = df_train['y'].to_numpy()
+    sarimax_model = sarimax.SARIMAX(y, order=(1, 0, 1))
+    sarimax_fit = sarimax_model.fit(transparams=True)
+    print('sarimax Coefficients: %s' % sarimax_fit.params)
+    out = sarimax_fit.predict(start=0, end=len(df_train)+len(df_test)+len(future_predict)-1)
+    return out
+
+def city_total_rf(df_train, df_test, future_predict, previous_model=None):
     if not previous_model:
         rf = RandomForestRegressor(
             n_estimators=10, # default 100
@@ -182,9 +235,12 @@ def city_total_rf(df_train, df_test, previous_model=None):
     yhat_test = rf.predict(
         df_test['ds'].apply(lambda x: x.year).to_numpy().reshape((len(df_test), -1))
     )
-    return np.concatenate((yhat_train, yhat_test))
+    yhat_future = rf.predict(
+        future_predict.apply(lambda x: x.year).to_numpy().reshape((len(future_predict), -1))
+    )
+    return np.concatenate((yhat_train, yhat_test, yhat_future))
 
-def city_model_validation_curve(fig, fig_ind, mcd, actual, nn, nf, poly, svr):
+def city_model_validation_curve(fig, fig_ind, mcd, actual, nn, arma, poly, autoreg, sarimax):
     # fig, ax = plt.subplots(figsize=(5, 5))
     # remove the axes placeholder
     # fig.delaxes(fig.axes[fig_ind])
@@ -194,9 +250,10 @@ def city_model_validation_curve(fig, fig_ind, mcd, actual, nn, nf, poly, svr):
     X = actual['ds'].apply(lambda x: pd.to_datetime(x))
     ax.plot(X, actual['y'], 'o', color='black', label='actual')  # Plot some data on the (implicit) axes.
     ax.plot(X, nn, '1-', color='blue', label='NN')  
-    ax.plot(X, nf, '<-', color='red', label='NF')  
     ax.plot(X, poly, 'x-', color='green', label='poly')  
-    ax.plot(X, poly, 'p-', color='yellow', label='svr')  
+    ax.plot(X, autoreg, 'p-', color='yellow', label='autoreg')  
+    ax.plot(X, arma, '<-', color='red', label='ARMA')  
+    ax.plot(X, sarimax, '4-', color='grey', label='SARIMAX')  
     ax.set_xlabel('year')
     ax.set_ylabel('hh')
     ax.set_title("city_total for mcd %s" % mcd)
