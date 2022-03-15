@@ -99,16 +99,23 @@ def city_total():
     mcd_list = [7015, 7065, 5050, 2205, 2065, 1045, 6035, 6065, 2150, 7040, 1180,
        2145, 6075, 1085, 2180, 4115, 1020, 1125, 4015, 3060, 3120, 6060,
        1095, 1155, 3105]
-    fig, axes = plt.subplots(5, 5, figsize=(25, 25))
-    for ind, mcd in enumerate(mcd_list):
+    total_mcd_list = h_mcd['semmcd'].value_counts().index
+    # 5 by 5 fig creation
+    # fig, axes = plt.subplots(5, 5, figsize=(25, 25))
+    nn_pred_all = pd.DataFrame(index=total_mcd_list, columns=np.arange(2000, 2051))
+    poly_pred_all = nn_pred_all.copy()
+    autoreg_pred_all = nn_pred_all.copy()
+    arma_pred_all = nn_pred_all.copy()
+    sarimax_pred_all = nn_pred_all.copy()
+    for ind, mcd in enumerate(total_mcd_list):
         print('running city_total on mcd %s' % mcd)
         h_mcd_local = h_mcd[ h_mcd['semmcd'] == mcd ][['year', 'hh']]
         h_mcd_local = h_mcd_local.rename(columns={'year': 'ds', 'hh': 'y'})
         df_train, df_test = train_test_split(h_mcd_local, test_size=1, shuffle=False)
-        h_mcd_local['ds'] = h_mcd_local.astype(df_train['ds'].dtype)
+        h_mcd_local['ds'] = h_mcd_local['ds'].astype(df_train['ds'].dtype)
         # future prediction
         future_prediction = pd.Series(
-            pd.date_range("2021-01-01", periods=10, freq="Y")
+            pd.date_range("2021-01-01", periods=30, freq="Y")
         )
         # nn model
         nn_yhat = city_total_nn(df_train, df_test, future_prediction)
@@ -128,10 +135,33 @@ def city_total():
         future = pd.DataFrame({'ds': future_prediction})
         future['y'] = np.nan
         actual = pd.concat((h_mcd_local, future), ignore_index=True)
-        city_model_validation_curve(fig, ind, mcd, 
-                                        actual, nn_yhat, arma_yhat, poly_yhat, autoreg_yhat, sarimax_yhat)
+        # city_model_validation_curve(fig, ind, mcd, 
+        #                                 actual, nn_yhat, arma_yhat, poly_yhat, autoreg_yhat, sarimax_yhat)
+        # writing table output
+        nn_pred = pd.Series(index=actual['ds'].apply(lambda x: pd.to_datetime(x).year), data=nn_yhat.astype(int))
+        poly_pred = pd.Series(index=actual['ds'].apply(lambda x: pd.to_datetime(x).year), data=poly_yhat.astype(int))
+        autoreg_pred = pd.Series(index=actual['ds'].apply(lambda x: pd.to_datetime(x).year), data=autoreg_yhat.astype(int))
+        arma_pred = pd.Series(index=actual['ds'].apply(lambda x: pd.to_datetime(x).year), data=arma_yhat.astype(int))
+        sarimax_pred = pd.Series(index=actual['ds'].apply(lambda x: pd.to_datetime(x).year), data=sarimax_yhat.astype(int))
+        # combine models result
+        nn_pred_all.loc[mcd] = nn_pred
+        poly_pred_all.loc[mcd] = poly_pred
+        autoreg_pred_all.loc[mcd] = autoreg_pred
+        arma_pred_all.loc[mcd] = arma_pred
+        sarimax_pred_all.loc[mcd] = sarimax_pred
         # fig.add_subplot(ax)
-    fig.savefig('data/plots/city_model_validation_curve_5x5.png')
+    # save fig
+    # fig.savefig('data/plots/city_model_validation_curve_5x5.png')
+    # save table
+    city_total_export_table(nn_pred_all, 'nn')
+    city_total_export_table(poly_pred_all, 'poly')
+    city_total_export_table(autoreg_pred_all, 'autoreg')
+    city_total_export_table(arma_pred_all, 'arma')
+    city_total_export_table(sarimax_pred_all, 'sarimax')
+
+def city_total_export_table(df, name):
+    df = df.sort_index()
+    df.to_csv('data/pred_by_mcd_year_%s.csv' % name)
 
 def city_total_nn(df_train, df_test, future_predict):
     n_test = len(df_test)
