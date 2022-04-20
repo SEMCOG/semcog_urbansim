@@ -86,8 +86,55 @@ def elcm_home_based(jobs, households):
     _print_number_unplaced(wrap_jobs, 'building_id')
 
 @orca.step()
-def mcd_hu_sampling(mcd_total, buildings):
-    return 
+def mcd_hu_sampling( buildings):
+    """
+    Apply the mcd total forecast to Limit and calculate the pool of housing 
+    units to match the distribution of the mcd_total growth table for the large_area
+    Parameters
+    ----------
+    mcd_total : pandas.DataFrame
+        MCD total table
+    buildings : pandas.DataFrame
+        Buildings table 
+    Returns
+    -------
+    new_units : pandas.Series
+        Index of alternatives which have been picked as the candidates
+    """
+    # get housing unit table from buildings
+    vacant_variable = 'vacant_residential_units'
+    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age'])
+    vacant_units = blds[vacant_variable]
+    vacant_units = vacant_units[vacant_units.index.values >= 0]
+    vacant_units = vacant_units[vacant_units > 0]
+    indexes = np.repeat(vacant_units.index.values,
+                        vacant_units.values.astype('int'))
+    housing_units = blds.loc[indexes]
+    # quota 
+    # init output df
+    new_units = None
+    # generate pseudo mcd_total
+    unique_city_id = blds[blds.city_id.notna()].city_id.unique()
+    mcd_total = pd.DataFrame( 
+        # random mcd total growth dataframe
+            np.random.randint(-100, 100, len(unique_city_id)),
+            index=unique_city_id.astype('int'), 
+            columns=['growth']
+        )    
+    # only selecting growth > 0
+    mcd_total = mcd_total[mcd_total.growth > 0]
+    for city in mcd_total.index:
+        # for each city, make n_units = n_choosers
+        # sorted by year built
+        city_units = housing_units[housing_units.city == city].sort_values(by='building_age', ascending=True)
+        # pick the top k units
+        growth = mcd_total.loc[city, 'growth']
+        selected_units = city_units.iloc[:growth]
+        if not new_units:
+            new_units = selected_units
+        else :
+            new_units = pd.concat([new_units, selected_units], copy=False)
+    return new_units.index
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
