@@ -391,7 +391,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         if len(bselect) <= 0:
             print("We can't find a building to place these agents")
             return agents, agents_pool
-        new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
+        new_building_ids = bselect.sample(number_of_agents, replace=True).index.values  
         # maybe use job reallocation instead of random
 
         if len(agents_pool) > 0:
@@ -632,11 +632,13 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
         sched_dev["stories"] = 0
-        zone = sched_dev.b_zone_id
+        zone = sched_dev.b_zone_id # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
         city = sched_dev.b_city_id
+        ebid = sched_dev.event_bid.copy() #save event_bid to be used later
         sched_dev = add_extra_columns_res(sched_dev)
-        sched_dev['b_zone_id'] = zone
+        sched_dev['b_zone_id'] = zone 
         sched_dev['b_city_id'] = city
+        sched_dev['event_bid'] = ebid #add back event_bid
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -646,7 +648,6 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # Todo: maybe we need to impute some columns
         # Todo: parcel use need to be updated
         # Todo: record dev_id -> building_id
-
 
 @orca.step()
 def scheduled_demolition_events(buildings, households, jobs, iter_var, events_deletion):
@@ -784,7 +785,7 @@ def feasibility(parcels):
 def add_extra_columns_nonres(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     for col in ['improvement_value', 'land_area', 'tax_exempt', 'sqft_price_nonres',
-                'sqft_price_res', 'sqft_per_unit', 'hu_filter']:
+                'sqft_price_res', 'sqft_per_unit', 'hu_filter', 'event_bid']:
         df[col] = 0
     df['year_built'] = orca.get_injectable('year')
     p = orca.get_table('parcels').to_frame(['zone_id', 'city_id'])
