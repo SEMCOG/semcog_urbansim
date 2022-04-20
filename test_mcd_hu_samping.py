@@ -17,10 +17,9 @@ orca.run([
     # "random_demolition_events",
     # "scheduled_development_events",
     # "refiner",       
-    # "households_transition",
-    "city_total",
+    "households_transition",
     # "fix_lpr",
-    # "households_relocation",
+    "households_relocation",
     # "jobs_transition",
     # "jobs_relocation",
     # "feasibility",
@@ -29,7 +28,8 @@ orca.run([
     ] + 
     # orca.get_injectable('repm_step_names') +  # In place of ['nrh_simulate', 'rsh_simulate']
     # ["increase_property_values"] +  # Hack to make more feasibility
-    # orca.get_injectable('hlcm_step_names') +
+    ['mcd_hu_sampling'] +
+    orca.get_injectable('hlcm_step_names') +
     # orca.get_injectable('elcm_step_names') + 
     [
         # "elcm_home_based",
