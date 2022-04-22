@@ -103,7 +103,7 @@ def mcd_hu_sampling( buildings):
     """
     # get housing unit table from buildings
     vacant_variable = 'vacant_residential_units'
-    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age'])
+    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age', 'census_bg_id'])
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
@@ -113,6 +113,8 @@ def mcd_hu_sampling( buildings):
     # quota 
     # init output df
     new_units = None
+
+    ####
     # generate pseudo mcd_total
     unique_city_id = blds[blds.city_id.notna()].city_id.unique()
     mcd_total = pd.DataFrame( 
@@ -121,12 +123,36 @@ def mcd_hu_sampling( buildings):
             index=unique_city_id.astype('int'), 
             columns=['growth']
         )    
+    #### 
+    # generating pseudo bg trend table
+    unique_bg_id = blds[blds.census_bg_id.notna()].census_bg_id.unique()
+    bg_trend = pd.DataFrame( 
+        # random mcd total growth dataframe
+            np.random.randint(-100, 100, len(unique_bg_id)),
+            index=unique_bg_id.astype('int'), 
+            name='bg_trend'
+        ) 
+    bg_trend_norm_by_bg = (bg_trend-bg_trend.mean())/bg_trend.std()
+ 
+
     # only selecting growth > 0
     mcd_total = mcd_total[mcd_total.growth > 0]
     for city in mcd_total.index:
         # for each city, make n_units = n_choosers
         # sorted by year built
-        city_units = housing_units[housing_units.city == city].sort_values(by='building_age', ascending=True)
+        city_units = housing_units[housing_units.city == city]
+        # building_age normalized
+        building_age = city_units.building_age
+        building_age_norm = (building_age-building_age.mean())/building_age.std()
+        # bg trend normalized
+        bg_trend_norm = city_units.census_bg_id.merge(bg_trend_norm_by_bg, how='left', on='census_bg_id').bg_trend
+        # sum of normalized score
+        normalized_score = (-building_age_norm) + bg_trend_norm
+        # sorted by the score from high to low
+        normalized_score = normalized_score.sort_values(ascending=False, ignore_index=False)
+        # apply sorted index back to city_units
+        city_units = city_units.loc[normalized_score.index]
+        #.sort_values(by='building_age', ascending=True)
         # pick the top k units
         growth = mcd_total.loc[city, 'growth']
         selected_units = city_units.iloc[:growth]
@@ -134,7 +160,6 @@ def mcd_hu_sampling( buildings):
             new_units = selected_units
         else :
             new_units = pd.concat([new_units, selected_units], copy=False)
-    return new_units.index
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
