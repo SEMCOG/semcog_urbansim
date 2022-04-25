@@ -479,7 +479,7 @@ geographic_levels = [('parcels', 'parcel_id'),
                      ('zones', 'zone_id')]
 vars_to_dummify = ['city_id', 'building_type_id']
 vars_to_log = ['non_residential_sqft', 'building_sqft', 'land_area', 'parcel_sqft', 'sqft_per_unit',
-               'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value']
+               'parcels_parcel_far', 'sqft_price_nonres', 'sqft_price_res', 'improvement_value', 'mcd_model_quota']
 
 for geography in geographic_levels:
     geography_name = geography[0]
