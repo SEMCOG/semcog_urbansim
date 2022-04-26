@@ -86,7 +86,7 @@ def elcm_home_based(jobs, households):
     _print_number_unplaced(wrap_jobs, 'building_id')
 
 @orca.step()
-def mcd_hu_sampling( mcd_total, buildings):
+def mcd_hu_sampling( buildings, mcd_total, bg_hh_increase):
     """
     Apply the mcd total forecast to Limit and calculate the pool of housing 
     units to match the distribution of the mcd_total growth table for the large_area
@@ -104,7 +104,7 @@ def mcd_hu_sampling( mcd_total, buildings):
     year = orca.get_injectable('year')
     # get housing unit table from buildings
     vacant_variable = 'vacant_residential_units'
-    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age', 'census_bg_id', 'mcd_model_quota'])
+    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age', 'geoid', 'mcd_model_quota'])
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
@@ -121,16 +121,10 @@ def mcd_hu_sampling( mcd_total, buildings):
     mcd_growth = mcd_total[str(year)] - mcd_total[str(year-1)]
     #### 
     # generating pseudo bg trend table
-    unique_bg_id = blds[blds.census_bg_id.notna()].census_bg_id.unique()
-    bg_trend = pd.Series( 
-        # random mcd total growth dataframe
-            np.random.randint(-100, 100, len(unique_bg_id)),
-            index=unique_bg_id.astype('int'), 
-            name='bg_trend'
-        ) 
-    bg_trend.index.name = 'census_bg_id'
+    bg_hh_increase = bg_hh_increase.to_frame()
+    bg_trend = bg_hh_increase.TotalHU19 - bg_hh_increase.TotalHU14
     bg_trend_norm_by_bg = (bg_trend-bg_trend.mean())/bg_trend.std()
- 
+    bg_trend_norm_by_bg.name = 'bg_trend'
 
     # only selecting growth > 0
     mcd_growth = mcd_growth[mcd_growth > 0]
@@ -142,7 +136,7 @@ def mcd_hu_sampling( mcd_total, buildings):
         building_age = city_units.building_age
         building_age_norm = (building_age-building_age.mean())/building_age.std()
         # bg trend normalized
-        bg_trend_norm = city_units[['census_bg_id']].join(bg_trend_norm_by_bg, how='left', on='census_bg_id').bg_trend
+        bg_trend_norm = city_units[['geoid']].join(bg_trend_norm_by_bg, how='left', on='geoid').bg_trend
         # sum of normalized score
         normalized_score = (-building_age_norm) + bg_trend_norm
         # sorted by the score from high to low
