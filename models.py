@@ -86,7 +86,7 @@ def elcm_home_based(jobs, households):
     _print_number_unplaced(wrap_jobs, 'building_id')
 
 @orca.step()
-def mcd_hu_sampling( buildings, mcd_total, bg_hh_increase):
+def mcd_hu_sampling( buildings, households, mcd_total, bg_hh_increase):
     """
     Apply the mcd total forecast to Limit and calculate the pool of housing 
     units to match the distribution of the mcd_total growth table for the large_area
@@ -101,37 +101,48 @@ def mcd_hu_sampling( buildings, mcd_total, bg_hh_increase):
     new_units : pandas.Series
         Index of alternatives which have been picked as the candidates
     """
+    # get current year
     year = orca.get_injectable('year')
     # get housing unit table from buildings
+    # TODO: replace hard-coded value
     vacant_variable = 'vacant_residential_units'
-    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age', 'geoid', 'mcd_model_quota'])
+    blds = buildings.to_frame(['building_id', 'semmcd', vacant_variable, 'building_age', 'geoid', 'mcd_model_quota'])
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
+    # generate housing units from vacant units 
     indexes = np.repeat(vacant_units.index.values,
                         vacant_units.values.astype('int'))
     housing_units = blds.loc[indexes]
-    # quota 
-    # init output df
-    new_units = pd.Series()
 
     # the mcd_total for year and year-1
-    mcd_total = mcd_total.to_frame([str(year-1), str(year)])
+    mcd_total = mcd_total.to_frame([str(year)])
+    hh = households.to_frame(['semmcd', 'building_id'])
+    hh = hh[hh.building_id != -1]
+    hh_by_city = hh.groupby('semmcd').count().building_id
+    # 4 mcds missing in the mcd_total table [2073, 2172, 6142, 2252]
     # get the growth by subtract the previous year
-    mcd_growth = mcd_total[str(year)] - mcd_total[str(year-1)]
+    # growth = target_year_hh - current_hh
+    mcd_growth = mcd_total[str(year)] - hh_by_city
+    # temp set NaN to 0
+    # TODO: solve the missing mcds
+    mcd_growth = mcd_growth.fillna(0).astype(int)
     #### 
     # generating pseudo bg trend table
     bg_hh_increase = bg_hh_increase.to_frame()
-    bg_trend = bg_hh_increase.TotalHU19 - bg_hh_increase.TotalHU14
+    # use occupied, 3 year window trend = y_i - y_i-3
+    bg_trend = bg_hh_increase.occupied - bg_hh_increase.previous_occupied
     bg_trend_norm_by_bg = (bg_trend-bg_trend.mean())/bg_trend.std()
     bg_trend_norm_by_bg.name = 'bg_trend'
 
+    # init output df
+    new_units = pd.Series()
     # only selecting growth > 0
     mcd_growth = mcd_growth[mcd_growth > 0]
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
         # sorted by year built
-        city_units = housing_units[housing_units.city_id == city]
+        city_units = housing_units[housing_units.semmcd == city]
         # building_age normalized
         building_age = city_units.building_age
         building_age_norm = (building_age-building_age.mean())/building_age.std()
