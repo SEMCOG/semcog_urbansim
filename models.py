@@ -125,7 +125,8 @@ def mcd_hu_sampling( buildings, households, mcd_total, bg_hh_increase):
     # growth = target_year_hh - current_hh
     mcd_growth = mcd_total[str(year)] - hh_by_city
     # temp set NaN to 0
-    # TODO: solve the missing mcds
+    if mcd_growth.isna().sum() > 0:
+        print("Warning: NaN exists in mcd_growth, replaced them with 0")
     mcd_growth = mcd_growth.fillna(0).astype(int)
     #### 
     # generating pseudo bg trend table
@@ -165,6 +166,26 @@ def mcd_hu_sampling( buildings, households, mcd_total, bg_hh_increase):
     mcd_model_quota.loc[quota.index] = quota.values
     buildings.update_col_from_series('mcd_model_quota', mcd_model_quota, cast=True)
 
+@orca.step()
+def update_bg_hh_increase(bg_hh_increase, households):
+    # baseyear 2019
+    base_year = 2019
+    year = orca.get_injectable('year')
+    year_diff = year - base_year
+    hh = households.to_frame(['geoid']).reset_index()
+    hh_by_bg = hh.groupby('geoid').count().household_id
+    bg_hh = bg_hh_increase.to_frame(['occupied_year_minus_3', 'occupied_year_minus_2', 'occupied_year_minus_1'])
+    bg_hh_increase.update_col_from_series('occupied_year_minus_3', 
+                bg_hh['occupied_year_minus_2'], cast=True)
+    bg_hh_increase.update_col_from_series('occupied_year_minus_2', 
+                bg_hh['occupied_year_minus_1'], cast=True)
+    bg_hh_increase.update_col_from_series('occupied_year_minus_1', hh_by_bg, cast=True)
+    if year_diff > 4:
+        # if the first few years, save the bg summary and use 2014 and 2019 data
+        bg_hh_increase.update_col_from_series('occupied', hh_by_bg, cast=True)
+        bg_hh_increase.update_col_from_series('previous_occupied', 
+                    bg_hh['occupied_year_minus_3'], cast=True)
+        
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
     parcels = parcels.to_frame()
