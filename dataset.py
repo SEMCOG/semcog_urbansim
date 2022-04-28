@@ -40,12 +40,15 @@ def bg_hh_increase():
     bg_hh_inc = pd.read_csv(
         "/media/urbansim/RDF2050/data/base_year/ACS_HH_14_19_BG.csv"
     )
-    bg_hh_inc = bg_hh_inc.rename(columns={
-        'OccupiedHU19': 'occupied',
-        'OccupiedHU14': 'previous_occupied',
-    })
-    return bg_hh_inc[['GEOID', 'occupied', 
-                    'previous_occupied']].set_index('GEOID')
+    # initialized iteration variable 
+    bg_hh_inc['occupied'] = bg_hh_inc['OccupiedHU19']
+    bg_hh_inc['previous_occupied'] = bg_hh_inc['OccupiedHU14']
+    bg_hh_inc['occupied_year_minus_1'] = -1
+    bg_hh_inc['occupied_year_minus_2'] = -1
+    bg_hh_inc['occupied_year_minus_3'] = -1
+    return bg_hh_inc[['GEOID', 'OccupiedHU19', 'OccupiedHU14', 'occupied', 
+                    'previous_occupied', 'occupied_year_minus_1', 
+                    'occupied_year_minus_2', 'occupied_year_minus_3']].set_index('GEOID')
 
 @orca.table(cache=True)
 def buildings(store):
