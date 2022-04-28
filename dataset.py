@@ -32,7 +32,7 @@ orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv"
 @orca.table('mcd_total')
 def mcd_total():
     return pd.read_csv(
-        "/media/data-analysis-drive/Staff/Li/RDF2050/MCD_forecast/mcd_2050_draft_noreview.csv"
+        "data/mcd_2050_draft_noreview.csv"
     ).set_index('semmcd')
 
 @orca.table('bg_hh_increase')
