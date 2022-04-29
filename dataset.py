@@ -38,8 +38,9 @@ def mcd_total():
 @orca.table('bg_hh_increase')
 def bg_hh_increase():
     bg_hh_inc = pd.read_csv(
-        "/media/urbansim/RDF2050/data/base_year/ACS_HH_14_19_BG.csv"
+        "data/ACS_HH_14_19_BG.csv"
     )
+    bg_hh_inc['GEOID'] = bg_hh_inc['GEOID'].astype(int)
     # initialized iteration variable 
     bg_hh_inc['occupied'] = bg_hh_inc['OccupiedHU19']
     bg_hh_inc['previous_occupied'] = bg_hh_inc['OccupiedHU14']
