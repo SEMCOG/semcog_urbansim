@@ -177,20 +177,18 @@ def update_bg_hh_increase(bg_hh_increase, households):
     hh = households.to_frame(['geoid']).reset_index()
     hh_by_bg = hh.groupby('geoid').count().household_id
     # hh_by_bg.index = hh_by_bg.index.astype(int)
-    bg_hh = bg_hh_increase.to_frame(['occupied_year_minus_3', 'occupied_year_minus_2', 'occupied_year_minus_1'])
-    bg_hh_increase.update_col_from_series('occupied_year_minus_3', 
-                bg_hh['occupied_year_minus_2'], cast=True)
-    bg_hh_increase.update_col_from_series('occupied_year_minus_2', 
-                bg_hh['occupied_year_minus_1'], cast=True)
+    bg_hh = bg_hh_increase.to_frame()
+    bg_hh['occupied_year_minus_3'] = bg_hh['occupied_year_minus_2']
+    bg_hh['occupied_year_minus_2'] = bg_hh['occupied_year_minus_1']
     # some bg missing in initial bg_hh_increase table
     # TODO: email to Sirisha and add them to a copy of the table
     # Added all 0s to the missing bg 261158335004
-    bg_hh_increase.update_col_from_series('occupied_year_minus_1', hh_by_bg, cast=True)
+    bg_hh['occupied_year_minus_1'] = hh_by_bg
     if year_diff > 4:
         # if the first few years, save the bg summary and use 2014 and 2019 data
-        bg_hh_increase.update_col_from_series('occupied', hh_by_bg, cast=True)
-        bg_hh_increase.update_col_from_series('previous_occupied', 
-                    bg_hh['occupied_year_minus_3'], cast=True)
+        bg_hh['occupied'] = hh_by_bg
+        bg_hh['previous_occupied'] =  bg_hh['occupied_year_minus_3']
+    orca.add_table('bg_hh_increase', bg_hh)
         
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
