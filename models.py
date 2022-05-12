@@ -85,6 +85,12 @@ def elcm_home_based(jobs, households):
 
     _print_number_unplaced(wrap_jobs, 'building_id')
 
+@orca.injectable('mcd_hu_sampling_config')
+def mcd_hu_sampling_config():
+    with open(os.path.join(misc.configs_dir(), "mcd_hu_sampling.yaml")) as f:
+        cfg = yaml.load(f, Loader=yaml.FullLoader)
+        return cfg
+
 @orca.step()
 def mcd_hu_sampling( buildings, households, mcd_total, bg_hh_increase):
     """
@@ -104,8 +110,8 @@ def mcd_hu_sampling( buildings, households, mcd_total, bg_hh_increase):
     # get current year
     year = orca.get_injectable('year')
     # get housing unit table from buildings
-    # TODO: replace hard-coded value
-    vacant_variable = 'vacant_residential_units'
+    config = orca.get_injectable('mcd_hu_sampling_config')
+    vacant_variable = config['vacant_variable']
     blds = buildings.to_frame(['building_id', 'semmcd', vacant_variable, 'building_age', 'geoid', 'mcd_model_quota'])
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
