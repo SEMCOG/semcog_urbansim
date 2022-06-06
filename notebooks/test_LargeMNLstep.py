@@ -30,29 +30,26 @@ orca.run(["neighborhood_vars"])
 #%%
 #function to get extra columns from config
 def filter_columns(model):
-        return [model.chooser_filters, model.alt_filters, 
+        conf_cols = [model.chooser_filters, model.alt_filters, 
                         model.out_chooser_filters, model.out_alt_filters, 
                         model.choice_column,
                         model.out_column,
                         model.alt_capacity
                 ]
-        
+        sl = list(map(util.columns_in_filters, conf_cols))
+        return list(set([c for subl in sl for c in subl]))
+
 # %%
 f = 'configs/hlcm_large/hlcm_city_test.yaml'
 d = yamlio.yaml_to_dict(str_or_buffer=f) #import yaml config
 step = mm.build_step(d['saved_object']) # build model
 mm.register(step, save_to_disk=False) #register to Orca
 
-
 # %%
-sl = list(map(util.columns_in_filters, extra_columns(step)))
-filter_cols = list(set([c for subl in sl for c in subl]))
+#prepare a simulation test
+# extract only used columns in model yaml/spec
+filter_cols = filter_columns(step)
 express_cols = util.columns_in_formula(step.model_expression) 
-
-# %%
-# extract used cols from model expression, add primary attributes
-#orca.get_table('buildings').local_columns
-#model_cols = util.columns_in_formula(step.model_expression) 
 
 hh = orca.get_table('households').to_frame(orca.get_table('households').local_columns + express_cols + filter_cols)
 bb = orca.get_table('buildings').to_frame(orca.get_table('buildings').local_columns + express_cols + filter_cols)
@@ -121,12 +118,11 @@ mm.initialize('configs/hlcm_large')
 # tags
 #
 
-#
-
 
 # %%
-# 1. start from scratch, add config items 
+# 1. test estimation from scratch, add config items 
 # Define the agent whose behavior is being modeled
+m = LargeMultinomialLogitStep()
 m.choosers = ['households']
 m.chooser_sample_size = 5000
 m.chooser_filters = ['large_area_id == 161']
@@ -149,8 +145,8 @@ selected_variables = ['has_children:nodes_walk_percent_hh_with_children',
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
-m.out_choosers = 'dfh161'
-m.out_alternatives = 'dfb161'
+m.out_choosers = 'dfh161' # if different from estimation
+m.out_alternatives = 'dfb161' # if different from estimation
 m.constrained_choices = True
 m.alt_capacity = 'vacant_residential_units'
 m.out_chooser_filters = ['building_id == -1']
@@ -159,14 +155,14 @@ m.out_chooser_filters = ['building_id == -1']
 # model estimation and save the results to default folder "configs/"
 
 m.fit()
-m.name = 'hlcm_city_test'
+m.name = 'hlcm_city_test2'
 mm.register(m)
 
 
 # %%
 # %%
-# 2. start from existing model config
-f = 'configs/hlcm_large/hlcm_city_test.yaml'
+# 2. model estimatin start from existing model config
+f = 'configs/hlcm_large/hlcm_city_test2.yaml'
 d = yamlio.yaml_to_dict(str_or_buffer=f) #import yaml config
 m = mm.build_step(d['saved_object']) # build model
 mm.register(step, save_to_disk=False) #register to Orca
@@ -174,7 +170,7 @@ mm.register(step, save_to_disk=False) #register to Orca
 #%%
 
 m.fit()
-m.name = 'hlcm_city_test'
+m.name = 'hlcm_city_test3'
 mm.register(m)
 
 
