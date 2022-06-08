@@ -961,9 +961,9 @@ def feasibility(parcels):
         modify_costs=cost_shifter_callback,
     )
     feasibility = orca.get_table("feasibility").to_frame()
-    for lid, df in parcels.large_area_id.to_frame().groupby("large_area_id"):
+    for mcdid, df in parcels.semmcd.to_frame().groupby("semmcd"):
         orca.add_table(
-            "feasibility_" + str(lid), feasibility[feasibility.index.isin(df.index)]
+            "feasibility_" + str(mcdid), feasibility[feasibility.index.isin(df.index)]
         )
 
 
