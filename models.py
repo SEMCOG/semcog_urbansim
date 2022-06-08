@@ -1053,7 +1053,7 @@ def register_btype_distributions(buildings):
 
 def run_developer(
     target_units,
-    lid,
+    mcdid,
     forms,
     buildings,
     supply_fname,
@@ -1072,10 +1072,10 @@ def run_developer(
     """
     from developer import develop
 
-    print("processing large area id:", lid)
+    print("processing mcd id:", mcdid)
     cfg = misc.config(cfg)
     dev = develop.Developer.from_yaml(
-        orca.get_table("feasibility_" + str(lid)).to_frame(),
+        orca.get_table("feasibility_" + str(mcdid)).to_frame(),
         forms,
         target_units,
         parcel_size,
@@ -1094,7 +1094,7 @@ def run_developer(
     )
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
-    orca.add_table("feasibility_" + str(lid), dev.feasibility)
+    orca.add_table("feasibility_" + str(mcdid), dev.feasibility)
 
     if new_buildings is None or len(new_buildings) == 0:
         return
