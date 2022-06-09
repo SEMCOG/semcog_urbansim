@@ -29,6 +29,11 @@ orca.add_table('target_vacancies', pd.read_csv("data/target_vacancies.csv"))
 orca.add_table('demolition_rates', pd.read_csv("data/DEMOLITION_RATES.csv", index_col='city_id'))
 orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv", index_col='b_city_id'))
 
+@orca.table('mcd_total')
+def mcd_total():
+    return pd.read_csv(
+        "/media/data-analysis-drive/Staff/Li/RDF2050/MCD_forecast/mcd_2050_draft_noreview.csv"
+    ).set_index('semmcd')
 
 @orca.table(cache=True)
 def buildings(store):
@@ -44,6 +49,7 @@ def buildings(store):
     df.fillna(0, inplace=True)
 
     df['hu_filter'] = 0
+    df['mcd_model_quota'] = 0
     cites = [551, 1155, 1100, 3130, 6020, 6040]
     sample = df[df.residential_units > 0]
     sample = sample[~(sample.index.isin(store['households'].building_id))]

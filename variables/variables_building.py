@@ -544,6 +544,7 @@ vars_to_log = [
     "sqft_price_nonres",
     "sqft_price_res",
     "improvement_value",
+    "mcd_model_quota",
 ]
 
 for geography in geographic_levels:
@@ -602,6 +603,11 @@ def zone_prop_race_4(buildings, zones):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_residential_units(buildings):
     return np.log1p(buildings.residential_units)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def census_bg_id(buildings, parcels):
+    return misc.reindex(parcels.census_bg_id, buildings.parcel_id).fillna(0)
 
 
 def standardize(series):

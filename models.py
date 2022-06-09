@@ -16,6 +16,26 @@ import lcm_utils
 import variables
 from functools import reduce
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
+
+from statsmodels.tsa.ar_model import AutoReg
+from statsmodels.tsa.arima_model import ARMA
+from statsmodels.tsa.statespace import sarimax
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# from neuralprophet import NeuralProphet, utils
+import neuralprophet
+neuralprophet.utils.set_random_seed(0)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 location_choice_models = {}
@@ -65,6 +85,80 @@ def elcm_home_based(jobs, households):
 
     _print_number_unplaced(wrap_jobs, 'building_id')
 
+@orca.step()
+def mcd_hu_sampling( mcd_total, buildings):
+    """
+    Apply the mcd total forecast to Limit and calculate the pool of housing 
+    units to match the distribution of the mcd_total growth table for the large_area
+    Parameters
+    ----------
+    mcd_total : pandas.DataFrame
+        MCD total table
+    buildings : pandas.DataFrame
+        Buildings table 
+    Returns
+    -------
+    new_units : pandas.Series
+        Index of alternatives which have been picked as the candidates
+    """
+    year = orca.get_injectable('year')
+    # get housing unit table from buildings
+    vacant_variable = 'vacant_residential_units'
+    blds = buildings.to_frame(['building_id', 'city_id', vacant_variable, 'building_age', 'census_bg_id', 'mcd_model_quota'])
+    vacant_units = blds[vacant_variable]
+    vacant_units = vacant_units[vacant_units.index.values >= 0]
+    vacant_units = vacant_units[vacant_units > 0]
+    indexes = np.repeat(vacant_units.index.values,
+                        vacant_units.values.astype('int'))
+    housing_units = blds.loc[indexes]
+    # quota 
+    # init output df
+    new_units = pd.Series()
+
+    # the mcd_total for year and year-1
+    mcd_total = mcd_total.to_frame([str(year-1), str(year)])
+    # get the growth by subtract the previous year
+    mcd_growth = mcd_total[str(year)] - mcd_total[str(year-1)]
+    #### 
+    # generating pseudo bg trend table
+    unique_bg_id = blds[blds.census_bg_id.notna()].census_bg_id.unique()
+    bg_trend = pd.Series( 
+        # random mcd total growth dataframe
+            np.random.randint(-100, 100, len(unique_bg_id)),
+            index=unique_bg_id.astype('int'), 
+            name='bg_trend'
+        ) 
+    bg_trend.index.name = 'census_bg_id'
+    bg_trend_norm_by_bg = (bg_trend-bg_trend.mean())/bg_trend.std()
+ 
+
+    # only selecting growth > 0
+    mcd_growth = mcd_growth[mcd_growth > 0]
+    for city in mcd_growth.index:
+        # for each city, make n_units = n_choosers
+        # sorted by year built
+        city_units = housing_units[housing_units.city_id == city]
+        # building_age normalized
+        building_age = city_units.building_age
+        building_age_norm = (building_age-building_age.mean())/building_age.std()
+        # bg trend normalized
+        bg_trend_norm = city_units[['census_bg_id']].join(bg_trend_norm_by_bg, how='left', on='census_bg_id').bg_trend
+        # sum of normalized score
+        normalized_score = (-building_age_norm) + bg_trend_norm
+        # sorted by the score from high to low
+        normalized_score = normalized_score.sort_values(ascending=False, ignore_index=False)
+        # apply sorted index back to city_units
+        city_units = city_units.loc[normalized_score.index]
+        #.sort_values(by='building_age', ascending=True)
+        # pick the top k units
+        growth = mcd_growth.loc[city]
+        selected_units = city_units.iloc[:growth]
+        new_units = pd.concat([new_units, selected_units])
+    # add mcd model quota to building table
+    quota = new_units.index.value_counts()
+    mcd_model_quota = pd.Series(0, index=blds.index)
+    mcd_model_quota.loc[quota.index] = quota.values
+    buildings.update_col_from_series('mcd_model_quota', mcd_model_quota, cast=True)
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
