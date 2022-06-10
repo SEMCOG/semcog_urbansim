@@ -32,8 +32,24 @@ orca.add_table('extreme_hu_controls', pd.read_csv("data/extreme_hu_controls.csv"
 @orca.table('mcd_total')
 def mcd_total():
     return pd.read_csv(
-        "/media/data-analysis-drive/Staff/Li/RDF2050/MCD_forecast/mcd_2050_draft_noreview.csv"
+        "data/mcd_2050_draft_noreview.csv"
     ).set_index('semmcd')
+
+@orca.table('bg_hh_increase')
+def bg_hh_increase():
+    bg_hh_inc = pd.read_csv(
+        "data/ACS_HH_14_19_BG.csv"
+    )
+    bg_hh_inc['GEOID'] = bg_hh_inc['GEOID'].astype(int)
+    # initialized iteration variable 
+    bg_hh_inc['occupied'] = bg_hh_inc['OccupiedHU19']
+    bg_hh_inc['previous_occupied'] = bg_hh_inc['OccupiedHU14']
+    bg_hh_inc['occupied_year_minus_1'] = -1
+    bg_hh_inc['occupied_year_minus_2'] = -1
+    bg_hh_inc['occupied_year_minus_3'] = -1
+    return bg_hh_inc[['GEOID', 'OccupiedHU19', 'OccupiedHU14', 'occupied', 
+                    'previous_occupied', 'occupied_year_minus_1', 
+                    'occupied_year_minus_2', 'occupied_year_minus_3']].set_index('GEOID')
 
 @orca.table(cache=True)
 def buildings(store):
