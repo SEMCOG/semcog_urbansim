@@ -1053,6 +1053,10 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     )
     # sample(demolition_rates.type84units, b[b.building_type_id == 84], 'residential_units', 'wh')
 
+    # github issue #30
+    if not buildings_idx: 
+        return
+
     drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
     buildings_idx = drop_buildings.index
@@ -1153,6 +1157,9 @@ def add_extra_columns_res(df):
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
         )
+    # github issue #31
+    # generating default `mcd_model_quota` as the same as the `residential_units`
+    df['mcd_model_quota'] = df['residential_units']
     return df
 
 
