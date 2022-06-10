@@ -177,6 +177,15 @@ def semmcd(buildings, parcels):
 def large_area_id(buildings, parcels):
     return misc.reindex(parcels.large_area_id, buildings.parcel_id)
 
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def county_id(buildings, parcels):
+    return misc.reindex(parcels.county_id, buildings.parcel_id)
+
+@orca.column('buildings', cache=True, cache_scope='iteration')
+def geoid(buildings, parcels):
+    # geoid = parcels[['county_id', 'census_bg_id']].apply(lambda x: 26*10000000000 + x.county_id*10000000 + x.census_bg_id, axis=1)
+    geoid = 26*10000000000 + parcels.county_id*10000000 + parcels.census_bg_id
+    return misc.reindex(geoid.fillna(0).astype(int), buildings.parcel_id)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def popden(buildings, zones):
