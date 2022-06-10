@@ -96,7 +96,7 @@ np.random.seed(seed)
 
 def verify():
     # hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear_py2.h5"), mode="r")
-    hdf_store = pd.HDFStore( "/media/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5", mode="r")
+    hdf_store = pd.HDFStore( "data/all_semcog_data_02-02-18-final-forecast_newbid_pickle4.h5", mode="r")
 
     new = verify_data_structure.yaml_from_store(hdf_store)
     with open(r"configs/data_structure.yaml", "w") as out:
