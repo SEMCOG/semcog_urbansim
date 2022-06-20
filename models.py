@@ -1101,9 +1101,15 @@ def feasibility(parcels):
         modify_costs=cost_shifter_callback,
     )
     feasibility = orca.get_table("feasibility").to_frame()
+    # MCD feasibility
     for mcdid, df in parcels.semmcd.to_frame().groupby("semmcd"):
         orca.add_table(
             "feasibility_" + str(mcdid), feasibility[feasibility.index.isin(df.index)]
+        )
+    # large_area feasibility
+    for lid, df in parcels.large_area_id.to_frame().groupby("large_area_id"):
+        orca.add_table(
+            "feasibility_" + str(lid), feasibility[feasibility.index.isin(df.index)]
         )
 
 
@@ -1302,8 +1308,8 @@ def run_developer(
 
 
 @orca.step("residential_developer")
-def residential_developer(households, parcels, target_vacancies):
-    target_vacancies = target_vacancies.to_frame()
+def residential_developer(households, parcels, target_vacancies_mcd):
+    target_vacancies = target_vacancies_mcd.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
@@ -1345,8 +1351,8 @@ def residential_developer(households, parcels, target_vacancies):
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies):
-    target_vacancies = target_vacancies.to_frame()
+def non_residential_developer(jobs, parcels, target_vacancies_la):
+    target_vacancies = target_vacancies_la.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
