@@ -27,26 +27,26 @@ for name in ['persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_s
     orca.add_table(name, store[name])
 
 orca.add_table("remi_pop_total", pd.read_csv(path.join(
-    table_dir, "data/remi_hhpop_bylarge.csv"), index_col='large_area_id'))
+    table_dir, "remi_hhpop_bylarge.csv"), index_col='large_area_id'))
 orca.add_table('target_vacancies_mcd', pd.read_csv(
-    path.join(table_dir, "data/target_vacancies_mcd.csv")))
+    path.join(table_dir, "target_vacancies_mcd.csv")))
 orca.add_table('target_vacancies_la', pd.read_csv(
-    path.join(table_dir, "data/target_vacancies.csv")))
+    path.join(table_dir, "target_vacancies.csv")))
 orca.add_table('demolition_rates', pd.read_csv(
-    path.join(table_dir, "data/DEMOLITION_RATES.csv"), index_col='city_id'))
+    path.join(table_dir, "DEMOLITION_RATES.csv"), index_col='city_id'))
 orca.add_table('extreme_hu_controls', pd.read_csv(
-    path.join(table_dir, "data/extreme_hu_controls.csv"), index_col='b_city_id'))
+    path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
 
 @orca.table('mcd_total')
 def mcd_total():
     return pd.read_csv(
-        path.join(table_dir, "data/mcd_2050_draft_noreview.csv")
+        path.join(table_dir, "mcd_2050_draft_noreview.csv")
     ).set_index('semmcd')
 
 @orca.table('bg_hh_increase')
 def bg_hh_increase():
     bg_hh_inc = pd.read_csv(
-        path.join(table_dir, "data/ACS_HH_14_19_BG.csv")
+        path.join(table_dir, "ACS_HH_14_19_BG.csv")
     )
     bg_hh_inc['GEOID'] = bg_hh_inc['GEOID'].astype(int)
     # initialized iteration variable 
