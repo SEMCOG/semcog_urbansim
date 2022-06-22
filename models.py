@@ -213,7 +213,7 @@ def update_bg_hh_increase(bg_hh_increase, households):
     # some bg missing in initial bg_hh_increase table
     # TODO: email to Sirisha and add them to a copy of the table
     # Added all 0s to the missing bg 261158335004
-    bg_hh["occupied_year_minus_1"] = hh_by_bg.fillna(0).astype("int")
+    bg_hh['occupied_year_minus_1'] = hh_by_bg.fillna(0).astype('int')
     if year_diff > 4:
         # if the first few years, save the bg summary and use 2014 and 2019 data
         bg_hh["occupied"] = hh_by_bg
@@ -1280,6 +1280,8 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
+    # return the number of units added
+    return new_buildings.residential_units.sum() - new_buildings.current_units.sum()
 
 
 # @orca.step("residential_developer")
@@ -1328,7 +1330,7 @@ def run_developer(
 
 
 @orca.step("residential_developer")
-def residential_developer(households, parcels, target_vacancies_mcd):
+def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
     target_vacancies = target_vacancies_mcd.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
@@ -1336,12 +1338,16 @@ def residential_developer(households, parcels, target_vacancies_mcd):
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
+    # get current year
+    year = orca.get_injectable('year')
+    # the mcd_total for year and year-1
+    mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
         target_vacancy = float(
             target_vacancies[target_vacancies.semmcd == mcdid].res_target_vacancy_rate
         )
-        num_agents = (households.semmcd == mcdid).sum()
+        num_agents = mcd_total.loc[mcdid]
         num_units = mcd_orig_buildings.residential_units.sum()
 
         print("Number of agents: {:,}".format(num_agents))
@@ -1356,7 +1362,7 @@ def residential_developer(households, parcels, target_vacancies_mcd):
         )
 
         register_btype_distributions(mcd_orig_buildings)
-        run_developer(
+        units_added = run_developer(
             target_units,
             mcdid,
             "residential",
@@ -1368,6 +1374,9 @@ def residential_developer(households, parcels, target_vacancies_mcd):
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+        if units_added < target_units:
+            print("Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s" % (
+                mcdid, target_units, units_added))
 
 
 @orca.step()
