@@ -1267,7 +1267,7 @@ def run_developer(
     orca.add_table("feasibility_" + str(geoid), dev.feasibility)
 
     if new_buildings is None or len(new_buildings) == 0:
-        return
+        return 0
 
     parcel_utils.add_buildings(
         dev.feasibility,
