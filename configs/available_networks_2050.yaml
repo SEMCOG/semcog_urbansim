@@ -1,0 +1,33 @@
+osm_roads_walk_2020:
+  cost1: feet
+  cost2: meters
+  cost3: minutes
+  edges: edges_osm_roads_walk_2020
+  nodes: nodes_osm_roads_walk_2020
+highway_ext_2020:
+  cost1: peak_mins
+  cost2: nonpk_mins
+  cost3: miles
+  edges: edges_highway_ext_2020
+  nodes: nodes_highway_ext_2020
+  local_edges: edges_highway_ext_2020_local
+  local_nodes: nodes_highway_ext_2020_local
+highway_ext_2030:
+  cost1: peak_mins
+  cost2: nonpk_mins
+  cost3: miles
+  edges: edges_highway_ext_2030
+  nodes: nodes_highway_ext_2030
+  local_edges: edges_highway_ext_2030_local
+  local_nodes: nodes_highway_ext_2030_local
+
+#/edges_highway_ext_2020    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
+#/edges_highway_ext_2020_local    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
+#/edges_highway_ext_2030    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
+#/edges_highway_ext_2030_local    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
+#/edges_osm_roads_walk_2020    |    Index(['from', 'to', 'feet', 'minutes', 'meters'], dtype='object')
+#/nodes_highway_ext_2020    |    Index(['x', 'y', 'nodeid'], dtype='object')
+#/nodes_highway_ext_2020_local    |    Index(['x', 'y', 'nodeid'], dtype='object')
+#/nodes_highway_ext_2030    |    Index(['x', 'y', 'nodeid'], dtype='object')
+#/nodes_highway_ext_2030_local    |    Index(['x', 'y', 'nodeid'], dtype='object')
+#/nodes_osm_roads_walk_2020    |    Index(['x', 'y', 'nodeid'], dtype='object')
