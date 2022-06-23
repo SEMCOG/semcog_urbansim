@@ -626,7 +626,9 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 
 @orca.step()
 def refiner(jobs, households, buildings, persons, year, refiner_events, group_quarters):
-    location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"]
+    # #35
+    location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"] # must include b_zone_id, and b_city for 2045 refinder_event table
+    # location_ids = [ "zone_id", "city_id", "large_area_id"] 
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + location_ids)
     group_quarters_columns = group_quarters.local_columns
@@ -991,13 +993,21 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     if len(sched_dev) > 0:
         sched_dev["stories"] = 0
         zone = (
-            sched_dev.b_zone_id
+            # #35
+            # sched_dev.b_zone_id
+            sched_dev.zone_id
         )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
-        city = sched_dev.b_city_id
-        ebid = sched_dev.event_bid.copy()  # save event_bid to be used later
+        # #35
+        # city = sched_dev.b_city_id
+        city = sched_dev.city_id
+        ebid = sched_dev.building_id.copy()  # save event_bid to be used later
         sched_dev = add_extra_columns_res(sched_dev)
-        sched_dev["b_zone_id"] = zone
-        sched_dev["b_city_id"] = city
+
+        # #35
+        # sched_dev["b_zone_id"] = zone
+        # sched_dev["b_city_id"] = city
+        sched_dev["zone_id"] = zone
+        sched_dev["city_id"] = city
         sched_dev["event_bid"] = ebid  # add back event_bid
         b = buildings.to_frame(buildings.local_columns)
 
@@ -1050,7 +1060,9 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2045 - year) / (2045 - 2015)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(
-        buildings.local_columns + ["b_total_jobs", "b_total_households"]
+        buildings.local_columns + 
+        ['city_id'] +
+        ["b_total_jobs", "b_total_households"]
     )
     b = buildings.copy()
     allowed = variables.parcel_is_allowed()
@@ -1058,8 +1070,11 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     buildings_idx = []
 
     def sample(targets, type_b, accounting, weights):
-        for b_city_id, target in targets[targets > 0].items():
-            rel_b = type_b[type_b.b_city_id == b_city_id]
+        # #35
+        # for b_city_id, target in targets[targets > 0].items():
+        #     rel_b = type_b[type_b.b_city_id == b_city_id]
+        for city_id, target in targets[targets > 0].items():
+            rel_b = type_b[type_b.city_id == city_id]
             rel_b = rel_b[rel_b[accounting] <= target]
             size = min(len(rel_b), int(target))
             if size > 0:

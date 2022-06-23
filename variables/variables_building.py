@@ -618,6 +618,30 @@ def ln_residential_units(buildings):
 def census_bg_id(buildings, parcels):
     return misc.reindex(parcels.census_bg_id, buildings.parcel_id).fillna(0)
 
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zone_id(buildings, parcels):
+    return misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def city_id(buildings, parcels):
+    return misc.reindex(parcels.city_id, buildings.parcel_id).fillna(0)
+
+@orca.column("buildings", cache=True)
+def hu_filter(buildings, households, parcels):
+    """ move hu_filter code from dataset.py to here """
+    buildings = buildings.local
+    series = pd.Series([0 for _ in range(len(buildings))], index=buildings.index)
+    city_id = misc.reindex(parcels.city_id, buildings.parcel_id).fillna(0)
+    cites = [551, 1155, 1100, 3130, 6020, 6040]
+    sample = buildings[buildings.residential_units > 0]
+    sample = sample[~(sample.index.isin(households.building_id))]
+    for c in city_id.unique():
+        frac = 0.9 if c in cites else 0.5
+        sampled_indexes = sample[sample.index.isin(city_id[city_id == c].index)].sample(
+            frac=frac, replace=False).index
+        series[series.index.isin(sampled_indexes)] = 1
+    print('hu_filter', series)
+    return series
 
 def standardize(series):
     return (series - series.mean()) / series.std()
