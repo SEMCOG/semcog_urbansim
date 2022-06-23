@@ -64,7 +64,7 @@ def geoid(households, buildings):
 def zone_id(households, buildings):
     return misc.reindex(buildings.zone_id, households.building_id)
 
-
+# #35 keep it for now as required by the refiner model
 @orca.column('households', cache=True, cache_scope='iteration')
 def b_zone_id(households, buildings):
     return misc.reindex(buildings.b_zone_id, households.building_id)
@@ -74,7 +74,7 @@ def b_zone_id(households, buildings):
 def city_id(households, buildings):
     return misc.reindex(buildings.city_id, households.building_id)
 
-
+# #35 keep it for now as required by the refiner model
 @orca.column('households', cache=True, cache_scope='iteration')
 def b_city_id(households, buildings):
     return misc.reindex(buildings.b_city_id, households.building_id)
@@ -202,7 +202,7 @@ def workers_lte_cars(households):
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
-
+# #35 keep it for now as required by the refiner model
 @orca.column('persons', cache=True, cache_scope='iteration')
 def b_zone_id(persons, households):
     return misc.reindex(households.b_zone_id, persons.household_id)
@@ -212,7 +212,7 @@ def b_zone_id(persons, households):
 def city_id(households, persons):
     return misc.reindex(households.city_id, persons.household_id)
 
-
+# #35 keep it for now as required by the refiner model
 @orca.column('persons', cache=True, cache_scope='iteration')
 def b_city_id(households, persons):
     return misc.reindex(households.b_city_id, persons.household_id)
