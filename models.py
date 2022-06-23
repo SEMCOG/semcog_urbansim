@@ -213,7 +213,7 @@ def update_bg_hh_increase(bg_hh_increase, households):
     # some bg missing in initial bg_hh_increase table
     # TODO: email to Sirisha and add them to a copy of the table
     # Added all 0s to the missing bg 261158335004
-    bg_hh['occupied_year_minus_1'] = hh_by_bg.fillna(0).astype('int')
+    bg_hh["occupied_year_minus_1"] = hh_by_bg.fillna(0).astype("int")
     if year_diff > 4:
         # if the first few years, save the bg summary and use 2014 and 2019 data
         bg_hh["occupied"] = hh_by_bg
@@ -1339,7 +1339,7 @@ def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
         ["residential_units", "semmcd", "building_type_id"]
     )
     # get current year
-    year = orca.get_injectable('year')
+    year = orca.get_injectable("year")
     # the mcd_total for year and year-1
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
@@ -1375,8 +1375,10 @@ def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
             add_more_columns_callback=add_extra_columns_res,
         )
         if units_added < target_units:
-            print("Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s" % (
-                mcdid, target_units, units_added))
+            print(
+                "Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+                % (mcdid, target_units, units_added)
+            )
 
 
 @orca.step()
@@ -1429,15 +1431,12 @@ def non_residential_developer(jobs, parcels, target_vacancies_la):
 def build_networks_2050(parcels):
     import yaml
 
-    pdna.network.reserve_num_graphs(2)
-
     # networks in semcog_networks.h5
     with open(r"configs/available_networks_2050.yaml", "r") as stream:
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
-
-    if orca.get_injectable("year") < 2030:
+    year = orca.get_injectable("year")
+    if year < 2030:
         lstnet = [
             {
                 "name": "osm_roads_walk_2020",
@@ -1468,30 +1467,35 @@ def build_networks_2050(parcels):
             },
         ]
 
-    for n in lstnet:
-        n_dic_net = dic_net[n["name"]]
-        nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
-        net = pdna.Network(
-            nodes["x"],
-            nodes["y"],
-            edges["from"],
-            edges["to"],
-            edges[[n_dic_net[n["cost"]]]],
+    ## TODO, remove 2015, 2019 after switching to full 2050 model
+    if year in [2015, 2019, 2020, 2030]:
+        st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
+        pdna.network.reserve_num_graphs(2)
+
+        for n in lstnet:
+            n_dic_net = dic_net[n["name"]]
+            nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
+            net = pdna.Network(
+                nodes["x"],
+                nodes["y"],
+                edges["from"],
+                edges["to"],
+                edges[[n_dic_net[n["cost"]]]],
+            )
+            net.precompute(n["prev"])
+            net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
+
+            orca.add_injectable(n["net"], net)
+
+        # spatially join node ids to parcels
+        p = parcels.local
+        p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
+            p["centroid_x"], p["centroid_y"]
         )
-        net.precompute(n["prev"])
-        net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
-
-        orca.add_injectable(n["net"], net)
-
-    # spatially join node ids to parcels
-    p = parcels.local
-    p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    orca.add_table("parcels", p)
+        p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
+            p["centroid_x"], p["centroid_y"]
+        )
+        orca.add_table("parcels", p)
 
 
 @orca.step()
