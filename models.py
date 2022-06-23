@@ -300,6 +300,50 @@ def households_relocation(households, annual_relocation_rates_for_households):
 
 
 @orca.step()
+def households_relocation_2050(households, annual_relocation_rates_for_households):
+    relocation_rates = annual_relocation_rates_for_households.to_frame()
+    relocation_rates = relocation_rates.rename(
+        columns={"age_max": "age_of_head_max", "age_min": "age_of_head_min"}
+    )
+    relocation_rates.probability_of_relocating *= 0.2
+    reloc = relocation.RelocationModel(relocation_rates, "probability_of_relocating")
+    _print_number_unplaced(households, "building_id")
+    print("un-placing")
+    hh = households.to_frame(households.local_columns)
+
+    # block all event buildings and special buildings (event_bid>0)
+    bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
+    blocklst = bb.loc[bb.event_bid > 0].index
+    hh = hh.loc(~hh.building_id.isin(blocklst))
+
+    idx_reloc = reloc.find_movers(hh)
+    households.update_col_from_series(
+        "building_id", pd.Series(-1, index=idx_reloc), cast=True
+    )
+    _print_number_unplaced(households, "building_id")
+
+
+@orca.step()
+def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
+    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
+    reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
+    _print_number_unplaced(jobs, "building_id")
+    print("un-placing")
+    j = jobs.to_frame(jobs.local_columns)
+
+    # block all event buildings and special buildings (event_bid>0)
+    bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
+    blocklst = bb.loc[bb.event_bid > 0].index
+    j = j.loc(~j.building_id.isin(blocklst))
+
+    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
+    jobs.update_col_from_series(
+        "building_id", pd.Series(-1, index=idx_reloc), cast=True
+    )
+    _print_number_unplaced(jobs, "building_id")
+
+
+@orca.step()
 def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
