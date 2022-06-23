@@ -8,107 +8,160 @@ from os import path
 
 import assumptions
 
-warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
+warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 
-table_dir = "~/share/U_RDF2050/base_table"
+table_dir = "~/semcog_urbansim/data"
 
-for name in ['persons', 'parcels', 'zones', 'semmcds', 'counties', 'employment_sectors',
-             'building_sqft_per_job',
-             'annual_relocation_rates_for_households',
-             'annual_relocation_rates_for_jobs', 'annual_employment_control_totals',
-             'travel_data', 'zoning', 'large_areas', 'building_types', 'land_use_types',
-             'workers_labor_participation_rates', 'workers_employment_rates_by_large_area_age',
-             'workers_employment_rates_by_large_area',
-             'transit_stops', 'crime_rates', 'schools', 'poi',
-             'group_quarters', 'group_quarters_control_totals',
-             'annual_household_control_totals',
-             'events_addition', 'events_deletion', 'refiner_events', 'income_growth_rates']:
+for name in [
+    "persons",
+    "parcels",
+    "zones",
+    "semmcds",
+    "counties",
+    "employment_sectors",
+    "building_sqft_per_job",
+    "annual_relocation_rates_for_households",
+    "annual_relocation_rates_for_jobs",
+    "annual_employment_control_totals",
+    "travel_data",
+    "zoning",
+    "large_areas",
+    "building_types",
+    "land_use_types",
+    "workers_labor_participation_rates",
+    "workers_employment_rates_by_large_area_age",
+    "workers_employment_rates_by_large_area",
+    "transit_stops",
+    "crime_rates",
+    "schools",
+    "poi",
+    "group_quarters",
+    "group_quarters_control_totals",
+    "annual_household_control_totals",
+    "events_addition",
+    "events_deletion",
+    "refiner_events",
+    "income_growth_rates",
+]:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
-orca.add_table("remi_pop_total", pd.read_csv(path.join(
-    table_dir, "remi_hhpop_bylarge.csv"), index_col='large_area_id'))
-orca.add_table('target_vacancies_mcd', pd.read_csv(
-    path.join(table_dir, "target_vacancies_mcd.csv")))
-orca.add_table('target_vacancies_la', pd.read_csv(
-    path.join(table_dir, "target_vacancies.csv")))
-orca.add_table('demolition_rates', pd.read_csv(
-    path.join(table_dir, "DEMOLITION_RATES.csv"), index_col='city_id'))
-orca.add_table('extreme_hu_controls', pd.read_csv(
-    path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
+orca.add_table(
+    "remi_pop_total",
+    pd.read_csv(
+        path.join(table_dir, "remi_hhpop_bylarge.csv"), index_col="large_area_id"
+    ),
+)
+orca.add_table(
+    "target_vacancies_mcd",
+    pd.read_csv(path.join(table_dir, "target_vacancies_mcd.csv")),
+)
+orca.add_table(
+    "target_vacancies_la", pd.read_csv(path.join(table_dir, "target_vacancies.csv"))
+)
+orca.add_table(
+    "demolition_rates",
+    pd.read_csv(path.join(table_dir, "DEMOLITION_RATES.csv"), index_col="city_id"),
+)
+orca.add_table(
+    "extreme_hu_controls",
+    pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="b_city_id"),
+)
 
-@orca.table('mcd_total')
+
+@orca.table("mcd_total")
 def mcd_total():
-    return pd.read_csv(
-        path.join(table_dir, "mcd_2050_draft_noreview.csv")
-    ).set_index('semmcd')
-
-@orca.table('bg_hh_increase')
-def bg_hh_increase():
-    bg_hh_inc = pd.read_csv(
-        path.join(table_dir, "ACS_HH_14_19_BG.csv")
+    return pd.read_csv(path.join(table_dir, "mcd_2050_draft_noreview.csv")).set_index(
+        "semmcd"
     )
-    bg_hh_inc['GEOID'] = bg_hh_inc['GEOID'].astype(int)
-    # initialized iteration variable 
-    bg_hh_inc['occupied'] = bg_hh_inc['OccupiedHU19']
-    bg_hh_inc['previous_occupied'] = bg_hh_inc['OccupiedHU14']
-    bg_hh_inc['occupied_year_minus_1'] = -1
-    bg_hh_inc['occupied_year_minus_2'] = -1
-    bg_hh_inc['occupied_year_minus_3'] = -1
-    return bg_hh_inc[['GEOID', 'OccupiedHU19', 'OccupiedHU14', 'occupied', 
-                    'previous_occupied', 'occupied_year_minus_1', 
-                    'occupied_year_minus_2', 'occupied_year_minus_3']].set_index('GEOID')
+
+
+@orca.table("bg_hh_increase")
+def bg_hh_increase():
+    bg_hh_inc = pd.read_csv(path.join(table_dir, "ACS_HH_14_19_BG.csv"))
+    bg_hh_inc["GEOID"] = bg_hh_inc["GEOID"].astype(int)
+    # initialized iteration variable
+    bg_hh_inc["occupied"] = bg_hh_inc["OccupiedHU19"]
+    bg_hh_inc["previous_occupied"] = bg_hh_inc["OccupiedHU14"]
+    bg_hh_inc["occupied_year_minus_1"] = -1
+    bg_hh_inc["occupied_year_minus_2"] = -1
+    bg_hh_inc["occupied_year_minus_3"] = -1
+    return bg_hh_inc[
+        [
+            "GEOID",
+            "OccupiedHU19",
+            "OccupiedHU14",
+            "occupied",
+            "previous_occupied",
+            "occupied_year_minus_1",
+            "occupied_year_minus_2",
+            "occupied_year_minus_3",
+        ]
+    ].set_index("GEOID")
+
 
 @orca.table(cache=True)
 def buildings(store):
-    df = store['buildings']
+    df = store["buildings"]
     # Todo: combine two sqft prices into one and set non use sqft price to 0
-    df.loc[df.improvement_value < 0, 'improvement_value'] = 0
-    df['sqft_price_nonres'] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
-    df.loc[df.sqft_price_nonres > 1000, 'sqft_price_nonres'] = 0
-    df.loc[df.sqft_price_nonres < 0, 'sqft_price_nonres'] = 0
-    df['sqft_price_res'] = df.improvement_value * 1.25 / 0.7 / (df.sqft_per_unit.astype(int) * df.residential_units)
-    df.loc[df.sqft_price_res > 1000, 'sqft_price_res'] = 0
-    df.loc[df.sqft_price_res < 0, 'sqft_price_res'] = 0
+    df.loc[df.improvement_value < 0, "improvement_value"] = 0
+    df["sqft_price_nonres"] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
+    df.loc[df.sqft_price_nonres > 1000, "sqft_price_nonres"] = 0
+    df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
+    df["sqft_price_res"] = (
+        df.improvement_value
+        * 1.25
+        / 0.7
+        / (df.sqft_per_unit.astype(int) * df.residential_units)
+    )
+    df.loc[df.sqft_price_res > 1000, "sqft_price_res"] = 0
+    df.loc[df.sqft_price_res < 0, "sqft_price_res"] = 0
     df.fillna(0, inplace=True)
 
-    df['hu_filter'] = 0
-    df['mcd_model_quota'] = 0
+    df["hu_filter"] = 0
+    df["mcd_model_quota"] = 0
     cites = [551, 1155, 1100, 3130, 6020, 6040]
     sample = df[df.residential_units > 0]
-    sample = sample[~(sample.index.isin(store['households'].building_id))]
+    sample = sample[~(sample.index.isin(store["households"].building_id))]
     for c in sample.b_city_id.unique():
         frac = 0.9 if c in cites else 0.5
-        df.loc[sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values, 'hu_filter'] = 1
+        df.loc[
+            sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values,
+            "hu_filter",
+        ] = 1
 
     return df
 
 
 @orca.table(cache=True)
 def households(store, buildings):
-    df = store['households']
-    b = buildings.to_frame(['large_area_id'])
+    df = store["households"]
+    b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
-    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(b.index.values,
-                                                                   (df.building_id == -1).sum())
+    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+        b.index.values, (df.building_id == -1).sum()
+    )
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
-    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
-                                                                      idx_invalid_building_id.sum())
-    df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
+    df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
+        b.index.values, idx_invalid_building_id.sum()
+    )
+    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     return df.fillna(0)
 
 
 @orca.table(cache=True)
 def jobs(store, buildings):
-    df = store['jobs']
-    b = buildings.to_frame(['large_area_id'])
+    df = store["jobs"]
+    b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
-    df.loc[df.building_id == -1, 'building_id'] = np.random.choice(b.index.values,
-                                                                   (df.building_id == -1).sum())
+    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+        b.index.values, (df.building_id == -1).sum()
+    )
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
-    df.loc[idx_invalid_building_id, 'building_id'] = np.random.choice(b.index.values,
-                                                                      idx_invalid_building_id.sum())
-    df['large_area_id'] = misc.reindex(b.large_area_id, df.building_id)
+    df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
+        b.index.values, idx_invalid_building_id.sum()
+    )
+    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     return df.fillna(0)
 
 
@@ -118,20 +171,22 @@ def base_job_space(buildings):
 
 
 # these are dummy returns that last until accessibility runs
-for node_tbl in ['nodes', 'nodes_walk', 'nodes_drv']:
+for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
     empty_df = pd.DataFrame()
     orca.add_table(node_tbl, empty_df)
 
 
 # this specifies the relationships between tables
-orca.broadcast('nodes_walk', 'buildings', cast_index=True, onto_on='nodeid_walk')
-orca.broadcast('nodes_walk', 'parcels', cast_index=True, onto_on='nodeid_walk')
-orca.broadcast('nodes_drv', 'buildings', cast_index=True, onto_on='nodeid_drv')
-orca.broadcast('nodes_drv', 'parcels', cast_index=True, onto_on='nodeid_drv')
-orca.broadcast('parcels', 'buildings', cast_index=True, onto_on='parcel_id')
-orca.broadcast('buildings', 'households', cast_index=True, onto_on='building_id')
-orca.broadcast('buildings', 'jobs', cast_index=True, onto_on='building_id')
-orca.broadcast('households', 'persons', cast_index=True, onto_on='household_id')
-orca.broadcast('building_types', 'buildings', cast_index=True, onto_on='building_type_id')
-orca.broadcast('zones', 'parcels', cast_index=True, onto_on='zone_id')
-orca.broadcast('schools', 'parcels', cast_on='parcel_id', onto_index=True)
+orca.broadcast("nodes_walk", "buildings", cast_index=True, onto_on="nodeid_walk")
+orca.broadcast("nodes_walk", "parcels", cast_index=True, onto_on="nodeid_walk")
+orca.broadcast("nodes_drv", "buildings", cast_index=True, onto_on="nodeid_drv")
+orca.broadcast("nodes_drv", "parcels", cast_index=True, onto_on="nodeid_drv")
+orca.broadcast("parcels", "buildings", cast_index=True, onto_on="parcel_id")
+orca.broadcast("buildings", "households", cast_index=True, onto_on="building_id")
+orca.broadcast("buildings", "jobs", cast_index=True, onto_on="building_id")
+orca.broadcast("households", "persons", cast_index=True, onto_on="household_id")
+orca.broadcast(
+    "building_types", "buildings", cast_index=True, onto_on="building_type_id"
+)
+orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
+orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
