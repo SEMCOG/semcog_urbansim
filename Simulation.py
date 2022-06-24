@@ -3,9 +3,10 @@ import sys
 import os
 
 # check disk space, need at least 10GB
-total, used, free = shutil.disk_usage("/")
-if free / (2 ** 30) < 10:
-    print(f"{int(free/(2**30))} GB available. Disk space is too small, stop running")
+total, used, free = [round(s/(2 ** 30),1) for s in shutil.disk_usage(".")]
+print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB" )
+if free < 10:
+    print(f"Free space is too small. Only {free} GB available. Stop running")
     sys.exit()
 
 import orca
