@@ -152,6 +152,7 @@ def parcel_is_allowed(form=None):
 
 def parcel_is_allowed_2050(form=None):
     # indentify parcels allowed for construction
+    # TODO, will replace parcel_is_allowed
     pcl_index = orca.get_table("parcels").index
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
