@@ -627,8 +627,8 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 @orca.step()
 def refiner(jobs, households, buildings, persons, year, refiner_events, group_quarters):
     # #35
-    location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"] # must include b_zone_id, and b_city for 2045 refinder_event table
-    # location_ids = [ "zone_id", "city_id", "large_area_id"] 
+    # location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"] # must include b_zone_id, and b_city for 2045 refinder_event table
+    location_ids = [ "zone_id", "city_id", "large_area_id"]
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + location_ids)
     group_quarters_columns = group_quarters.local_columns
