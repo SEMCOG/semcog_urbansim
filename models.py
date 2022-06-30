@@ -314,7 +314,7 @@ def households_relocation_2050(households, annual_relocation_rates_for_household
     # block all event buildings and special buildings (event_bid>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
     blocklst = bb.loc[bb.event_bid > 0].index
-    hh = hh.loc(~hh.building_id.isin(blocklst))
+    hh = hh.loc[~hh.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(hh)
     households.update_col_from_series(
@@ -334,7 +334,7 @@ def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
     # block all event buildings and special buildings (event_bid>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
     blocklst = bb.loc[bb.event_bid > 0].index
-    j = j.loc(~j.building_id.isin(blocklst))
+    j = j.loc[~j.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
     jobs.update_col_from_series(
