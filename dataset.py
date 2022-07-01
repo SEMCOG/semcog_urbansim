@@ -50,10 +50,10 @@ orca.add_table('events_addition', pd.read_csv(
     path.join(table_dir, "events_2050.csv")))
 orca.add_table("remi_pop_total", pd.read_csv(path.join(
     table_dir, "remi_hhpop_bylarge.csv"), index_col='large_area_id'))
-orca.add_table('target_vacancies_mcd', pd.read_csv(
-    path.join(table_dir, "target_vacancies_mcd.csv")))
-orca.add_table('target_vacancies_la', pd.read_csv(
-    path.join(table_dir, "target_vacancies.csv")))
+orca.add_table('target_vacancies_mcd', pd.read_excel(
+    path.join(table_dir, "target_vacancies_mcd.xlsx"), index_col=0))
+orca.add_table('target_vacancies_la', pd.read_excel(
+    path.join(table_dir, "target_vacancies.xlsx")))
 orca.add_table('demolition_rates', pd.read_csv(
     path.join(table_dir, "DEMOLITION_RATES.csv"), index_col='city_id'))
 # #35 change csv column name from b_city_id to city_id

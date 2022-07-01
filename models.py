@@ -1009,6 +1009,11 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["event_bid"] = ebid  # add back event_bid
+        sched_dev = sched_dev.rename(columns={
+            'nonres_sqft': 'non_residential_sqft',
+            'housing_units': 'residential_units',
+            'build_type': 'building_type_id'
+        })
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -1390,21 +1395,19 @@ def run_developer(
 
 @orca.step("residential_developer")
 def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
+    # get current year
+    year = orca.get_injectable("year")
     target_vacancies = target_vacancies_mcd.to_frame()
-    target_vacancies = target_vacancies[
-        target_vacancies.year == orca.get_injectable("year")
-    ]
+    target_vacancies = target_vacancies[year]
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
-    # get current year
-    year = orca.get_injectable("year")
     # the mcd_total for year and year-1
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
         target_vacancy = float(
-            target_vacancies[target_vacancies.semmcd == mcdid].res_target_vacancy_rate
+            target_vacancies[mcdid]
         )
         num_agents = mcd_total.loc[mcdid]
         num_units = mcd_orig_buildings.residential_units.sum()
