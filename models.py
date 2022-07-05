@@ -997,6 +997,11 @@ def scheduled_development_events(buildings, iter_var, events_addition):
             # sched_dev.b_zone_id
             sched_dev.zone_id
         )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
+        sched_dev = sched_dev.rename(columns={
+            'nonres_sqft': 'non_residential_sqft',
+            'housing_units': 'residential_units',
+            'build_type': 'building_type_id',
+        })
         # #35
         # city = sched_dev.b_city_id
         city = sched_dev.city_id
@@ -1009,11 +1014,6 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["event_bid"] = ebid  # add back event_bid
-        sched_dev = sched_dev.rename(columns={
-            'nonres_sqft': 'non_residential_sqft',
-            'housing_units': 'residential_units',
-            'build_type': 'building_type_id'
-        })
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
