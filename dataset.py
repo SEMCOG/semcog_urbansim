@@ -68,6 +68,10 @@ def mcd_total():
         "semmcd"
     )
 
+@orca.table('debug_res_developer')
+def debug_res_developer():
+    return pd.DataFrame(columns=['year', 'mcd', 'target_units', 'units_added'])
+    
 
 @orca.table("bg_hh_increase")
 def bg_hh_increase():
