@@ -128,7 +128,6 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         print("Warning: NaN exists in mcd_growth, replaced them with 0")
     mcd_growth = mcd_growth.fillna(0).astype(int)
     ####
-    # generating pseudo bg trend table
     bg_hh_increase = bg_hh_increase.to_frame()
     # use occupied, 3 year window trend = y_i - y_i-3
     bg_trend = bg_hh_increase.occupied - bg_hh_increase.previous_occupied
@@ -200,8 +199,8 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
 
 @orca.step()
 def update_bg_hh_increase(bg_hh_increase, households):
-    # baseyear 2019
-    base_year = 2019
+    # baseyear 2020
+    base_year = 2020
     year = orca.get_injectable("year")
     year_diff = year - base_year
     hh = households.to_frame(["geoid"]).reset_index()
@@ -1394,7 +1393,7 @@ def run_developer(
 
 
 @orca.step("residential_developer")
-def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
+def residential_developer( parcels, target_vacancies_mcd, mcd_total, debug_res_developer):
     # get current year
     year = orca.get_injectable("year")
     target_vacancies = target_vacancies_mcd.to_frame()
@@ -1404,6 +1403,7 @@ def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
     )
     # the mcd_total for year and year-1
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+    debug_res_developer = debug_res_developer.to_frame()
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
         target_vacancy = float(
@@ -1436,11 +1436,16 @@ def residential_developer(households, parcels, target_vacancies_mcd, mcd_total):
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+        debug_res_developer = debug_res_developer.append({
+            'year':year, 'mcd':mcdid, 'target_units': target_units, 'units_added':units_added
+        }, ignore_index=True)
         if units_added < target_units:
             print(
                 "Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s"
                 % (mcdid, target_units, units_added)
             )
+    # log the target and result in this year's run
+    orca.add_table('debug_res_developer', debug_res_developer)
 
 
 @orca.step()
