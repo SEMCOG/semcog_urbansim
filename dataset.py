@@ -128,8 +128,8 @@ def buildings(store):
 
     # TODO, this is placeholder. will update with special emp buildings lookup later
     special_buildings = pd.read_csv("data/special_buildings.csv", index_col=0)
-    df["event_bid"] = 0
-    df.loc[special_buildings.index, "event_bid"] = 1000
+    df["sp_bid"] = 0 #special building id: for event location/building, landmark building, etc
+    df.loc[special_buildings.index, "sp_bid"] = 1000
 
     return df
 

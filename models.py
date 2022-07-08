@@ -310,9 +310,9 @@ def households_relocation_2050(households, annual_relocation_rates_for_household
     print("un-placing")
     hh = households.to_frame(households.local_columns)
 
-    # block all event buildings and special buildings (event_bid>0)
+    # block all event buildings and special buildings (sp_bid>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
-    blocklst = bb.loc[bb.event_bid > 0].index
+    blocklst = bb.loc[bb.sp_bid > 0].index
     hh = hh.loc[~hh.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(hh)
@@ -330,9 +330,9 @@ def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
     print("un-placing")
     j = jobs.to_frame(jobs.local_columns)
 
-    # block all event buildings and special buildings (event_bid>0)
+    # block all event buildings and special buildings (sp_bid>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
-    blocklst = bb.loc[bb.event_bid > 0].index
+    blocklst = bb.loc[bb.sp_bid > 0].index
     j = j.loc[~j.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
@@ -1004,7 +1004,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # #35
         # city = sched_dev.b_city_id
         city = sched_dev.city_id
-        ebid = sched_dev.building_id.copy()  # save event_bid to be used later
+        ebid = sched_dev.building_id.copy()  # save sp_bid to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
         # #35
@@ -1012,7 +1012,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # sched_dev["b_city_id"] = city
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
-        sched_dev["event_bid"] = ebid  # add back event_bid
+        sched_dev["sp_bid"] = ebid  # add back sp_bid(special building id)
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -1206,7 +1206,7 @@ def add_extra_columns_nonres(df):
         "sqft_price_res",
         "sqft_per_unit",
         "hu_filter",
-        "event_bid",
+        "sp_bid",
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
