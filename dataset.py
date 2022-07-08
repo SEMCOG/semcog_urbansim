@@ -8,7 +8,7 @@ from os import path
 
 import assumptions
 
-warnings.filterwarnings('ignore', category=pd.io.pytables.PerformanceWarning)
+warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 
 table_dir = "~/semcog_urbansim/data"
 
@@ -38,7 +38,7 @@ for name in [
     "group_quarters",
     "group_quarters_control_totals",
     "annual_household_control_totals",
-    #"events_addition", # load local csv below
+    # "events_addition", # load local csv below
     "events_deletion",
     "refiner_events",
     "income_growth_rates",
@@ -46,32 +46,44 @@ for name in [
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
-orca.add_table('events_addition', pd.read_csv(
-    path.join(table_dir, "events_2050.csv")))
-orca.add_table("remi_pop_total", pd.read_csv(path.join(
-    table_dir, "remi_hhpop_bylarge.csv"), index_col='large_area_id'))
-orca.add_table('target_vacancies_mcd', pd.read_excel(
-    path.join(table_dir, "target_vacancies_mcd.xlsx"), index_col=0))
-orca.add_table('target_vacancies_la', pd.read_excel(
-    path.join(table_dir, "target_vacancies.xlsx")))
-orca.add_table('demolition_rates', pd.read_csv(
-    path.join(table_dir, "DEMOLITION_RATES.csv"), index_col='city_id'))
+orca.add_table("events_addition", pd.read_csv(path.join(table_dir, "events_2050.csv")))
+orca.add_table(
+    "remi_pop_total",
+    pd.read_csv(
+        path.join(table_dir, "remi_hhpop_bylarge.csv"), index_col="large_area_id"
+    ),
+)
+orca.add_table(
+    "target_vacancies_mcd",
+    pd.read_excel(path.join(table_dir, "target_vacancies_mcd.xlsx"), index_col=0),
+)
+orca.add_table(
+    "target_vacancies_la", pd.read_excel(path.join(table_dir, "target_vacancies.xlsx"))
+)
+orca.add_table(
+    "demolition_rates",
+    pd.read_csv(path.join(table_dir, "DEMOLITION_RATES.csv"), index_col="city_id"),
+)
 # #35 change csv column name from b_city_id to city_id
 # orca.add_table('extreme_hu_controls', pd.read_csv(
 #     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
-orca.add_table('extreme_hu_controls', pd.read_csv(
-    path.join(table_dir, "extreme_hu_controls.csv"), index_col='city_id'))
+orca.add_table(
+    "extreme_hu_controls",
+    pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
+)
 
-@orca.table('mcd_total')
+
+@orca.table("mcd_total")
 def mcd_total():
     return pd.read_csv(path.join(table_dir, "mcd_2050_draft_noreview.csv")).set_index(
         "semmcd"
     )
 
-@orca.table('debug_res_developer')
+
+@orca.table("debug_res_developer")
 def debug_res_developer():
-    return pd.DataFrame(columns=['year', 'mcd', 'target_units', 'units_added'])
-    
+    return pd.DataFrame(columns=["year", "mcd", "target_units", "units_added"])
+
 
 @orca.table("bg_hh_increase")
 def bg_hh_increase():
@@ -116,7 +128,7 @@ def buildings(store):
     df.fillna(0, inplace=True)
 
     # df['hu_filter'] = 0
-    df['mcd_model_quota'] = 0
+    df["mcd_model_quota"] = 0
     # cites = [551, 1155, 1100, 3130, 6020, 6040]
     # sample = df[df.residential_units > 0]
     # sample = sample[~(sample.index.isin(store['households'].building_id))]
@@ -127,9 +139,11 @@ def buildings(store):
     #     df.loc[sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values, 'hu_filter'] = 1
 
     # TODO, this is placeholder. will update with special emp buildings lookup later
-    special_buildings = pd.read_csv("data/special_buildings.csv", index_col=0)
-    df["sp_bid"] = 0 #special building id: for event location/building, landmark building, etc
-    df.loc[special_buildings.index, "sp_bid"] = 1000
+
+    df["sp_bid"] = 0  # special building id: for event location/buildings, landmark buildings, etc
+    df.loc[store["landmark_worksites"].building_id, "sp_bid"] = (
+        -1 * store["landmark_worksites"].building_id
+    )  # set landmark building_id as negative for blocking
 
     return df
 
