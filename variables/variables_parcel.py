@@ -50,7 +50,7 @@ def parcel_is_allowed(form=None):
             "building_type_id",
             "residential_units",
             "building_age",
-            "event_bid",
+            "sp_bid",
         ]
     )
     zoning = orca.get_table("zoning")
@@ -163,7 +163,7 @@ def parcel_is_allowed_2050(form=None):
             "building_type_id",
             "residential_units",
             "building_age",
-            "event_bid",
+            "sp_bid",
         ]
     )
     zoning = orca.get_table("zoning")
