@@ -310,9 +310,9 @@ def households_relocation_2050(households, annual_relocation_rates_for_household
     print("un-placing")
     hh = households.to_frame(households.local_columns)
 
-    # block all event buildings and special buildings (sp_bid>0)
+    # block all event buildings and special buildings (sp_filter>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
-    blocklst = bb.loc[bb.sp_bid > 0].index
+    blocklst = bb.loc[bb.sp_filter > 0].index
     hh = hh.loc[~hh.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(hh)
@@ -330,9 +330,9 @@ def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
     print("un-placing")
     j = jobs.to_frame(jobs.local_columns)
 
-    # block all event buildings and special buildings (sp_bid>0)
+    # block all event buildings and special buildings (sp_filter>0)
     bb = orca.get_table("buildings").to_frame(orca.get_table("buildings").local_columns)
-    blocklst = bb.loc[bb.sp_bid > 0].index
+    blocklst = bb.loc[bb.sp_filter > 0].index
     j = j.loc[~j.building_id.isin(blocklst)]
 
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
@@ -627,7 +627,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 def refiner(jobs, households, buildings, persons, year, refiner_events, group_quarters):
     # #35
     # location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"] # must include b_zone_id, and b_city for 2045 refinder_event table
-    location_ids = [ "zone_id", "city_id", "large_area_id"]
+    location_ids = ["zone_id", "city_id", "large_area_id"]
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + location_ids)
     group_quarters_columns = group_quarters.local_columns
@@ -824,6 +824,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         agents = dic_agent[agent_type]
         pool = pd.DataFrame(data=None, columns=agents.columns)
 
+        if agent_type == "jobs":
+            for _, record in trecords.iterrows():
+                buildings.loc[
+                    buildings.query(record.location_expression).index, "sp_filter"
+                ] = -1  # all job event building will be filtered from reloc and LCM
+
         for _, record in trecords[trecords.action == "clone"].iterrows():
             print(record)
             agents, pool = clone_agents(
@@ -936,6 +942,9 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         assert jobs.index.duplicated().sum() == 0, "duplicated index in jobs"
         jobs["large_area_id"] = misc.reindex(buildings.large_area_id, jobs.building_id)
         orca.add_table("jobs", jobs[jobs_columns])
+        orca.add_table(
+            "buildings", buildings[buildings.local_columns]
+        )  # update buildings
 
     if refinements.agents.isin({"gq"}).sum() > 0:
         group_quarters = dic_agent["gq"]
@@ -996,15 +1005,17 @@ def scheduled_development_events(buildings, iter_var, events_addition):
             # sched_dev.b_zone_id
             sched_dev.zone_id
         )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
-        sched_dev = sched_dev.rename(columns={
-            'nonres_sqft': 'non_residential_sqft',
-            'housing_units': 'residential_units',
-            'build_type': 'building_type_id',
-        })
+        sched_dev = sched_dev.rename(
+            columns={
+                "nonres_sqft": "non_residential_sqft",
+                "housing_units": "residential_units",
+                "build_type": "building_type_id",
+            }
+        )
         # #35
         # city = sched_dev.b_city_id
         city = sched_dev.city_id
-        ebid = sched_dev.building_id.copy()  # save sp_bid to be used later
+        ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
         # #35
@@ -1012,7 +1023,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # sched_dev["b_city_id"] = city
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
-        sched_dev["sp_bid"] = ebid  # add back sp_bid(special building id)
+        sched_dev["event_id"] = ebid  # add back event_id
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -1064,9 +1075,7 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2045 - year) / (2045 - 2015)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(
-        buildings.local_columns + 
-        ['city_id'] +
-        ["b_total_jobs", "b_total_households"]
+        buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
     )
     b = buildings.copy()
     allowed = variables.parcel_is_allowed()
@@ -1206,7 +1215,8 @@ def add_extra_columns_nonres(df):
         "sqft_price_res",
         "sqft_per_unit",
         "hu_filter",
-        "sp_bid",
+        "event_id",
+        "sp_filter",
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
@@ -1393,7 +1403,9 @@ def run_developer(
 
 
 @orca.step("residential_developer")
-def residential_developer( parcels, target_vacancies_mcd, mcd_total, debug_res_developer):
+def residential_developer(
+    parcels, target_vacancies_mcd, mcd_total, debug_res_developer
+):
     # get current year
     year = orca.get_injectable("year")
     target_vacancies = target_vacancies_mcd.to_frame()
@@ -1406,9 +1418,7 @@ def residential_developer( parcels, target_vacancies_mcd, mcd_total, debug_res_d
     debug_res_developer = debug_res_developer.to_frame()
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
-        target_vacancy = float(
-            target_vacancies[mcdid]
-        )
+        target_vacancy = float(target_vacancies[mcdid])
         num_agents = mcd_total.loc[mcdid]
         num_units = mcd_orig_buildings.residential_units.sum()
 
@@ -1436,16 +1446,22 @@ def residential_developer( parcels, target_vacancies_mcd, mcd_total, debug_res_d
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
-        debug_res_developer = debug_res_developer.append({
-            'year':year, 'mcd':mcdid, 'target_units': target_units, 'units_added':units_added
-        }, ignore_index=True)
+        debug_res_developer = debug_res_developer.append(
+            {
+                "year": year,
+                "mcd": mcdid,
+                "target_units": target_units,
+                "units_added": units_added,
+            },
+            ignore_index=True,
+        )
         if units_added < target_units:
             print(
                 "Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s"
                 % (mcdid, target_units, units_added)
             )
     # log the target and result in this year's run
-    orca.add_table('debug_res_developer', debug_res_developer)
+    orca.add_table("debug_res_developer", debug_res_developer)
 
 
 @orca.step()
