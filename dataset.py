@@ -140,10 +140,14 @@ def buildings(store):
 
     # TODO, this is placeholder. will update with special emp buildings lookup later
 
-    df["sp_bid"] = 0  # special building id: for event location/buildings, landmark buildings, etc
-    df.loc[store["landmark_worksites"].building_id, "sp_bid"] = (
-        -1 * store["landmark_worksites"].building_id
-    )  # set landmark building_id as negative for blocking
+    df[
+        "sp_filter"
+    ] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    df.loc[
+        store["landmark_worksites"].building_id, "sp_filter"
+    ] = -1  # set landmark building_id as negative for blocking
+
+    df["event_id"] = 0  # also add event_id for event reference
 
     return df
 
