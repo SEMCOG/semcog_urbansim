@@ -1666,7 +1666,7 @@ def neighborhood_vars(jobs, households, buildings):
             b.index.values, idx_invalid_building_id.sum()
         )
         # TODO: keep LA the same
-        j["large_area_id"] = misc.reindex(b.large_area_id, h.building_id)
+        h["large_area_id"] = misc.reindex(b.large_area_id, h.building_id)
         orca.add_table("households", h)
 
     building_vars = set(orca.get_table("buildings").columns)
