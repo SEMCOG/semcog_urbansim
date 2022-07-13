@@ -25,38 +25,6 @@ def hedonic_id(buildings):
     return hedonic_id
 
 
-orca.add_injectable(
-    {
-        11: "Institutional",
-        13: "Institutional",
-        14: "Institutional",
-        21: "Retail",
-        23: "Office",
-        31: "Industrial",
-        32: "Industrial",
-        33: "TCU",
-        41: "TCU",
-        42: "TCU",
-        51: "Medical",
-        52: "Medical",
-        53: "Medical",
-        61: "Entertainment",
-        63: "Hospitality",
-        65: "Hospitality",
-        71: "Others",
-        81: "Residential",
-        82: "Residential",
-        83: "Residential",
-        84: "Residential",
-        91: "Entertainment",
-        92: "Institutional",
-        93: "Institutional",
-        94: "Retail",
-        95: "TCU",
-    },
-)
-
-
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def general_type(buildings, building_type_map):
     return buildings.building_type_id.map(building_type_map).fillna(0)
