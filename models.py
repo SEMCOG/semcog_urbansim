@@ -635,6 +635,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
     households_columns = households.local_columns
     households = households.to_frame(households_columns + location_ids)
     households["household_id_old"] = households.index.values
+    buildings_local_columns = buildings.local_columns
     buildings = buildings.to_frame(
         buildings.local_columns + location_ids + ["gq_building"]
     )
@@ -943,7 +944,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         jobs["large_area_id"] = misc.reindex(buildings.large_area_id, jobs.building_id)
         orca.add_table("jobs", jobs[jobs_columns])
         orca.add_table(
-            "buildings", buildings[buildings.local_columns]
+            "buildings", buildings[buildings_local_columns]
         )  # update buildings
 
     if refinements.agents.isin({"gq"}).sum() > 0:
