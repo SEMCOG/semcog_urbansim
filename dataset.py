@@ -165,6 +165,15 @@ def households(store, buildings):
         b.index.values, idx_invalid_building_id.sum()
     )
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
+    # dtype optimization
+    df['workers'] = df['workers'].fillna(0).astype(np.int8)
+    df['children'] = df['children'].fillna(0).astype(np.int8)
+    df['persons'] = df['persons'].astype(np.int8)
+    df['cars'] = df['cars'].astype(np.int8)
+    df['race_id'] = df['race_id'].astype(np.int8)
+    df['income'] = df['income'].astype(np.int32)
+    df['age_of_head'] = df['age_of_head'].astype(np.int8)
+    df['large_area_id'] = df['large_area_id'].astype(np.int8)
     return df.fillna(0)
 
 
