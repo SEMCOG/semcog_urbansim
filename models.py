@@ -368,6 +368,8 @@ def presses_trans(xxx_todo_changeme1):
     new.loc[added_hh_idx, "building_id"] = -1
     pers = new_linked["linked"]
     pers = pers[pers.household_id.isin(new.index)]
+    new.index.name = "household_id"
+    pers.index.name = "person_id"
     out = [[new, pers]]
     target -= len(pers)
     best_qal = np.inf
@@ -383,6 +385,8 @@ def presses_trans(xxx_todo_changeme1):
         pers = pers[pers.household_id.isin(new.index)]
         qal = abs(target - len(pers))
         if qal < best_qal:
+            new.index.name = "household_id"
+            pers.index.name = "person_id"
             best = (new, pers)
             best_qal = qal
     out.append(best)
@@ -422,40 +426,51 @@ def households_transition(
     out = reduce(operator.concat, cunks_per_la)
 
     # fix indexes
-    out_hh_fixed = []
-    out_p_fixed = []
     hhidmax = region_hh.index.values.max() + 1
     pidmax = region_p.index.values.max() + 1
-    for hh, p in out:
-        hh.index.name = "household_id"
-        hh = hh.reset_index()
-        hh["household_id_old"] = hh["household_id"]
-        new_hh = (hh.building_id == -1).sum()
-        hh.loc[hh.building_id == -1, "household_id"] = list(
-            range(hhidmax, hhidmax + new_hh)
-        )
-        hhidmax += new_hh
-        hhid_map = hh[["household_id_old", "household_id"]].set_index(
+
+    ## create {old_hh_id => new_hh_id} mapping
+    hh_id_mapping = [x[0]['building_id'] for x in out]
+    # list of number of hh added for each df in the hh_id_mapping
+    hh_new_added = [(x == -1).sum() for x in hh_id_mapping]
+    # cumulative sum for hh_new_added, add 0 at front
+    hh_new_added_cumsum = [0] + list(np.cumsum(hh_new_added))
+    for i, hhmap in enumerate(hh_id_mapping):
+        ## create seperate mapping for each df in the list
+        hhmap = hhmap.reset_index()
+        hhmap["household_id_old"] = hhmap["household_id"]
+        # assign hh_id to those newly added
+        hhmap.loc[hhmap['building_id'] == -1, "household_id"] = list(
+            range(hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i+1]))
+        hh_id_mapping[i] = hhmap[["household_id_old", "household_id"]].set_index(
             "household_id_old"
         )
-        p.index.name = "person_id"
-        p = pd.merge(
-            p.reset_index(), hhid_map, left_on="household_id", right_index=True
-        )
-        new_p = (p.household_id_x != p.household_id_y).sum()
-        p.loc[p.household_id_x != p.household_id_y, "person_id"] = list(
-            range(pidmax, pidmax + new_p)
-        )
-        pidmax += new_p
-        p["household_id"] = p["household_id_y"]
 
-        new_hh_df = hh.set_index("household_id")
-        out_hh_fixed.append(new_hh_df[households.local_columns])
-        out_p_fixed.append(p.set_index("person_id")[persons.local_columns])
+    ## hh df
+    # merge with hh_id mapping and concat all hh dfs and reset their index
+    out_hh = pd.concat([
+        pd.merge(x[0].reset_index(), hh_id_mapping[i], left_on='household_id', right_index=True) for i, x in enumerate(
+            out)], verify_integrity=True, ignore_index=True, copy=False)
+    # sort
+    out_hh = out_hh.sort_values(by='household_id')
+    # set index to hh_id
+    out_hh = out_hh.set_index("household_id_y")
+    out_hh = out_hh[households.local_columns]
+    out_hh.index.name = 'household_id'
+    ## persons df
+    # merge with hh_id mapping and concat and reset their index
+    out_person = pd.concat([
+        pd.merge(x[1].reset_index(), hh_id_mapping[i], left_on='household_id', right_index=True) for i, x in enumerate(
+            out)], verify_integrity=True, ignore_index=True, copy=False)
+    new_p = (out_person.household_id_x != out_person.household_id_y).sum()
+    out_person.loc[out_person.household_id_x != out_person.household_id_y, "person_id"] = list(
+        range(pidmax, pidmax + new_p)
+    )
+    out_person["household_id"] = out_person["household_id_y"]
+    out_person = out_person.set_index('person_id')
 
-    orca.add_table("households", pd.concat(out_hh_fixed, verify_integrity=True))
-    orca.add_table("persons", pd.concat(out_p_fixed, verify_integrity=True))
-
+    orca.add_table("households", out_hh[households.local_columns])
+    orca.add_table("persons", out_person[persons.local_columns])
 
 @orca.step()
 def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_area):
