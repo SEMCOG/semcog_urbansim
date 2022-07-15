@@ -1180,25 +1180,6 @@ def parcel_average_price(use):
     return misc.reindex(orca.get_table("nodes_walk")[use], parcels_wrapper.nodeid_walk)
 
 
-@orca.injectable("cost_shifters")
-def shifters():
-    with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
-        cfg = yaml.load(f, Loader=yaml.FullLoader)
-        return cfg
-
-
-def cost_shifter_callback(self, form, df, costs):
-    shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
-    geography = shifter_cfg["calibration_geography_id"]
-    shift_type = "residential" if form == "residential" else "non_residential"
-    shifters = shifter_cfg["proforma_cost_shifters"][shift_type]
-
-    for geo, geo_df in df.reset_index().groupby(geography):
-        shifter = shifters[geo]
-        costs[:, geo_df.index] *= shifter
-    return costs
-
-
 @orca.step("feasibility")
 def feasibility(parcels):
     parcel_utils.run_feasibility(
@@ -1206,7 +1187,7 @@ def feasibility(parcels):
         parcel_average_price,
         variables.parcel_is_allowed,
         cfg="proforma.yaml",
-        modify_costs=cost_shifter_callback,
+        modify_costs=None,
     )
     feasibility = orca.get_table("feasibility").to_frame()
     # MCD feasibility
