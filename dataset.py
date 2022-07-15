@@ -173,8 +173,21 @@ def households(store, buildings):
     df['race_id'] = df['race_id'].astype(np.int8)
     df['income'] = df['income'].astype(np.int32)
     df['age_of_head'] = df['age_of_head'].astype(np.int8)
-    df['large_area_id'] = df['large_area_id'].astype(np.int8)
+    df['large_area_id'] = df['large_area_id'].astype(np.uint8)
     return df.fillna(0)
+
+
+@orca.table(cache=True)
+def persons(store):
+    df = store["persons"]
+    df['relate'] = df['relate'].astype(np.int8)
+    df['age'] = df['age'].astype(np.int8)
+    df['worker'] = df['worker'].astype(np.int8)
+    df['sex'] = df['sex'].astype(np.int8)
+    df['race_id'] = df['race_id'].astype(np.int8)
+    df['member_id'] = df['member_id'].astype(np.int8)
+    df['household_id'] = df['household_id'].astype(np.int64)
+    return df
 
 
 @orca.table(cache=True)
