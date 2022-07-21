@@ -44,7 +44,8 @@ def parcel_is_allowed(form=None):
     form_to_btype = orca.get_injectable("form_to_btype")
     buildings = orca.get_table("buildings").to_frame(
         [
-            "b_city_id",
+            # #35
+            # "b_city_id",
             "city_id",
             "parcel_id",
             "building_type_id",
@@ -65,7 +66,9 @@ def parcel_is_allowed(form=None):
     new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     new_building = new_building.reindex(index, fill_value=False)
 
-    count_hu = buildings.groupby("b_city_id").residential_units.sum()
+    # #35
+    # count_hu = buildings.groupby("b_city_id").residential_units.sum()
+    count_hu = buildings.groupby("city_id").residential_units.sum()
     hu_target = orca.get_table("extreme_hu_controls").to_frame()
     hu_target["c0"] = (hu_target.end - hu_target.base) * (year - 2015) + hu_target.base
     hu_target["c5"] = (hu_target.end - hu_target.base) * (

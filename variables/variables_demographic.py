@@ -251,9 +251,10 @@ def city_id(group_quarters, buildings):
     return misc.reindex(buildings.city_id, group_quarters.building_id)
 
 
-@orca.column('group_quarters', cache=True, cache_scope='iteration')
-def b_city_id(group_quarters, buildings):
-    return misc.reindex(buildings.b_city_id, group_quarters.building_id)
+# #35
+# @orca.column('group_quarters', cache=True, cache_scope='iteration')
+# def b_city_id(group_quarters, buildings):
+#     return misc.reindex(buildings.b_city_id, group_quarters.building_id)
 
 
 @orca.column('group_quarters', cache=True, cache_scope='iteration')
