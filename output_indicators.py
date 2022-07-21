@@ -8,9 +8,9 @@ from urbansim.utils import misc
 
 def orca_year_dataset(hdf, year):
     orca.clear_cache()
-    if str(year) == '2015':
+    if str(year) == '2020':
         year = 'base'
-    orca.add_injectable("year", int(year if str(year) != 'base' else 2015))
+    orca.add_injectable("year", int(year if str(year) != 'base' else 2020))
     for tbl in ['parcels', 'buildings', 'jobs', 'households', 'persons', 'group_quarters', 'base_job_space', 'dropped_buildings']:
         name = str(year) + '/' + tbl
         if name in hdf:
@@ -409,10 +409,10 @@ def main(run_name):
     store_la = pd.HDFStore(run_name, mode='r')
     print(store_la)
 
-    base_year = 2015
+    base_year = 2020
     target_year = 2050
 
-    spacing = int(30.0 / len(set(j[1: 5] for j in list(store_la.keys())) & set(str(i) for i in range(base_year+1, target_year+1))))
+    spacing = 30 // len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year))
     if spacing == 1:
         all_years_dir = os.path.join(outdir, 'annual')
         if not (os.path.exists(all_years_dir)):
@@ -429,34 +429,36 @@ def main(run_name):
         return parcels.drop_duplicates('semmcd').set_index('semmcd').large_area_id
 
     p = orca.get_table('parcels')
-    p = p.to_frame(['city_id', 'large_area_id'])
-    cities = p.drop_duplicates('city_id').set_index('city_id')
+    p = p.to_frame(['large_area_id', 'city_id', 'zone_id'])
+    cities = p[['city_id', 'large_area_id']].drop_duplicates('city_id').set_index('city_id')
 
     orca.add_table('cities', cities)
 
     # TODO: add school_id back in at some point
-    p = orca.get_table('parcels')
+    # p = orca.get_table('parcels')
     # #35
     # p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
     #     columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
-    p = p.to_frame(['large_area_id', 'city_id', 'zone_id'])
+    # p = p.to_frame(['large_area_id', 'city_id', 'zone_id'])
 
-    p.index.name = 'parcel_id'
+    # p.index.name = 'parcel_id'
     p = p.reset_index()
     # #35
     # whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
     whatnot = p.drop_duplicates(['large_area_id', 'city_id', 'zone_id', 'parcel_id'])
 
+    ## spatial case handling for 2045 forecast -- disabled
     # fenton
-    fenton = p.head(1)
-    fenton.large_area_id = 93
+    # fenton = p.head(1)
+    # fenton.large_area_id = 93
     # #35
     # fenton.b_city_id = 7027
     # fenton.b_zone_id = 72214
-    fenton.city_id = 7027
-    fenton.zone_id = 72214
-    fenton.parcel_id = 0
-    whatnot = whatnot.append(fenton, ignore_index=True)
+    # fenton.city_id = 7027
+    # fenton.zone_id = 72214
+    # fenton.parcel_id = 0
+    # whatnot = whatnot.append(fenton, ignore_index=True)
+
     # #35
     # e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
     e = orca.get_table('events_addition').to_frame(['parcel_id', 'city_id', 'zone_id'])
@@ -473,7 +475,7 @@ def main(run_name):
     whatnot = whatnot.append(b, ignore_index=True)
     b = store_la['/%s/buildings' % target_year]
     if spacing == 1:
-        interesting_parcel_ids = set(b[b.year_built > 2015].parcel_id) | set(store_la['/%s/dropped_buildings' % target_year].parcel_id)
+        interesting_parcel_ids = set(b[b.year_built > 2020].parcel_id) | set(store_la['/%s/dropped_buildings' % target_year].parcel_id)
         acres = orca.get_table('parcels').acres
         interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
     else:
@@ -755,7 +757,7 @@ def main(run_name):
     print("runtime geom:", end - start)
 
     start = time.clock()
-    for year in range(2015, 2046, 5):
+    for year in range(2020, 2046, 5):
         print("buildings for", year)
         orca_year_dataset(store_la, year)
         buildings = orca.get_table('buildings')
