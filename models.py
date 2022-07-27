@@ -13,6 +13,7 @@ from urbansim_parcels import utils as parcel_utils
 
 import utils
 import lcm_utils
+import dataset
 import variables
 from functools import reduce
 
