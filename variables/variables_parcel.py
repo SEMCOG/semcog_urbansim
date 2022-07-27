@@ -223,7 +223,7 @@ def parcel_is_allowed_2050(form=None):
             )
         ]
 
-    allowed = zoning.to_frame(columns).max(axis=1).reindex(index, fill_value=0)
+    allowed = zoning.to_frame(columns).max(axis=1).reindex(pcl_index, fill_value=0)
 
     return (allowed > 0) & (~protected)
 
