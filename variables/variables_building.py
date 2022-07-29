@@ -27,7 +27,7 @@ def hedonic_id(buildings):
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def general_type(buildings, building_type_map):
-    return buildings.building_type_id.map(building_type_map).fillna(0)
+    return buildings.building_type_id.map(building_type_map)
 
 
 @orca.column("buildings", cache=True)
@@ -606,7 +606,7 @@ def hu_filter(buildings, households, parcels):
         sampled_indexes = sample[sample.index.isin(city_id[city_id == c].index)].sample(
             frac=frac, replace=False).index
         series[series.index.isin(sampled_indexes)] = 1
-    print('hu_filter', series)
+    #print('hu_filter', series)
     return series
 
 def standardize(series):
@@ -636,5 +636,8 @@ def register_standardized_variable(table_name, column_to_s):
 
 
 for var in orca.get_table("buildings").columns:
+    if var == "general_type":
+        # skip general_type, which stalls the process when loading st column
+        continue
     register_standardized_variable("buildings", var)
 
