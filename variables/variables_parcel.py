@@ -245,12 +245,20 @@ def max_height(parcels, zoning):
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def pct_undev(parcels, zoning):
-    return zoning.pct_undev.reindex(parcels.index)
+    #  based on zoning.is_developable, adjust parcels pct_undev
+    pct_undev = zoning.pct_undev.copy() 
+    # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
+    pct_undev[zoning.is_undevelopable == 0] = 100  
+    # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
+    # Parcel is developable, but contains underground storage tanks
+    pct_undev[zoning.is_undevelopable == 2] += 10
+    return pct_undev.reindex(parcels.index)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_size(parcels):
-    return parcels.parcel_sqft
+    # apply pct_undev to parcel_size, which will be used in feasibility step
+    return parcels.parcel_sqft - (parcels.pct_undev * parcels.parcel_sqft)
 
 
 @orca.column("parcels")
