@@ -1053,7 +1053,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
 
 
 @orca.step()
-def scheduled_demolition_events(buildings, households, jobs, iter_var, events_deletion):
+def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, events_deletion):
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -1068,7 +1068,8 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
         else:
             orca.add_table("dropped_buildings", drop_buildings)
 
-        orca.add_table("buildings", buildings.drop(buildings_idx))
+        new_buildings_table = buildings.drop(buildings_idx)
+        orca.add_table("buildings", new_buildings_table)
 
         # unplace HH
         # todo: use orca.update_col_from_series
@@ -1084,10 +1085,17 @@ def scheduled_demolition_events(buildings, households, jobs, iter_var, events_de
         jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
         # Todo: parcel use need to be updated
+        # Todo: parcel use need to be updated
+        # get parcel_id if theres only one building in the parcel
+        parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
+        # update pct_undev to 100 if theres only one building in the parcel
+        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+        # update parcels table
+        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
 @orca.step()
-def random_demolition_events(buildings, households, jobs, year, demolition_rates):
+def random_demolition_events(buildings, parcels, households, jobs, year, demolition_rates):
     demolition_rates = demolition_rates.to_frame()
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2045 - year) / (2045 - 2015)
     buildings_columns = buildings.local_columns
@@ -1155,8 +1163,10 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
         orca.add_table("dropped_buildings", pd.concat([drop_buildings, prev_drops]))
     else:
         orca.add_table("dropped_buildings", drop_buildings)
+    
+    new_buildings_table = buildings[buildings_columns].drop(buildings_idx)
 
-    orca.add_table("buildings", buildings[buildings_columns].drop(buildings_idx))
+    orca.add_table("buildings", new_buildings_table)
 
     # unplace HH
     # todo: use orca.update_col_from_series
@@ -1170,6 +1180,12 @@ def random_demolition_events(buildings, households, jobs, year, demolition_rates
     jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
     orca.add_table("jobs", jobs)
     # Todo: parcel use need to be updated
+    # get parcel_id if theres only one building in the parcel
+    parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
+    # update pct_undev to 100 if theres only one building in the parcel
+    pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+    # update parcels table
+    parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
 def parcel_average_price(use):
@@ -1465,6 +1481,7 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+        # TODO: update parcels.pct_undev to 100 for units_added 
         debug_res_developer = debug_res_developer.append(
             {
                 "year": year,
