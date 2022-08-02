@@ -610,7 +610,10 @@ def hu_filter(buildings, households, parcels):
     return series
 
 def standardize(series):
-    return (series - series.mean()) / series.std()
+    if pd.api.types.is_numeric_dtype(series):
+        return (series - series.mean()) / series.std()
+    else:
+        return series
 
 
 def register_standardized_variable(table_name, column_to_s):
