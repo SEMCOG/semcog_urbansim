@@ -205,6 +205,19 @@ def jobs(store, buildings):
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     return df.fillna(0)
 
+@orca.table(cache=True)
+def parcels(store, zoning):
+    parcels_df = store["parcels"]
+    #  based on zoning.is_developable, adjust parcels pct_undev
+    pct_undev = zoning.pct_undev.copy() 
+    # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
+    pct_undev[zoning.is_developable == 0] = 100  
+    # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
+    # Parcel is developable, but contains underground storage tanks
+    pct_undev[zoning.is_developable == 2] += 10
+    parcels_df["pct_undev"] = pct_undev
+    return parcels_df
+
 
 @orca.table(cache=True)
 def base_job_space(buildings):
