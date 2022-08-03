@@ -1375,7 +1375,7 @@ def run_developer(
     orca.add_table("feasibility_" + str(geoid), dev.feasibility)
 
     if new_buildings is None or len(new_buildings) == 0:
-        return 0
+        return 0, []
 
     # get the list of parcel_id whose pct_undev need to be updated
     pid_need_updates = [pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id]
