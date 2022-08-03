@@ -15,17 +15,35 @@ from urbansim.models import util
 from choicemodels.tools import MergedChoiceTable
 from urbansim_templates import modelmanager as mm
 from urbansim_templates.models import LargeMultinomialLogitStep
+os.chdir("/home/da/semcog_urbansim")
+from notebooks.estimation_variables_2050 import *
 
-import models, utils
-import dataset
-import variables
+# +++++++++++ estimation input preparation +++++++++++
+#%% load input data
+data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
+hdf_list = [
+    (data_path + "/" + f)
+    for f in os.listdir(data_path)
+    if ("forecast_data_input" in f) & (f[-3:] == ".h5")
+]
+hdf_last = max(hdf_list, key=os.path.getctime)
+hdf = pd.HDFStore(hdf_last, "r")
+print("HDF data: ", hdf_last)
+
+orca.add_injectable("store", hdf)
+load_tables_to_store()
+
+from notebooks.models_test import *
 
 #%%
+# compute network and variables
 orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
 
+
+
 #%%
-######## largeMNL step simulation ###########
+#+++++++++++ largeMNL step simulation +++++++++++
 
 #%%
 #function to get extra columns from config
@@ -40,7 +58,7 @@ def filter_columns(model):
         return list(set([c for subl in sl for c in subl]))
 
 # %%
-f = 'configs/hlcm_large/hlcm_city_test.yaml'
+f = 'configs/hlcm_city_test.yaml'
 d = yamlio.yaml_to_dict(str_or_buffer=f) #import yaml config
 step = mm.build_step(d['saved_object']) # build model
 mm.register(step, save_to_disk=False) #register to Orca
@@ -119,50 +137,64 @@ mm.initialize('configs/hlcm_large')
 #
 
 
-# %%
-# 1. test estimation from scratch, add config items 
+# %% ++++++++++++++++++++++++++++++++++++++++++++++++
+#  1. test estimation from scratch, add config items
 # Define the agent whose behavior is being modeled
 m = LargeMultinomialLogitStep()
 m.choosers = ['households']
-m.chooser_sample_size = 5000
+m.chooser_sample_size = 3000
 m.chooser_filters = ['large_area_id == 161']
 
 # Define the geographic alternatives agent is selecting amongst
 m.alternatives = ['buildings']
 m.choice_column = 'building_id'
-m.alt_sample_size = 100
+m.alt_sample_size = 50
 
-selected_variables = ['has_children:nodes_walk_percent_hh_with_children',
-        'has_workers:nodes_drv_log_sum_45min_jobs',
+selected_variables = [
+        'has_children:nodes_walk_percent_hh_with_children',
         'is_race2:nodes_walk_percent_race2',
-        'is_young:nodes_walk_retail_jobs',
-        'ln_income:nodes_walk_ln_popden',
+         'is_young:nodes_walk_retail_jobs',
+        # 'ln_income:nodes_walk_ln_popden',
         'nodes_walk_percent_low_income',
-        'nodes_walk_log_sum_residential_units',
         'year_built',
-        'zones_a_ln_retail_emp_15min_drive_alone'
                      ]
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
-m.out_choosers = 'dfh161' # if different from estimation
-m.out_alternatives = 'dfb161' # if different from estimation
+m.out_choosers = 'hh161' # if different from estimation
+m.out_alternatives = 'bb161' # if different from estimation
 m.constrained_choices = True
 m.alt_capacity = 'vacant_residential_units'
 m.out_chooser_filters = ['building_id == -1']
+
 
 # %%
 # model estimation and save the results to default folder "configs/"
 
 m.fit()
 m.name = 'hlcm_city_test2'
-mm.register(m)
+#mm.register(m)
+
+#%%
+dir(m)
+
+#%%
+m.chooser_filters
+
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
+#%%
 
 
 # %%
-# %%
-# 2. model estimatin start from existing model config
-f = 'configs/hlcm_large/hlcm_city_test2.yaml'
+# ++++++++++ 2. model estimatin start from existing model config ++++++++++++++++
+f = 'configs/hlcm_city_test.yaml'
 d = yamlio.yaml_to_dict(str_or_buffer=f) #import yaml config
 m = mm.build_step(d['saved_object']) # build model
 mm.register(step, save_to_disk=False) #register to Orca
@@ -173,6 +205,8 @@ m.fit()
 m.name = 'hlcm_city_test3'
 mm.register(m)
 
+#%%
+dir(mm)
 
 #%%
 ######## update data for estimation or simulation ###########
@@ -206,6 +240,8 @@ m.fit()
 m.name = 'hlcm_city_test_update'
 mm.register(m)
 
+#%%
+orca.get_table('nodes_walk').to_frame("percent_race2")
 
 
 
