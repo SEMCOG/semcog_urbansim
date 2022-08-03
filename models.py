@@ -1377,6 +1377,9 @@ def run_developer(
     if new_buildings is None or len(new_buildings) == 0:
         return 0
 
+    # get the list of parcel_id whose pct_undev need to be updated
+    pid_need_updates = [pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id]
+
     parcel_utils.add_buildings(
         dev.feasibility,
         buildings,
@@ -1388,8 +1391,8 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
-    # return the number of units added
-    return new_buildings.residential_units.sum() - new_buildings.current_units.sum()
+    # return the number of units added and the list of parcel_id for updating pct_undev
+    return new_buildings.residential_units.sum() - new_buildings.current_units.sum(), pid_need_updates
 
 
 # @orca.step("residential_developer")
@@ -1469,7 +1472,7 @@ def residential_developer(
         )
 
         register_btype_distributions(mcd_orig_buildings)
-        units_added = run_developer(
+        units_added, parcels_idx_to_update = run_developer(
             target_units,
             mcdid,
             "residential",
@@ -1481,6 +1484,11 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+        # update pct_undev to 0 if theres only one building in the parcel
+        pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+        # update parcels table
+        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
         # TODO: update parcels.pct_undev to 100 for units_added 
         debug_res_developer = debug_res_developer.append(
             {
@@ -1531,7 +1539,7 @@ def non_residential_developer(jobs, parcels, target_vacancies_la):
         )
 
         register_btype_distributions(la_orig_buildings)
-        run_developer(
+        spaces_added, parcels_idx_to_update = run_developer(
             target_units,
             lid,
             ["office", "retail", "industrial", "medical"],
@@ -1543,6 +1551,10 @@ def non_residential_developer(jobs, parcels, target_vacancies_la):
             "nonres_developer.yaml",
             add_more_columns_callback=add_extra_columns_nonres,
         )
+        # update pct_undev to 0 if theres only one building in the parcel
+        pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+        # update parcels table
+        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
 @orca.step()
