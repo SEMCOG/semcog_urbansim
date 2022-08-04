@@ -1088,8 +1088,8 @@ def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, 
         # Todo: parcel use need to be updated
         # get parcel_id if theres only one building in the parcel
         parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
-        # update pct_undev to 100 if theres only one building in the parcel
-        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+        # update pct_undev to 0 if theres only one building in the parcel
+        pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
@@ -1097,7 +1097,7 @@ def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, 
 @orca.step()
 def random_demolition_events(buildings, parcels, households, jobs, year, demolition_rates):
     demolition_rates = demolition_rates.to_frame()
-    demolition_rates *= 0.1 + (1.0 - 0.1) * (2045 - year) / (2045 - 2015)
+    demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2015)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(
         buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
@@ -1182,8 +1182,8 @@ def random_demolition_events(buildings, parcels, households, jobs, year, demolit
     # Todo: parcel use need to be updated
     # get parcel_id if theres only one building in the parcel
     parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
-    # update pct_undev to 100 if theres only one building in the parcel
-    pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+    # update pct_undev to 0 if theres only one building in the parcel
+    pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     # update parcels table
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
@@ -1484,8 +1484,8 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
-        # update pct_undev to 0 if theres only one building in the parcel
-        pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+        # update pct_undev to 100 if theres only one building in the parcel
+        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
@@ -1551,8 +1551,8 @@ def non_residential_developer(jobs, parcels, target_vacancies_la):
             "nonres_developer.yaml",
             add_more_columns_callback=add_extra_columns_nonres,
         )
-        # update pct_undev to 0 if theres only one building in the parcel
-        pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+        # update pct_undev to 100 if theres only one building in the parcel
+        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
