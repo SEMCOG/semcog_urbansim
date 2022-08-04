@@ -246,7 +246,7 @@ def max_height(parcels, zoning):
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_size(parcels):
     # apply pct_undev to parcel_size, which will be used in feasibility step
-    return parcels.parcel_sqft - (parcels.pct_undev * parcels.parcel_sqft)
+    return parcels.parcel_sqft - ((parcels.pct_undev.clip(0, 100) / 100) * parcels.parcel_sqft)
 
 
 @orca.column("parcels")
