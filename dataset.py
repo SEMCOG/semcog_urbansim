@@ -215,7 +215,7 @@ def parcels(store, zoning):
     # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
     # Parcel is developable, but contains underground storage tanks
     pct_undev[zoning.is_developable == 2] += 10
-    parcels_df["pct_undev"] = pct_undev
+    parcels_df["pct_undev"] = pct_undev.clip(0, 100)
     return parcels_df
 
 
