@@ -666,22 +666,22 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
 
 
 @orca.step()
-def refiner(jobs, households, buildings, persons, year, refiner_events, group_quarters):
+def refiner(jobs, households, buildings, persons, year, refiner_events):
     # #35
     # location_ids = ["b_zone_id", "zone_id", "b_city_id", "city_id", "large_area_id"] # must include b_zone_id, and b_city for 2045 refinder_event table
     location_ids = ["zone_id", "city_id", "large_area_id"]
     jobs_columns = jobs.local_columns
     jobs = jobs.to_frame(jobs_columns + location_ids)
-    group_quarters_columns = group_quarters.local_columns
-    group_quarters = group_quarters.to_frame(group_quarters_columns + location_ids)
+    # group_quarters_columns = group_quarters.local_columns
+    # group_quarters = group_quarters.to_frame(group_quarters_columns + location_ids)
     households_columns = households.local_columns
     households = households.to_frame(households_columns + location_ids)
     households["household_id_old"] = households.index.values
     buildings_local_columns = buildings.local_columns
     buildings = buildings.to_frame(
-        buildings.local_columns + location_ids + ["gq_building"]
+        buildings.local_columns + location_ids
     )
-    dic_agent = {"jobs": jobs, "households": households, "gq": group_quarters}
+    dic_agent = {"jobs": jobs, "households": households}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
@@ -989,12 +989,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             "buildings", buildings[buildings_local_columns]
         )  # update buildings
 
-    if refinements.agents.isin({"gq"}).sum() > 0:
-        group_quarters = dic_agent["gq"]
-        assert (
-            group_quarters.index.duplicated().sum() == 0
-        ), "duplicated index in group_quarters"
-        orca.add_table("group_quarters", group_quarters[group_quarters_columns])
+    # if refinements.agents.isin({"gq"}).sum() > 0:
+    #     group_quarters = dic_agent["gq"]
+    #     assert (
+    #         group_quarters.index.duplicated().sum() == 0
+    #     ), "duplicated index in group_quarters"
+    #     orca.add_table("group_quarters", group_quarters[group_quarters_columns])
 
     if refinements.agents.isin({"households"}).sum() > 0:
         households = dic_agent["households"]
@@ -1489,8 +1489,8 @@ def residential_developer(
 ):
     # get current year
     year = orca.get_injectable("year")
-    target_vacancies = target_vacancies_mcd.to_frame()
-    target_vacancies = target_vacancies[year]
+    target_vacancies = target_vacancies_mcd.to_frame().set_index('cityid')
+    target_vacancies = target_vacancies[str(year)]
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
@@ -1498,6 +1498,9 @@ def residential_developer(
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     debug_res_developer = debug_res_developer.to_frame()
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
+        if mcdid == 7027:
+            # TODO: fix mcd 7027
+            continue
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
         target_vacancy = float(target_vacancies[mcdid])
         num_agents = mcd_total.loc[mcdid]
@@ -1552,8 +1555,8 @@ def residential_developer(
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies_la):
-    target_vacancies = target_vacancies_la.to_frame()
+def non_residential_developer(jobs, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]

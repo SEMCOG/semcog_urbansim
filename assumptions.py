@@ -126,7 +126,7 @@ np.random.seed(seed)
 def verify():
     # hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear_py2.h5"), mode="r")
     hdf_store = pd.HDFStore(
-        "~/semcog_urbansim/data/all_semcog_data_02-02-18-final-forecast_newbid.h5",
+        "/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_080422.h5",
         mode="r",
     )
 
