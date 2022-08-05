@@ -103,11 +103,11 @@ def parcel_is_allowed(form=None):
     ) & (year <= 2020)
     wold_have_bean_in_events = wold_have_bean_in_events.reindex(index, fill_value=False)
 
-    gq = index.isin(
-        buildings[
-            buildings.index.isin(orca.get_table("group_quarters").building_id)
-        ].parcel_id
-    )
+    # gq = index.isin(
+    #     buildings[
+    #         buildings.index.isin(orca.get_table("group_quarters").building_id)
+    #     ].parcel_id
+    # )
 
     parcel_refin = set()
     refinements = orca.get_table("refiner_events").to_frame()
@@ -134,7 +134,7 @@ def parcel_is_allowed(form=None):
         | demolition
         | wold_have_bean_in_events
         | refiner
-        | gq
+        # | gq
     )
     if form:
         columns = ["type%d" % typ for typ in form_to_btype[form]]
