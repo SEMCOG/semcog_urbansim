@@ -21,7 +21,7 @@ if freespace < 10:
 
 orca.run(
     ["refiner", "build_networks_2050", "neighborhood_vars"]
-    + orca.get_injectable("repm_step_names")
+    # + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
 )  # increase feasibility based on projected income
 
@@ -33,24 +33,24 @@ orca.run(
         "random_demolition_events",
         "scheduled_development_events",
         "refiner",
-        "households_transition",
-        "fix_lpr",
-        "households_relocation_2050",
+        # "households_transition",
+        # "fix_lpr",
+        # "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
         "feasibility",
         "residential_developer",
         "non_residential_developer",
     ]
-    + orca.get_injectable("repm_step_names")
+    # + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
     + ["mcd_hu_sampling"]  # Hack to make more feasibility
-    + orca.get_injectable("hlcm_step_names") # disable for now, wait until new estimation
-    + orca.get_injectable("elcm_step_names")
+    # + orca.get_injectable("hlcm_step_names") # disable for now, wait until new estimation
+    # + orca.get_injectable("elcm_step_names")
     + [
         "elcm_home_based",
         "jobs_scaling_model",
-        "gq_pop_scaling_model",
+        # "gq_pop_scaling_model",
         # "travel_model", Fixme: on hold
         "update_bg_hh_increase",
     ],
@@ -63,31 +63,31 @@ orca.run(
         "annual_relocation_rates_for_jobs",
         "households",
         "persons",
-        "annual_relocation_rates_for_households",
+        # "annual_relocation_rates_for_households",
         "buildings",
         "parcels",
         "zones",
         "semmcds",
         "counties",
         "target_vacancies_mcd",
-        "target_vacancies_la",
+        "target_vacancies",
         "building_sqft_per_job",
         "annual_employment_control_totals",
-        "travel_data",
+        # "travel_data",
         "zoning",
         "large_areas",
         "building_types",
         "land_use_types",
-        "workers_labor_participation_rates",
-        "workers_employment_rates_by_large_area_age",
-        "workers_employment_rates_by_large_area",
+        # "workers_labor_participation_rates",
+        # "workers_employment_rates_by_large_area_age",
+        # "workers_employment_rates_by_large_area",
         "transit_stops",
         "crime_rates",
         "schools",
         "poi",
-        "group_quarters",
-        "group_quarters_control_totals",
-        "annual_household_control_totals",
+        # "group_quarters",
+        # "group_quarters_control_totals",
+        # "annual_household_control_totals",
         "events_addition",
         "events_deletion",
         "refiner_events",
@@ -99,7 +99,7 @@ orca.run(
         "parcels",
         "households",
         "persons",
-        "group_quarters",
+        # "group_quarters",
         "dropped_buildings",
     ],
     out_interval=1,
