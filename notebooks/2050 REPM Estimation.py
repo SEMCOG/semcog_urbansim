@@ -73,3 +73,26 @@ for i, lcm in list(enumerate(repm_configs))[:]:
     print()
     print(i, lcm)
     estimate_repm(lcm)
+
+# In[9]:
+import scipy
+import time
+with open('/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/081022_variable_validation.yaml', 'r') as f:
+    vars_config = yaml.load(f, Loader=yaml.FullLoader)
+buildings = orca.get_table('buildings')
+valid_b_vars = vars_config['buildings']['valid variables']
+vars_used = []
+mat = None
+t0 = time.time()
+for var in valid_b_vars[:]:
+    s = buildings.to_frame(var).iloc[:, 0]
+    if pd.api.types.is_numeric_dtype(s):
+        vars_used.append(var)
+        sparse_mat = scipy.sparse.csr_matrix(s.values)
+        mat = scipy.sparse.vstack([mat, sparse_mat])
+t1 = time.time()
+# 2692.167008 MB RAM usage with 500 variables loaded
+# save matrix to npz
+scipy.sparse.save_npz('sparse_matrix.npz', mat)
+print("finsihed in ", t1 - t0)
+# %%
