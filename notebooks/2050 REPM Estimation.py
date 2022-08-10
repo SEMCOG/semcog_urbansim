@@ -10,14 +10,17 @@ import numpy as np
 import pandas as pd
 import orca
 from urbansim.utils import misc
+import sys
 
 os.chdir("/home/da/semcog_urbansim")
-from notebooks.estimation_variables_2050 import *
+sys.path.append("/home/da/forecast_data_input")
+from data_checks.estimation_variables_2050 import *
 
 
 # import utils
 #%%
 data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
+# data_path = r"/home/da/share/urbansim/RDF2050/model_inputs/base_hdf"
 hdf_list = [
     (data_path + "/" + f)
     for f in os.listdir(data_path)
