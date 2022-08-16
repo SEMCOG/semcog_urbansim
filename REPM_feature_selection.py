@@ -18,6 +18,7 @@ import sys
 import scipy
 import time
 from tqdm import tqdm
+from guppy import hpy; h=hpy()
 
 import pymrmr
 from sklearn.feature_selection import SelectKBest, f_classif
@@ -67,23 +68,23 @@ def apply_filter_query(df, filters=None):
 
 def feature_selection(mat, yaml_config, vars_used):
     filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
-    filter_col_ind = [filter_cols.index(name) for name in filter_cols]
+    filter_col_ind = [vars_used.index(name) for name in filter_cols]
     df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
     with open( yaml_config, 'r') as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     fit_filters = conf['fit_filters']
     target_var = conf['model_expression']['left_side']
     target_var_raw = target_var[target_var.find("(")+1:target_var.find(")")]
-    df = apply_filter_query(df, fit_filters)
-    if df.size == 0: 
+    filtered_df = apply_filter_query(df, fit_filters)
+    if filtered_df.size == 0: 
         print("0 size dataframe after filtering")
         return None, None
-    filtered_ind = df.index
+    filtered_ind = filtered_df.index
     # get filtered rows, if load all variables, sys will stalled 
     # all_vars_filtered = pd.DataFrame(np.hstack([mat.getcol(i).todense() for i in filtered_ind]).transpose(), columns=vars_used)
     all_vars_filtered = mat.toarray()[:,filtered_ind].transpose()
-    y = df.loc[:, target_var_raw].values
-    f, p = f_classif(np.nan_to_num(all_vars_filtered), y)
+    y = filtered_df.loc[:, target_var_raw].values
+    f, p = f_classif(np.nan_to_num(all_vars_filtered, copy=False), y)
     return f, p
 
 # ## REPM Configs
@@ -99,7 +100,6 @@ repm_configs.sort()
 
 def load_variables():
     vars_used = []
-    mat = None
     t0 = time.time()
     # TODO: Fix RAM limit
     # this loop will stall the system if it loads all 1200 variables
@@ -113,33 +113,12 @@ def load_variables():
             sparse_mat = scipy.sparse.csr_matrix(s.values)
             mat_list.append(sparse_mat)
         # clear cache every 50 vars
-        if i % 50 ==0: buildings.clear_cached()
+        if i % 50 ==0: orca.clear_columns('buildings')
     mat = scipy.sparse.vstack(mat_list)
     t1 = time.time()
     # 2692.167008 MB RAM usage with 500 variables loaded
     print("finsihed in ", t1 - t0)
     return vars_used, mat
-
-def load_variables_names():
-    vars_used = []
-    t0 = time.time()
-    # TODO: Fix RAM limit
-    # this loop will stall the system if it loads all 1200 variables
-    for i, var in enumerate(tqdm(valid_b_vars[:])):
-        if var in ['parcel_id', 'geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far']:
-            continue
-        s = buildings.to_frame(var).iloc[:, 0]
-        if pd.api.types.is_numeric_dtype(s):
-            vars_used.append(var)
-        # clear cache every 50 vars
-        if i % 50 ==0: buildings.clear_cached()
-    t1 = time.time()
-    # 2692.167008 MB RAM usage with 500 variables loaded
-    print("finsihed in ", t1 - t0)
-    return vars_used
-# save matrix to npz
-# scipy.sparse.save_npz('sparse_matrix_first_600.npz', mat)
-# mat = scipy.sparse.load_npz('sparse_matrix_first_600.npz')
 
 with open('/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/081022_variable_validation.yaml', 'r') as f:
     vars_config = yaml.load(f, Loader=yaml.FullLoader)
@@ -148,15 +127,27 @@ valid_b_vars = vars_config['buildings']['valid variables']
 
 # load variables
 n = len(valid_b_vars)
-# vars_used, mat = load_variables()
-mat = scipy.sparse.load_npz('sparse_matrix.npz')
-# vars_used = load_variables_names()
-with open('vars_used.txt', 'r') as f:
-    vars_used = f.readline().split(',')
+vars_used, mat = load_variables()
+# clear all orca cache
+orca.clear_all()
+# cannot use orca from now on
 
-# y = buildings.to_frame('sqft_price_nonres').iloc[:, 0].values
-# df = df.drop(columns=['parcel_id', 'geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far'])
-# pymrmr.mRMR(df, 'MIQ', 10)
-p = feature_selection(mat, repm_configs[40], vars_used)
+# save matrix
+# scipy.sparse.save_npz('sparse_matrix.npz', mat)
+# load matrix
+# mat = scipy.sparse.load_npz('sparse_matrix.npz')
+# save vars_used
+# with open('vars_used.txt', 'w') as f:
+#     f.write(','.join(vars_used))
+# load vars_used
+# with open('vars_used.txt', 'r') as f:
+#     vars_used = f.readline().split(',')
+
+for config in repm_configs:
+    f, p = feature_selection(mat, config, vars_used)
+    if not p:
+        continue
+    print('\t'.join([vars_used[x] for x in np.argsort(p)[::-1][:10]]))
+    print('\t'.join([p[x] for x in np.argsort(p)[::-1][:10]]))
 # print(f_classif(df.values, y))
 print('done')
