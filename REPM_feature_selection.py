@@ -18,10 +18,19 @@ import sys
 import scipy
 import time
 from tqdm import tqdm
-from guppy import hpy; h=hpy()
-
+# from guppy import hpy; h=hpy()
 import pymrmr
+
+# suppress sklearn warnings
+def warn(*args, **kwargs):
+    pass
+import warnings
+warnings.warn = warn
 from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import Lasso
 
 os.chdir("/home/da/semcog_urbansim")
 sys.path.append("/home/da/forecast_data_input")
@@ -40,11 +49,21 @@ hdf_last = max(hdf_list, key=os.path.getctime)
 hdf = pd.HDFStore(hdf_last, "r")
 print("HDF data: ", hdf_last)
 
+var_validation_list = [
+    (data_path + "/" + f)
+    for f in os.listdir(data_path)
+    if ("variable_validation" in f) & (f[-5:] == ".yaml")
+]
+var_validation_last = max(var_validation_list, key=os.path.getctime)
+with open(var_validation_last, 'r') as f:
+    vars_config = yaml.load(f, Loader=yaml.FullLoader)
+valid_b_vars = vars_config['buildings']['valid variables']
+
 
 orca.add_injectable("store", hdf)
 load_tables_to_store()
 from notebooks.models_test import *
-
+import variables
 
 orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
@@ -66,8 +85,8 @@ def apply_filter_query(df, filters=None):
     else:
         return df
 
-def feature_selection(mat, yaml_config, vars_used):
-    filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
+def get_training_data(mat, yaml_config, vars_used):
+    filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'st_sqft_price_res', 'st_sqft_price_nonres', 'non_residential_sqft',  'hedonic_id', 'residential_units']
     filter_col_ind = [vars_used.index(name) for name in filter_cols]
     df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
     with open( yaml_config, 'r') as f:
@@ -77,15 +96,47 @@ def feature_selection(mat, yaml_config, vars_used):
     target_var_raw = target_var[target_var.find("(")+1:target_var.find(")")]
     filtered_df = apply_filter_query(df, fit_filters)
     if filtered_df.size == 0: 
-        print("0 size dataframe after filtering")
-        return None, None
+        print("Config %s has 0 size dataframe after filtering" % (yaml_config))
+        return [0 for _ in range(len(vars_used))], [0 for _ in range(len(vars_used))]
+    else:
+        print("Config %s has sample size: %s" % (yaml_config, filtered_df.size))
     filtered_ind = filtered_df.index
     # get filtered rows, if load all variables, sys will stalled 
     # all_vars_filtered = pd.DataFrame(np.hstack([mat.getcol(i).todense() for i in filtered_ind]).transpose(), columns=vars_used)
-    all_vars_filtered = mat.toarray()[:,filtered_ind].transpose()
+    cols_ind_to_fit = [i for i in range(mat.shape[0]) if i not in filter_col_ind]
+    cols_names_to_fit = [vars_used[i] for i in cols_ind_to_fit]
+    all_vars_filtered = mat.toarray()[:, filtered_ind].transpose()
+    all_vars_filtered = all_vars_filtered[:, cols_ind_to_fit]
     y = filtered_df.loc[:, target_var_raw].values
-    f, p = f_classif(np.nan_to_num(all_vars_filtered, copy=False), y)
+    return np.nan_to_num(all_vars_filtered, copy=False), y, cols_names_to_fit
+
+def feature_selection_f_classif(mat, yaml_config, vars_used):
+    all_vars_filtered, y, cols_names_to_fit = get_training_data(mat, yaml_config, vars_used)
+    f, p = f_classif(all_vars_filtered, y)
     return f, p
+
+def feature_selection_lasso(mat, yaml_config, vars_used):
+    all_vars_filtered, y, cols_names_to_fit = get_training_data(mat, yaml_config, vars_used)
+    pipeline = Pipeline([
+                        ('scaler',StandardScaler()),
+                        ('model',Lasso(alpha=0.3))
+    ])
+    # search = GridSearchCV(pipeline,
+    #                   {'model__alpha':np.arange(0.1,10,0.1)},
+    #                   cv = 5, scoring="neg_mean_squared_error",verbose=3
+    #                 )
+    pipeline.fit(all_vars_filtered, y)
+    cols_names = [cols_names_to_fit[i] for i in np.arange(all_vars_filtered.shape[1])[np.abs(pipeline._final_estimator.coef_) > 0]]
+    coef = pipeline._final_estimator.coef_[np.abs(pipeline._final_estimator.coef_) > 0]
+    score = pipeline.score(all_vars_filtered, y)
+    print(score)
+    print(cols_names)
+    print(coef)
+    # f, p = f_classif(np.nan_to_num(all_vars_filtered, copy=False), y)
+    # return f, p
+    # print(search.best_params_)
+    # {'model__alpha': 0.30000000000000004}
+    return cols_names, coef, score
 
 # ## REPM Configs
 repm_configs = []
@@ -120,11 +171,7 @@ def load_variables():
     print("finsihed in ", t1 - t0)
     return vars_used, mat
 
-with open('/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/081022_variable_validation.yaml', 'r') as f:
-    vars_config = yaml.load(f, Loader=yaml.FullLoader)
 buildings = orca.get_table('buildings')
-valid_b_vars = vars_config['buildings']['valid variables']
-
 # load variables
 n = len(valid_b_vars)
 vars_used, mat = load_variables()
@@ -142,12 +189,14 @@ orca.clear_all()
 # load vars_used
 # with open('vars_used.txt', 'r') as f:
 #     vars_used = f.readline().split(',')
+f, p = feature_selection_lasso(mat, repm_configs[-1], vars_used)
 
 for config in repm_configs:
-    f, p = feature_selection(mat, config, vars_used)
-    if not p:
-        continue
-    print('\t'.join([vars_used[x] for x in np.argsort(p)[::-1][:10]]))
-    print('\t'.join([p[x] for x in np.argsort(p)[::-1][:10]]))
+	col_names, coef, score = feature_selection_lasso(mat, repm_configs[-1], vars_used)
+    # f, p = feature_selection_f_classif(mat, config, vars_used)
+    # f = np.nan_to_num(f)
+    # p = np.nan_to_num(p)
+    # print('\t'.join([str(vars_used[x]) for x in np.argsort(p)[::-1][:10]]))
+    # print('\t'.join([str(p[x]) for x in np.argsort(p)[::-1][:10]]))
 # print(f_classif(df.values, y))
 print('done')
