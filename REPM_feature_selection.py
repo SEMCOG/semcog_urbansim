@@ -39,7 +39,7 @@ from data_checks.estimation_variables_2050 import *
 
 # import utils
 # data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
-data_path = r"/home/da/share/urbansim/RDF2050/model_inputs/base_hdf"
+data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
 hdf_list = [
     (data_path + "/" + f)
     for f in os.listdir(data_path)
@@ -97,7 +97,7 @@ def get_training_data(mat, yaml_config, vars_used):
     filtered_df = apply_filter_query(df, fit_filters)
     if filtered_df.size == 0: 
         print("Config %s has 0 size dataframe after filtering" % (yaml_config))
-        return [0 for _ in range(len(vars_used))], [0 for _ in range(len(vars_used))]
+        return [0 for _ in range(len(vars_used))], [0 for _ in range(len(vars_used))], None, filtered_df.size
     else:
         print("Config %s has sample size: %s" % (yaml_config, filtered_df.size))
     filtered_ind = filtered_df.index
@@ -108,17 +108,19 @@ def get_training_data(mat, yaml_config, vars_used):
     all_vars_filtered = mat.toarray()[:, filtered_ind].transpose()
     all_vars_filtered = all_vars_filtered[:, cols_ind_to_fit]
     y = filtered_df.loc[:, target_var_raw].values
-    return np.nan_to_num(all_vars_filtered, copy=False), y, cols_names_to_fit
+    return np.nan_to_num(all_vars_filtered, copy=False), y, cols_names_to_fit, all_vars_filtered.shape[0]
 
 def feature_selection_f_classif(mat, yaml_config, vars_used):
-    all_vars_filtered, y, cols_names_to_fit = get_training_data(mat, yaml_config, vars_used)
+    all_vars_filtered, y, cols_names_to_fit, sample_size = get_training_data(mat, yaml_config, vars_used)
     f, p = f_classif(all_vars_filtered, y)
     return f, p
 
 def feature_selection_lasso(mat, yaml_config, vars_used):
-    all_vars_filtered, y, cols_names_to_fit = get_training_data(mat, yaml_config, vars_used)
+    all_vars_filtered, y, cols_names_to_fit, sample_size = get_training_data(mat, yaml_config, vars_used)
+    if sample_size == 0:
+        return None, None, None, sample_size
     pipeline = Pipeline([
-                        ('scaler',StandardScaler()),
+                        # ('scaler',StandardScaler()), # disable standardize
                         ('model',Lasso(alpha=0.3))
     ])
     # search = GridSearchCV(pipeline,
@@ -136,7 +138,7 @@ def feature_selection_lasso(mat, yaml_config, vars_used):
     # return f, p
     # print(search.best_params_)
     # {'model__alpha': 0.30000000000000004}
-    return cols_names, coef, score
+    return cols_names, coef, score, sample_size
 
 # ## REPM Configs
 repm_configs = []
@@ -165,6 +167,8 @@ def load_variables():
             mat_list.append(sparse_mat)
         # clear cache every 50 vars
         if i % 50 ==0: orca.clear_columns('buildings')
+    # clear all orca cache
+    orca.clear_all()
     mat = scipy.sparse.vstack(mat_list)
     t1 = time.time()
     # 2692.167008 MB RAM usage with 500 variables loaded
@@ -175,8 +179,6 @@ buildings = orca.get_table('buildings')
 # load variables
 n = len(valid_b_vars)
 vars_used, mat = load_variables()
-# clear all orca cache
-orca.clear_all()
 # cannot use orca from now on
 
 # save matrix
@@ -189,14 +191,36 @@ orca.clear_all()
 # load vars_used
 # with open('vars_used.txt', 'r') as f:
 #     vars_used = f.readline().split(',')
-f, p = feature_selection_lasso(mat, repm_configs[-1], vars_used)
+# f, p = feature_selection_lasso(mat, repm_configs[-1], vars_used)
 
+result = {}
 for config in repm_configs:
-	col_names, coef, score = feature_selection_lasso(mat, repm_configs[-1], vars_used)
+	col_names, coef, score, sample_size = feature_selection_lasso(mat, config, vars_used)
+	if sample_size == 0:
+		result[config] = {
+            'coef': 'None',
+            'score': 'None',
+            'sample_size': sample_size
+        }
+		continue
+	result[config] = {
+       'coef': {col_names[i]: float(coef[i]) for i in range(len(col_names))},
+       'score': score,
+       'sample_size': sample_size
+    }
     # f, p = feature_selection_f_classif(mat, config, vars_used)
     # f = np.nan_to_num(f)
     # p = np.nan_to_num(p)
     # print('\t'.join([str(vars_used[x]) for x in np.argsort(p)[::-1][:10]]))
     # print('\t'.join([str(p[x]) for x in np.argsort(p)[::-1][:10]]))
+for k in result:
+	if type(result[k]['sample_size']) == np.int64: 
+		result[k]['sample_size'] = result[k]['sample_size'].item()
+	if result[k]['coef'] == 'None': continue
+	result[k]['score'] = float(result[k]['score'])
+	for coe in result[k]['coef']:
+		result[k]['coef'][coe] = float(result[k]['coef'][coe])
+with open('repm_result.yaml', 'w') as f:
+    yaml.dump(result, f, default_flow_style=False)
 # print(f_classif(df.values, y))
 print('done')
