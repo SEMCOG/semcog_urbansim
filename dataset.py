@@ -113,12 +113,12 @@ def bg_hh_increase():
 def buildings(store):
     df = store["buildings"]
     # Todo: combine two sqft prices into one and set non use sqft price to 0
-    df.loc[df.improvement_value < 0, "improvement_value"] = 0
-    df["sqft_price_nonres"] = df.improvement_value * 1.0 / 0.7 / df.non_residential_sqft
+    df.loc[df.market_value < 0, "market_value"] = 0
+    df["sqft_price_nonres"] = df.market_value * 1.0 / 0.7 / df.non_residential_sqft
     df.loc[df.sqft_price_nonres > 1000, "sqft_price_nonres"] = 0
     df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
     df["sqft_price_res"] = (
-        df.improvement_value
+        df.market_value
         * 1.25
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
@@ -166,27 +166,27 @@ def households(store, buildings):
     )
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     # dtype optimization
-    df['workers'] = df['workers'].fillna(0).astype(np.int8)
-    df['children'] = df['children'].fillna(0).astype(np.int8)
-    df['persons'] = df['persons'].astype(np.int8)
-    df['cars'] = df['cars'].astype(np.int8)
-    df['race_id'] = df['race_id'].astype(np.int8)
-    df['income'] = df['income'].astype(np.int32)
-    df['age_of_head'] = df['age_of_head'].astype(np.int8)
-    df['large_area_id'] = df['large_area_id'].astype(np.uint8)
+    df["workers"] = df["workers"].fillna(0).astype(np.int8)
+    df["children"] = df["children"].fillna(0).astype(np.int8)
+    df["persons"] = df["persons"].astype(np.int8)
+    df["cars"] = df["cars"].astype(np.int8)
+    df["race_id"] = df["race_id"].astype(np.int8)
+    df["income"] = df["income"].astype(np.int32)
+    df["age_of_head"] = df["age_of_head"].astype(np.int8)
+    df["large_area_id"] = df["large_area_id"].astype(np.uint8)
     return df.fillna(0)
 
 
 @orca.table(cache=True)
 def persons(store):
     df = store["persons"]
-    df['relate'] = df['relate'].astype(np.int8)
-    df['age'] = df['age'].astype(np.int8)
-    df['worker'] = df['worker'].astype(np.int8)
-    df['sex'] = df['sex'].astype(np.int8)
-    df['race_id'] = df['race_id'].astype(np.int8)
-    df['member_id'] = df['member_id'].astype(np.int8)
-    df['household_id'] = df['household_id'].astype(np.int64)
+    df["relate"] = df["relate"].astype(np.int8)
+    df["age"] = df["age"].astype(np.int8)
+    df["worker"] = df["worker"].astype(np.int8)
+    df["sex"] = df["sex"].astype(np.int8)
+    df["race_id"] = df["race_id"].astype(np.int8)
+    df["member_id"] = df["member_id"].astype(np.int8)
+    df["household_id"] = df["household_id"].astype(np.int64)
     return df
 
 
@@ -205,13 +205,14 @@ def jobs(store, buildings):
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     return df.fillna(0)
 
+
 @orca.table(cache=True)
 def parcels(store, zoning):
     parcels_df = store["parcels"]
     #  based on zoning.is_developable, adjust parcels pct_undev
-    pct_undev = zoning.pct_undev.copy() 
+    pct_undev = zoning.pct_undev.copy()
     # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
-    pct_undev[zoning.is_developable == 0] = 100  
+    pct_undev[zoning.is_developable == 0] = 100
     # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
     # Parcel is developable, but contains underground storage tanks
     pct_undev[zoning.is_developable == 2] += 10

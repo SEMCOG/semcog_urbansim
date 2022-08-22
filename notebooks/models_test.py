@@ -1252,7 +1252,7 @@ def feasibility(parcels):
 def add_extra_columns_nonres(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     for col in [
-        "improvement_value",
+        "market_value",
         "land_area",
         "tax_exempt",
         "sqft_price_nonres",

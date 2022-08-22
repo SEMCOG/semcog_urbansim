@@ -1,21 +1,21 @@
 name: _job_space
 indexs:
-- building_id
+  - building_id
 columns:
   base_job_space: int64
 ---
 name: annual_employment_control_totals
 indexs:
-- year
-- sector_id
-- home_based_status
+  - year
+  - sector_id
+  - home_based_status
 columns:
   large_area_id: int32
   total_number_of_jobs: int32
 ---
 name: annual_household_control_totals
 indexs:
-- year
+  - year
 columns:
   age_of_head_max: int64
   age_of_head_min: int64
@@ -35,7 +35,7 @@ columns:
 ---
 name: annual_relocation_rates_for_households
 indexs:
-- None
+  - None
 columns:
   age_max: int8
   age_min: int8
@@ -45,19 +45,19 @@ columns:
 ---
 name: annual_relocation_rates_for_jobs
 indexs:
-- sector_id
+  - sector_id
 columns:
   job_relocation_probability: float64
 ---
 name: building_sqft_per_job
 indexs:
-- building_type_id
+  - building_type_id
 columns:
   building_sqft_per_job: int32
 ---
 name: building_types
 indexs:
-- building_type_id
+  - building_type_id
 columns:
   building_type_description: object
   building_type_name: object
@@ -70,12 +70,12 @@ columns:
 ---
 name: buildings
 indexs:
-- building_id
+  - building_id
 columns:
   b_city_id: int32
   b_zone_id: int32
   building_type_id: int8
-  improvement_value: float64
+  market_value: float64
   land_area: int32
   non_residential_sqft: int32
   parcel_id: int32
@@ -86,20 +86,20 @@ columns:
 ---
 name: counties
 indexs:
-- county_id
+  - county_id
 columns:
   county_name: object
 ---
 name: crime_rates
 indexs:
-- parcel_id
+  - parcel_id
 columns:
   other_crime_rate: float64
   ucr_crime_rate: float64
 ---
 name: employment_sectors
 indexs:
-- sector_id
+  - sector_id
 columns:
   naics sector description: object
   naics_code: object
@@ -108,7 +108,7 @@ columns:
 ---
 name: events_addition
 indexs:
-- objectid
+  - objectid
 columns:
   b_city_id: int32
   b_zone_id: int32
@@ -120,14 +120,14 @@ columns:
 ---
 name: events_deletion
 indexs:
-- objectid
+  - objectid
 columns:
   building_id: int32
   year_built: int32
 ---
 name: group_quarters
 indexs:
-- None
+  - None
 columns:
   age: int8
   building_id: int64
@@ -137,7 +137,7 @@ columns:
 ---
 name: group_quarters_control_totals
 indexs:
-- None
+  - None
 columns:
   city_id: float32
   count: float32
@@ -145,7 +145,7 @@ columns:
 ---
 name: households
 indexs:
-- None
+  - None
 columns:
   age_of_head: float64
   building_id: int64
@@ -159,20 +159,20 @@ columns:
 ---
 name: income_growth_rates
 indexs:
-- year
+  - year
 columns:
-  '115': float64
-  '125': float64
-  '147': float64
-  '161': float64
-  '3': float64
-  '5': float64
-  '93': float64
-  '99': float64
+  "115": float64
+  "125": float64
+  "147": float64
+  "161": float64
+  "3": float64
+  "5": float64
+  "93": float64
+  "99": float64
 ---
 name: jobs
 indexs:
-- None
+  - None
 columns:
   building_id: int64
   home_based_status: object
@@ -183,7 +183,7 @@ columns:
 ---
 name: land_use_types
 indexs:
-- land_use_type_id
+  - land_use_type_id
 columns:
   description: object
   generic_land_use_type_descripti: object
@@ -196,7 +196,7 @@ columns:
 ---
 name: large_areas
 indexs:
-- large_area_id
+  - large_area_id
 columns:
   alt_large_id: int8
   large_area_group_id: int8
@@ -204,7 +204,7 @@ columns:
 ---
 name: orig_lu_parcels
 indexs:
-- parcel_id
+  - parcel_id
 columns:
   census_bg_id: object
   census_block_id: object
@@ -225,7 +225,7 @@ columns:
 ---
 name: orig_lu_zoning
 indexs:
-- parcel_id
+  - parcel_id
 columns:
   future_use: object
   max_dua: float64
@@ -262,7 +262,7 @@ columns:
 ---
 name: parcels
 indexs:
-- parcel_id
+  - parcel_id
 columns:
   census_bg_id: int32
   centroid_x: float64
@@ -282,7 +282,7 @@ columns:
 ---
 name: persons
 indexs:
-- person_id
+  - person_id
 columns:
   age: float64
   household_id: int64
@@ -294,7 +294,7 @@ columns:
 ---
 name: poi
 indexs:
-- None
+  - None
 columns:
   category: object
   index: int32
@@ -303,7 +303,7 @@ columns:
 ---
 name: refiner_events
 indexs:
-- refinement_id
+  - refinement_id
 columns:
   action: object
   agent_expression: object
@@ -316,43 +316,43 @@ columns:
 ---
 name: remi_pop_total
 indexs:
-- large_area_id
+  - large_area_id
 columns:
-  '2015': int32
-  '2016': int32
-  '2017': int32
-  '2018': int32
-  '2019': int32
-  '2020': int32
-  '2021': int32
-  '2022': int32
-  '2023': int32
-  '2024': int32
-  '2025': int32
-  '2026': int32
-  '2027': int32
-  '2028': int32
-  '2029': int32
-  '2030': int32
-  '2031': int32
-  '2032': int32
-  '2033': int32
-  '2034': int32
-  '2035': int32
-  '2036': int32
-  '2037': int32
-  '2038': int32
-  '2039': int32
-  '2040': int32
-  '2041': int32
-  '2042': int32
-  '2043': int32
-  '2044': int32
-  '2045': int32
+  "2015": int32
+  "2016": int32
+  "2017": int32
+  "2018": int32
+  "2019": int32
+  "2020": int32
+  "2021": int32
+  "2022": int32
+  "2023": int32
+  "2024": int32
+  "2025": int32
+  "2026": int32
+  "2027": int32
+  "2028": int32
+  "2029": int32
+  "2030": int32
+  "2031": int32
+  "2032": int32
+  "2033": int32
+  "2034": int32
+  "2035": int32
+  "2036": int32
+  "2037": int32
+  "2038": int32
+  "2039": int32
+  "2040": int32
+  "2041": int32
+  "2042": int32
+  "2043": int32
+  "2044": int32
+  "2045": int32
 ---
 name: school_districts
 indexs:
-- school_district_id
+  - school_district_id
 columns:
   district_name: object
   isd_code: int8
@@ -363,7 +363,7 @@ columns:
 ---
 name: schools
 indexs:
-- bcode
+  - bcode
 columns:
   bname: object
   dcode: int32
@@ -375,13 +375,13 @@ columns:
 ---
 name: semmcds
 indexs:
-- semmcd_id
+  - semmcd_id
 columns:
   city_name: object
 ---
 name: target_vacancies
 indexs:
-- None
+  - None
 columns:
   large_area_id: int64
   non_res_target_vacancy_rate: float64
@@ -390,14 +390,14 @@ columns:
 ---
 name: transit_stops
 indexs:
-- stop_id
+  - stop_id
 columns:
   point_x: float64
   point_y: float64
 ---
 name: transit_to_jobs_am
 indexs:
-- node_id
+  - node_id
 columns:
   <=10.0: int32
   <=15.0: int32
@@ -412,7 +412,7 @@ columns:
 ---
 name: transit_to_jobs_midday
 indexs:
-- node_id
+  - node_id
 columns:
   <=10.0: int32
   <=15.0: int32
@@ -427,8 +427,8 @@ columns:
 ---
 name: travel_data
 indexs:
-- from_zone_id
-- to_zone_id
+  - from_zone_id
+  - to_zone_id
 columns:
   am_auto_total_time: float64
   am_transit_total_time: float64
@@ -440,84 +440,84 @@ columns:
 ---
 name: workers_employment_rates_by_large_area
 indexs:
-- large_area_id
+  - large_area_id
 columns:
-  '2010': float64
-  '2013': float64
-  '2014': float64
-  '2015': float64
-  '2016': float64
-  '2017': float64
-  '2018': float64
-  '2019': float64
-  '2020': float64
-  '2021': float64
-  '2022': float64
-  '2023': float64
-  '2024': float64
-  '2025': float64
-  '2026': float64
-  '2027': float64
-  '2028': float64
-  '2029': float64
-  '2030': float64
-  '2031': float64
-  '2032': float64
-  '2033': float64
-  '2034': float64
-  '2035': float64
-  '2036': float64
-  '2037': float64
-  '2038': float64
-  '2039': float64
-  '2040': float64
-  '2041': float64
-  '2042': float64
-  '2043': float64
-  '2044': float64
-  '2045': float64
+  "2010": float64
+  "2013": float64
+  "2014": float64
+  "2015": float64
+  "2016": float64
+  "2017": float64
+  "2018": float64
+  "2019": float64
+  "2020": float64
+  "2021": float64
+  "2022": float64
+  "2023": float64
+  "2024": float64
+  "2025": float64
+  "2026": float64
+  "2027": float64
+  "2028": float64
+  "2029": float64
+  "2030": float64
+  "2031": float64
+  "2032": float64
+  "2033": float64
+  "2034": float64
+  "2035": float64
+  "2036": float64
+  "2037": float64
+  "2038": float64
+  "2039": float64
+  "2040": float64
+  "2041": float64
+  "2042": float64
+  "2043": float64
+  "2044": float64
+  "2045": float64
   age_max: int8
   age_min: int8
   la_rates: float64
 ---
 name: workers_employment_rates_by_large_area_age
 indexs:
-- large_area_id
+  - large_area_id
 columns:
-  '2010': float64
-  '2013': float64
-  '2014': float64
-  '2015': float64
-  '2016': float64
-  '2017': float64
-  '2018': float64
-  '2019': float64
-  '2020': float64
-  '2021': float64
-  '2022': float64
-  '2023': float64
-  '2024': float64
-  '2025': float64
-  '2026': float64
-  '2027': float64
-  '2028': float64
-  '2029': float64
-  '2030': float64
-  '2031': float64
-  '2032': float64
-  '2033': float64
-  '2034': float64
-  '2035': float64
-  '2036': float64
-  '2037': float64
-  '2038': float64
-  '2039': float64
-  '2040': float64
-  '2041': float64
-  '2042': float64
-  '2043': float64
-  '2044': float64
-  '2045': float64
+  "2010": float64
+  "2013": float64
+  "2014": float64
+  "2015": float64
+  "2016": float64
+  "2017": float64
+  "2018": float64
+  "2019": float64
+  "2020": float64
+  "2021": float64
+  "2022": float64
+  "2023": float64
+  "2024": float64
+  "2025": float64
+  "2026": float64
+  "2027": float64
+  "2028": float64
+  "2029": float64
+  "2030": float64
+  "2031": float64
+  "2032": float64
+  "2033": float64
+  "2034": float64
+  "2035": float64
+  "2036": float64
+  "2037": float64
+  "2038": float64
+  "2039": float64
+  "2040": float64
+  "2041": float64
+  "2042": float64
+  "2043": float64
+  "2044": float64
+  "2045": float64
   age_group: int8
   age_max: int8
   age_min: int8
@@ -525,48 +525,48 @@ columns:
 ---
 name: workers_labor_participation_rates
 indexs:
-- large_area_id
+  - large_area_id
 columns:
-  '2010': object
-  '2013': object
-  '2014': object
-  '2015': object
-  '2016': object
-  '2017': object
-  '2018': object
-  '2019': object
-  '2020': object
-  '2021': object
-  '2022': object
-  '2023': object
-  '2024': object
-  '2025': object
-  '2026': object
-  '2027': object
-  '2028': object
-  '2029': object
-  '2030': object
-  '2031': object
-  '2032': object
-  '2033': object
-  '2034': object
-  '2035': object
-  '2036': object
-  '2037': object
-  '2038': object
-  '2039': object
-  '2040': object
-  '2041': object
-  '2042': object
-  '2043': object
-  '2044': object
-  '2045': object
+  "2010": object
+  "2013": object
+  "2014": object
+  "2015": object
+  "2016": object
+  "2017": object
+  "2018": object
+  "2019": object
+  "2020": object
+  "2021": object
+  "2022": object
+  "2023": object
+  "2024": object
+  "2025": object
+  "2026": object
+  "2027": object
+  "2028": object
+  "2029": object
+  "2030": object
+  "2031": object
+  "2032": object
+  "2033": object
+  "2034": object
+  "2035": object
+  "2036": object
+  "2037": object
+  "2038": object
+  "2039": object
+  "2040": object
+  "2041": object
+  "2042": object
+  "2043": object
+  "2044": object
+  "2045": object
   age_max: int8
   age_min: int8
 ---
 name: zones
 indexs:
-- zone_id
+  - zone_id
 columns:
   acres: float64
   taz: object
@@ -574,7 +574,7 @@ columns:
 ---
 name: zoning
 indexs:
-- parcel_id
+  - parcel_id
 columns:
   future_use: object
   max_dua: float64
