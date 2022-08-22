@@ -431,7 +431,7 @@ def households_transition(
     pidmax = region_p.index.values.max() + 1
 
     ## create {old_hh_id => new_hh_id} mapping
-    hh_id_mapping = [x[0]['building_id'] for x in out]
+    hh_id_mapping = [x[0]["building_id"] for x in out]
     # list of number of hh added for each df in the hh_id_mapping
     hh_new_added = [(x == -1).sum() for x in hh_id_mapping]
     # cumulative sum for hh_new_added, add 0 at front
@@ -441,37 +441,63 @@ def households_transition(
         hhmap = hhmap.reset_index()
         hhmap["household_id_old"] = hhmap["household_id"]
         # assign hh_id to those newly added
-        hhmap.loc[hhmap['building_id'] == -1, "household_id"] = list(
-            range(hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i+1]))
+        hhmap.loc[hhmap["building_id"] == -1, "household_id"] = list(
+            range(
+                hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i + 1]
+            )
+        )
         hh_id_mapping[i] = hhmap[["household_id_old", "household_id"]].set_index(
             "household_id_old"
         )
 
     ## hh df
     # merge with hh_id mapping and concat all hh dfs and reset their index
-    out_hh = pd.concat([
-        pd.merge(x[0].reset_index(), hh_id_mapping[i], left_on='household_id', right_index=True) for i, x in enumerate(
-            out)], verify_integrity=True, ignore_index=True, copy=False)
+    out_hh = pd.concat(
+        [
+            pd.merge(
+                x[0].reset_index(),
+                hh_id_mapping[i],
+                left_on="household_id",
+                right_index=True,
+            )
+            for i, x in enumerate(out)
+        ],
+        verify_integrity=True,
+        ignore_index=True,
+        copy=False,
+    )
     # sort
-    out_hh = out_hh.sort_values(by='household_id')
+    out_hh = out_hh.sort_values(by="household_id")
     # set index to hh_id
     out_hh = out_hh.set_index("household_id_y")
     out_hh = out_hh[households.local_columns]
-    out_hh.index.name = 'household_id'
+    out_hh.index.name = "household_id"
     ## persons df
     # merge with hh_id mapping and concat and reset their index
-    out_person = pd.concat([
-        pd.merge(x[1].reset_index(), hh_id_mapping[i], left_on='household_id', right_index=True) for i, x in enumerate(
-            out)], verify_integrity=True, ignore_index=True, copy=False)
-    new_p = (out_person.household_id_x != out_person.household_id_y).sum()
-    out_person.loc[out_person.household_id_x != out_person.household_id_y, "person_id"] = list(
-        range(pidmax, pidmax + new_p)
+    out_person = pd.concat(
+        [
+            pd.merge(
+                x[1].reset_index(),
+                hh_id_mapping[i],
+                left_on="household_id",
+                right_index=True,
+            )
+            for i, x in enumerate(out)
+        ],
+        verify_integrity=True,
+        ignore_index=True,
+        copy=False,
     )
+    new_p = (out_person.household_id_x != out_person.household_id_y).sum()
+    out_person.loc[
+        out_person.household_id_x != out_person.household_id_y, "person_id"
+    ] = list(range(pidmax, pidmax + new_p))
     out_person["household_id"] = out_person["household_id_y"]
-    out_person = out_person.set_index('person_id')
+    out_person = out_person.set_index("person_id")
 
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
+
 
 @orca.step()
 def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_area):
@@ -1053,7 +1079,9 @@ def scheduled_development_events(buildings, iter_var, events_addition):
 
 
 @orca.step()
-def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, events_deletion):
+def scheduled_demolition_events(
+    buildings, parcels, households, jobs, iter_var, events_deletion
+):
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -1087,7 +1115,11 @@ def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, 
         # Todo: parcel use need to be updated
         # Todo: parcel use need to be updated
         # get parcel_id if theres only one building in the parcel
-        parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
+        parcels_idx_to_update = [
+            pid
+            for pid in drop_buildings.parcel_id
+            if pid not in new_buildings_table.parcel_id
+        ]
         # update pct_undev to 0 if theres only one building in the parcel
         pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
         # update parcels table
@@ -1095,7 +1127,9 @@ def scheduled_demolition_events(buildings, parcels, households, jobs, iter_var, 
 
 
 @orca.step()
-def random_demolition_events(buildings, parcels, households, jobs, year, demolition_rates):
+def random_demolition_events(
+    buildings, parcels, households, jobs, year, demolition_rates
+):
     demolition_rates = demolition_rates.to_frame()
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2015)
     buildings_columns = buildings.local_columns
@@ -1163,7 +1197,7 @@ def random_demolition_events(buildings, parcels, households, jobs, year, demolit
         orca.add_table("dropped_buildings", pd.concat([drop_buildings, prev_drops]))
     else:
         orca.add_table("dropped_buildings", drop_buildings)
-    
+
     new_buildings_table = buildings[buildings_columns].drop(buildings_idx)
 
     orca.add_table("buildings", new_buildings_table)
@@ -1181,7 +1215,11 @@ def random_demolition_events(buildings, parcels, households, jobs, year, demolit
     orca.add_table("jobs", jobs)
     # Todo: parcel use need to be updated
     # get parcel_id if theres only one building in the parcel
-    parcels_idx_to_update = [pid for pid in drop_buildings.parcel_id if pid not in new_buildings_table.parcel_id]
+    parcels_idx_to_update = [
+        pid
+        for pid in drop_buildings.parcel_id
+        if pid not in new_buildings_table.parcel_id
+    ]
     # update pct_undev to 0 if theres only one building in the parcel
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     # update parcels table
@@ -1241,7 +1279,7 @@ def feasibility(parcels):
 def add_extra_columns_nonres(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     for col in [
-        "improvement_value",
+        "market_value",
         "land_area",
         "tax_exempt",
         "sqft_price_nonres",
@@ -1378,7 +1416,9 @@ def run_developer(
         return 0, []
 
     # get the list of parcel_id whose pct_undev need to be updated
-    pid_need_updates = [pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id]
+    pid_need_updates = [
+        pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id
+    ]
 
     parcel_utils.add_buildings(
         dev.feasibility,
@@ -1392,7 +1432,10 @@ def run_developer(
         pipeline,
     )
     # return the number of units added and the list of parcel_id for updating pct_undev
-    return new_buildings.residential_units.sum() - new_buildings.current_units.sum(), pid_need_updates
+    return (
+        new_buildings.residential_units.sum() - new_buildings.current_units.sum(),
+        pid_need_updates,
+    )
 
 
 # @orca.step("residential_developer")
@@ -1489,7 +1532,7 @@ def residential_developer(
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        # TODO: update parcels.pct_undev to 100 for units_added 
+        # TODO: update parcels.pct_undev to 100 for units_added
         debug_res_developer = debug_res_developer.append(
             {
                 "year": year,

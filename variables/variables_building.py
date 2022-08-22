@@ -143,15 +143,18 @@ def semmcd(buildings, parcels):
 def large_area_id(buildings, parcels):
     return misc.reindex(parcels.large_area_id, buildings.parcel_id)
 
-@orca.column('buildings', cache=True, cache_scope='iteration')
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
 def county_id(buildings, parcels):
     return misc.reindex(parcels.county_id, buildings.parcel_id)
 
-@orca.column('buildings', cache=True, cache_scope='iteration')
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
 def geoid(buildings, parcels):
     # geoid = parcels[['county_id', 'census_bg_id']].apply(lambda x: 26*10000000000 + x.county_id*10000000 + x.census_bg_id, axis=1)
-    geoid = 26*10000000000 + parcels.county_id*10000000 + parcels.census_bg_id
+    geoid = 26 * 10000000000 + parcels.county_id * 10000000 + parcels.census_bg_id
     return misc.reindex(geoid.fillna(0).astype(int), buildings.parcel_id)
+
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def popden(buildings, zones):
@@ -518,7 +521,7 @@ vars_to_log = [
     "parcels_parcel_far",
     "sqft_price_nonres",
     "sqft_price_res",
-    "improvement_value",
+    "market_value",
     "mcd_model_quota",
 ]
 
@@ -584,13 +587,16 @@ def ln_residential_units(buildings):
 def census_bg_id(buildings, parcels):
     return misc.reindex(parcels.census_bg_id, buildings.parcel_id).fillna(0)
 
+
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def zone_id(buildings, parcels):
     return misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
 
+
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def city_id(buildings, parcels):
     return misc.reindex(parcels.city_id, buildings.parcel_id).fillna(0)
+
 
 @orca.column("buildings", cache=True)
 def hu_filter(buildings, households, parcels):
@@ -603,11 +609,15 @@ def hu_filter(buildings, households, parcels):
     sample = sample[~(sample.index.isin(households.building_id))]
     for c in city_id.unique():
         frac = 0.9 if c in cites else 0.5
-        sampled_indexes = sample[sample.index.isin(city_id[city_id == c].index)].sample(
-            frac=frac, replace=False).index
+        sampled_indexes = (
+            sample[sample.index.isin(city_id[city_id == c].index)]
+            .sample(frac=frac, replace=False)
+            .index
+        )
         series[series.index.isin(sampled_indexes)] = 1
-    #print('hu_filter', series)
+    # print('hu_filter', series)
     return series
+
 
 def standardize(series):
     if pd.api.types.is_numeric_dtype(series):
