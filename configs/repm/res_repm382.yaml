@@ -21,7 +21,7 @@ model_expression:
     - nodes_walk_log_sum_nonresidential_units
     - nodes_walk_percent_race4
     - parcels_pptytax
-    - improvement_value
+    - market_value
     - nodes_walk_ave_lot_sqft
     - zones_a_ln_retail_emp_15min_drive_alone
     - drv_nearest_hospital
@@ -39,7 +39,7 @@ fit_parameters:
         Intercept: 1.4724998166784578
         crime_other_rate: 0.00016933656674638904
         drv_nearest_hospital: 0.022561282607377324
-        improvement_value: 2.400339960882011e-06
+        market_value: 2.400339960882011e-06
         nodes_drv_elem_school_perf: 0.3985546834504907
         nodes_drv_log_sum_20min_pop: 0.322031485621863
         nodes_walk_ave_lot_sqft: -0.3622740189085871
@@ -57,7 +57,7 @@ fit_parameters:
         Intercept: 0.8663979686795578
         crime_other_rate: 9.425581638879655e-06
         drv_nearest_hospital: 0.005078547199619004
-        improvement_value: 4.245816354008884e-08
+        market_value: 4.245816354008884e-08
         nodes_drv_elem_school_perf: 0.10464932295434438
         nodes_drv_log_sum_20min_pop: 0.06527681980100655
         nodes_walk_ave_lot_sqft: 0.03268288523805883
@@ -75,7 +75,7 @@ fit_parameters:
         Intercept: 1.6995651766389013
         crime_other_rate: 17.965635780808615
         drv_nearest_hospital: 4.4424678398322035
-        improvement_value: 56.53423890120963
+        market_value: 56.53423890120963
         nodes_drv_elem_school_perf: 3.808478375195692
         nodes_drv_log_sum_20min_pop: 4.933320688776836
         nodes_walk_ave_lot_sqft: -11.084517669410758

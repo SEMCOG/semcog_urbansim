@@ -20,7 +20,7 @@ estimation_sample_size: 2000
 
 prediction_sample_size: 100
 
-model_expression: has_children:nodes_walk_percent_hh_with_children + improvement_value
+model_expression: has_children:nodes_walk_percent_hh_with_children + market_value
     + has_workers:zones_a_ln_emp_50min_transit + ln_income:nodes_walk_ave_income +
     b_ln_parcel_sqft + nodes_drv_log_sum_60min_jobs + building_age_gt_100 + is_race1:nodes_walk_percent_race1
     + persons:nodes_walk_ln_popden + nodes_walk_race_4_hhs + is_young:nodes_walk_retail_jobs
@@ -36,7 +36,7 @@ fit_parameters:
         building_age_gt_100: 0.6003119396282468
         has_children:nodes_walk_percent_hh_with_children: 0.36352603497564606
         has_workers:zones_a_ln_emp_50min_transit: 0.18015255811882547
-        improvement_value: 5.076944292581721e-07
+        market_value: 5.076944292581721e-07
         is_race1:nodes_walk_percent_race1: 0.7082011048208766
         is_young:nodes_walk_retail_jobs: 0.01190250816808262
         ln_income:nodes_walk_ave_income: 0.21246838927390443
@@ -50,7 +50,7 @@ fit_parameters:
         building_age_gt_100: 0.12335928607287262
         has_children:nodes_walk_percent_hh_with_children: 0.28792517990679933
         has_workers:zones_a_ln_emp_50min_transit: 0.008255037992358643
-        improvement_value: 3.80380298777205e-08
+        market_value: 3.80380298777205e-08
         is_race1:nodes_walk_percent_race1: 0.40050729050227973
         is_young:nodes_walk_retail_jobs: 0.0027799493033937445
         ln_income:nodes_walk_ave_income: 0.00720964311247964
@@ -64,7 +64,7 @@ fit_parameters:
         building_age_gt_100: 4.866370086428853
         has_children:nodes_walk_percent_hh_with_children: 1.2625711828792416
         has_workers:zones_a_ln_emp_50min_transit: 21.823346941054112
-        improvement_value: 13.34702220094572
+        market_value: 13.34702220094572
         is_race1:nodes_walk_percent_race1: 1.7682602080294603
         is_young:nodes_walk_retail_jobs: 4.281555837565856
         ln_income:nodes_walk_ave_income: 29.47002867674949
