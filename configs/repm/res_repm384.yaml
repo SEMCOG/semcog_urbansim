@@ -22,7 +22,7 @@ model_expression:
     - b_ln_parcels_parcel_far
     - nodes_walk_percent_low_income
     - nodes_drv_log_sum_10min_pop
-    - improvement_value
+    - market_value
     - building_age_gt_70
     - nodes_walk_log_sum_nonresidential_units
 
@@ -36,7 +36,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: -0.8785048362393726
         building_age_gt_70: 0.07102181520101915
         drv_nearest_library: 0.006999548841537881
-        improvement_value: 5.414744248082637e-05
+        market_value: 5.414744248082637e-05
         nodes_drv_log_sum_10min_pop: 0.07826051262101963
         nodes_walk_log_sum_nonresidential_units: -0.0059034598833804415
         nodes_walk_percent_low_income: -0.058788254327859175
@@ -50,7 +50,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: 0.01819607269265077
         building_age_gt_70: 0.0060910018721834535
         drv_nearest_library: 0.000564947215143232
-        improvement_value: 2.5348510864248626e-07
+        market_value: 2.5348510864248626e-07
         nodes_drv_log_sum_10min_pop: 0.0030721234951050485
         nodes_walk_log_sum_nonresidential_units: 0.0008026644281673983
         nodes_walk_percent_low_income: 0.010094262562353504
@@ -64,7 +64,7 @@ fit_parameters:
         b_ln_parcels_parcel_far: -48.27991463202896
         building_age_gt_70: 11.660120402419087
         drv_nearest_library: 12.38973952595425
-        improvement_value: 213.61192683391735
+        market_value: 213.61192683391735
         nodes_drv_log_sum_10min_pop: 25.474403208632594
         nodes_walk_log_sum_nonresidential_units: -7.3548293361634505
         nodes_walk_percent_low_income: -5.82392759894216

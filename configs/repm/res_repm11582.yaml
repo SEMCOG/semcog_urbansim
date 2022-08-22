@@ -19,7 +19,7 @@ model_expression:
     - zones_population
     - zones_employment
     - nodes_walk_quarter_mile_to_transit
-    - improvement_value
+    - market_value
     - nodes_walk_ave_lot_sqft
     - nodes_walk_log_sum_nonresidential_units
     - nodes_walk_race_3_hhs
@@ -31,7 +31,7 @@ fitted: true
 fit_parameters:
     Coefficient:
         Intercept: 4.164632055284124
-        improvement_value: 5.281108637159384e-06
+        market_value: 5.281108637159384e-06
         nodes_walk_ave_lot_sqft: -0.1087406572910295
         nodes_walk_highinc_hhs: 0.015437847367496042
         nodes_walk_log_sum_nonresidential_units: 0.15360371579858714
@@ -43,7 +43,7 @@ fit_parameters:
         zones_population: -0.00020599783499874227
     Std. Error:
         Intercept: 0.9648947581569048
-        improvement_value: 3.3662335919077963e-07
+        market_value: 3.3662335919077963e-07
         nodes_walk_ave_lot_sqft: 0.12179639021386533
         nodes_walk_highinc_hhs: 0.0045854642850688835
         nodes_walk_log_sum_nonresidential_units: 0.02814389127098168
@@ -55,7 +55,7 @@ fit_parameters:
         zones_population: 6.853850997305407e-05
     T-Score:
         Intercept: 4.316151601071191
-        improvement_value: 15.688479402780665
+        market_value: 15.688479402780665
         nodes_walk_ave_lot_sqft: -0.8928068976435923
         nodes_walk_highinc_hhs: 3.3666923146178496
         nodes_walk_log_sum_nonresidential_units: 5.4577995032607065
