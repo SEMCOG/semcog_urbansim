@@ -355,8 +355,8 @@ def b_is_pre_1945(buildings):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def b_is_newerthan2010(buildings):
-    return (buildings.year_built > 2010).astype("int32")
+def b_is_newerthan2015(buildings):
+    return (buildings.year_built > 2015).astype("int32")
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
