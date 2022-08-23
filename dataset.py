@@ -118,7 +118,7 @@ def buildings(store):
     df.loc[df.sqft_price_nonres > 1000, "sqft_price_nonres"] = 0
     df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
     df["sqft_price_res"] = (
-        df.improvement_value
+        df.market_value
         * 1.0
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
