@@ -68,6 +68,21 @@ import variables
 orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
 
+vars_to_skip = [
+    'parcel_id', 'st_parcel_id', 'geoid', 'st_geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far',
+    'parcels_st_parcel_far',
+    'nodeid_drv', 'st_nodeid_drv', 'nodeid_walk', 'st_nodeid_walk', 'semmcd', 
+    'city_id', 'census_bg_id', 'x', 'y',
+    'zone_id', 'improvement_value', 'market_value', 'landvalue', 'b_ln_sqft_price_nonres',
+    'zones_tazce10_n', 'tazce10', 'parcels_zones_tazce10_n', 'parcels_st_zones_tazce10_n',
+    'st_parcels_zones_tazce10_n', 'st_parcels_st_zones_tazce10_n', 'st_zones_tazce10_n',
+    'parcels_land_use_type_id', 'st_parcels_land_use_type_id', 'st_parcels_max_dua', 'parcels_max_dua',
+    'parcels_max_height', 'st_parcels_max_height', 'parcels_school_id', 'st_parcels_school_id', 
+    'parcels_sev_value', 'st_parcels_sev_value', 'parcels_centroid_x', 'st_parcels_centroid_x',
+    'parcels_centroid_y', 'st_parcels_centroid_y', 'parcels_school_id', 'st_parcels_school_id',
+    'parcels_land_cost', 'st_parcels_land_cost', 'b_ln_market_value', 'st_b_ln_market_value'
+]
+
 def estimate_repm(yaml_config):
     model = RegressionModel.from_yaml(str_or_buffer=misc.config(yaml_config))
     b = orca.get_table("buildings").to_frame(model.columns_used()).fillna(0)
@@ -121,7 +136,9 @@ def feature_selection_lasso(mat, yaml_config, vars_used):
         return None, None, None, sample_size
     pipeline = Pipeline([
                         # ('scaler',StandardScaler()), # disable standardize
-                        ('model',Lasso(alpha=0.3))
+                        # alpha control the strength of regularization, 
+                        # higher the alpha, stronger the regularization, more vars get 0 coef
+                        ('model',Lasso(alpha=0.4))
     ])
     # search = GridSearchCV(pipeline,
     #                   {'model__alpha':np.arange(0.1,10,0.1)},
@@ -158,7 +175,8 @@ def load_variables():
     # this loop will stall the system if it loads all 1200 variables
     mat_list = []
     for i, var in enumerate(tqdm(valid_b_vars[:])):
-        if var in ['parcel_id', 'geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far']:
+        # skip variables in the list or if it's standardized variable
+        if var in vars_to_skip or 'st_' in var:
             continue
         s = buildings.to_frame(var).iloc[:, 0]
         if pd.api.types.is_numeric_dtype(s):
