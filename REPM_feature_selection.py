@@ -101,7 +101,7 @@ def apply_filter_query(df, filters=None):
         return df
 
 def get_training_data(mat, yaml_config, vars_used):
-    filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'st_sqft_price_res', 'st_sqft_price_nonres', 'non_residential_sqft',  'hedonic_id', 'residential_units']
+    filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
     filter_col_ind = [vars_used.index(name) for name in filter_cols]
     df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
     with open( yaml_config, 'r') as f:
@@ -123,6 +123,8 @@ def get_training_data(mat, yaml_config, vars_used):
     all_vars_filtered = mat.toarray()[:, filtered_ind].transpose()
     all_vars_filtered = all_vars_filtered[:, cols_ind_to_fit]
     y = filtered_df.loc[:, target_var_raw].values
+    # target transformation
+    y = np.log1p(y)
     return np.nan_to_num(all_vars_filtered, copy=False), y, cols_names_to_fit, all_vars_filtered.shape[0]
 
 def feature_selection_f_classif(mat, yaml_config, vars_used):
@@ -176,7 +178,7 @@ def load_variables():
     mat_list = []
     for i, var in enumerate(tqdm(valid_b_vars[:])):
         # skip variables in the list or if it's standardized variable
-        if var in vars_to_skip or 'st_' in var:
+        if var in vars_to_skip or 'st_' in var or var not in buildings.columns:
             continue
         s = buildings.to_frame(var).iloc[:, 0]
         if pd.api.types.is_numeric_dtype(s):
