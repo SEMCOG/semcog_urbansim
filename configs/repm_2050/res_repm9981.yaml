@@ -1,0 +1,51 @@
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 650
+- hedonic_id == 9981
+model_expression:
+  left_side: np.log1p(sqft_price_res)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 9981
+ytransform: np.exp
+coef:
+  building_age: -0.0021367001752262992
+  crime_other_rate: -1.0035541603208311e-05
+  crime_ucr_rate: 0.0001341000800370216
+  jobs_within_30_min: -3.090825158229269e-08
+  land_area: 3.924971253668929e-05
+  nodes_walk_housing_cost: 3.215854369873432e-07
+  nodes_walk_jobs: 8.586511254675131e-06
+  nodes_walk_medical: 7.426181727124664e-05
+  nodes_walk_node_r1500_sqft: -2.7958184796975367e-09
+  nodes_walk_population: -5.1168118287804745e-05
+  nodes_walk_race_1_hhs: 0.00026506877377811214
+  nodes_walk_residential: 0.006167138053782656
+  parcel_sqft: 7.841313658769415e-08
+  parcels_landvalue: -4.479596851582014e-07
+  parcels_zones_employment: -5.453909944022994e-07
+  parcels_zones_households: 4.602966813950702e-05
+  parcels_zones_jobs_within_30_min: 6.0346450595063295e-09
+  parcels_zones_logsum_job_high_income: -1.3307945812837175e-07
+  parcels_zones_logsum_job_low_income: 6.186710679670349e-08
+  parcels_zones_logsum_pop_high_income: 1.3840798445551394e-07
+  parcels_zones_logsum_pop_low_income: -1.0375923632570669e-07
+  parcels_zones_population: -1.761394551537282e-05
+  parcels_zones_retail_jobs: -1.0137085497752597e-05
+  parcels_zones_transit_jobs_30min: 3.2950061402556746e-07
+  parcels_zones_transit_jobs_50min: -2.9671370091404335e-07
+  residential_sqft: -6.308174784065583e-05
+  year_built: 0.0016054966848798242
+  zones_acres: -5.376015875399868e-06
+  zones_households: 4.1761509818480545e-05
+  zones_logsum_job_high_income: -1.8970682670123658e-07
+  zones_logsum_job_low_income: 8.069088924561897e-08
+  zones_logsum_pop_high_income: 1.4985660803101207e-07
+  zones_logsum_pop_low_income: -7.507838259029986e-08
+  zones_population: -1.687089533965631e-05
+  zones_retail_jobs: -5.99830020383628e-08
+  zones_transit_jobs_30min: 9.084670056471322e-08
+  zones_transit_jobs_50min: -1.7634942966367457e-07
+sample_size: 246520
+score: 0.6449770765846754

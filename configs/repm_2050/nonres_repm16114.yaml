@@ -1,0 +1,27 @@
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 16114
+model_expression:
+  left_side: np.log1p(sqft_price_nonres)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 16114
+ytransform: np.exp
+coef:
+  building_sqft: 5.2451823100717214e-06
+  jobs_within_30_min: 4.123817955257214e-06
+  land_area: 5.286861603781095e-06
+  parcel_sqft: -1.0945253249343298e-08
+  parcels_landvalue: -8.948491764503578e-07
+  parcels_total_sqft: 2.570251081392065e-05
+  parcels_zones_jobs_within_30_min: 4.125815614283997e-06
+  parcels_zones_logsum_job_high_income: 4.606171981046253e-09
+  parcels_zones_logsum_job_low_income: 9.40733128372854e-10
+  parcels_zones_logsum_pop_high_income: -3.397383773868729e-07
+  parcels_zones_logsum_pop_low_income: 1.444273511828497e-07
+  zones_logsum_job_high_income: 3.6953446167683654e-11
+  zones_logsum_job_low_income: 6.483449496193104e-12
+sample_size: 4
+score: 0.9999999975975299

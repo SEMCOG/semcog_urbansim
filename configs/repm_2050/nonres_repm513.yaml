@@ -1,0 +1,65 @@
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 513
+model_expression:
+  left_side: np.log1p(sqft_price_nonres)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 513
+ytransform: np.exp
+coef:
+  building_age: -0.00012090052957488264
+  building_sqft: 1.387538422447923e-05
+  crime_other_rate: 2.0378596380940685e-05
+  crime_ucr_rate: -8.779898585678145e-06
+  jobs_within_30_min: 1.8427076587133379e-06
+  land_area: -0.00011209323976832237
+  nodes_walk_ave_unit_sqft: 2.3390594037903565e-05
+  nodes_walk_hhs_with_children: 0.005260921949187402
+  nodes_walk_highinc_hhs: 0.0034272085743116292
+  nodes_walk_housing_cost: 5.924568824159381e-06
+  nodes_walk_jobs: -0.00010009661638872631
+  nodes_walk_lowinc_hhs: -0.0009559545938708378
+  nodes_walk_max_office_far: 0.01027002892582398
+  nodes_walk_medical: 0.0017098705678908227
+  nodes_walk_node_r1500_sqft: 8.27336706562012e-08
+  nodes_walk_population: -0.0006021223093048153
+  nodes_walk_race_2_hhs: 0.0006582666011553513
+  nodes_walk_race_3_hhs: 0.0020526505996264345
+  nodes_walk_retail: 0.011696463094472705
+  nodes_walk_retail_jobs: 0.002199335054919122
+  parcel_sqft: 8.122586192531322e-06
+  parcels_ave_unit_size: 0.00015038574661863213
+  parcels_landvalue: 3.3191279555438926e-06
+  parcels_total_sqft: -8.465001915034777e-06
+  parcels_zones_employment: 2.69359980687872e-05
+  parcels_zones_households: -0.0003901173997527654
+  parcels_zones_jobs_within_30_min: 1.5775912152572153e-07
+  parcels_zones_logsum_job_high_income: -1.1043838650706854e-05
+  parcels_zones_logsum_job_low_income: 3.392331240811755e-08
+  parcels_zones_logsum_pop_high_income: 3.369780934886727e-06
+  parcels_zones_logsum_pop_low_income: 3.965822642238674e-09
+  parcels_zones_population: 0.0001383832331035858
+  parcels_zones_retail_jobs: -0.0019662400112865747
+  parcels_zones_transit_jobs_30min: 4.8290980794620145e-06
+  parcels_zones_transit_jobs_50min: -2.813547624393697e-07
+  parcels_zones_z_total_jobs: 0.00017144571200770038
+  residential_sqft: 3.756023584369771e-05
+  sqft_per_unit: 0.0002508889646771816
+  year_built: 0.007645821134232879
+  zones_acres: -0.00022547214234277496
+  zones_employment: 2.292796470685602e-05
+  zones_households: -0.00019460434189889374
+  zones_logsum_job_high_income: -1.0877312845959707e-05
+  zones_logsum_job_low_income: 4.147894106420517e-08
+  zones_logsum_pop_high_income: 7.129340492740722e-06
+  zones_logsum_pop_low_income: 1.6037170652091555e-09
+  zones_population: 0.00013030392442396697
+  zones_retail_jobs: -0.0008367211366559531
+  zones_transit_jobs_30min: 2.8860439089312433e-06
+  zones_transit_jobs_50min: -1.6511916455727443e-07
+  zones_z_total_jobs: 8.638948128969358e-06
+sample_size: 229
+score: 0.4044897536889708

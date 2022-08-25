@@ -1,0 +1,51 @@
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 650
+- hedonic_id == 11581
+model_expression:
+  left_side: np.log1p(sqft_price_res)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 11581
+ytransform: np.exp
+coef:
+  building_age: -0.0002254040343037563
+  building_sqft: -5.1326428869309874e-21
+  crime_other_rate: -3.960957206928171e-05
+  crime_ucr_rate: 5.120609603047428e-05
+  jobs_within_30_min: -7.892003985105327e-08
+  land_area: 3.2911935840004805e-05
+  nodes_walk_ave_unit_sqft: -2.103377590813576e-06
+  nodes_walk_housing_cost: 2.972589707857758e-06
+  nodes_walk_jobs: 4.08223015079188e-05
+  nodes_walk_node_r1500_sqft: 8.272805358078205e-10
+  nodes_walk_population: 2.5448951308767676e-05
+  nodes_walk_residential: 0.004069075577121771
+  parcel_sqft: -1.3227536817603885e-07
+  parcels_ave_unit_size: -5.801975640654628e-05
+  parcels_landvalue: 1.5044086770883957e-06
+  parcels_zones_employment: 1.4579875206277397e-05
+  parcels_zones_jobs_within_30_min: -1.3438793400225975e-08
+  parcels_zones_logsum_job_high_income: 1.119731945221356e-06
+  parcels_zones_logsum_job_low_income: 2.840791007322148e-07
+  parcels_zones_logsum_pop_high_income: -5.731464348584318e-07
+  parcels_zones_logsum_pop_low_income: -2.5096518635153914e-09
+  parcels_zones_population: 7.640228096857431e-08
+  parcels_zones_transit_jobs_30min: -3.744518171062927e-05
+  parcels_zones_transit_jobs_50min: 1.0527748232582217e-05
+  parcels_zones_z_total_jobs: 1.6811955082043352e-06
+  residential_sqft: -5.882203139631815e-05
+  year_built: 0.00313842286478125
+  zones_acres: -4.247265291710745e-08
+  zones_employment: 3.337507786114903e-07
+  zones_logsum_job_high_income: 1.1863353106841383e-06
+  zones_logsum_job_low_income: 5.420237058145979e-08
+  zones_logsum_pop_high_income: -6.818717408230811e-07
+  zones_logsum_pop_low_income: -1.5937038249539554e-07
+  zones_population: 2.5596322163327186e-07
+  zones_transit_jobs_30min: -2.3562126126793206e-05
+  zones_transit_jobs_50min: 6.671729763614458e-06
+  zones_z_total_jobs: 9.254543554202797e-07
+sample_size: 47981
+score: 0.39545574242503645
