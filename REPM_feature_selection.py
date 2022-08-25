@@ -19,7 +19,7 @@ import scipy
 import time
 from tqdm import tqdm
 # from guppy import hpy; h=hpy()
-import pymrmr
+# import pymrmr
 
 # suppress sklearn warnings
 def warn(*args, **kwargs):
@@ -70,7 +70,7 @@ orca.run(["neighborhood_vars"])
 
 vars_to_skip = [
     'parcel_id', 'st_parcel_id', 'geoid', 'st_geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far',
-    'parcels_st_parcel_far',
+    'parcels_st_parcel_far', 'parcels_census_bg_id',
     'nodeid_drv', 'st_nodeid_drv', 'nodeid_walk', 'st_nodeid_walk', 'semmcd', 
     'city_id', 'census_bg_id', 'x', 'y',
     'zone_id', 'improvement_value', 'market_value', 'landvalue', 'b_ln_sqft_price_nonres',
@@ -99,6 +99,37 @@ def apply_filter_query(df, filters=None):
         return df.query(query)
     else:
         return df
+
+def generate_repm_config(df):
+    hid_count = df.hedonic_id.value_counts()
+    for hid in hid_count.index:
+        config = {
+            'name': 'RegressionModel',
+            'model_type': 'Regression',
+            'fit_filters': [],
+            'predict_filters': 'hedonic_id == ' + str(hid),
+            'ytransform': 'np.exp',
+            'model_expression': {
+                'left_side': ''
+            }
+        }
+        if hid % 100 in [81, 82, 83, 84]:
+            prefix = "res_repm"
+            price_col = "sqft_price_res"
+            size_col = "residential_units"
+        else:
+            prefix = "nonres_repm"
+            price_col = "sqft_price_nonres"
+            size_col = "non_residential_sqft"
+        config['fit_filters'].append(size_col + ' > 0')
+        config['fit_filters'].append(price_col + ' > 1')
+        config['fit_filters'].append(price_col + ' < 650')
+        config['fit_filters'].append('hedonic_id == ' + str(hid))
+        config['model_expression']['left_side'] = 'np.log1p(%s)' % price_col
+        config_name = prefix + str(hid)
+        with open('configs/repm_2050/%s.yaml' % config_name, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
+    return
 
 def get_training_data(mat, yaml_config, vars_used):
     filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
@@ -140,7 +171,7 @@ def feature_selection_lasso(mat, yaml_config, vars_used):
                         # ('scaler',StandardScaler()), # disable standardize
                         # alpha control the strength of regularization, 
                         # higher the alpha, stronger the regularization, more vars get 0 coef
-                        ('model',Lasso(alpha=0.4))
+                        ('model',Lasso(alpha=0.3))
     ])
     # search = GridSearchCV(pipeline,
     #                   {'model__alpha':np.arange(0.1,10,0.1)},
@@ -161,7 +192,7 @@ def feature_selection_lasso(mat, yaml_config, vars_used):
 
 # ## REPM Configs
 repm_configs = []
-path = "./configs/repm/"
+path = "./configs/repm_2050/"
 for filename in os.listdir(path):
     if not filename.endswith(".yaml"):
         continue
@@ -228,19 +259,27 @@ for config in repm_configs:
        'score': score,
        'sample_size': sample_size
     }
+	if type(result[config]['sample_size']) == np.int64: 
+		result[config]['sample_size'] = result[config]['sample_size'].item()
+	if result[config]['coef'] == 'None': continue
+	result[config]['score'] = float(result[config]['score'])
+	for coe in result[config]['coef']:
+		result[config]['coef'][coe] = float(result[config]['coef'][coe])
+	with open(config, 'a') as f:
+		yaml.dump(result[config], f, default_flow_style=False)
     # f, p = feature_selection_f_classif(mat, config, vars_used)
     # f = np.nan_to_num(f)
     # p = np.nan_to_num(p)
     # print('\t'.join([str(vars_used[x]) for x in np.argsort(p)[::-1][:10]]))
     # print('\t'.join([str(p[x]) for x in np.argsort(p)[::-1][:10]]))
-for k in result:
-	if type(result[k]['sample_size']) == np.int64: 
-		result[k]['sample_size'] = result[k]['sample_size'].item()
-	if result[k]['coef'] == 'None': continue
-	result[k]['score'] = float(result[k]['score'])
-	for coe in result[k]['coef']:
-		result[k]['coef'][coe] = float(result[k]['coef'][coe])
-with open('repm_result.yaml', 'w') as f:
-    yaml.dump(result, f, default_flow_style=False)
+# for k in result:
+# 	if type(result[k]['sample_size']) == np.int64: 
+# 		result[k]['sample_size'] = result[k]['sample_size'].item()
+# 	if result[k]['coef'] == 'None': continue
+# 	result[k]['score'] = float(result[k]['score'])
+# 	for coe in result[k]['coef']:
+# 		result[k]['coef'][coe] = float(result[k]['coef'][coe])
+# with open('repm_result.yaml', 'w') as f:
+#     yaml.dump(result, f, default_flow_style=False)
 # print(f_classif(df.values, y))
 print('done')

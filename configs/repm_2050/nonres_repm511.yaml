@@ -1,0 +1,48 @@
+fit_filters:
+- non_residential_sqft > 0
+- sqft_price_nonres > 1
+- sqft_price_nonres < 650
+- hedonic_id == 511
+model_expression:
+  left_side: np.log1p(sqft_price_nonres)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 511
+ytransform: np.exp
+coef:
+  building_age: -0.0012386934111299312
+  building_sqft: 1.3143447178965745e-05
+  crime_other_rate: 0.00015072504943411483
+  crime_ucr_rate: -9.191499230764443e-05
+  jobs_within_30_min: -6.724763990112155e-08
+  land_area: -0.00010370470400127894
+  nodes_walk_ave_unit_sqft: 0.00013694415122843614
+  nodes_walk_housing_cost: -1.6460709401081191e-06
+  nodes_walk_jobs: 0.0003231482842402896
+  nodes_walk_node_r1500_sqft: 4.0247495538750757e-07
+  nodes_walk_population: 0.0009187978928350756
+  parcel_sqft: 2.7571487977250243e-06
+  parcels_landvalue: 1.4013303079048594e-05
+  parcels_total_sqft: -1.3137666133089295e-05
+  parcels_zones_employment: -0.0005314719849247597
+  parcels_zones_jobs_within_30_min: 9.474656335724238e-07
+  parcels_zones_logsum_job_high_income: 8.735714537090915e-07
+  parcels_zones_logsum_job_low_income: 7.76780794602885e-08
+  parcels_zones_logsum_pop_high_income: -3.7142353498468335e-07
+  parcels_zones_logsum_pop_low_income: 1.059202900175989e-07
+  parcels_zones_population: -0.0001758858046133561
+  parcels_zones_transit_jobs_30min: -5.6746266292953974e-06
+  parcels_zones_transit_jobs_50min: -9.385905306118435e-06
+  parcels_zones_z_total_jobs: -0.00011269092446162872
+  year_built: 0.021889993038959162
+  zones_employment: -4.957940218315019e-06
+  zones_logsum_job_high_income: 2.919978206105163e-06
+  zones_logsum_job_low_income: 1.4912644664475768e-07
+  zones_logsum_pop_high_income: -1.2660814680795802e-06
+  zones_logsum_pop_low_income: 1.427224309962055e-07
+  zones_population: -0.00012122721359402292
+  zones_transit_jobs_30min: -5.768971096480564e-06
+  zones_transit_jobs_50min: -5.854438367107214e-06
+  zones_z_total_jobs: -2.8287231807650707e-05
+sample_size: 17
+score: 0.994261685987866

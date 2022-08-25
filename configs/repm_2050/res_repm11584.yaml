@@ -1,0 +1,11 @@
+fit_filters:
+- residential_units > 0
+- sqft_price_res > 1
+- sqft_price_res < 650
+- hedonic_id == 11584
+model_expression:
+  left_side: np.log1p(sqft_price_res)
+model_type: Regression
+name: RegressionModel
+predict_filters: hedonic_id == 11584
+ytransform: np.exp
