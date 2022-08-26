@@ -73,7 +73,7 @@ vars_to_skip = [
     'parcels_st_parcel_far', 'parcels_census_bg_id',
     'nodeid_drv', 'st_nodeid_drv', 'nodeid_walk', 'st_nodeid_walk', 'semmcd', 
     'city_id', 'census_bg_id', 'x', 'y',
-    'zone_id', 'improvement_value', 'market_value', 'landvalue', 'b_ln_sqft_price_nonres',
+    'zone_id', 'improvement_value', 'market_value', 'landvalue', 'parcels_landvalue', 'b_ln_sqft_price_nonres',
     'zones_tazce10_n', 'tazce10', 'parcels_zones_tazce10_n', 'parcels_st_zones_tazce10_n',
     'st_parcels_zones_tazce10_n', 'st_parcels_st_zones_tazce10_n', 'st_zones_tazce10_n',
     'parcels_land_use_type_id', 'st_parcels_land_use_type_id', 'st_parcels_max_dua', 'parcels_max_dua',
@@ -100,7 +100,11 @@ def apply_filter_query(df, filters=None):
     else:
         return df
 
-def generate_repm_config(df):
+def generate_repm_config(mat, vars_used):
+    filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
+    filter_col_ind = [vars_used.index(name) for name in filter_cols]
+    df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
+    df['hedonic_id'] = df['hedonic_id'].astype('int')
     hid_count = df.hedonic_id.value_counts()
     for hid in hid_count.index:
         config = {
@@ -132,6 +136,16 @@ def generate_repm_config(df):
     return
 
 def get_training_data(mat, yaml_config, vars_used):
+    # yaml with less than 100 samples
+    # 42, 52, 91, 92, 93, 95, 
+    # 311, 313, 314, 341, 371, 
+    # 511, 514, 561, 563, 571, 
+    # 9311, 9313, 9314, 9333, 9341, 9351, 9361, 9363, 9371, 9383,
+    # 9911, 9913, 9914, 9941, 9961, 9963, 9971, 
+    # 11511, 11513, 11514, 11533, 11541, 11541, 11561, 11563, 11571, 
+    # 12511, 12513, 12514, 12571,
+    # 14711, 14713, 14714, 14733, 14741, 14761, 14763, 14771,
+    # 16111, 16113, 16114, 16141, 16161, 16163, 16171,  
     filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
     filter_col_ind = [vars_used.index(name) for name in filter_cols]
     df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
@@ -190,15 +204,6 @@ def feature_selection_lasso(mat, yaml_config, vars_used):
     # {'model__alpha': 0.30000000000000004}
     return cols_names, coef, score, sample_size
 
-# ## REPM Configs
-repm_configs = []
-path = "./configs/repm_2050/"
-for filename in os.listdir(path):
-    if not filename.endswith(".yaml"):
-        continue
-    repm_configs.append(os.path.join(path, filename))
-repm_configs.sort()
-# list(enumerate(repm_configs))
 
 
 def load_variables():
@@ -231,7 +236,18 @@ buildings = orca.get_table('buildings')
 n = len(valid_b_vars)
 vars_used, mat = load_variables()
 # cannot use orca from now on
+generate_repm_config(mat, vars_used)
 
+# ## REPM Configs
+repm_configs = []
+path = "./configs/repm_2050/"
+for filename in os.listdir(path):
+    if not filename.endswith(".yaml"):
+        continue
+    repm_configs.append(os.path.join(path, filename))
+repm_configs.sort()
+
+# list(enumerate(repm_configs))
 # save matrix
 # scipy.sparse.save_npz('sparse_matrix.npz', mat)
 # load matrix
@@ -249,19 +265,19 @@ for config in repm_configs:
 	col_names, coef, score, sample_size = feature_selection_lasso(mat, config, vars_used)
 	if sample_size == 0:
 		result[config] = {
-            'coef': 'None',
-            'score': 'None',
+            'coef': {},
+            'score': 0.0,
             'sample_size': sample_size
         }
-		continue
-	result[config] = {
-       'coef': {col_names[i]: float(coef[i]) for i in range(len(col_names))},
-       'score': score,
-       'sample_size': sample_size
-    }
+	else:
+		result[config] = {
+			'coef': {col_names[i]: float(coef[i]) for i in range(len(col_names))},
+			'score': score,
+			'sample_size': sample_size
+		}
 	if type(result[config]['sample_size']) == np.int64: 
 		result[config]['sample_size'] = result[config]['sample_size'].item()
-	if result[config]['coef'] == 'None': continue
+	# if result[config]['coef'] == 'None': continue
 	result[config]['score'] = float(result[config]['score'])
 	for coe in result[config]['coef']:
 		result[config]['coef'][coe] = float(result[config]['coef'][coe])
@@ -272,14 +288,4 @@ for config in repm_configs:
     # p = np.nan_to_num(p)
     # print('\t'.join([str(vars_used[x]) for x in np.argsort(p)[::-1][:10]]))
     # print('\t'.join([str(p[x]) for x in np.argsort(p)[::-1][:10]]))
-# for k in result:
-# 	if type(result[k]['sample_size']) == np.int64: 
-# 		result[k]['sample_size'] = result[k]['sample_size'].item()
-# 	if result[k]['coef'] == 'None': continue
-# 	result[k]['score'] = float(result[k]['score'])
-# 	for coe in result[k]['coef']:
-# 		result[k]['coef'][coe] = float(result[k]['coef'][coe])
-# with open('repm_result.yaml', 'w') as f:
-#     yaml.dump(result, f, default_flow_style=False)
-# print(f_classif(df.values, y))
 print('done')
