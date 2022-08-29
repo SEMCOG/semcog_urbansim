@@ -69,6 +69,7 @@ orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
 
 vars_to_skip = [
+    'large_area_id', 'county_id',
     'parcel_id', 'st_parcel_id', 'geoid', 'st_geoid', 'b_ln_parcels_parcel_far', 'parcels_parcel_far',
     'parcels_st_parcel_far', 'parcels_census_bg_id',
     'nodeid_drv', 'st_nodeid_drv', 'nodeid_walk', 'st_nodeid_walk', 'semmcd', 
