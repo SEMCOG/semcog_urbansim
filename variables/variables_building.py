@@ -19,7 +19,7 @@ def hedonic_id(buildings):
     hedonic_id = buildings.large_area_id * 100 + buildings.building_type_id
     hedonic_id.loc[
         # buildings.building_type_id.isin([24, 32, 42, 43, 52, 53, 61, 62])
-        buildings.building_type_id.isin([11, 13, 14, 32, 41, 42, 52, 53, 71, 91, 92, 93, 94, 95])
+        buildings.building_type_id.isin([11, 13, 14, 32, 41, 42, 52, 53, 61, 63, 71, 84, 91, 92, 93, 94, 95])
     ] = buildings.building_type_id
     # hedonic_id.loc[hedonic_id == 571] = 371
     # hedonic_id.loc[hedonic_id == 584] = 384

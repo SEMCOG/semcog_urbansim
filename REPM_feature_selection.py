@@ -141,11 +141,11 @@ def get_training_data(mat, yaml_config, vars_used):
     # 311, 313, 314, 341, 371, 
     # 511, 514, 561, 563, 571, 
     # 9311, 9313, 9314, 9333, 9341, 9351, 9361, 9363, 9371, 9383,
-    # 9911, 9913, 9914, 9941, 9961, 9963, 9971, 
-    # 11511, 11513, 11514, 11533, 11541, 11541, 11561, 11563, 11571, 
-    # 12511, 12513, 12514, 12571,
-    # 14711, 14713, 14714, 14733, 14741, 14761, 14763, 14771,
-    # 16111, 16113, 16114, 16141, 16161, 16163, 16171,  
+    # 9911, 9913, 9914, 9941, 9961, 9963, 9971, 9984,
+    # 11511, 11513, 11514, 11533, 11541, 11541, 11561, 11563, 11571, 11584,
+    # 12511, 12513, 12514, 12571, 12584,
+    # 14711, 14713, 14714, 14733, 14741, 14761, 14763, 14771, 14784,
+    # 16111, 16113, 16114, 16141, 16161, 16163, 16171, 16184, 
     filter_cols = ['sqft_price_nonres', 'sqft_price_res', 'non_residential_sqft',  'hedonic_id', 'residential_units']
     filter_col_ind = [vars_used.index(name) for name in filter_cols]
     df = pd.DataFrame(np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(), columns=filter_cols)
@@ -236,11 +236,16 @@ buildings = orca.get_table('buildings')
 n = len(valid_b_vars)
 vars_used, mat = load_variables()
 # cannot use orca from now on
+
+# remove old REPM configs 
+path = "./configs/repm_2050/"
+for f in os.listdir(path):
+    os.remove(os.path.join(path, f))
+# generate new REPM configs
 generate_repm_config(mat, vars_used)
 
 # ## REPM Configs
 repm_configs = []
-path = "./configs/repm_2050/"
 for filename in os.listdir(path):
     if not filename.endswith(".yaml"):
         continue
