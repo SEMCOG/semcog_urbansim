@@ -10,42 +10,47 @@ name: RegressionModel
 predict_filters: hedonic_id == 12581
 ytransform: np.exp
 coef:
-  building_age: -0.001535456390591524
-  crime_other_rate: -1.0595663220397542e-05
-  crime_ucr_rate: -0.00025548464536246144
-  jobs_within_30_min: 5.076915725253969e-08
-  land_area: 3.0507644987978226e-05
-  nodes_walk_ave_unit_sqft: 2.541335479365282e-07
-  nodes_walk_housing_cost: -7.066366405524544e-07
-  nodes_walk_jobs: -2.1311839563981305e-07
-  nodes_walk_node_r1500_sqft: -2.9079829809858688e-09
-  nodes_walk_race_1_hhs: 0.00012882299377349268
-  nodes_walk_residential: 0.005312280043000805
-  parcel_sqft: 1.1617248646686554e-08
-  parcels_ave_unit_size: 2.930505168426029e-06
-  parcels_zones_employment: -2.696817523384085e-06
-  parcels_zones_households: 4.679052358532773e-05
-  parcels_zones_jobs_within_30_min: 7.0748084412035e-08
-  parcels_zones_logsum_job_high_income: 5.092038582814659e-09
-  parcels_zones_logsum_job_low_income: 9.378994070902121e-08
-  parcels_zones_logsum_pop_high_income: -2.8329207151648992e-08
-  parcels_zones_logsum_pop_low_income: -1.629112712457061e-07
-  parcels_zones_population: -2.0569738842796984e-05
-  parcels_zones_transit_jobs_30min: 2.7087230031599037e-08
-  parcels_zones_transit_jobs_50min: 3.842249155833083e-07
-  parcels_zones_z_total_jobs: -2.980739363854769e-06
-  sqft_per_unit: 6.549804755111523e-06
-  year_built: 0.0021408622033141666
-  zones_acres: -3.466267965960606e-06
-  zones_employment: -5.1673885292243436e-08
-  zones_households: 5.140558568934151e-05
-  zones_logsum_job_high_income: -8.545386343637113e-09
-  zones_logsum_job_low_income: 9.308335200488196e-08
-  zones_logsum_pop_high_income: 2.5296928159707842e-08
-  zones_logsum_pop_low_income: -1.453251270112249e-07
-  zones_population: -1.9434827199555053e-05
-  zones_transit_jobs_30min: 1.1564102702386171e-08
-  zones_transit_jobs_50min: 2.8366508840065433e-07
-  zones_z_total_jobs: -5.472812031496401e-07
-sample_size: 365119
-score: 0.6767556229982654
+  building_age: -0.0013499297149671702
+  building_sqft: -1.0559766309844463e-06
+  crime_other_rate: -9.132241409619274e-06
+  crime_ucr_rate: -0.00027192750187265903
+  jobs_within_30_min: 4.8799878340452864e-08
+  land_area: 3.067399320654758e-05
+  nodes_walk_ave_nonres_sqft_price: 2.0277693729913703e-05
+  nodes_walk_ave_unit_sqft: 3.1198264537637593e-06
+  nodes_walk_housing_cost: -5.856632612349849e-07
+  nodes_walk_jobs: -2.585196688021901e-06
+  nodes_walk_midinc_hhs: 2.9041437843895497e-05
+  nodes_walk_node_r1500_sqft: -2.4774408706371826e-09
+  nodes_walk_race_1_hhs: 0.00014572495180822245
+  nodes_walk_residential: 0.005106754290920575
+  parcel_sqft: 3.4738632395521e-08
+  parcels_parcel_size: -1.3864386181735334e-07
+  parcels_total_sqft: -5.82703641169312e-06
+  parcels_zones_employment: -1.8578730414720142e-06
+  parcels_zones_households: 5.0233316775577894e-05
+  parcels_zones_jobs_within_30_min: 5.775941244155539e-08
+  parcels_zones_logsum_job_high_income: -8.203475456625329e-09
+  parcels_zones_logsum_job_low_income: 1.0561476857641934e-07
+  parcels_zones_logsum_pop_high_income: -6.269792699156106e-09
+  parcels_zones_logsum_pop_low_income: -1.7743770678055737e-07
+  parcels_zones_population: -2.291225629425769e-05
+  parcels_zones_transit_jobs_30min: 3.040105456994947e-07
+  parcels_zones_transit_jobs_50min: 3.4976105540814107e-07
+  parcels_zones_z_total_jobs: -4.117478172694929e-06
+  residential_sqft: -4.184871736794351e-05
+  sqft_per_unit: 5.463635050353157e-05
+  year_built: 0.0023868750509252563
+  zones_acres: -1.1062716512827484e-06
+  zones_employment: -1.2166685267126733e-07
+  zones_households: 5.850324701161794e-05
+  zones_logsum_job_high_income: -2.493216889902809e-08
+  zones_logsum_job_low_income: 1.0585137196005612e-07
+  zones_logsum_pop_high_income: 4.217358646058333e-08
+  zones_logsum_pop_low_income: -1.5650799992092806e-07
+  zones_population: -2.2283334991387304e-05
+  zones_transit_jobs_30min: 7.66978253542108e-08
+  zones_transit_jobs_50min: 2.4296381128147747e-07
+  zones_z_total_jobs: -6.841081749202921e-07
+sample_size: 366413
+score: 0.6636422291063728
