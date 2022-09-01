@@ -129,6 +129,10 @@ vars_to_skip = [
 ]
 
 
+for var in valid_b_vars:
+    if "parcels_" + var in valid_b_vars:
+        vars_to_skip.append("parcels_" + var)
+
 def estimate_repm(yaml_config):
     model = RegressionModel.from_yaml(str_or_buffer=misc.config(yaml_config))
     b = orca.get_table("buildings").to_frame(model.columns_used()).fillna(0)
