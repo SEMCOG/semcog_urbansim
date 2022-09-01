@@ -10,31 +10,26 @@ name: RegressionModel
 predict_filters: hedonic_id == 92
 ytransform: np.exp
 coef:
-  Intercept: 8.213421582785907
-  building_sqft: -1.8125322496036684e-05
-  jobs_within_30_min: 9.944235615931504e-08
-  land_area: -6.762518770529608e-05
-  nodes_walk_housing_cost: 1.3804357292808544e-06
-  nodes_walk_node_r1500_sqft: -1.1723839453036611e-07
-  parcel_sqft: -2.797548643647864e-06
-  parcels_ave_unit_size: -7.324435184558206e-06
-  parcels_total_sqft: -7.251759200553963e-06
-  parcels_zones_employment: 0.0001901906223852414
-  parcels_zones_jobs_within_30_min: 1.7833944665646533e-07
-  parcels_zones_logsum_job_high_income: -1.4446747956942196e-06
-  parcels_zones_logsum_job_low_income: -3.332071309941631e-07
-  parcels_zones_logsum_pop_high_income: 8.813493500677008e-07
-  parcels_zones_logsum_pop_low_income: 1.4365672039251712e-07
-  parcels_zones_transit_jobs_30min: -1.19222862251521e-05
-  parcels_zones_transit_jobs_50min: 8.004147925234289e-06
-  parcels_zones_z_total_jobs: 1.1634654821329246e-06
-  zones_acres: -0.001033155601210832
-  zones_employment: 0.00010910094178243963
-  zones_logsum_job_high_income: -1.3502307830564331e-06
-  zones_logsum_job_low_income: -2.7838394648723066e-07
-  zones_logsum_pop_high_income: -1.2288582917569514e-06
-  zones_logsum_pop_low_income: 6.234861078761036e-08
-  zones_transit_jobs_30min: -1.0388848938016421e-05
-  zones_transit_jobs_50min: 7.24037909003938e-06
+  Intercept: 9.444600498360515
+  building_sqft: -5.920172113869135e-05
+  jobs_within_30_min: 2.7746325083694053e-06
+  land_area: -4.065641940436028e-05
+  nodes_walk_housing_cost: 1.8314371962106154e-05
+  nodes_walk_node_r1500_sqft: -4.86914703711914e-08
+  parcel_sqft: -8.115990596311e-07
+  parcels_total_sqft: -2.99946469378921e-05
+  parcels_zones_jobs_within_30_min: 1.460621788011742e-06
+  parcels_zones_logsum_job_high_income: -5.195609436871305e-06
+  parcels_zones_logsum_job_low_income: -5.865050947964647e-07
+  parcels_zones_logsum_pop_high_income: -2.306228087235647e-06
+  parcels_zones_logsum_pop_low_income: 8.255354237246722e-07
+  parcels_zones_transit_jobs_30min: -2.3569818908951617e-05
+  parcels_zones_transit_jobs_50min: 1.714626113477576e-05
+  zones_logsum_job_high_income: -3.280414174239147e-06
+  zones_logsum_job_low_income: -6.943048144191054e-07
+  zones_logsum_pop_high_income: 1.6700877948250644e-06
+  zones_logsum_pop_low_income: 3.7203280260178623e-07
+  zones_transit_jobs_30min: -2.115309067059753e-05
+  zones_transit_jobs_50min: 1.5644294316423996e-05
 sample_size: 8
-score: 0.9999991252097524
+score: 0.9999995555252761

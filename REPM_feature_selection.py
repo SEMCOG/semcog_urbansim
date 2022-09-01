@@ -248,26 +248,25 @@ def get_training_data(mat, yaml_config, vars_used):
     )
 
 
-def feature_selection_f_classif(mat, yaml_config, vars_used):
-    all_vars_filtered, y, cols_names_to_fit, sample_size = get_training_data(
-        mat, yaml_config, vars_used
-    )
-    f, p = f_classif(all_vars_filtered, y)
-    return f, p
-
-
 def feature_selection_lasso(mat, yaml_config, vars_used):
     all_vars_filtered, y, cols_names_to_fit, sample_size = get_training_data(
         mat, yaml_config, vars_used
     )
     if sample_size == 0:
         return None, None, None, sample_size
+    # adjusting alpha based on sample_size
+    if sample_size <= 50:
+        alpha = 2
+    elif sample_size <= 100:
+        alpha = 0.8
+    else:
+        alpha = 0.3
     pipeline = Pipeline(
         [
             # ('scaler',StandardScaler()), # disable standardize
             # alpha control the strength of regularization,
             # higher the alpha, stronger the regularization, more vars get 0 coef
-            ("model", Lasso(alpha=0.3, fit_intercept=True))
+            ("model", Lasso(alpha=alpha, fit_intercept=True))
         ]
     )
     # search = GridSearchCV(pipeline,
@@ -382,10 +381,5 @@ for config in repm_configs:
         result[config]["coef"][coe] = float(result[config]["coef"][coe])
     with open(config, "a") as f:
         yaml.dump(result[config], f, default_flow_style=False)
-        # f, p = feature_selection_f_classif(mat, config, vars_used)
-        # f = np.nan_to_num(f)
-        # p = np.nan_to_num(p)
-        # print('\t'.join([str(vars_used[x]) for x in np.argsort(p)[::-1][:10]]))
-        # print('\t'.join([str(p[x]) for x in np.argsort(p)[::-1][:10]]))
 print("done")
 
