@@ -377,4 +377,3 @@ def register_standardized_variable(table_name, column_to_s):
 
 for var in orca.get_table("parcels").columns:
     register_standardized_variable("parcels", var)
-
