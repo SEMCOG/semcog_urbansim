@@ -1612,7 +1612,9 @@ def build_networks_2050(parcels):
     year = orca.get_injectable("year")
     # change travel data to 2030, enable when travel data 2030 is inplace
     if year == 2030:
-        orca.add_table('travel_data', orca.get_table('travel_data_2030'))
+        orca.add_table("travel_data", orca.get_table("travel_data_2030"))
+        orca.clear_columns("zones")
+
     if year < 2030:
         lstnet = [
             {
