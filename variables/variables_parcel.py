@@ -68,27 +68,27 @@ def parcel_is_allowed(form=None):
 
     # #35
     # count_hu = buildings.groupby("b_city_id").residential_units.sum()
-    count_hu = buildings.groupby("city_id").residential_units.sum()
-    hu_target = orca.get_table("extreme_hu_controls").to_frame()
-    hu_target["c0"] = (hu_target.end - hu_target.base) * (year - 2015) + hu_target.base
-    hu_target["c5"] = (hu_target.end - hu_target.base) * (
-        year - 2015 + 5
-    ) + hu_target.base
-    p_city = orca.get_table("parcels").city_id
-    if form == "residential":
-        city_is_full = count_hu > hu_target[["c0", "c5"]].max(1).reindex(
-            count_hu.index, fill_value=0
-        )
-        city_is_full = city_is_full[city_is_full]
-        city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
-    elif form is None:
-        city_is_full = count_hu < hu_target[["c0", "c5"]].min(1).reindex(
-            count_hu.index, fill_value=0
-        )
-        city_is_full = city_is_full[city_is_full]
-        city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
-    else:
-        city_is_full = False
+    # count_hu = buildings.groupby("city_id").residential_units.sum()
+    # hu_target = orca.get_table("extreme_hu_controls").to_frame()
+    # hu_target["c0"] = (hu_target.end - hu_target.base) * (year - 2015) + hu_target.base
+    # hu_target["c5"] = (hu_target.end - hu_target.base) * (
+    #     year - 2015 + 5
+    # ) + hu_target.base
+    # p_city = orca.get_table("parcels").city_id
+    # if form == "residential":
+    #     city_is_full = count_hu > hu_target[["c0", "c5"]].max(1).reindex(
+    #         count_hu.index, fill_value=0
+    #     )
+    #     city_is_full = city_is_full[city_is_full]
+    #     city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
+    # elif form is None:
+    #     city_is_full = count_hu < hu_target[["c0", "c5"]].min(1).reindex(
+    #         count_hu.index, fill_value=0
+    #     )
+    #     city_is_full = city_is_full[city_is_full]
+    #     city_is_full = p_city.isin(city_is_full.index).reindex(index, fill_value=False)
+    # else:
+    #     city_is_full = False
 
     development = index.isin(orca.get_table("events_addition").parcel_id)
 
@@ -119,6 +119,15 @@ def parcel_is_allowed(form=None):
 
     refiner = index.isin(parcel_refin)
 
+    # protected = (
+    #     new_building
+    #     | development
+    #     | demolition
+    #     | wold_have_bean_in_events
+    #     | refiner
+    #     | gq
+    #     | city_is_full
+    # )
     protected = (
         new_building
         | development
@@ -126,9 +135,7 @@ def parcel_is_allowed(form=None):
         | wold_have_bean_in_events
         | refiner
         | gq
-        | city_is_full
     )
-
     if form:
         columns = ["type%d" % typ for typ in form_to_btype[form]]
     else:
@@ -246,7 +253,9 @@ def max_height(parcels, zoning):
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_size(parcels):
     # apply pct_undev to parcel_size, which will be used in feasibility step
-    return parcels.parcel_sqft - ((parcels.pct_undev.clip(0, 100) / 100) * parcels.parcel_sqft)
+    return parcels.parcel_sqft - (
+        (parcels.pct_undev.clip(0, 100) / 100) * parcels.parcel_sqft
+    )
 
 
 @orca.column("parcels")
