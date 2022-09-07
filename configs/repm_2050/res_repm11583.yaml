@@ -3,51 +3,53 @@ fit_filters:
 - sqft_price_res > 1
 - sqft_price_res < 650
 - hedonic_id == 11583
-model_expression:
-  left_side: np.log1p(sqft_price_res)
-model_type: Regression
+model_type: regression
 name: RegressionModel
 predict_filters: hedonic_id == 11583
+target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
-coef:
-  Intercept: 4.598714355140847
-  building_age: -0.0001573947690207812
-  crime_other_rate: 0.00014012038707773562
-  crime_ucr_rate: -0.0003095396972087312
-  jobs_within_30_min: -3.0173380181718934e-06
-  land_area: -1.2500617978838362e-05
-  nodes_walk_ave_unit_sqft: -3.339135057368924e-05
-  nodes_walk_highinc_hhs: 0.004209802764790189
-  nodes_walk_households: 0.0020639456615309487
-  nodes_walk_housing_cost: 4.481109563194649e-06
-  nodes_walk_jobs: 0.0001855414358589171
-  nodes_walk_lowinc_hhs: -0.0013175458946838845
-  nodes_walk_medical: 0.0001828157704204084
-  nodes_walk_midinc_hhs: 0.0002766777702372552
-  nodes_walk_node_r1500_sqft: 5.8142986878750824e-09
-  nodes_walk_population: -0.0010790712933798948
-  nodes_walk_race_2_hhs: -0.0011086443133228548
-  nodes_walk_retail: -0.0011506492802861314
-  nodes_walk_retail_jobs: -0.001407465392032691
-  parcel_sqft: 8.67007705733725e-09
-  parcels_ave_unit_size: -0.0001498738051051844
-  parcels_total_job_spaces: -0.006602869586588119
-  parcels_total_sqft: 8.598563073943294e-07
-  parcels_total_units: -4.644560496175297e-05
-  parcels_zones_jobs_within_30_min: 5.940824198462028e-08
-  residential_sqft: -1.149626579038378e-05
-  sqft_per_unit: -0.00024756320962184794
-  year_built: 4.02617324648982e-06
-  zones_acres: -7.67148548303219e-06
-  zones_employment: 0.0001356850086196123
-  zones_households: 0.00037422247258469746
-  zones_logsum_job_high_income: -1.3333614245037047e-06
-  zones_logsum_job_low_income: 1.0802958498051332e-05
-  zones_logsum_pop_high_income: 5.430699185295473e-07
-  zones_logsum_pop_low_income: -2.285112563470973e-06
-  zones_population: -0.00014874942845285923
-  zones_retail_jobs: -0.00032663398504602066
-  zones_transit_jobs_30min: 3.14878514642546e-05
-  zones_transit_jobs_50min: -3.8181344290788125e-05
+fit_parameters:
+  Coefficient:
+    Intercept: 5.105807813564562
+    crime_other_rate: 0.00016910105672740425
+    crime_ucr_rate: -0.0005289442281188392
+    jobs_within_30_min: -1.471146134140935e-06
+    land_area: -1.3176261647174181e-05
+    nodes_walk_ave_unit_sqft: -4.059345449647834e-05
+    nodes_walk_highinc_hhs: 0.002037612152247595
+    nodes_walk_households: 0.0014288424344393515
+    nodes_walk_housing_cost: 4.080541383591519e-06
+    nodes_walk_jobs: 0.00017351633650501913
+    nodes_walk_lowinc_hhs: -0.0002089679332287584
+    nodes_walk_medical: 0.00024938885668003064
+    nodes_walk_midinc_hhs: 5.236125591237844e-06
+    nodes_walk_node_r1500_sqft: 2.9112386093422034e-09
+    nodes_walk_population: -0.0007593662134571113
+    nodes_walk_race_2_hhs: -0.0007479199144134367
+    nodes_walk_retail: -0.000577198866792374
+    nodes_walk_retail_jobs: -0.001374868363530107
+    parcel_sqft: -8.610228886401689e-07
+    parcels_ave_unit_size: -0.00011123119709342057
+    parcels_parcel_size: 1.3606268794790591e-06
+    parcels_pct_undev: 0.0025478623838468295
+    parcels_total_job_spaces: -0.006788802612473989
+    parcels_total_sqft: 1.0290347270590258e-06
+    parcels_zones_jobs_within_30_min: 5.67286077940989e-07
+    residential_sqft: -1.2782820276892631e-05
+    sqft_per_unit: -0.00023618201834844284
+    zones_acres: -6.54773520220039e-06
+    zones_employment: 0.00014018436024226507
+    zones_logsum_job_high_income: -1.102361058346523e-05
+    zones_logsum_job_low_income: 7.577811473740783e-06
+    zones_logsum_job_mid_income: 3.354268615721494e-06
+    zones_logsum_pop_high_income: 1.6507833361374057e-06
+    zones_logsum_pop_low_income: -3.7263091800189075e-06
+    zones_logsum_pop_mid_income: 4.378907794046574e-06
+    zones_population: -2.864702499283451e-05
+    zones_retail_jobs: -0.00031208238914585696
+    zones_transit_jobs_30min: 6.53447073704089e-05
+    zones_transit_jobs_50min: -1.9761808405943694e-05
+    zones_z_total_jobs: 4.1748434607301415e-05
+fit_rsquared: 0.44007777242308965
+fitted: true
 sample_size: 523
-score: 0.42940187586760936

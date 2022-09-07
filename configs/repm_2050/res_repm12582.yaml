@@ -3,51 +3,52 @@ fit_filters:
 - sqft_price_res > 1
 - sqft_price_res < 650
 - hedonic_id == 12582
-model_expression:
-  left_side: np.log1p(sqft_price_res)
-model_type: Regression
+model_type: regression
 name: RegressionModel
 predict_filters: hedonic_id == 12582
+target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
-coef:
-  Intercept: 1.571807739236224
-  building_age: -0.002208948017431108
-  building_sqft: -5.479303727308959e-18
-  crime_other_rate: -4.9438551020871946e-05
-  crime_ucr_rate: -6.288488446515121e-05
-  jobs_within_30_min: -1.9015833617228174e-07
-  land_area: -4.0489411555486696e-05
-  nodes_walk_ave_unit_sqft: 1.6158000292195545e-05
-  nodes_walk_highinc_hhs: 1.1403330800060164e-05
-  nodes_walk_households: 6.625071463856734e-05
-  nodes_walk_housing_cost: -2.529283214109349e-06
-  nodes_walk_jobs: 7.512949463458262e-05
-  nodes_walk_lowinc_hhs: -5.302725626365307e-06
-  nodes_walk_medical: -8.305456738380931e-05
-  nodes_walk_midinc_hhs: 6.738095633333328e-05
-  nodes_walk_node_r1500_sqft: -1.681442975086158e-08
-  nodes_walk_office: -8.534902726500671e-06
-  nodes_walk_race_1_hhs: 5.44468590054972e-05
-  nodes_walk_race_2_hhs: -0.0002420356341698277
-  nodes_walk_race_3_hhs: 0.00045580637194526165
-  nodes_walk_residential: 0.006653989644855703
-  nodes_walk_retail_jobs: 0.00010474208060550333
-  parcel_sqft: 3.6791214703080017e-06
-  parcels_ave_unit_size: 0.00013012698480260675
-  parcels_total_sqft: -3.803331780096263e-05
-  parcels_zones_jobs_within_30_min: 1.0327255800035256e-07
-  year_built: 0.0011909853929180944
-  zones_acres: -2.6061626547424544e-06
-  zones_employment: 2.9261568999484517e-06
-  zones_households: 3.693205546201886e-05
-  zones_logsum_job_high_income: 1.423950948143495e-06
-  zones_logsum_job_low_income: 6.070646153908539e-07
-  zones_logsum_pop_high_income: -6.258753944468803e-07
-  zones_logsum_pop_low_income: -8.642250192200974e-07
-  zones_population: -3.6119693906122977e-06
-  zones_retail_jobs: 3.92946920700376e-05
-  zones_transit_jobs_30min: -7.700998769010717e-06
-  zones_transit_jobs_50min: 7.831290956968763e-08
-  zones_z_total_jobs: 1.2128613707619723e-05
+fit_parameters:
+  Coefficient:
+    Intercept: 1.0113042019904555
+    building_age: -0.0018774367081630045
+    building_sqft: -5.095474498135094e-18
+    crime_other_rate: -6.066922618383848e-05
+    crime_ucr_rate: -6.178818471296355e-05
+    jobs_within_30_min: -2.3039730879067548e-07
+    land_area: -4.3017690450367526e-05
+    nodes_walk_ave_unit_sqft: 1.9040863675776304e-05
+    nodes_walk_highinc_hhs: 3.811040797370097e-05
+    nodes_walk_households: 0.00011900494659537735
+    nodes_walk_housing_cost: -2.4425712698672486e-06
+    nodes_walk_jobs: 7.36586540666041e-05
+    nodes_walk_lowinc_hhs: -2.6489366235477346e-05
+    nodes_walk_medical: -7.357286202538718e-05
+    nodes_walk_midinc_hhs: 7.216264469301621e-05
+    nodes_walk_node_r1500_sqft: -1.7329718436522042e-08
+    nodes_walk_race_2_hhs: -0.0003241139071225302
+    nodes_walk_race_3_hhs: 0.0003731228875191063
+    nodes_walk_residential: 0.006607670809990507
+    nodes_walk_retail_jobs: 0.00013279414984739707
+    parcel_sqft: 3.488399871806811e-06
+    parcels_ave_unit_size: 0.00012838337097097373
+    parcels_parcel_size: -4.266824896559766e-05
+    parcels_total_sqft: -3.8008313786314504e-05
+    parcels_zones_jobs_within_30_min: 1.065988183620791e-07
+    year_built: 0.0014563824073579193
+    zones_acres: -3.5795126037957e-06
+    zones_employment: 9.07120166335076e-06
+    zones_households: 3.6161691637896737e-05
+    zones_logsum_job_high_income: 1.2200045749292295e-06
+    zones_logsum_job_low_income: 1.3708313226956895e-06
+    zones_logsum_job_mid_income: -2.0939474768887867e-07
+    zones_logsum_pop_high_income: -4.7197059899759126e-07
+    zones_logsum_pop_low_income: -1.622979644431537e-06
+    zones_logsum_pop_mid_income: 2.5985234898869813e-07
+    zones_population: -1.643568184455797e-06
+    zones_retail_jobs: 5.352992873436761e-05
+    zones_transit_jobs_30min: -7.237054793940755e-06
+    zones_transit_jobs_50min: -1.1140774734752609e-07
+fit_rsquared: 0.788651869363129
+fitted: true
 sample_size: 47589
-score: 0.7869347390718877

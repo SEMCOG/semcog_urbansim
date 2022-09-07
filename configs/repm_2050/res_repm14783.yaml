@@ -3,49 +3,52 @@ fit_filters:
 - sqft_price_res > 1
 - sqft_price_res < 650
 - hedonic_id == 14783
-model_expression:
-  left_side: np.log1p(sqft_price_res)
-model_type: Regression
+model_type: regression
 name: RegressionModel
 predict_filters: hedonic_id == 14783
+target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
-coef:
-  Intercept: 0.2076854926489431
-  building_age: -1.700204150605891e-05
-  building_sqft: -1.4603913883537307e-05
-  crime_other_rate: 8.003096646524741e-05
-  crime_ucr_rate: -0.00020521645527783129
-  land_area: -1.2354239300270862e-05
-  nodes_walk_ave_nonres_sqft_price: -0.000993966676048954
-  nodes_walk_ave_unit_sqft: -4.50614765302337e-05
-  nodes_walk_hhs_with_children: -0.0006711169920369684
-  nodes_walk_housing_cost: 3.1345362079786335e-06
-  nodes_walk_industrial: -0.00018952399108448418
-  nodes_walk_jobs: 6.95154044524442e-05
-  nodes_walk_lowinc_hhs: 0.000833067226871341
-  nodes_walk_medical: -0.00040282114695039476
-  nodes_walk_midinc_hhs: -0.002095457862360867
-  nodes_walk_node_r1500_sqft: 3.520347500408193e-08
-  nodes_walk_office: 0.0004076647554019928
-  nodes_walk_population: -3.6618575957666564e-07
-  nodes_walk_retail_jobs: -0.00041397126949243034
-  parcel_sqft: 1.9623082028802838e-07
-  parcels_ave_unit_size: -1.3834378547275307e-07
-  parcels_total_sqft: -5.1821163615550305e-06
-  parcels_zones_jobs_within_30_min: 6.358393573342794e-07
-  residential_sqft: 2.4914805700503015e-05
-  sqft_per_unit: -0.00027070555849785874
-  year_built: 0.001996210231789017
-  zones_acres: -3.441271050735315e-05
-  zones_employment: -0.0001908625904165546
-  zones_households: -0.00040738440631777093
-  zones_logsum_job_high_income: -3.7655113641837006e-06
-  zones_logsum_job_low_income: 3.7465721914549523e-06
-  zones_logsum_pop_high_income: 2.3662225796727468e-06
-  zones_logsum_pop_low_income: -2.189778771866569e-06
-  zones_population: 0.0003079887218501956
-  zones_retail_jobs: 4.726904873556137e-06
-  zones_transit_jobs_30min: -3.1877421235129283e-05
-  zones_transit_jobs_50min: 4.515029687064428e-06
+fit_parameters:
+  Coefficient:
+    Intercept: 0.5260376091097609
+    building_age: -3.754795091408065e-05
+    building_sqft: -2.6225756915290857e-06
+    crime_ucr_rate: -8.514685615527824e-05
+    jobs_within_30_min: -9.218585487214397e-08
+    land_area: -1.5535201287934657e-05
+    nodes_walk_ave_nonres_sqft_price: -0.0020367179859123313
+    nodes_walk_ave_unit_sqft: -0.00015248265188197636
+    nodes_walk_hhs_with_children: -0.0002064785990527468
+    nodes_walk_housing_cost: 9.748135219815128e-06
+    nodes_walk_jobs: 9.833195221910227e-05
+    nodes_walk_lowinc_hhs: 0.002386689212071247
+    nodes_walk_midinc_hhs: -0.000641079227498027
+    nodes_walk_node_r1500_sqft: 3.6880705287624403e-08
+    nodes_walk_office: 0.0010636229572360317
+    nodes_walk_population: -0.000582449420808073
+    nodes_walk_retail_jobs: -0.00036514558134786507
+    parcel_sqft: 1.7802988799908869e-06
+    parcels_ave_unit_size: -4.263683813354568e-05
+    parcels_parcel_size: -2.0722403215984956e-06
+    parcels_pct_undev: -0.00015028056199813274
+    parcels_total_sqft: -7.340635241499372e-06
+    parcels_zones_jobs_within_30_min: 1.87886596278862e-06
+    residential_sqft: 1.4654022174775537e-05
+    sqft_per_unit: -0.00029861286933523473
+    year_built: 0.001904921915782753
+    zones_acres: -4.507928326698534e-05
+    zones_employment: -0.00018061421108687175
+    zones_households: -0.0007836651521465409
+    zones_logsum_job_high_income: -3.135793543372177e-06
+    zones_logsum_job_low_income: 8.311974758886654e-07
+    zones_logsum_job_mid_income: 5.127086018869208e-06
+    zones_logsum_pop_high_income: 1.8174856304786627e-06
+    zones_logsum_pop_low_income: -9.0671394793176e-08
+    zones_logsum_pop_mid_income: -2.9857027090406796e-06
+    zones_population: 0.00047909266012916685
+    zones_retail_jobs: 2.4927029143618217e-05
+    zones_transit_jobs_30min: -6.493466321110115e-05
+    zones_transit_jobs_50min: 8.127569349857e-06
+fit_rsquared: 0.4979299509746693
+fitted: true
 sample_size: 475
-score: 0.45309567595259337
