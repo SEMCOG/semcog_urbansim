@@ -376,7 +376,7 @@ for config in repm_configs:
     else:
         result[config] = {
             "fitted": True,
-            "fit_parameters": {"Coefficient": {col_names[i]: float(coef[i]) for i in range(len(col_names))}},
+            "fit_parameters": {"Coefficient": {col_names[i]: float(coef[i]) for i in range(len(col_names))}, "Std. Error": {}, "T-Score": {}},
             "fit_rsquared": float(score),
             "fit_rsquared_adj": float(score),
             "sample_size": sample_size,
