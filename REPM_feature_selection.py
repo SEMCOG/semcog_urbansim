@@ -371,10 +371,6 @@ for config in repm_configs:
     col_names, coef, score, sample_size = feature_selection_lasso(
         mat, config, vars_used
     )
-    result["model_expression"] = {
-        "left_side": "np.log1p(sqft_price_%s)" % ("nonres" if "nonres" in config else "res"),
-        "right_side": [col for col in col_names if col != "Intercept"]
-    }
     if sample_size == 0:
         result[config] = {"fit_parameters": {}, "fit_rsquared": 0.0, "sample_size": sample_size}
     else:
@@ -384,6 +380,10 @@ for config in repm_configs:
             "fit_rsquared": score,
             "sample_size": sample_size,
         }
+    result[config]["model_expression"] = {
+        "left_side": "np.log1p(sqft_price_%s)" % ("nonres" if "nonres" in config else "res"),
+        "right_side": [col for col in col_names if col != "Intercept"]
+    }
     if type(result[config]["sample_size"]) == np.int64:
         result[config]["sample_size"] = result[config]["sample_size"].item()
     # if result[config]['coef'] == 'None': continue
