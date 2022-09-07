@@ -3,49 +3,52 @@ fit_filters:
 - sqft_price_res > 1
 - sqft_price_res < 650
 - hedonic_id == 16182
-model_expression:
-  left_side: np.log1p(sqft_price_res)
-model_type: Regression
+model_type: regression
 name: RegressionModel
 predict_filters: hedonic_id == 16182
+target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
-coef:
-  Intercept: 2.1845061201319376
-  building_age: -0.0005012442640842467
-  building_sqft: 2.9029493775631995e-18
-  crime_other_rate: -5.085161357461241e-05
-  crime_ucr_rate: -0.0001499585303948735
-  jobs_within_30_min: -2.663188325680173e-07
-  land_area: 9.199418332714833e-07
-  nodes_walk_ave_nonres_sqft_price: 2.2698356248187585e-05
-  nodes_walk_housing_cost: 6.138125093484695e-06
-  nodes_walk_industrial: -9.891123537095333e-05
-  nodes_walk_jobs: 8.671947681977887e-05
-  nodes_walk_lowinc_hhs: -0.0005868221159340078
-  nodes_walk_medical: -4.978175988966565e-05
-  nodes_walk_midinc_hhs: 0.0001193937940936531
-  nodes_walk_node_r1500_sqft: 2.3645805718419285e-09
-  nodes_walk_race_2_hhs: -0.0010467559874811484
-  nodes_walk_race_3_hhs: 0.0004881094371945873
-  nodes_walk_residential: 0.0018485685623514997
-  nodes_walk_retail: -0.00017044106264206262
-  parcel_sqft: 6.367382630830908e-06
-  parcels_ave_unit_size: -0.00022551251071654965
-  parcels_total_sqft: -0.0002549883370813723
-  parcels_zones_jobs_within_30_min: -3.7664204931960807e-07
-  residential_sqft: 0.0002601828655409276
-  sqft_per_unit: -9.921598585751234e-05
-  year_built: 0.0013732275281701071
-  zones_acres: 1.9681120928061652e-05
-  zones_households: -5.0809687236866665e-05
-  zones_logsum_job_high_income: 8.855426620852336e-06
-  zones_logsum_job_low_income: -9.897177727109678e-09
-  zones_logsum_pop_high_income: -4.85783594791416e-06
-  zones_logsum_pop_low_income: 6.752427768245241e-08
-  zones_population: 5.17245634214302e-05
-  zones_retail_jobs: 7.093500851484544e-05
-  zones_transit_jobs_30min: 3.8397574839866755e-07
-  zones_transit_jobs_50min: -1.3799303200902173e-06
-  zones_z_total_jobs: -3.6337464506730695e-06
+fit_parameters:
+  Coefficient:
+    Intercept: 1.3476295799556914
+    building_sqft: 2.709093532672282e-18
+    crime_other_rate: -6.264827719906303e-05
+    crime_ucr_rate: -0.0001301503207899664
+    jobs_within_30_min: -7.685433629134513e-07
+    land_area: 5.974969326725501e-07
+    nodes_walk_ave_unit_sqft: -6.255563755836791e-06
+    nodes_walk_highinc_hhs: 9.536961609837875e-05
+    nodes_walk_housing_cost: 5.327055637856649e-06
+    nodes_walk_jobs: 7.646099272403969e-05
+    nodes_walk_lowinc_hhs: -0.0005077733976278756
+    nodes_walk_medical: -8.832023181905264e-05
+    nodes_walk_node_r1500_sqft: 2.833950054462966e-09
+    nodes_walk_race_1_hhs: 6.89204612533788e-05
+    nodes_walk_race_2_hhs: -0.0008681010246321536
+    nodes_walk_race_3_hhs: 0.00026660421598840905
+    nodes_walk_residential: 0.0020076526455684272
+    nodes_walk_retail: -0.000197758864669079
+    parcel_sqft: 1.0672277644854909e-05
+    parcels_ave_unit_size: -0.0001863820262689821
+    parcels_parcel_size: -1.3942304091049443e-05
+    parcels_total_sqft: -0.0002574563993367644
+    parcels_zones_jobs_within_30_min: -4.373884513630738e-07
+    residential_sqft: 0.0002612455823705752
+    sqft_per_unit: -9.797151125929646e-05
+    year_built: 0.001711249105700093
+    zones_acres: 1.4689076632982162e-05
+    zones_households: -9.779203523193533e-05
+    zones_logsum_job_high_income: 1.2013870142097871e-05
+    zones_logsum_job_low_income: 3.6130234858405127e-07
+    zones_logsum_job_mid_income: -3.6939958045231715e-07
+    zones_logsum_pop_high_income: -6.482537603367783e-06
+    zones_logsum_pop_low_income: -2.368242067877245e-07
+    zones_logsum_pop_mid_income: 3.551707655549211e-07
+    zones_population: 6.87700631767969e-05
+    zones_retail_jobs: 0.0001217202377780785
+    zones_transit_jobs_30min: 4.270112442792331e-07
+    zones_transit_jobs_50min: -2.0232444525200976e-06
+    zones_z_total_jobs: -1.0087041786582202e-05
+fit_rsquared: 0.7028504665243636
+fitted: true
 sample_size: 11993
-score: 0.6975293842847093

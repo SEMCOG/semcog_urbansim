@@ -43,8 +43,8 @@ from data_checks.estimation_variables_2050 import *
 
 
 # import utils
-data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
-# data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
+# data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
+data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
 hdf_list = [
     (data_path + "/" + f)
     for f in os.listdir(data_path)
@@ -165,16 +165,18 @@ def generate_repm_config(mat, vars_used):
         np.vstack([mat.getrow(i).todense() for i in filter_col_ind]).transpose(),
         columns=filter_cols,
     )
+    df = df[~df["hedonic_id"].isna()]
     df["hedonic_id"] = df["hedonic_id"].astype("int")
     hid_count = df.hedonic_id.value_counts()
     for hid in hid_count.index:
         config = {
             "name": "RegressionModel",
-            "model_type": "Regression",
+            "model_type": "regression",
             "fit_filters": [],
             "predict_filters": "hedonic_id == " + str(hid),
             "ytransform": "np.exp",
-            "model_expression": {"left_side": ""},
+            "target_variable": "",
+            # "model_expression": {"left_side": ""},
         }
         if hid % 100 in [81, 82, 83, 84]:
             prefix = "res_repm"
@@ -188,7 +190,7 @@ def generate_repm_config(mat, vars_used):
         config["fit_filters"].append(price_col + " > 1")
         config["fit_filters"].append(price_col + " < 650")
         config["fit_filters"].append("hedonic_id == " + str(hid))
-        config["model_expression"]["left_side"] = "np.log1p(%s)" % price_col
+        config["target_variable"] = "np.log1p(%s)" % price_col
         config_name = prefix + str(hid)
         with open("configs/repm_2050/%s.yaml" % config_name, "w") as f:
             yaml.dump(config, f, default_flow_style=False)
@@ -221,7 +223,7 @@ def get_training_data(mat, yaml_config, vars_used):
     with open(yaml_config, "r") as f:
         conf = yaml.load(f, Loader=yaml.FullLoader)
     fit_filters = conf["fit_filters"]
-    target_var = conf["model_expression"]["left_side"]
+    target_var = conf["target_variable"]
     target_var_raw = target_var[target_var.find("(") + 1 : target_var.find(")")]
     filtered_df = apply_filter_query(df, fit_filters)
     if filtered_df.size == 0:
@@ -369,20 +371,26 @@ for config in repm_configs:
     col_names, coef, score, sample_size = feature_selection_lasso(
         mat, config, vars_used
     )
+    result["model_expression"] = {
+        "left_side": "np.log1p(sqft_price_%s)" % ("nonres" if "nonres" in config else "res"),
+        "right_side": [col for col in col_names if col != "Intercept"]
+    }
     if sample_size == 0:
-        result[config] = {"coef": {}, "score": 0.0, "sample_size": sample_size}
+        result[config] = {"fit_parameters": {}, "fit_rsquared": 0.0, "sample_size": sample_size}
     else:
         result[config] = {
-            "coef": {col_names[i]: float(coef[i]) for i in range(len(col_names))},
-            "score": score,
+            "fitted": True,
+            "fit_parameters": {"Coefficient": {col_names[i]: float(coef[i]) for i in range(len(col_names))}},
+            "fit_rsquared": score,
             "sample_size": sample_size,
         }
     if type(result[config]["sample_size"]) == np.int64:
         result[config]["sample_size"] = result[config]["sample_size"].item()
     # if result[config]['coef'] == 'None': continue
-    result[config]["score"] = float(result[config]["score"])
-    for coe in result[config]["coef"]:
-        result[config]["coef"][coe] = float(result[config]["coef"][coe])
+    result[config]["fit_rsquared"] = float(result[config]["fit_rsquared"])
+    for coe in result[config]["fit_parameters"]["Coefficient"]:
+        result[config]["fit_parameters"]["Coefficient"][coe] = float(
+            result[config]["fit_parameters"]["Coefficient"][coe])
     with open(config, "a") as f:
         yaml.dump(result[config], f, default_flow_style=False)
 print("done")
