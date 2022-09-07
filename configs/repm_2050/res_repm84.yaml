@@ -10,45 +10,46 @@ target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
 fit_parameters:
   Coefficient:
-    Intercept: 2.873295875854442
-    crime_other_rate: 0.00022546180188457834
-    crime_ucr_rate: -4.017889952715281e-06
-    jobs_within_30_min: -8.566883988836757e-07
-    land_area: 3.876418791734641e-05
-    nodes_walk_ave_nonres_sqft_price: 0.0001322068544056358
-    nodes_walk_hhs_with_children: -0.0020547621876845744
-    nodes_walk_housing_cost: 9.662335309802806e-05
-    nodes_walk_industrial: 2.4702930645106204e-05
-    nodes_walk_jobs: -0.0005872709604926281
-    nodes_walk_lowinc_hhs: 0.0014312670166622618
-    nodes_walk_node_r1500_sqft: -2.928184382636873e-09
-    nodes_walk_office: -0.00025604014523605584
-    nodes_walk_population: 0.0001917669233329548
-    nodes_walk_race_1_hhs: -0.0007750318860411907
-    nodes_walk_race_4_hhs: -0.00046703434991831976
-    nodes_walk_retail_jobs: 0.00017079603041716444
-    parcel_sqft: 6.989118818030043e-08
-    parcels_ave_unit_size: -0.002469818517741779
-    parcels_parcel_size: -3.196149643780767e-09
-    parcels_pptytax: -0.0098933416652035
-    parcels_total_sqft: -7.215759115883821e-07
-    parcels_total_units: 0.0012800976876463782
-    parcels_zones_jobs_within_30_min: -6.465510587695163e-07
-    school_district_achievement: 0.0003654425048066284
-    sqft_per_unit: 0.0017763143904129916
-    zones_acres: 1.1088294712888232e-07
-    zones_employment: 5.2445837603612524e-05
-    zones_households: -0.00039785534534189887
-    zones_logsum_job_high_income: 9.389300173708814e-06
-    zones_logsum_job_low_income: -3.436763547878497e-07
-    zones_logsum_job_mid_income: 6.337489981969218e-08
-    zones_logsum_pop_high_income: -4.644889931518729e-06
-    zones_logsum_pop_low_income: 2.766223696019421e-07
-    zones_logsum_pop_mid_income: -2.6526935808117693e-07
-    zones_population: 0.00011403915565479333
-    zones_transit_jobs_30min: 2.5297231000119852e-05
-    zones_transit_jobs_50min: -6.0089933051992875e-06
-fit_rsquared: 0.6473601323177315
+    Intercept: 2.872438494996144
+    crime_other_rate: 0.00022552261686185833
+    crime_ucr_rate: -4.003363422614972e-06
+    jobs_within_30_min: -8.542359623158274e-07
+    land_area: 3.875925234475145e-05
+    nodes_walk_ave_nonres_sqft_price: 0.00013335017832383615
+    nodes_walk_hhs_with_children: -0.002064977774721147
+    nodes_walk_housing_cost: 9.662202291634468e-05
+    nodes_walk_industrial: 1.8179653502867187e-05
+    nodes_walk_jobs: -0.0005864427071746364
+    nodes_walk_lowinc_hhs: 0.0014200153830560434
+    nodes_walk_node_r1500_sqft: -2.8903700703278757e-09
+    nodes_walk_office: -0.0002558907987836242
+    nodes_walk_population: 0.00019434146371102975
+    nodes_walk_race_1_hhs: -0.0007772659281722501
+    nodes_walk_race_4_hhs: -0.00046240202013585126
+    nodes_walk_retail_jobs: 0.00017329240639910983
+    parcel_sqft: 6.981478999041241e-08
+    parcels_ave_unit_size: -0.00246910211941492
+    parcels_parcel_size: -3.2192810224129244e-09
+    parcels_pptytax: -0.009871990983127594
+    parcels_total_sqft: -7.235438249037006e-07
+    parcels_total_units: 0.0012842586711618808
+    parcels_zones_jobs_within_30_min: -6.470958279823012e-07
+    school_district_achievement: 0.00037437680694373427
+    sqft_per_unit: 0.0017758763604939604
+    zones_acres: 8.093865343429111e-08
+    zones_employment: 5.272240367582872e-05
+    zones_households: -0.00040042155890719736
+    zones_logsum_job_high_income: 9.383643593547887e-06
+    zones_logsum_job_low_income: -3.4577124178699706e-07
+    zones_logsum_job_mid_income: 6.443446069582002e-08
+    zones_logsum_pop_high_income: -4.643057346653134e-06
+    zones_logsum_pop_low_income: 2.7734396687431017e-07
+    zones_logsum_pop_mid_income: -2.6571800177422906e-07
+    zones_population: 0.00011504817118535867
+    zones_transit_jobs_30min: 2.527980757080123e-05
+    zones_transit_jobs_50min: -6.001422221209495e-06
+fit_rsquared: 0.6474104491043291
+fit_rsquared_adj: 0.6474104491043291
 fitted: true
 model_expression:
   left_side: np.log1p(sqft_price_res)

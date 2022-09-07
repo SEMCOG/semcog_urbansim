@@ -10,25 +10,26 @@ target_variable: np.log1p(sqft_price_nonres)
 ytransform: np.exp
 fit_parameters:
   Coefficient:
-    Intercept: 10.227260244155957
-    building_sqft: -6.843153797130526e-05
-    jobs_within_30_min: 2.9836177303839353e-06
-    land_area: -2.290971080386707e-05
-    nodes_walk_housing_cost: 1.4053349694471558e-05
-    nodes_walk_node_r1500_sqft: -1.6003621705532031e-07
-    parcel_sqft: -6.599638153099002e-07
-    parcels_parcel_size: -0.00022015708057348404
-    parcels_total_sqft: -2.7126629408066465e-05
-    parcels_zones_jobs_within_30_min: 3.2587302633085555e-06
-    zones_logsum_job_high_income: -6.479434657419019e-06
-    zones_logsum_job_low_income: 3.606844181751579e-07
-    zones_logsum_job_mid_income: -7.919955480375378e-07
-    zones_logsum_pop_high_income: -2.5187263840401796e-06
-    zones_logsum_pop_low_income: 9.566576064885953e-07
-    zones_logsum_pop_mid_income: 1.6832641318789384e-08
-    zones_transit_jobs_30min: -2.88669526314106e-05
-    zones_transit_jobs_50min: 2.074305813484597e-05
-fit_rsquared: 0.999997462644522
+    Intercept: 10.227383316825252
+    building_sqft: -6.842838712598736e-05
+    jobs_within_30_min: 2.9836328916234676e-06
+    land_area: -2.2909382859935446e-05
+    nodes_walk_housing_cost: 1.40527540804164e-05
+    nodes_walk_node_r1500_sqft: -1.6003076786560114e-07
+    parcel_sqft: -6.59896684847928e-07
+    parcels_parcel_size: -0.00022014403371372728
+    parcels_total_sqft: -2.712938519367522e-05
+    parcels_zones_jobs_within_30_min: 3.258794239365652e-06
+    zones_logsum_job_high_income: -6.4785343985729606e-06
+    zones_logsum_job_low_income: 3.606855976485322e-07
+    zones_logsum_job_mid_income: -7.91943523951403e-07
+    zones_logsum_pop_high_income: -2.5193278213774694e-06
+    zones_logsum_pop_low_income: 9.56531396760609e-07
+    zones_logsum_pop_mid_income: 1.6829632488325013e-08
+    zones_transit_jobs_30min: -2.886589116756717e-05
+    zones_transit_jobs_50min: 2.074317539393629e-05
+fit_rsquared: 0.9999974624874153
+fit_rsquared_adj: 0.9999974624874153
 fitted: true
 model_expression:
   left_side: np.log1p(sqft_price_nonres)

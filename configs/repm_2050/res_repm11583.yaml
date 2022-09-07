@@ -10,46 +10,47 @@ target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
 fit_parameters:
   Coefficient:
-    Intercept: 5.105060307299526
-    crime_other_rate: 0.00016864408061513874
-    crime_ucr_rate: -0.0005295044454783707
-    jobs_within_30_min: -1.4732650367484292e-06
-    land_area: -1.3145044236328053e-05
-    nodes_walk_ave_unit_sqft: -4.1225930088959096e-05
-    nodes_walk_highinc_hhs: 0.0021106720437219888
-    nodes_walk_households: 0.001437857861020992
-    nodes_walk_housing_cost: 4.080074940527207e-06
-    nodes_walk_jobs: 0.0001729264897735445
-    nodes_walk_lowinc_hhs: -0.00019190717840894474
-    nodes_walk_medical: 0.00024774248363835155
-    nodes_walk_node_r1500_sqft: 2.9279804072314265e-09
-    nodes_walk_population: -0.0007697999628964845
-    nodes_walk_race_2_hhs: -0.0007554304909958172
-    nodes_walk_retail: -0.0005829233686712046
-    nodes_walk_retail_jobs: -0.0013738018160524318
-    parcel_sqft: -8.619746702787236e-07
-    parcels_ave_unit_size: -0.00011112272534914792
-    parcels_parcel_size: 1.3572444099623173e-06
-    parcels_pct_undev: 0.00254568757670402
-    parcels_total_job_spaces: -0.0067814727055735
-    parcels_total_sqft: 1.0363427803521873e-06
-    parcels_zones_jobs_within_30_min: 5.655468004295453e-07
-    residential_sqft: -1.2781197584626691e-05
-    sqft_per_unit: -0.0002361790395381069
-    zones_acres: -6.4864756646737185e-06
-    zones_employment: 0.00014042102928291122
-    zones_logsum_job_high_income: -1.094183930325132e-05
-    zones_logsum_job_low_income: 7.477043809584452e-06
-    zones_logsum_job_mid_income: 3.3600627634668858e-06
-    zones_logsum_pop_high_income: 1.6137298105209598e-06
-    zones_logsum_pop_low_income: -3.660689329983364e-06
-    zones_logsum_pop_mid_income: 4.3607000103347655e-06
-    zones_population: -2.8009893156915945e-05
-    zones_retail_jobs: -0.0003089394541427583
-    zones_transit_jobs_30min: 6.443700845010739e-05
-    zones_transit_jobs_50min: -1.9529576942797372e-05
-    zones_z_total_jobs: 4.1050647722814866e-05
-fit_rsquared: 0.4403724360149317
+    Intercept: 5.102034947792429
+    crime_other_rate: 0.00016779957865330157
+    crime_ucr_rate: -0.0005282772402542953
+    jobs_within_30_min: -1.4585416003991056e-06
+    land_area: -1.316288364102545e-05
+    nodes_walk_ave_unit_sqft: -4.0576945986123486e-05
+    nodes_walk_highinc_hhs: 0.0021408850386254604
+    nodes_walk_households: 0.0014411909641784291
+    nodes_walk_housing_cost: 4.105749298683523e-06
+    nodes_walk_jobs: 0.00017291010829239225
+    nodes_walk_lowinc_hhs: -0.00016830410025212212
+    nodes_walk_medical: 0.0002483353846512126
+    nodes_walk_node_r1500_sqft: 2.957299314366218e-09
+    nodes_walk_population: -0.00077848640787425
+    nodes_walk_race_2_hhs: -0.000705406736726329
+    nodes_walk_retail: -0.0005775540920308512
+    nodes_walk_retail_jobs: -0.0013706102172777214
+    parcel_sqft: -8.616252954509442e-07
+    parcels_ave_unit_size: -0.00011166678186250066
+    parcels_parcel_size: 1.3594125373587874e-06
+    parcels_pct_undev: 0.002553754272047439
+    parcels_total_job_spaces: -0.006787030255109788
+    parcels_total_sqft: 1.0300727294744964e-06
+    parcels_zones_jobs_within_30_min: 5.632482085050406e-07
+    residential_sqft: -1.2771447073198061e-05
+    sqft_per_unit: -0.00023633163588977597
+    zones_acres: -6.527054354254369e-06
+    zones_employment: 0.0001409668075248084
+    zones_logsum_job_high_income: -1.0952505008040736e-05
+    zones_logsum_job_low_income: 7.541635570384665e-06
+    zones_logsum_job_mid_income: 3.3152114681027478e-06
+    zones_logsum_pop_high_income: 1.6438747081860146e-06
+    zones_logsum_pop_low_income: -3.6831985159136376e-06
+    zones_logsum_pop_mid_income: 4.3447107653811895e-06
+    zones_population: -2.8310209923279516e-05
+    zones_retail_jobs: -0.0003077804091461393
+    zones_transit_jobs_30min: 6.428788352932376e-05
+    zones_transit_jobs_50min: -1.952891947190046e-05
+    zones_z_total_jobs: 4.060580698925752e-05
+fit_rsquared: 0.44033056446339547
+fit_rsquared_adj: 0.44033056446339547
 fitted: true
 model_expression:
   left_side: np.log1p(sqft_price_res)

@@ -377,7 +377,8 @@ for config in repm_configs:
         result[config] = {
             "fitted": True,
             "fit_parameters": {"Coefficient": {col_names[i]: float(coef[i]) for i in range(len(col_names))}},
-            "fit_rsquared": score,
+            "fit_rsquared": float(score),
+            "fit_rsquared_adj": float(score),
             "sample_size": sample_size,
         }
     result[config]["model_expression"] = {
@@ -387,7 +388,6 @@ for config in repm_configs:
     if type(result[config]["sample_size"]) == np.int64:
         result[config]["sample_size"] = result[config]["sample_size"].item()
     # if result[config]['coef'] == 'None': continue
-    result[config]["fit_rsquared"] = float(result[config]["fit_rsquared"])
     for coe in result[config]["fit_parameters"]["Coefficient"]:
         result[config]["fit_parameters"]["Coefficient"][coe] = float(
             result[config]["fit_parameters"]["Coefficient"][coe])
