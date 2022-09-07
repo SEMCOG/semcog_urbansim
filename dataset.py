@@ -67,10 +67,10 @@ orca.add_table(
 # #35 change csv column name from b_city_id to city_id
 # orca.add_table('extreme_hu_controls', pd.read_csv(
 #     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
-orca.add_table(
-    "extreme_hu_controls",
-    pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
-)
+# orca.add_table(
+#     "extreme_hu_controls",
+#     pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
+# )
 
 
 @orca.table("mcd_total")
