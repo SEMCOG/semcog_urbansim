@@ -10,46 +10,48 @@ target_variable: np.log1p(sqft_price_nonres)
 ytransform: np.exp
 fit_parameters:
   Coefficient:
-    Intercept: -2.418110860680869
-    building_age: -0.0011283325699952007
-    building_sqft: -1.320380404851341e-05
-    crime_other_rate: 0.00012861722299501872
-    crime_ucr_rate: -0.0008354709555576873
-    jobs_within_30_min: -3.634456915110542e-06
-    land_area: 1.608945860582967e-05
-    nodes_walk_ave_nonres_sqft_price: 0.008097600371054793
-    nodes_walk_ave_unit_sqft: -3.855870952061769e-06
-    nodes_walk_hhs_with_children: 0.0003724311139691826
-    nodes_walk_housing_cost: -1.4215539357586279e-06
-    nodes_walk_industrial: 0.006592378826740685
-    nodes_walk_jobs: 0.0007425899962017745
-    nodes_walk_medical: -0.001098056576613529
-    nodes_walk_node_r1500_sqft: -1.4597633035727605e-08
-    nodes_walk_office: -0.0006135099610027088
-    nodes_walk_population: 0.00032506049812093464
-    nodes_walk_retail_jobs: -0.00344583861155781
-    parcel_sqft: 6.328217800635368e-07
-    parcels_parcel_size: -5.961197794559415e-07
-    parcels_total_job_spaces: 0.0038188173525558083
-    parcels_total_sqft: -7.257636156929085e-06
-    parcels_zones_jobs_within_30_min: 1.6844152446568163e-07
-    year_built: 0.0027131621020794103
-    zones_acres: 9.032379543336227e-06
-    zones_employment: 9.379408817604923e-05
-    zones_households: -0.0007673090611757239
-    zones_logsum_job_high_income: 9.77872325639572e-07
-    zones_logsum_job_low_income: 7.095445355161343e-06
-    zones_logsum_job_mid_income: 1.8547041492659846e-06
-    zones_logsum_pop_high_income: -3.10959298396698e-07
-    zones_logsum_pop_low_income: -3.690190572237564e-06
-    zones_logsum_pop_mid_income: -5.083169058651554e-07
-    zones_population: 0.0002567734898423471
-    zones_retail_jobs: 0.00030989519410878447
-    zones_transit_jobs_30min: -2.1890291955824756e-05
-    zones_transit_jobs_50min: -2.871718108007558e-05
-    zones_z_total_jobs: 3.0451171430573195e-06
-fit_rsquared: 0.502000523413018
-fit_rsquared_adj: 0.502000523413018
+    Intercept: -2.4149760372620928
+    building_age: -0.001126278191883652
+    building_sqft: -1.3234863790492907e-05
+    crime_other_rate: 0.0001283834158561123
+    crime_ucr_rate: -0.000836670694299647
+    jobs_within_30_min: -3.6395796044705327e-06
+    land_area: 1.611495797640324e-05
+    nodes_walk_ave_nonres_sqft_price: 0.008098891612561512
+    nodes_walk_ave_unit_sqft: -4.47485857589533e-06
+    nodes_walk_hhs_with_children: 0.00045959391298532054
+    nodes_walk_housing_cost: -1.414758373782604e-06
+    nodes_walk_industrial: 0.006599141359952834
+    nodes_walk_jobs: 0.0007417161925703454
+    nodes_walk_medical: -0.0010986601085708069
+    nodes_walk_node_r1500_sqft: -1.4608382718107022e-08
+    nodes_walk_office: -0.0006099104033558132
+    nodes_walk_population: 0.00031489493957612304
+    nodes_walk_retail_jobs: -0.00344496599897134
+    parcel_sqft: 6.326097920846189e-07
+    parcels_parcel_size: -5.959426536662739e-07
+    parcels_total_job_spaces: 0.003818933134886638
+    parcels_total_sqft: -7.252219704047966e-06
+    parcels_zones_jobs_within_30_min: 1.7644420078925394e-07
+    year_built: 0.002713653200172957
+    zones_acres: 8.920233011391738e-06
+    zones_employment: 9.532030815170526e-05
+    zones_households: -0.0007862278930519268
+    zones_logsum_job_high_income: 1.0601700275889077e-06
+    zones_logsum_job_low_income: 7.047012989820715e-06
+    zones_logsum_job_mid_income: 1.9444195601058243e-06
+    zones_logsum_pop_high_income: -3.576340550774155e-07
+    zones_logsum_pop_low_income: -3.64645204189992e-06
+    zones_logsum_pop_mid_income: -5.646479044731999e-07
+    zones_population: 0.000264154081819516
+    zones_retail_jobs: 0.00030695947571540775
+    zones_transit_jobs_30min: -2.163912394731182e-05
+    zones_transit_jobs_50min: -2.8936086582726976e-05
+    zones_z_total_jobs: 2.8578755696020833e-06
+  Std. Error: {}
+  T-Score: {}
+fit_rsquared: 0.5022512994896733
+fit_rsquared_adj: 0.5022512994896733
 fitted: true
 model_expression:
   left_side: np.log1p(sqft_price_nonres)
