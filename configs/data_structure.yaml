@@ -1,63 +1,71 @@
-name: _job_space
-indexs:
-  - building_id
-columns:
-  base_job_space: int64
----
 name: annual_employment_control_totals
 indexs:
-  - year
-  - sector_id
-  - home_based_status
+- year
+- sector_id
+- home_based_status
 columns:
-  large_area_id: int32
+  large_area_id: int16
   total_number_of_jobs: int32
----
-name: annual_household_control_totals
-indexs:
-  - year
-columns:
-  age_of_head_max: int64
-  age_of_head_min: int64
-  cars_max: int64
-  cars_min: int64
-  children_max: int64
-  children_min: int64
-  income_max: int64
-  income_min: int64
-  large_area_id: int64
-  persons_max: int64
-  persons_min: int64
-  race_id: int64
-  total_number_of_households: int64
-  workers_max: int64
-  workers_min: int64
 ---
 name: annual_relocation_rates_for_households
 indexs:
-  - None
+- None
 columns:
   age_max: int8
   age_min: int8
   income_max: int32
   income_min: int32
-  probability_of_relocating: float32
+  probability_of_relocating: float64
 ---
 name: annual_relocation_rates_for_jobs
 indexs:
-  - sector_id
+- sector_id
 columns:
   job_relocation_probability: float64
 ---
 name: building_sqft_per_job
 indexs:
-  - building_type_id
+- building_type_id
 columns:
-  building_sqft_per_job: int32
+  building_sqft_per_job: int16
+---
+name: building_type_allowed
+indexs:
+- None
+columns:
+  future_use: object
+  is_developable: int8
+  type11: int8
+  type13: int8
+  type14: int8
+  type21: int8
+  type23: int8
+  type31: int8
+  type32: int8
+  type33: int8
+  type41: int8
+  type42: int8
+  type51: int8
+  type52: int8
+  type53: int8
+  type61: int8
+  type63: int8
+  type65: int8
+  type71: int8
+  type81: int8
+  type82: int8
+  type83: int8
+  type84: int8
+  type91: int8
+  type92: int8
+  type93: int8
+  type94: int8
+  type95: int8
+  zoning: object
 ---
 name: building_types
 indexs:
-  - building_type_id
+- building_type_id
 columns:
   building_type_description: object
   building_type_name: object
@@ -70,120 +78,122 @@ columns:
 ---
 name: buildings
 indexs:
-  - building_id
+- building_id
 columns:
-  b_city_id: int32
-  b_zone_id: int32
   building_type_id: int8
-  market_value: float64
+  improvement_value: float64
   land_area: int32
-  non_residential_sqft: int32
+  market_value: float64
+  non_residential_sqft: int64
   parcel_id: int32
-  residential_units: int32
-  sqft_per_unit: int32
+  residential_units: int16
+  sqft_per_unit: int16
   stories: float64
-  year_built: int32
+  year_built: int16
 ---
 name: counties
 indexs:
-  - county_id
+- county_id
 columns:
   county_name: object
 ---
 name: crime_rates
 indexs:
-  - parcel_id
+- parcel_id
 columns:
   other_crime_rate: float64
   ucr_crime_rate: float64
 ---
+name: demolition_rates
+indexs:
+- city_id
+columns:
+  type81units: int8
+  type82units: int32
+  type83units: int32
+  typenonsqft: int32
+---
 name: employment_sectors
 indexs:
-  - sector_id
+- sector_id
 columns:
   naics sector description: object
   naics_code: object
   sector_name: object
-  sqft_per_job: int32
+  sqft_per_job: int16
 ---
 name: events_addition
 indexs:
-  - objectid
+- objectid
 columns:
-  b_city_id: int32
-  b_zone_id: int32
+  building_id: int32
   building_type_id: int8
+  city_id: int32
+  dev_type: object
+  event_id: int32
+  gqcap: int32
+  median_hgt: int32
   non_residential_sqft: int32
   parcel_id: int32
-  residential_units: int32
-  year_built: int32
+  res_sqft: int32
+  residential_units: int16
+  stories: float16
+  year_built: int16
+  zone_id: int32
 ---
 name: events_deletion
 indexs:
-  - objectid
+- objectid
 columns:
   building_id: int32
-  year_built: int32
----
-name: group_quarters
-indexs:
-  - None
-columns:
-  age: int8
-  building_id: int64
-  gq_code: int32
-  race_id: int8
-  type: object
----
-name: group_quarters_control_totals
-indexs:
-  - None
-columns:
-  city_id: float32
-  count: float32
-  year: int32
+  demolished: object
+  median_hgt: int32
+  year_built: int16
+  zone_id: int32
 ---
 name: households
 indexs:
-  - None
+- household_id
 columns:
-  age_of_head: float64
-  building_id: int64
-  cars: int64
-  children: float64
+  age_of_head: int8
+  blkgrp: int64
+  building_id: int32
+  cars: int8
+  children: int8
+  household_type: int8
   income: float64
-  large_area_id: float64
-  persons: int64
-  race_id: int64
-  workers: int64
+  persons: int8
+  race_id: int8
+  ten: int8
+  valp: int32
+  workers: int8
 ---
 name: income_growth_rates
 indexs:
-  - year
+- year
 columns:
-  "115": float64
-  "125": float64
-  "147": float64
-  "161": float64
-  "3": float64
-  "5": float64
-  "93": float64
-  "99": float64
+  '115': float64
+  '125': float64
+  '147': float64
+  '161': float64
+  '3': float64
+  '5': float64
+  '93': float64
+  '99': float64
 ---
 name: jobs
 indexs:
-  - None
+- job_id
 columns:
-  building_id: int64
-  home_based_status: object
-  large_area_id: float64
-  sector_id: object
-  semcog_id: object
-  sqft: object
+  building_id: int32
+  home_based_status: int8
+  sector_id: int8
+  semcog_id: int32
+  sqft: int16
 ---
 name: land_use_types
 indexs:
-  - land_use_type_id
+- land_use_type_id
 columns:
   description: object
   generic_land_use_type_descripti: object
@@ -191,179 +201,140 @@ columns:
   home_based_status: int8
   is_residential: int8
   land_use_name: object
-  objectid: int8
   unit_name: object
 ---
 name: large_areas
 indexs:
-  - large_area_id
+- large_area_id
 columns:
   alt_large_id: int8
   large_area_group_id: int8
   large_area_name: object
 ---
-name: orig_lu_parcels
+name: parcel_undevelopable
 indexs:
-  - parcel_id
+- parcel_id
 columns:
-  census_bg_id: object
-  census_block_id: object
-  centroid_x: float64
-  centroid_y: float64
-  city_id: int32
-  county_id: int32
-  land_use_type_id: int8
-  large_area_id: int32
-  parcel_sqft: int32
-  pptytax: float64
-  school_id: int32
-  semmcd: int32
-  sev_value: int32
-  spid: int32
-  tax_exempt_flag: int8
-  zone_id: int32
----
-name: orig_lu_zoning
-indexs:
-  - parcel_id
-columns:
-  future_use: object
-  max_dua: float64
-  max_far: float64
-  max_height: int32
-  max_stories: float16
-  pct_undev: float64
-  type11: int8
-  type12: int8
-  type13: int8
-  type14: int8
-  type21: int8
-  type22: int8
-  type23: int8
-  type24: int8
-  type25: int8
-  type26: int8
-  type31: int8
-  type32: int8
-  type33: int8
-  type41: int8
-  type42: int8
-  type43: int8
-  type51: int8
-  type52: int8
-  type53: int8
-  type61: int8
-  type62: int8
-  type71: int8
-  type81: int8
-  type82: int8
-  type83: int8
-  type84: int8
+  parcel_area: float64
+  percent_undev: float64
+  undev_area: float64
 ---
 name: parcels
 indexs:
-  - parcel_id
+- parcel_id
 columns:
   census_bg_id: int32
   centroid_x: float64
   centroid_y: float64
-  city_id: int32
-  county_id: int32
+  city_id: int16
+  county_id: int16
   land_use_type_id: int8
-  large_area_id: int32
-  nodeid_drv: int64
-  nodeid_walk: int64
+  landvalue: int32
+  large_area_id: int16
   parcel_sqft: int32
   pptytax: float64
   school_id: int32
-  semmcd: int32
+  semmcd: int16
   sev_value: int32
   zone_id: int32
 ---
 name: persons
 indexs:
-  - person_id
+- person_id
 columns:
-  age: float64
-  household_id: int64
-  member_id: int64
-  race_id: int64
-  relate: int64
-  sex: int64
-  worker: int64
+  age: int8
+  household_id: int32
+  industry: int8
+  member_id: int8
+  race_id: int8
+  relate: int8
+  school_grade: int8
+  sex: int8
+  worker: int8
 ---
 name: poi
 indexs:
-  - None
+- None
 columns:
   category: object
-  index: int32
   point_x: float64
   point_y: float64
 ---
+name: pseudo_building_2020
+indexs:
+- building_id
+columns:
+  bg: int8
+  block: int8
+  building_type_id: int8
+  county: int32
+  improvement_value: float64
+  landvalue: int8
+  market_value: float64
+  mcd: int32
+  non_residential_sqft: int8
+  owner_units: int8
+  parcel_id: int32
+  parcel_sqft: int8
+  res_sqft: int8
+  residential_units: int32
+  sev_value: float64
+  sqft_per_unit: int8
+  stories: int8
+  tract: int8
+  year_built: int32
+---
 name: refiner_events
 indexs:
-  - refinement_id
+- refinement_id
 columns:
   action: object
   agent_expression: object
   agents: object
-  amount: int32
-  location_capacity_attribute: float64
+  amount: int16
   location_expression: object
-  transaction_id: int32
-  year: int32
+  transaction_id: int16
+  year: int16
 ---
 name: remi_pop_total
 indexs:
-  - large_area_id
+- large_area_id
 columns:
-  "2015": int32
-  "2016": int32
-  "2017": int32
-  "2018": int32
-  "2019": int32
-  "2020": int32
-  "2021": int32
-  "2022": int32
-  "2023": int32
-  "2024": int32
-  "2025": int32
-  "2026": int32
-  "2027": int32
-  "2028": int32
-  "2029": int32
-  "2030": int32
-  "2031": int32
-  "2032": int32
-  "2033": int32
-  "2034": int32
-  "2035": int32
-  "2036": int32
-  "2037": int32
-  "2038": int32
-  "2039": int32
-  "2040": int32
-  "2041": int32
-  "2042": int32
-  "2043": int32
-  "2044": int32
-  "2045": int32
----
-name: school_districts
-indexs:
-  - school_district_id
-columns:
-  district_name: object
-  isd_code: int8
-  isd_name: object
-  meap10: float32
-  proficient10: float32
-  public: int8
+  '2020': int32
+  '2021': int32
+  '2022': int32
+  '2023': int32
+  '2024': int32
+  '2025': int32
+  '2026': int32
+  '2027': int32
+  '2028': int32
+  '2029': int32
+  '2030': int32
+  '2031': int32
+  '2032': int32
+  '2033': int32
+  '2034': int32
+  '2035': int32
+  '2036': int32
+  '2037': int32
+  '2038': int32
+  '2039': int32
+  '2040': int32
+  '2041': int32
+  '2042': int32
+  '2043': int32
+  '2044': int32
+  '2045': int32
+  '2046': int32
+  '2047': int32
+  '2048': int32
+  '2049': int32
+  '2050': int32
 ---
 name: schools
 indexs:
-  - bcode
+- bcode
 columns:
   bname: object
   dcode: int32
@@ -375,198 +346,106 @@ columns:
 ---
 name: semmcds
 indexs:
-  - semmcd_id
+- semmcd_id
 columns:
   city_name: object
+  county_id: int32
+  large_area_id: int32
 ---
 name: target_vacancies
 indexs:
-  - None
+- None
 columns:
-  large_area_id: int64
+  large_area_id: int16
   non_res_target_vacancy_rate: float64
   res_target_vacancy_rate: float64
-  year: int64
+  year: int16
+---
+name: target_vacancies_mcd
+indexs:
+- None
+columns:
+  '2020': float64
+  '2021': float64
+  '2022': float64
+  '2023': float64
+  '2024': float64
+  '2025': float64
+  '2026': float64
+  '2027': float64
+  '2028': float64
+  '2029': float64
+  '2030': float64
+  '2031': float64
+  '2032': float64
+  '2033': float64
+  '2034': float64
+  '2035': float64
+  '2036': float64
+  '2037': float64
+  '2038': float64
+  '2039': float64
+  '2040': float64
+  '2041': float64
+  '2042': float64
+  '2043': float64
+  '2044': float64
+  '2045': float64
+  '2046': float64
+  '2047': float64
+  '2048': float64
+  '2049': float64
+  '2050': float64
+  cityid: int32
+  cityname: object
 ---
 name: transit_stops
 indexs:
-  - stop_id
+- stop_id
 columns:
   point_x: float64
   point_y: float64
 ---
-name: transit_to_jobs_am
-indexs:
-  - node_id
-columns:
-  <=10.0: int32
-  <=15.0: int32
-  <=20.0: int32
-  <=25.0: int32
-  <=30.0: int32
-  <=45.0: int32
-  <=5.0: int32
-  <=60.0: int32
-  <=75.0: int32
-  <=90.0: int32
----
-name: transit_to_jobs_midday
-indexs:
-  - node_id
-columns:
-  <=10.0: int32
-  <=15.0: int32
-  <=20.0: int32
-  <=25.0: int32
-  <=30.0: int32
-  <=45.0: int32
-  <=5.0: int32
-  <=60.0: int32
-  <=75.0: int32
-  <=90.0: int32
----
 name: travel_data
 indexs:
-  - from_zone_id
-  - to_zone_id
+- from_zone_id
+- to_zone_id
 columns:
   am_auto_total_time: float64
   am_transit_total_time: float64
   am_work_highinc_logsum: float64
   am_work_lowinc_logsum: float64
+  am_work_midinc_logsum: float32
   midday_auto_total_time: float64
   midday_other_logsum: float64
   midday_transit_total_time: float64
 ---
-name: workers_employment_rates_by_large_area
+name: travel_data_2030
 indexs:
-  - large_area_id
+- from_zone_id
+- to_zone_id
 columns:
-  "2010": float64
-  "2013": float64
-  "2014": float64
-  "2015": float64
-  "2016": float64
-  "2017": float64
-  "2018": float64
-  "2019": float64
-  "2020": float64
-  "2021": float64
-  "2022": float64
-  "2023": float64
-  "2024": float64
-  "2025": float64
-  "2026": float64
-  "2027": float64
-  "2028": float64
-  "2029": float64
-  "2030": float64
-  "2031": float64
-  "2032": float64
-  "2033": float64
-  "2034": float64
-  "2035": float64
-  "2036": float64
-  "2037": float64
-  "2038": float64
-  "2039": float64
-  "2040": float64
-  "2041": float64
-  "2042": float64
-  "2043": float64
-  "2044": float64
-  "2045": float64
-  age_max: int8
-  age_min: int8
-  la_rates: float64
+  am_auto_total_time: float32
+  am_transit_total_time: float32
+  am_work_highinc_logsum: float32
+  am_work_lowinc_logsum: float32
+  am_work_midinc_logsum: float32
+  midday_auto_total_time: float32
+  midday_other_logsum: float32
+  midday_transit_total_time: float32
 ---
-name: workers_employment_rates_by_large_area_age
+name: urbansim_millage_rates
 indexs:
-  - large_area_id
+- None
 columns:
-  "2010": float64
-  "2013": float64
-  "2014": float64
-  "2015": float64
-  "2016": float64
-  "2017": float64
-  "2018": float64
-  "2019": float64
-  "2020": float64
-  "2021": float64
-  "2022": float64
-  "2023": float64
-  "2024": float64
-  "2025": float64
-  "2026": float64
-  "2027": float64
-  "2028": float64
-  "2029": float64
-  "2030": float64
-  "2031": float64
-  "2032": float64
-  "2033": float64
-  "2034": float64
-  "2035": float64
-  "2036": float64
-  "2037": float64
-  "2038": float64
-  "2039": float64
-  "2040": float64
-  "2041": float64
-  "2042": float64
-  "2043": float64
-  "2044": float64
-  "2045": float64
-  age_group: int8
-  age_max: int8
-  age_min: int8
-  la_age_rates: float64
----
-name: workers_labor_participation_rates
-indexs:
-  - large_area_id
-columns:
-  "2010": object
-  "2013": object
-  "2014": object
-  "2015": object
-  "2016": object
-  "2017": object
-  "2018": object
-  "2019": object
-  "2020": object
-  "2021": object
-  "2022": object
-  "2023": object
-  "2024": object
-  "2025": object
-  "2026": object
-  "2027": object
-  "2028": object
-  "2029": object
-  "2030": object
-  "2031": object
-  "2032": object
-  "2033": object
-  "2034": object
-  "2035": object
-  "2036": object
-  "2037": object
-  "2038": object
-  "2039": object
-  "2040": object
-  "2041": object
-  "2042": object
-  "2043": object
-  "2044": object
-  "2045": object
-  age_max: int8
-  age_min: int8
+  city_id: int32
+  city_name: object
+  dcode_id: int32
+  millage18: float64
 ---
 name: zones
 indexs:
-  - zone_id
+- zone_id
 columns:
   acres: float64
   taz: object
@@ -574,37 +453,38 @@ columns:
 ---
 name: zoning
 indexs:
-  - parcel_id
+- parcel_id
 columns:
   future_use: object
+  is_developable: int8
   max_dua: float64
   max_far: float64
-  max_height: int32
+  max_height: int16
   max_stories: float16
   pct_undev: float64
   type11: int8
-  type12: int8
   type13: int8
   type14: int8
   type21: int8
-  type22: int8
   type23: int8
-  type24: int8
-  type25: int8
-  type26: int8
   type31: int8
   type32: int8
   type33: int8
   type41: int8
   type42: int8
-  type43: int8
   type51: int8
   type52: int8
   type53: int8
   type61: int8
-  type62: int8
+  type63: int8
+  type65: int8
   type71: int8
   type81: int8
   type82: int8
   type83: int8
   type84: int8
+  type91: int8
+  type92: int8
+  type93: int8
+  type94: int8
+  type95: int8
