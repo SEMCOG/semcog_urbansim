@@ -10,24 +10,44 @@ target_variable: np.log1p(sqft_price_nonres)
 ytransform: np.exp
 fit_parameters:
   Coefficient:
-    Intercept: 10.22726357902553
-    building_sqft: -6.843340202963534e-05
-    jobs_within_30_min: 2.9836211782377364e-06
-    land_area: -2.29021815967114e-05
-    nodes_walk_housing_cost: 1.4053453168623133e-05
-    nodes_walk_node_r1500_sqft: -1.6000935904329865e-07
-    parcel_sqft: -6.601024407422106e-07
-    parcels_parcel_size: -0.00022019532441556555
-    parcels_total_sqft: -2.712707237711564e-05
-    parcels_zones_jobs_within_30_min: 3.2590730848933373e-06
-    zones_logsum_job_high_income: -6.480333484516616e-06
-    zones_logsum_job_low_income: 3.6069996437924695e-07
-    zones_logsum_job_mid_income: -7.918959359940624e-07
-    zones_logsum_pop_high_income: -2.5182905411440413e-06
-    zones_logsum_pop_low_income: 9.564293912454226e-07
-    zones_logsum_pop_mid_income: 1.6688910677839505e-08
-    zones_transit_jobs_30min: -2.8864191551729384e-05
-    zones_transit_jobs_50min: 2.074425961705662e-05
-fit_rsquared: 0.9999974618697837
+    Intercept: 10.227260244155957
+    building_sqft: -6.843153797130526e-05
+    jobs_within_30_min: 2.9836177303839353e-06
+    land_area: -2.290971080386707e-05
+    nodes_walk_housing_cost: 1.4053349694471558e-05
+    nodes_walk_node_r1500_sqft: -1.6003621705532031e-07
+    parcel_sqft: -6.599638153099002e-07
+    parcels_parcel_size: -0.00022015708057348404
+    parcels_total_sqft: -2.7126629408066465e-05
+    parcels_zones_jobs_within_30_min: 3.2587302633085555e-06
+    zones_logsum_job_high_income: -6.479434657419019e-06
+    zones_logsum_job_low_income: 3.606844181751579e-07
+    zones_logsum_job_mid_income: -7.919955480375378e-07
+    zones_logsum_pop_high_income: -2.5187263840401796e-06
+    zones_logsum_pop_low_income: 9.566576064885953e-07
+    zones_logsum_pop_mid_income: 1.6832641318789384e-08
+    zones_transit_jobs_30min: -2.88669526314106e-05
+    zones_transit_jobs_50min: 2.074305813484597e-05
+fit_rsquared: 0.999997462644522
 fitted: true
+model_expression:
+  left_side: np.log1p(sqft_price_nonres)
+  right_side:
+  - land_area
+  - building_sqft
+  - jobs_within_30_min
+  - parcel_sqft
+  - parcels_parcel_size
+  - parcels_total_sqft
+  - parcels_zones_jobs_within_30_min
+  - zones_logsum_pop_high_income
+  - zones_logsum_pop_mid_income
+  - zones_logsum_pop_low_income
+  - zones_logsum_job_high_income
+  - zones_logsum_job_mid_income
+  - zones_logsum_job_low_income
+  - zones_transit_jobs_50min
+  - zones_transit_jobs_30min
+  - nodes_walk_node_r1500_sqft
+  - nodes_walk_housing_cost
 sample_size: 8
