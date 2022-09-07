@@ -379,9 +379,12 @@ def jobs_home_based(jobs):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def jobs_non_home_based(jobs):
+def jobs_non_home_based(jobs, buildings):
     jobs = jobs.to_frame(["building_id", "home_based_status"])
-    return jobs[jobs.home_based_status == 0].groupby("building_id").size()
+    return pd.Series(
+        index=buildings.index, 
+        data=jobs[jobs.home_based_status == 0].groupby("building_id").size()
+    ).fillna(0)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
