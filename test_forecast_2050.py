@@ -21,7 +21,7 @@ if freespace < 10:
 
 orca.run(
     ["refiner", "build_networks_2050", "neighborhood_vars"]
-    # + orca.get_injectable("repm_step_names")
+    + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
 )  # increase feasibility based on projected income
 
@@ -42,7 +42,7 @@ orca.run(
         "residential_developer",
         "non_residential_developer",
     ]
-    # + orca.get_injectable("repm_step_names")
+    + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
     + ["mcd_hu_sampling"]  # Hack to make more feasibility
     # + orca.get_injectable("hlcm_step_names") # disable for now, wait until new estimation

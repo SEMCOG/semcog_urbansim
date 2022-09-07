@@ -249,7 +249,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
 
 
 repm_step_names = []
-for repm_config in os.listdir("./configs/repm"):
+for repm_config in os.listdir("./configs/repm_2050"):
     model_name = repm_config.split(".")[0]
 
     if repm_config.startswith("res"):
@@ -257,7 +257,7 @@ for repm_config in os.listdir("./configs/repm"):
     elif repm_config.startswith("nonres"):
         dep_var = "sqft_price_nonres"
 
-    make_repm_func(model_name, "repm/" + repm_config, dep_var)
+    make_repm_func(model_name, "repm_2050/" + repm_config, dep_var)
     repm_step_names.append(model_name)
 orca.add_injectable("repm_step_names", repm_step_names)
 
