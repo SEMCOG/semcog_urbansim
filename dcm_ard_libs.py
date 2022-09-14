@@ -75,11 +75,12 @@ def minimize(X = None, f = None, length = None, *args):
 # either with an error or returning Nan or Inf, and minimize should handle this
 # gracefully.
     
-    if np.amax(length.shape) == 2:
-        red = len(2)
-        length = len(1)
-    else:
-        red = 1
+    # if np.amax(length.shape) == 2:
+    #     red = len(2)
+    #     length = len(1)
+    # else:
+    #     red = 1
+    red = 1
     
     if length > 0:
         S = 'Linesearch'
@@ -91,18 +92,18 @@ def minimize(X = None, f = None, length = None, *args):
     ls_failed = 0
     
     # f0,df0 = feval(f,X,varargin[:])
-    f0,df0 = f(X,args[:])
+    f0,df0 = f(X, *args[:])
     
     Z = X
-    X = unwrap(X)
-    df0 = unwrap(df0)
+    # X = unwrap(X)
+    # df0 = unwrap(df0)
     print('%s %6i;  Value %4.6e\r' % (S,i,f0))
     #if exist('fflush','builtin') fflush(stdout); end
     fX = f0
     i = i + (length < 0)
     
     s = - df0
-    d0 = - np.transpose(s) * s
+    d0 = - np.transpose(s).dot(s)
     
     x3 = red / (1 - d0)
     
@@ -115,7 +116,7 @@ def minimize(X = None, f = None, length = None, *args):
         if length > 0:
             M = MAX
         else:
-            M = np.amin(MAX,- length - i)
+            M = min(MAX,- length - i)
         while 1:
 
             x2 = 0
@@ -130,8 +131,9 @@ def minimize(X = None, f = None, length = None, *args):
                     M = M - 1
                     i = i + (length < 0)
                     # f3,df3 = feval(f,rewrap(Z,X + x3 * s),args[:])
-                    f3,df3 = f(rewrap(Z,X + x3 * s),args[:])
-                    df3 = unwrap(df3)
+                    # f3,df3 = f(rewrap(Z,X + x3 * s), *args[:])
+                    f3,df3 = f(X + x3 * s, *args[:])
+                    # df3 = unwrap(df3)
                     if np.isnan(f3) or np.isinf(f3) or np.any(np.isnan(df3) + np.isinf(df3)):
                         raise Exception(' ')
                     success = 1
@@ -142,7 +144,7 @@ def minimize(X = None, f = None, length = None, *args):
                 X0 = X + x3 * s
                 F0 = f3
                 dF0 = df3
-            d3 = np.transpose(df3) * s
+            d3 = df3.dot(s)
             if d3 > SIG * d0 or f3 > f0 + x3 * RHO * d0 or M == 0:
                 break
             x1 = x2
@@ -181,17 +183,18 @@ def minimize(X = None, f = None, length = None, *args):
                 x3 = x2 + (np.sqrt(B * B - A * d2 * (x4 - x2) ** 2) - B) / A
             if np.isnan(x3) or np.isinf(x3):
                 x3 = (x2 + x4) / 2
-            x3 = np.amax(np.amin(x3,x4 - INT * (x4 - x2)),x2 + INT * (x4 - x2))
+            x3 = max(min(x3,x4 - INT * (x4 - x2)),x2 + INT * (x4 - x2))
             # f3,df3 = feval(f,rewrap(Z,X + x3 * s),args[:])
-            f3,df3 = f(rewrap(Z,X + x3 * s), args[:])
-            df3 = unwrap(df3)
+            # f3,df3 = f(rewrap(Z,X + x3 * s), *args[:])
+            f3,df3 = f(X + x3 * s, *args[:])
+            # df3 = unwrap(df3)
             if f3 < F0:
                 X0 = X + x3 * s
                 F0 = f3
                 dF0 = df3
             M = M - 1
             i = i + (length < 0)
-            d3 = np.transpose(df3) * s
+            d3 = np.transpose(df3).dot(s)
 
         if np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0:
             X = X + x3 * s
@@ -199,14 +202,14 @@ def minimize(X = None, f = None, length = None, *args):
             fX = np.transpose(np.array([np.transpose(fX),f0]))
             print('%s %6i;  Value %4.6e\r' % (S,i,f0))
             #    if exist('fflush','builtin') fflush(stdout); end
-            s = (np.transpose(df3) * df3 - np.transpose(df0) * df3) / (np.transpose(df0) * df0) * s - df3
+            s = (df3.T.dot(df3) - df0.T.dot(df3)) / (df0.T.dot(df0)) * s - df3
             df0 = df3
             d3 = d0
-            d0 = np.transpose(df0) * s
+            d0 = df0.T.dot(s)
             if d0 > 0:
                 s = - df0
-                d0 = - np.transpose(s) * s
-            x3 = x3 * np.amin(RATIO,d3 / (d0 - np.finfo(float).tiny))
+                d0 = - s.T.dot(s)
+            x3 = x3 * min(RATIO,d3 / (d0 - np.finfo(float).tiny))
             ls_failed = 0
         else:
             X = X0
@@ -215,26 +218,29 @@ def minimize(X = None, f = None, length = None, *args):
             if ls_failed or i > np.abs(length):
                 break
             s = - df0
-            d0 = - np.transpose(s) * s
+            d0 = - np.transpose(s).dot(s)
             x3 = 1 / (1 - d0)
             ls_failed = 1
 
     
-    X = rewrap(Z,X)
+    # X = rewrap(Z,X)
     # fprintf('\n'); if exist('fflush','builtin') fflush(stdout); end
-    return X, fX, i
+    return X
     
     
 def unwrap(s = None): 
     # Extract the numerical values from "s" into the column vector "v". The
 # variable "s" can be of any type, including struct and cell array.
 # Non-numerical elements are ignored. See also the reverse rewrap.m.
-    v = []
-    if pd.api.types.is_numeric_dtype(s):
+    v = np.array([])
+    if type(s) in [int, float]:
+        v = np.array([s])
+    elif pd.api.types.is_numeric_dtype(s):
         v = s
     else:
-        for i in np.arange(1,np.asarray(s).size+1).reshape(-1):
-            v = np.array([[v],[unwrap(s[i])]])
+        for i in range(np.asarray(s).size):
+            # v = np.array([[v],[unwrap(s[i])]])
+            v = np.append(v, unwrap(s[i]))
     return v
     
     
@@ -242,7 +248,7 @@ def rewrap(s = None,v = None):
     # Map the numerical elements in the vector "v" onto the variables "s" which can
 # be of any type. The number of numerical elements must match; on exit "v"
 # should be empty. Non-numerical entries are just copied. See also unwrap.m.
-    if pd.api.types.is_numeric_dtype(s):
+    if pd.api.types.is_numeric_dtype(s) or type(s) in [int, float]:
         if v.size < s.size:
             raise Exception('The vector for conversion contains too few elements')
         # s = np.reshape(v(np.arange(1,np.asarray(s).size+1)), tuple(s.shape), order="F")
@@ -250,7 +256,7 @@ def rewrap(s = None,v = None):
         # v = v(np.arange(np.asarray(s).size + 1,end()+1))
         v = v[s.size:]
     else:
-        for i in np.arange(np.asarray(s).size).reshape(-1):
+        for i in range(s.size):
             s[i],v = rewrap(s[i],v)
     return s, v
 
@@ -258,26 +264,32 @@ def neglog_DCM(theta = None,X = None,Y = None,T = None,availableChoices = None):
     #function [g, dg] = neglog_DCM(theta, X, Y, T, availableChoices)
     
     # (C) Filipe Rodrigues (2019)
-    
+    T = T.reshape(T.size, -1)
     N,K = T.shape
     F = np.zeros((N,K))
-    for k in np.arange(K):
-        F[:,k] = X[k] * theta[k]
+    # for k in np.arange(K):
+    #     F[:,k] = X[k] * theta[k]
+    # conditional
+    F[:,0] = X.dot(theta[0])
     
     ma = np.amax(F, 1)
-    Fma = F - ma
+    Fma = F[:,0] - ma
     expF = np.exp(Fma)
-    expF = np.multiply(expF,availableChoices)
+    # element-wise multiply
+    expF = expF * availableChoices
     
-    normExpF = np.sum(expF, 1)
+    normExpF = np.sum(expF)
     S = expF / normExpF
     # Yind = sub2ind(Fma.shape,np.transpose(np.array([np.arange(N)])),Y)
     # g = - sum(Fma(Yind) - np.log(normExpF))
-    Yind = np.ravel_multi_index( [np.arange(N), Y], Fma.shape)
+    Yind = np.arange(N)[Y>0]
+    # g: scaler
     g = -np.sum(Fma[Yind] - np.log(normExpF));
     # dg = cell(3,1)
-    dg = np.empty([3,1])
-    for k in np.arange(K):
-        dg[k] = - X[k].T * (T[:,k] - S[:,k])
+    # dg = np.empty([1,1])
+    # for k in np.arange(K):
+    #     dg[k] = - X[k].T * (T[:,k] - S[:,k])
+    # dg: m x 1
+    dg = -X.T.dot((T[:,0] - S))
     
     return g,dg
