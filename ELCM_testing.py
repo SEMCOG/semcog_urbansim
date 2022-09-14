@@ -143,7 +143,7 @@ buildings = orca.get_table("buildings")
 households = orca.get_table("households")
 # config
 choice_column = "building_id"
-estimation_sample_size = 10
+estimation_sample_size = 30
 # load variables
 hh, b = load_hlcm_df()
 # sampling hh
@@ -176,6 +176,8 @@ X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
 # Y: 1 for the building picked
 Y = np.zeros(estimation_sample_size)
 Y[0] = 1
+Y[5] = 1
+Y[9] = 1
 # TODO: Y_onehot
 Y_onehot = Y
 # availablechoice is 1
