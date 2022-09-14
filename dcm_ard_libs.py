@@ -49,7 +49,8 @@ def minimize(X = None, f = None, length = None, *args):
     
     RATIO = 10
     
-    SIG = 0.1
+    # SIG = 0.1
+    SIG = 1
     RHO = SIG / 2
     
     # Powell conditions. SIG is the maximum allowed absolute ratio between
@@ -134,7 +135,7 @@ def minimize(X = None, f = None, length = None, *args):
                     # f3,df3 = f(rewrap(Z,X + x3 * s), *args[:])
                     f3,df3 = f(X + x3 * s, *args[:])
                     # df3 = unwrap(df3)
-                    if np.isnan(f3) or np.isinf(f3) or np.any(np.isnan(df3) + np.isinf(df3)):
+                    if np.isnan(f3) or np.isinf(f3) or np.any(np.concatenate((np.isnan(df3), np.isinf(df3)))):
                         raise Exception(' ')
                     success = 1
                 finally:
@@ -196,7 +197,9 @@ def minimize(X = None, f = None, length = None, *args):
             i = i + (length < 0)
             d3 = np.transpose(df3).dot(s)
 
-        if np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0:
+        # relax this constrain to keep the process going
+        # if np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0:
+        if np.abs(d3) <= - SIG * d0:
             X = X + x3 * s
             f0 = f3
             fX = np.transpose(np.array([np.transpose(fX),f0]))
@@ -291,5 +294,6 @@ def neglog_DCM(theta = None,X = None,Y = None,T = None,availableChoices = None):
     #     dg[k] = - X[k].T * (T[:,k] - S[:,k])
     # dg: m x 1
     dg = -X.T.dot((T[:,0] - S))
+    dg = dg.astype(float)
     
     return g,dg
