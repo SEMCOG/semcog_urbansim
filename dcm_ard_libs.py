@@ -45,13 +45,15 @@ def minimize(X = None, f = None, length = None, *args):
     
     EXT = 3.0
     
-    MAX = 20
+    MAX = 60
     
     RATIO = 10
     
-    # SIG = 0.1
-    SIG = 1
+    # SIG = 1
+    SIG = 0.9
     RHO = SIG / 2
+    
+    REL = 10
     
     # Powell conditions. SIG is the maximum allowed absolute ratio between
 # previous and new slopes (derivatives in the search direction), thus setting
@@ -100,7 +102,7 @@ def minimize(X = None, f = None, length = None, *args):
     # df0 = unwrap(df0)
     print('%s %6i;  Value %4.6e\r' % (S,i,f0))
     #if exist('fflush','builtin') fflush(stdout); end
-    fX = f0
+    fX = np.array([f0])
     i = i + (length < 0)
     
     s = - df0
@@ -198,11 +200,13 @@ def minimize(X = None, f = None, length = None, *args):
             d3 = np.transpose(df3).dot(s)
 
         # relax this constrain to keep the process going
-        # if np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0:
-        if np.abs(d3) <= - SIG * d0:
+        if (np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0) or REL > 0:
+        # if np.abs(d3) <= - SIG * d0:
+            if REL > 0: REL -= 1
             X = X + x3 * s
             f0 = f3
-            fX = np.transpose(np.array([np.transpose(fX),f0]))
+            # fX = np.array([fX.T,f0]).T
+            fX = np.concatenate([fX.T, np.array([f0])]).T
             print('%s %6i;  Value %4.6e\r' % (S,i,f0))
             #    if exist('fflush','builtin') fflush(stdout); end
             s = (df3.T.dot(df3) - df0.T.dot(df3)) / (df0.T.dot(df0)) * s - df3
@@ -275,7 +279,7 @@ def neglog_DCM(theta = None,X = None,Y = None,T = None,availableChoices = None):
     # conditional
     F[:,0] = X.dot(theta[0])
     
-    ma = np.amax(F, 1)
+    ma = np.amax(F[:,0])
     Fma = F[:,0] - ma
     expF = np.exp(Fma)
     # element-wise multiply
