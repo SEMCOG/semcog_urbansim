@@ -50,14 +50,6 @@ valid_b_vars = vars_config["buildings"]["valid variables"]
 valid_hh_vars = vars_config["households"]["valid variables"]
 
 
-orca.add_injectable("store", hdf)
-load_tables_to_store()
-from notebooks.models_test import *
-import variables
-
-orca.run(["build_networks"])
-orca.run(["neighborhood_vars"])
-
 vars_to_skip = [
     "large_area_id",
     "county_id",
@@ -137,66 +129,78 @@ def apply_filter_query(df, filters=None):
 def load_hlcm_df():
     # load both hh
     hh = households.to_frame([var for var in valid_hh_vars if var not in hh_vars_to_skip])
-    b = buildings.to_frame([var for var in valid_b_vars[:100] if var not in vars_to_skip] + ["large_area_id"])
+    b = buildings.to_frame([var for var in valid_b_vars[:150] if var not in vars_to_skip] + ["large_area_id"])
     return hh, b
 
-buildings = orca.get_table("buildings")
-households = orca.get_table("households")
 # config
 choice_column = "building_id"
 hh_sample_size = 100
 estimation_sample_size = 10
 # load variables
-hh, b = load_hlcm_df()
-# sampling hh
-hh = hh[hh.large_area_id == 125]
-hh = hh[hh.building_id > 1]
-# hh = hh.sample(estimation_sample_size)
-hh = hh.sample(hh_sample_size)
-picked_bid = hh["building_id"]
-hh = hh.reset_index()
-hh = hh.fillna(0)
-# sampling b
-b = b[b.large_area_id == 125]
-b = b[b.residential_units > 0]
-b_sample = b[~b.index.isin(hh.building_id)].sample((estimation_sample_size-1)*hh_sample_size)
-b_sample = pd.concat([b.loc[hh.building_id], b_sample])
-b_sample = b_sample.reset_index()
-b_sample = b_sample.fillna(0)
-# remove unnecessary col in HH
-hh = hh[[col for col in hh.columns if 'id' not in col ]]
-# remove unnecessary col in buildings
-b_sample = b_sample[[col for col in b_sample.columns if col not in [ 'large_area_id']]]
+RELOAD = False
+if RELOAD:
+    orca.add_injectable("store", hdf)
+    load_tables_to_store()
+    from notebooks.models_test import *
+    import variables
+    buildings = orca.get_table("buildings")
+    households = orca.get_table("households")
+    orca.run(["build_networks"])
+    orca.run(["neighborhood_vars"])
+    hh, b = load_hlcm_df()
+    # sampling hh
+    hh = hh[hh.large_area_id == 125]
+    hh = hh[hh.building_id > 1]
+    # hh = hh.sample(estimation_sample_size)
+    hh = hh.sample(hh_sample_size)
+    picked_bid = hh["building_id"]
+    hh = hh.reset_index()
+    hh = hh.fillna(0)
+    # sampling b
+    b = b[b.large_area_id == 125]
+    b = b[b.residential_units > 0]
+    b_sample = b[~b.index.isin(hh.building_id)].sample((estimation_sample_size-1)*hh_sample_size)
+    b_sample = pd.concat([b.loc[hh.building_id], b_sample])
+    b_sample = b_sample.reset_index()
+    b_sample = b_sample.fillna(0)
+    # remove unnecessary col in HH
+    hh = hh[[col for col in hh.columns if 'id' not in col ]]
+    # remove unnecessary col in buildings
+    b_sample = b_sample[[col for col in b_sample.columns if col not in [ 'large_area_id']]]
 
-X_df = pd.concat([pd.concat([hh]*estimation_sample_size).reset_index(), b_sample], axis=1)
-# Y: 1 for the building picked
-Y = X_df.building_id.isin(picked_bid).astype(int).values
-X_df = X_df[[col for col in X_df.columns if col not in ['building_id', 'index']]]
-orig_var_names = X_df.columns
-# print("orig_var_names",orig_var_names)
-# df to ndarray
-X = X_df.values
-# standardize X
-used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
-X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
-X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
-# shuffle X
-shuffled_index = np.arange(Y.size)
-np.random.shuffle(shuffled_index)
-X = X[shuffled_index, :]
-Y = Y[shuffled_index]
-# TODO: Y_onehot
-Y_onehot = Y
-# availablechoice is 1
-available_choice = np.ones(X.shape[0])
+    X_df = pd.concat([pd.concat([hh]*estimation_sample_size).reset_index(), b_sample], axis=1)
+    # Y: 1 for the building picked
+    Y = X_df.building_id.isin(picked_bid).astype(int).values
+    X_df = X_df[[col for col in X_df.columns if col not in ['building_id', 'index']]]
+    orig_var_names = X_df.columns
+    # print("orig_var_names",orig_var_names)
+    # df to ndarray
+    X = X_df.values
+    # standardize X
+    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
+    X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
+    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
+    # shuffle X
+    shuffled_index = np.arange(Y.size)
+    np.random.shuffle(shuffled_index)
+    X = X[shuffled_index, :].astype(float)
+    Y = Y[shuffled_index].reshape(-1, 1)
+    # TODO: Y_onehot
+    Y_onehot = Y
+    # availablechoice is 1
+    available_choice = np.ones((X.shape[0], 1))
 
-# theta: 1 x m
-theta = np.zeros((1, X.shape[1]))
+    # theta: m x 1
+    theta = np.zeros((X.shape[1], 1))
+else:
+    cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
+    theta, X, Y, Y_onehot, available_choice = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y'], cache_hdf['Y_onehot'], cache_hdf['available_choice']
+    theta, X, Y, Y_onehot, available_choice = theta.values, X.values, Y.values, Y_onehot.values, available_choice.values
 
-theta_optim_full = minimize(theta, neglog_DCM, -10000, X, Y, Y_onehot, available_choice)
-print([orig_var_names[used_val][i] for i in theta_optim_full.argsort()[0][:20]])
+theta_optim_full = minimize(theta, neglog_DCM, -20000, X, Y, Y_onehot, available_choice)
+# print([orig_var_names[used_val][i] for i in theta_optim_full.argsort()[0][:20]])
 print(Y.argsort()[::-1][:20])
-print(X.dot(theta_optim_full.T).reshape(-1).argsort()[::-1][:20])
-print([x for x in Y.argsort()[::-1][:hh_sample_size] if x in X.dot(theta_optim_full.T).reshape(-1).argsort()[::-1][:hh_sample_size]])
+print(X.dot(theta_optim_full).reshape(-1).argsort()[::-1][:20])
+print([x for x in Y.reshape(-1).argsort()[::-1][:hh_sample_size] if x in X.dot(theta_optim_full).reshape(-1).argsort()[::-1][:hh_sample_size]])
 
 print('done')

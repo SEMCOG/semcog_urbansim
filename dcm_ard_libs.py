@@ -50,7 +50,7 @@ def minimize(X = None, f = None, length = None, *args):
     RATIO = 10
     
     # SIG = 1
-    SIG = 0.9
+    SIG = 0.1
     RHO = SIG / 2
     
     REL = 10
@@ -109,6 +109,7 @@ def minimize(X = None, f = None, length = None, *args):
     d0 = - np.transpose(s).dot(s)
     
     x3 = red / (1 - d0)
+    lastx3 = x3
     
     while i < np.abs(length):
 
@@ -116,6 +117,7 @@ def minimize(X = None, f = None, length = None, *args):
         X0 = X
         F0 = f0
         dF0 = df0
+        x3 = red / (1 - d0)
         if length > 0:
             M = MAX
         else:
@@ -147,7 +149,7 @@ def minimize(X = None, f = None, length = None, *args):
                 X0 = X + x3 * s
                 F0 = f3
                 dF0 = df3
-            d3 = df3.dot(s)
+            d3 = df3.T.dot(s)
             if d3 > SIG * d0 or f3 > f0 + x3 * RHO * d0 or M == 0:
                 break
             x1 = x2
@@ -198,13 +200,15 @@ def minimize(X = None, f = None, length = None, *args):
             M = M - 1
             i = i + (length < 0)
             d3 = np.transpose(df3).dot(s)
-
         # relax this constrain to keep the process going
-        if (np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0) or REL > 0:
+        if (np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0) :
         # if np.abs(d3) <= - SIG * d0:
             if REL > 0: REL -= 1
             X = X + x3 * s
             f0 = f3
+            if np.isclose(lastx3, x3):
+                print('debugger')
+            lastx3 = x3
             # fX = np.array([fX.T,f0]).T
             fX = np.concatenate([fX.T, np.array([f0])]).T
             print('%s %6i;  Value %4.6e\r' % (S,i,f0))
@@ -277,27 +281,32 @@ def neglog_DCM(theta = None,X = None,Y = None,T = None,availableChoices = None):
     # for k in np.arange(K):
     #     F[:,k] = X[k] * theta[k]
     # conditional
-    F[:,0] = X.dot(theta[0])
+    # F[:,0] = X.dot(theta[0])
+    F = X.dot(theta)
     
-    ma = np.amax(F[:,0])
-    Fma = F[:,0] - ma
+    ma = np.amax(F, 0)
+    # Fma = F - ma
+    Fma = F
     expF = np.exp(Fma)
     # element-wise multiply
     expF = expF * availableChoices
     
-    normExpF = np.sum(expF)
+    normExpF = np.sum(expF, 1).reshape(-1,1)
     S = expF / normExpF
     # Yind = sub2ind(Fma.shape,np.transpose(np.array([np.arange(N)])),Y)
     # g = - sum(Fma(Yind) - np.log(normExpF))
-    Yind = np.arange(N)[Y>0]
-    # g: scaler
-    g = -np.sum(Fma[Yind] - np.log(normExpF));
+    Yind = np.arange(N)[Y[:,0]>0]
+    # g: scaler, diff from all sample
+    # g = -np.sum(Fma[Yind] - np.log(normExpF+0.1)[Yind]);
+    g = -np.sum(np.clip(Fma[Yind],0,1) - Y[Yind]) # error terms
     # dg = cell(3,1)
     # dg = np.empty([1,1])
     # for k in np.arange(K):
     #     dg[k] = - X[k].T * (T[:,k] - S[:,k])
     # dg: m x 1
-    dg = -X.T.dot((T[:,0] - S))
+    dg = -X.T.dot((T - S))
     dg = dg.astype(float)
-    
+    if np.any(np.concatenate((np.isnan(dg), np.isinf(dg)))):
+        print('nan')
+    # print(g)
     return g,dg
