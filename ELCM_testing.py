@@ -192,15 +192,28 @@ if RELOAD:
 
     # theta: m x 1
     theta = np.zeros((X.shape[1], 1))
+    # cache input tables
+    cache_hdf = pd.HDFStore('lcm_testing.hdf')
+    cache_hdf["theta"] = theta
+    cache_hdf["X"] =X 
+    cache_hdf["Y"] =Y 
+    cache_hdf["Y_onehot"] =Y_onehot 
+    cache_hdf["available_choice"] =available_choice 
+    cache_hdf.close()
 else:
     cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
     theta, X, Y, Y_onehot, available_choice = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y'], cache_hdf['Y_onehot'], cache_hdf['available_choice']
     theta, X, Y, Y_onehot, available_choice = theta.values, X.values, Y.values, Y_onehot.values, available_choice.values
 
+X = {0:X, 1:X}
+theta = {0:theta, 1:theta}
+Y = 1 - Y
+Y_onehot = np.concatenate((Y_onehot, 1-Y_onehot), axis=1)
+available_choice = np.concatenate((available_choice, available_choice), axis=1)
 theta_optim_full = minimize(theta, neglog_DCM, -20000, X, Y, Y_onehot, available_choice)
 # print([orig_var_names[used_val][i] for i in theta_optim_full.argsort()[0][:20]])
-print(Y.argsort()[::-1][:20])
-print(X.dot(theta_optim_full).reshape(-1).argsort()[::-1][:20])
-print([x for x in Y.reshape(-1).argsort()[::-1][:hh_sample_size] if x in X.dot(theta_optim_full).reshape(-1).argsort()[::-1][:hh_sample_size]])
+# print(Y.argsort()[::-1][:20])
+# print(X.dot(theta_optim_full[0]).reshape(-1).argsort()[::-1][:20])
+# print([x for x in Y.reshape(-1).argsort()[::-1][:hh_sample_size] if x in X.dot(theta_optim_full[0]).reshape(-1).argsort()[::-1][:hh_sample_size]])
 
 print('done')

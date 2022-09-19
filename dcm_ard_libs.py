@@ -40,12 +40,13 @@ def minimize(X = None, f = None, length = None, *args):
     # See also: checkgrad
     
     # Copyright (C) 2001 - 2010 by Carl Edward Rasmussen, 2010-01-03
+    # converted to python by Tian Xie (2022)
     
     INT = 0.1
     
     EXT = 3.0
     
-    MAX = 60
+    MAX = 20
     
     RATIO = 10
     
@@ -98,8 +99,8 @@ def minimize(X = None, f = None, length = None, *args):
     f0,df0 = f(X, *args[:])
     
     Z = X
-    # X = unwrap(X)
-    # df0 = unwrap(df0)
+    X = unwrap(X)
+    df0 = unwrap(df0)
     print('%s %6i;  Value %4.6e\r' % (S,i,f0))
     #if exist('fflush','builtin') fflush(stdout); end
     fX = np.array([f0])
@@ -117,7 +118,7 @@ def minimize(X = None, f = None, length = None, *args):
         X0 = X
         F0 = f0
         dF0 = df0
-        x3 = red / (1 - d0)
+        # x3 = red / (1 - d0)
         if length > 0:
             M = MAX
         else:
@@ -136,9 +137,9 @@ def minimize(X = None, f = None, length = None, *args):
                     M = M - 1
                     i = i + (length < 0)
                     # f3,df3 = feval(f,rewrap(Z,X + x3 * s),args[:])
-                    # f3,df3 = f(rewrap(Z,X + x3 * s), *args[:])
-                    f3,df3 = f(X + x3 * s, *args[:])
-                    # df3 = unwrap(df3)
+                    f3,df3 = f(rewrap(Z,X + x3 * s)[0], *args[:])
+                    # f3,df3 = f(X + x3 * s, *args[:])
+                    df3 = unwrap(df3)
                     if np.isnan(f3) or np.isinf(f3) or np.any(np.concatenate((np.isnan(df3), np.isinf(df3)))):
                         raise Exception(' ')
                     success = 1
@@ -161,7 +162,7 @@ def minimize(X = None, f = None, length = None, *args):
             A = 6 * (f1 - f2) + 3 * (d2 + d1) * (x2 - x1)
             B = 3 * (f2 - f1) - (2 * d1 + d2) * (x2 - x1)
             x3 = x1 - d1 * (x2 - x1) ** 2 / (B + np.sqrt(B * B - A * d1 * (x2 - x1)))
-            if not True  or np.isnan(x3) or np.isinf(x3) or x3 < 0:
+            if np.isnan(x3) or np.isinf(x3) or x3 < 0:
                 x3 = x2 * EXT
             else:
                 if x3 > x2 * EXT:
@@ -190,9 +191,9 @@ def minimize(X = None, f = None, length = None, *args):
                 x3 = (x2 + x4) / 2
             x3 = max(min(x3,x4 - INT * (x4 - x2)),x2 + INT * (x4 - x2))
             # f3,df3 = feval(f,rewrap(Z,X + x3 * s),args[:])
-            # f3,df3 = f(rewrap(Z,X + x3 * s), *args[:])
-            f3,df3 = f(X + x3 * s, *args[:])
-            # df3 = unwrap(df3)
+            f3,df3 = f(rewrap(Z,X + x3 * s)[0], *args[:])
+            # f3,df3 = f(X + x3 * s, *args[:])
+            df3 = unwrap(df3)
             if f3 < F0:
                 X0 = X + x3 * s
                 F0 = f3
@@ -234,7 +235,7 @@ def minimize(X = None, f = None, length = None, *args):
             ls_failed = 1
 
     
-    # X = rewrap(Z,X)
+    X = rewrap(Z,X)[0]
     # fprintf('\n'); if exist('fflush','builtin') fflush(stdout); end
     return X
     
@@ -249,7 +250,7 @@ def unwrap(s = None):
     elif pd.api.types.is_numeric_dtype(s):
         v = s
     else:
-        for i in range(np.asarray(s).size):
+        for i in s:
             # v = np.array([[v],[unwrap(s[i])]])
             v = np.append(v, unwrap(s[i]))
     return v
@@ -267,46 +268,43 @@ def rewrap(s = None,v = None):
         # v = v(np.arange(np.asarray(s).size + 1,end()+1))
         v = v[s.size:]
     else:
-        for i in range(s.size):
+        for i in s:
             s[i],v = rewrap(s[i],v)
     return s, v
 
-def neglog_DCM(theta = None,X = None,Y = None,T = None,availableChoices = None): 
-    #function [g, dg] = neglog_DCM(theta, X, Y, T, availableChoices)
-    
-    # (C) Filipe Rodrigues (2019)
-    T = T.reshape(T.size, -1)
+def neglog_DCM(theta = None,X = None, Y = None,T = None,availableChoices = None): 
+    """
+    DCM function generate score and gradients matrix given theta
+    # original Matlab version (C) Filipe Rodrigues (2019)
+    # code converted to python by Tian Xie (2022)
+    Input:
+        theta: W matrix ( m x k )
+        X: training data matrix ( k x n x m )
+        Y: TRUE target ( n x 1 )
+        Y: Y_onehot ( n x k )
+        availableChoice: ( n x k )
+    return:
+        g: score
+        dg: gradients matrix ( m x k )
+    """
     N,K = T.shape
     F = np.zeros((N,K))
-    # for k in np.arange(K):
-    #     F[:,k] = X[k] * theta[k]
-    # conditional
-    # F[:,0] = X.dot(theta[0])
-    F = X.dot(theta)
+    for k in np.arange(K):
+        F[:,k] = X[k].dot(theta[k]).flatten()
     
-    ma = np.amax(F, 0)
+    ma = np.amax(F, 1).reshape(-1, 1)
     # Fma = F - ma
-    Fma = F
+    Fma = F - ma
     expF = np.exp(Fma)
     # element-wise multiply
     expF = expF * availableChoices
     
     normExpF = np.sum(expF, 1).reshape(-1,1)
     S = expF / normExpF
-    # Yind = sub2ind(Fma.shape,np.transpose(np.array([np.arange(N)])),Y)
-    # g = - sum(Fma(Yind) - np.log(normExpF))
-    Yind = np.arange(N)[Y[:,0]>0]
-    # g: scaler, diff from all sample
-    # g = -np.sum(Fma[Yind] - np.log(normExpF+0.1)[Yind]);
-    g = -np.sum(np.clip(Fma[Yind],0,1) - Y[Yind]) # error terms
-    # dg = cell(3,1)
-    # dg = np.empty([1,1])
-    # for k in np.arange(K):
-    #     dg[k] = - X[k].T * (T[:,k] - S[:,k])
-    # dg: m x 1
-    dg = -X.T.dot((T - S))
-    dg = dg.astype(float)
-    if np.any(np.concatenate((np.isnan(dg), np.isinf(dg)))):
-        print('nan')
-    # print(g)
+    Yind = np.ravel_multi_index((np.arange(N), (Y).flatten()), Fma.shape)
+    # g: scaler
+    g = -np.sum(Fma.flatten()[Yind] - np.log(normExpF).flatten())
+    dg = {}
+    for k in np.arange(K):
+        dg[k] = - X[k].T.dot(T[:,[k]] - S[:,[k]])
     return g,dg
