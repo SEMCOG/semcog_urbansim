@@ -5,20 +5,24 @@
 from urbansim.models.dcm import MNLDiscreteChoiceModel
 
 import os
+import sys
+import yaml
 import numpy as np
 import pandas as pd
 import orca
 from urbansim.utils import misc
 
 os.chdir("/home/da/semcog_urbansim")
-from notebooks.estimation_variables_2050 import *
+sys.path.append("/home/da/forecast_data_input")
+from data_checks.estimation_variables_2050 import *
 
 
 import utils
 
 # ++++++ estimation input preparation +++++++++++
 #%% load input data
-data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
+# data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
+data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
 hdf_list = [
     (data_path + "/" + f)
     for f in os.listdir(data_path)
@@ -32,17 +36,44 @@ orca.add_injectable("store", hdf)
 load_tables_to_store()
 
 from notebooks.models_test import *
+@orca.column('households', cache=True, cache_scope='iteration')
+def residential_units(households, buildings):
+    return misc.reindex(buildings.residential_units, households.building_id)
+@orca.column('households', cache=True, cache_scope='iteration')
+def year_built(households, buildings):
+    return misc.reindex(buildings.year_built, households.building_id)
 
 #%%
 # compute network and variables
 orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
 
+#%%
+# create yaml
+theta_df = pd.read_csv('~/semcog_urbansim/out_theta.txt', index_col=0)
+varnames = theta_df.index[:20]
+model_expression = ' + '.join(varnames)
+chooser_filter = "large_area_id == 125 & building_id > 1 & residential_units > 0 & year_built > 2010"
+alts_filter = "large_area_id == 125 & residential_units > 0"
+with open("./configs/hlcm_2050_testing.yaml", "w") as f:
+    yaml.dump({
+        'name': 'MNLDiscreteChoiceModel',
+        'model_type': 'discretechoice',
+        'choosers_fit_filters': chooser_filter,
+        'choosers_predict_filters': chooser_filter,
+        'alts_fit_filters': alts_filter,
+        'alts_predict_filters': alts_filter,
+        'choice_column': 'building_id',
+        'sample_size': 100,
+        'estimation_sample_size': 10000,
+        'prediction_sample_size': 100,
+        'model_expression': model_expression,
+    }, f, default_flow_style=False)
 
 # ++++++++++ estimate MNLDiscreteChoiceModel ++++++++++++++++++++
 ######## estimation demo ###########
 # %%
-m2 = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config("test_indiv.yaml"))
+m2 = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config("hlcm_2050_testing.yaml"))
 m2.probability_mode
 
 # %%
