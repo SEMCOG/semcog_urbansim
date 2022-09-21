@@ -1080,7 +1080,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
 
 @orca.step()
 def scheduled_demolition_events(
-    buildings, parcels, households, jobs, iter_var, events_deletion
+    buildings, parcels, households, jobs, iter_var, events_deletion, multi_parcel_buildings
 ):
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
@@ -1115,9 +1115,11 @@ def scheduled_demolition_events(
         # Todo: parcel use need to be updated
         # Todo: parcel use need to be updated
         # get parcel_id if theres only one building in the parcel
+        b_with_multi_parcels = multi_parcel_buildings[multi_parcel_buildings.building_id.isin(drop_buildings.index)]
         parcels_idx_to_update = [
             pid
-            for pid in drop_buildings.parcel_id
+            # for pid in drop_buildings.parcel_id
+            for pid in set(drop_buildings.parcel_id.values.tolist() + b_with_multi_parcels.parcel_id.values.tolist())
             if pid not in new_buildings_table.parcel_id
         ]
         # update pct_undev to 0 if theres only one building in the parcel
@@ -1128,7 +1130,7 @@ def scheduled_demolition_events(
 
 @orca.step()
 def random_demolition_events(
-    buildings, parcels, households, jobs, year, demolition_rates
+    buildings, parcels, households, jobs, year, demolition_rates, multi_parcel_buildings
 ):
     demolition_rates = demolition_rates.to_frame()
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2015)
@@ -1215,9 +1217,10 @@ def random_demolition_events(
     orca.add_table("jobs", jobs)
     # Todo: parcel use need to be updated
     # get parcel_id if theres only one building in the parcel
+    b_with_multi_parcels = multi_parcel_buildings[multi_parcel_buildings.building_id.isin(drop_buildings.index)]
     parcels_idx_to_update = [
         pid
-        for pid in drop_buildings.parcel_id
+        for pid in set(drop_buildings.parcel_id.values.tolist() + b_with_multi_parcels.parcel_id.values.tolist())
         if pid not in new_buildings_table.parcel_id
     ]
     # update pct_undev to 0 if theres only one building in the parcel
