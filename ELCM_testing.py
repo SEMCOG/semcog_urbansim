@@ -187,10 +187,12 @@ if RELOAD:
     import variables
     buildings = orca.get_table("buildings")
     households = orca.get_table("households")
+    # set year to 2050 
+    orca.add_injectable('year', 2050)
     orca.run(["build_networks"])
     orca.run(["neighborhood_vars"])
     orca.run(["mcd_hu_sampling"])
-    # TODO: get vars from vars list from last forecast
+# TODO: get vars from vars list from last forecast
     used_vars = pd.read_csv("/home/da/share/urbansim/RDF2050/model_improvements/2022_spring/HLCM_estimation/configs_hlcm_large_area_income_quartile.csv")
     used_vars = used_vars["variables"]
     hh_columns, b_columns = columns_in_vars(used_vars)
@@ -207,20 +209,29 @@ if RELOAD:
     hh = hh[hh.large_area_id == 125]
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
-    hh = hh[hh.year_built > 2010]
+    hh = hh[hh.year_built > 2005]
     hh["mcd_model_quota"] += 1 # add 1 to all hh's mcd_model_quota for weights
     hh = hh.sample(hh_sample_size, weights="mcd_model_quota")
+    # hh = hh.sample(hh_sample_size)
     picked_bid = hh["building_id"]
     hh = hh.reset_index()
     hh = hh.fillna(0)
     # sampling b
     # building age < 10
     # weighted by mcd_quota
-    b = b[b.large_area_id == 125]
-    b = b[b.residential_units > 0]
-    b["mcd_model_quota"] += 1 # add 1 to all buildings's mcd_model_quota for weights
-    b_sample = b[~b.index.isin(hh.building_id)].sample( # replace sample or not
-        (estimation_sample_size-1)*hh_sample_size, replace=False, weights="mcd_model_quota")
+    # b = b[b.large_area_id == 125]
+    # b = b[b.residential_units > 0]
+    # b = b[b.year_built > 2005]
+    # b["mcd_model_quota"] += 1 # add 1 to all buildings's mcd_model_quota for weights
+    # sample buildings from the chosen HH's buildings list
+    uhh_id = hh.building_id.unique()
+    sampled_b_id = []
+    for _ in range(estimation_sample_size-1):
+        for j in hh.building_id:
+           sampled_b_id.append(np.random.choice(uhh_id[uhh_id!=j])) 
+    # b_sample = b[~b.index.isin(hh.building_id)].sample( # replace sample or not
+    #     (estimation_sample_size-1)*hh_sample_size, replace=False, weights="mcd_model_quota")
+    b_sample = b.loc[sampled_b_id]
     b_sample = pd.concat([b.loc[hh.building_id], b_sample])
     b_sample = b_sample.reset_index()
     b_sample = b_sample.fillna(0)
@@ -229,9 +240,13 @@ if RELOAD:
     # remove unnecessary col in buildings
     b_sample = b_sample[[col for col in b_sample.columns if col not in b_filter_columns]]
 
-    X_df = pd.concat([pd.concat([hh]*estimation_sample_size).reset_index(drop=True), b_sample], axis=1)
+    X_df = pd.concat(
+        [pd.concat([hh]*estimation_sample_size).reset_index(drop=True), b_sample], axis=1)
     # Y: 1 for the building picked
-    Y = X_df.building_id.isin(picked_bid).astype(int).values
+    # Y = X_df.building_id.isin(picked_bid).astype(int).values
+    # Y: set first hh_sample_size item 1
+    Y = np.zeros((hh_sample_size*estimation_sample_size,1), dtype=int)
+    Y[:hh_sample_size,0] = 1
     # remove extra cols
     X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
     orig_var_names = X_df.columns
@@ -296,6 +311,6 @@ t1 = time.time()
 out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
 out_theta.index = newX_cols_name[used_val]
 out_theta = out_theta.sort_values(by='theta', ascending=False)
-out_theta.to_csv('out_theta.txt')
+out_theta.to_csv('out_theta_%s.txt' % (estimation_sample_size))
 
 print('done')
