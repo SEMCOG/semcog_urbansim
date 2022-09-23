@@ -1,0 +1,133 @@
+alt_capacity: residential_units
+alt_filters: null
+alt_sample_size: 25
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 10000
+chooser_size: null
+choosers: hh
+constrained_choices: true
+fitted_parameters:
+- 0.14456003269091897
+- -0.03633134483335783
+- -0.003809955846471199
+- -0.028217048933776516
+- 0.30271815900287774
+- 0.3131655067126382
+- 0.004920680313494016
+- -0.5718144690078825
+- 0.04229318808628747
+- 0.06631135227651548
+- -0.07503138367345848
+- 0.11151491927496694
+- 0.3017224936661358
+- -0.20477448698818645
+- 0.16431863521524614
+- 0.31033494895484304
+- 0.011392047895919546
+- 0.11184276871242978
+- -0.0391909638669662
+- 0.2742086761207519
+- -0.02831142577268078
+- 0.059946492428993775
+- 0.16778453790846048
+- -0.09174009294137295
+- 0.08224170777846
+- -0.05507434579710273
+- 0.018205492860173002
+- 0.22163907520138115
+- -0.19908556774033054
+- 0.03767795194736417
+- -0.0677766565434368
+- 0.02794202009470937
+- 0.028972851198019685
+- -0.0987727398851573
+- 0.00461115569952771
+- -0.06292133621683527
+- -0.39456609265322823
+- -0.09173286137992426
+- 0.02845359727830918
+- -0.033854554566643116
+max_iter: null
+mct_intx_ops: null
+model_expression: residential_units + vacant_residential_units + b_total_jobs + parcels_total_units
+  + building_type_id_is_83 + zones_logsum_pop_high_income + parcel_sqft + zones_logsum_pop_low_income
+  + vacant_job_spaces + nodes_walk_race_1_hhs + stories + is_race2:nodes_walk_percent_race2
+  + zones_logsum_job_low_income + crime_ucr_rate + nodes_walk_population + has_children:nodes_walk_percent_hh_with_children
+  + zones_transit_jobs_50min + is_race4:nodes_walk_percent_race4 + improvement_value
+  + is_race1:nodes_walk_percent_race1 + has_children:sqft_per_unit + zones_a_ln_emp_50min_transit
+  + ln_income:sqft_per_unit + popden + b_ln_parcels_parcel_far + persons:nodes_walk_ln_popden
+  + nodes_walk_quarter_mile_to_transit + zones_a_ln_emp_26min_drive_alone + zones_logsum_job_high_income
+  + nodes_walk_ave_nonres_sqft_price + nodes_walk_lowinc_hhs + nodes_drv_log_sum_45min_jobs
+  + hhsize_gt_2:building_type_id_is_81 + zones_employment + zones_transit_jobs_30min
+  + ln_income:nodes_walk_ln_popden + building_type_id_is_82 + zones_a_ln_retail_emp_15min_drive_alone
+  + is_young:nodes_walk_retail_jobs + nodes_walk_race_3_hhs - 1
+name: hlcm_city_test_125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:         10,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:              9,960\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     40\nDate:                 2022-09-23   Pseudo R-squ.:\
+  \             0.247\nTime:                      19:55   Pseudo R-bar-squ.:     \
+  \    0.246\nAIC:                  48,534.394   Log-Likelihood:      -24,227.197\n\
+  BIC:                  48,822.807   LL-Null:             -32,188.758\n=====================================================================================================\n\
+  \                                                      coef   std err         z\
+  \     P>|z|   Conf. Int.\n-----------------------------------------------------------------------------------------------------\n\
+  residential_units                                   0.1446     0.006    25.421 \
+  \    0.000             \nvacant_residential_units                           -0.0363\
+  \     0.004    -8.956     0.000             \nb_total_jobs                     \
+  \                  -0.0038     0.006    -0.587     0.557             \nparcels_total_units\
+  \                                -0.0282     0.024    -1.166     0.244         \
+  \    \nbuilding_type_id_is_83                              0.3027     0.005    56.006\
+  \     0.000             \nzones_logsum_pop_high_income                        0.3132\
+  \     0.281     1.113     0.266             \nparcel_sqft                      \
+  \                   0.0049     0.026     0.188     0.851             \nzones_logsum_pop_low_income\
+  \                        -0.5718     0.086    -6.618     0.000             \nvacant_job_spaces\
+  \                                   0.0423     0.004    11.781     0.000       \
+  \      \nnodes_walk_race_1_hhs                               0.0663     0.035  \
+  \   1.909     0.056             \nstories                                      \
+  \      -0.0750     0.011    -6.583     0.000             \nis_race2:nodes_walk_percent_race2\
+  \                   0.1115     0.009    12.653     0.000             \nzones_logsum_job_low_income\
+  \                         0.3017     0.079     3.812     0.000             \ncrime_ucr_rate\
+  \                                     -0.2048     0.020   -10.251     0.000    \
+  \         \nnodes_walk_population                               0.1643     0.034\
+  \     4.827     0.000             \nhas_children:nodes_walk_percent_hh_with_children\
+  \    0.3103     0.011    27.404     0.000             \nzones_transit_jobs_50min\
+  \                            0.0114     0.031     0.368     0.713             \n\
+  is_race4:nodes_walk_percent_race4                   0.1118     0.006    18.503 \
+  \    0.000             \nimprovement_value                                  -0.0392\
+  \     0.005    -7.943     0.000             \nis_race1:nodes_walk_percent_race1\
+  \                   0.2742     0.013    21.400     0.000             \nhas_children:sqft_per_unit\
+  \                         -0.0283     0.012    -2.350     0.019             \nzones_a_ln_emp_50min_transit\
+  \                        0.0599     0.026     2.277     0.023             \nln_income:sqft_per_unit\
+  \                             0.1678     0.014    12.216     0.000             \n\
+  popden                                             -0.0917     0.021    -4.457 \
+  \    0.000             \nb_ln_parcels_parcel_far                             0.0822\
+  \     0.013     6.322     0.000             \npersons:nodes_walk_ln_popden     \
+  \                  -0.0551     0.012    -4.638     0.000             \nnodes_walk_quarter_mile_to_transit\
+  \                  0.0182     0.013     1.368     0.171             \nzones_a_ln_emp_26min_drive_alone\
+  \                    0.2216     0.053     4.162     0.000             \nzones_logsum_job_high_income\
+  \                       -0.1991     0.330    -0.603     0.547             \nnodes_walk_ave_nonres_sqft_price\
+  \                    0.0377     0.013     2.917     0.004             \nnodes_walk_lowinc_hhs\
+  \                              -0.0678     0.022    -3.015     0.003           \
+  \  \nnodes_drv_log_sum_45min_jobs                        0.0279     0.034     0.824\
+  \     0.410             \nhhsize_gt_2:building_type_id_is_81                  0.0290\
+  \     0.012     2.345     0.019             \nzones_employment                 \
+  \                  -0.0988     0.014    -6.986     0.000             \nzones_transit_jobs_30min\
+  \                            0.0046     0.016     0.284     0.776             \n\
+  ln_income:nodes_walk_ln_popden                     -0.0629     0.013    -4.670 \
+  \    0.000             \nbuilding_type_id_is_82                             -0.3946\
+  \     0.018   -21.924     0.000             \nzones_a_ln_retail_emp_15min_drive_alone\
+  \            -0.0917     0.037    -2.504     0.012             \nis_young:nodes_walk_retail_jobs\
+  \                     0.0285     0.011     2.521     0.012             \nnodes_walk_race_3_hhs\
+  \                              -0.0339     0.016    -2.061     0.039           \
+  \  \n====================================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
