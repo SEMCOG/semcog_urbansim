@@ -177,7 +177,7 @@ def mcd_model_quota(households, buildings):
 # config
 choice_column = "building_id"
 hh_sample_size = 10000
-estimation_sample_size = 25
+estimation_sample_size = 50
 # load variables
 RELOAD = True
 if RELOAD:
@@ -310,7 +310,7 @@ t1 = time.time()
 # exporting theta
 out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
 out_theta.index = newX_cols_name[used_val]
-out_theta = out_theta.sort_values(by='theta', ascending=False)
+out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
 out_theta.to_csv('out_theta_%s.txt' % (estimation_sample_size))
 
 print('done')
