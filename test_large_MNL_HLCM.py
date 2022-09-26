@@ -115,7 +115,7 @@ hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_i
 
 b = b[b.large_area_id == 125]
 b = b[b.residential_units > 0]
-b = b[b.year_built > 2000]
+# b = b[b.year_built > 2000]
 b = b[[col for col in b.columns if col not in b_filter_columns]]
 
 # (df-df.mean())/df.std()
@@ -139,7 +139,7 @@ m.alt_sample_size = 25
 # m.alt_filters = alts_filter
 
 # use top 40 variables
-selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:40]
+selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:25]
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
