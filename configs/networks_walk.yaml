@@ -4,26 +4,43 @@ model_type: networks
 
 node_col: nodeid_walk
 
+#all distances are foot based (cost1 for 2050 walk network)
+#2500 feet, about 750 meters, 1640 feet about 500 meters
+
 variable_definitions:
+
+  - name: sum_residential_units
+    dataframe: buildings
+    varname: residential_units
+    radius: 1640
+    decay: flat
+    aggregation: sum
+
+  - name: sum_vacant_residential_units
+    dataframe: buildings
+    varname: vacant_residential_units
+    radius: 1640
+    decay: flat
+    aggregation: sum
 
   - name: log_sum_residential_units
     dataframe: buildings
     varname: residential_units
-    radius: 500
+    radius: 1640
     decay: flat
     apply: np.log1p
 
   - name: log_sum_nonresidential_units
     dataframe: buildings
     varname: job_spaces
-    radius: 500
+    radius: 1640
     decay: flat
     apply: np.log1p
 
   - name: ave_lot_sqft
     dataframe: buildings
     varname: land_area
-    radius: 500
+    radius: 1640
     apply: np.log1p
     decay: flat
     aggregation: ave
@@ -31,12 +48,12 @@ variable_definitions:
   - name: population
     dataframe: households
     varname: persons
-    radius: 1500
+    radius: 2500
     decay: flat
 
   - name: households
     dataframe: households
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: midinc_hhs
@@ -46,7 +63,7 @@ variable_definitions:
     add_fields:
     - income_quartile
     varname: income_quartile
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: lowinc_hhs
@@ -56,7 +73,7 @@ variable_definitions:
     add_fields:
     - income_quartile
     varname: income_quartile
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: highinc_hhs
@@ -66,7 +83,7 @@ variable_definitions:
     add_fields:
     - income_quartile
     varname: income_quartile
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: race_1_hhs
@@ -74,7 +91,7 @@ variable_definitions:
     filters:
     - race_id == 1
     varname: race_id
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: race_2_hhs
@@ -82,7 +99,7 @@ variable_definitions:
     filters:
     - race_id == 2
     varname: race_id
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: race_3_hhs
@@ -90,7 +107,7 @@ variable_definitions:
     filters:
     - race_id == 3
     varname: race_id
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: race_4_hhs
@@ -98,7 +115,7 @@ variable_definitions:
     filters:
     - race_id == 4
     varname: race_id
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: hhs_with_children
@@ -106,13 +123,13 @@ variable_definitions:
     filters:
     - children > 0
     varname: children
-    radius: 1500
+    radius: 2500
     aggregation: count
 
   - name: hhsize
     dataframe: households
     varname: persons
-    radius: 1500
+    radius: 2500
     aggregation: ave
     decay: flat
 
@@ -121,7 +138,7 @@ variable_definitions:
     varname: income
     filters:
     - income >= 0
-    radius: 1500
+    radius: 2500
     aggregation: ave
     decay: flat
     apply: np.log1p
@@ -129,7 +146,7 @@ variable_definitions:
   - name: max_industrial_far
     dataframe: parcels
     varname: parcel_far
-    radius: 5000
+    radius: 16400
     filters:
     - land_use_type_id == 5
     aggregation: max
@@ -137,7 +154,7 @@ variable_definitions:
   - name: max_office_far
     dataframe: parcels
     varname: parcel_far
-    radius: 5000
+    radius: 16400
     filters:
     - land_use_type_id == 3
     aggregation: max
@@ -145,16 +162,15 @@ variable_definitions:
   - name: max_retail_far
     dataframe: parcels
     varname: parcel_far
-    radius: 5000
+    radius: 16400
     filters:
     - land_use_type_id == 2
     aggregation: max
 
-
   - name: max_medical_far
     dataframe: parcels
     varname: parcel_far
-    radius: 5000
+    radius: 16400
     filters:
     - land_use_type_id == 8
     aggregation: max
@@ -162,19 +178,19 @@ variable_definitions:
   - name: jobs
     dataframe: jobs
     aggregation: count
-    radius: 1500
+    radius: 4920
 
   - name: retail_jobs
     dataframe: jobs
     filters:
     - sector_id == 5
     aggregation: count
-    radius: 1500
+    radius: 4920
 
   - name: node_r1500_sqft
     dataframe: parcels
     varname: parcel_sqft
-    radius: 1500
+    radius: 4920
     decay: flat
     aggregation: sum
  
@@ -185,7 +201,7 @@ variable_definitions:
     - 0 < sqft_price_res < 500
     decay: flat
     name: residential
-    radius: 2000
+    radius: 6560
     varname: sqft_price_res
 
   - aggregation: ave
@@ -194,7 +210,7 @@ variable_definitions:
     filters:
     - 21 <= building_type_id <= 71
     name: ave_nonres_sqft_price
-    radius: 2000
+    radius: 6560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -205,7 +221,7 @@ variable_definitions:
     filters:
     - general_type == "Retail"
     name: retail
-    radius: 2000
+    radius: 6560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -216,7 +232,7 @@ variable_definitions:
     filters:
     - general_type == "Office"
     name: office
-    radius: 2000
+    radius: 6560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -227,7 +243,7 @@ variable_definitions:
     filters:
     - general_type == "Industrial"
     name: industrial
-    radius: 2000
+    radius: 6560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -238,7 +254,7 @@ variable_definitions:
     filters:
     - general_type == "Medical"
     name: medical
-    radius: 2000
+    radius: 6560
     varname: sqft_price_nonres
 
   - aggregation: count
@@ -251,7 +267,7 @@ variable_definitions:
     filters:
     - sector_id == 5
     aggregation: count
-    radius: 15
+    radius: 3960
     decay: flat
     apply: np.log1p
 
@@ -260,7 +276,7 @@ variable_definitions:
     filters:
     - (sector_id == 16) | (sector_id == 5)
     aggregation: count
-    radius: 15
+    radius: 3960
     decay: flat
     apply: np.log1p
 
@@ -269,7 +285,7 @@ variable_definitions:
     filters:
     - sector_id == 5
     aggregation: count
-    radius: 30
+    radius: 7920
     decay: flat
     apply: np.log1p
 
@@ -278,7 +294,7 @@ variable_definitions:
     filters:
     - (sector_id == 16) | (sector_id == 5)
     aggregation: count
-    radius: 30
+    radius: 7920
     decay: flat
     apply: np.log1p
  
