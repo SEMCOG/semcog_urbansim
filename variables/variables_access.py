@@ -222,3 +222,12 @@ def percent_hh_with_children(nodes_walk):
 def housing_cost(nodes_walk):
     return (nodes_walk.residential * nodes_walk.ave_unit_sqft) / 5.0
 
+
+@orca.column("nodes_walk", cache=True, cache_scope="iteration")
+def percent_large_hhs(nodes_walk):
+    return np.log1p(nodes_walk.large_hhs / nodes_walk.households).fillna(0)
+
+
+@orca.column("nodes_walk", cache=True, cache_scope="iteration")
+def percent_young_hhs(nodes_walk):
+    return np.log1p(nodes_walk.young_hhs / nodes_walk.households).fillna(0)

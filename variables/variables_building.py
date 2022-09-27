@@ -19,7 +19,9 @@ def hedonic_id(buildings):
     hedonic_id = buildings.large_area_id * 100 + buildings.building_type_id
     hedonic_id.loc[
         # buildings.building_type_id.isin([24, 32, 42, 43, 52, 53, 61, 62])
-        buildings.building_type_id.isin([11, 13, 14, 32, 41, 42, 52, 53, 61, 63, 71, 84, 91, 92, 93, 94, 95])
+        buildings.building_type_id.isin(
+            [11, 13, 14, 32, 41, 42, 52, 53, 61, 63, 71, 84, 91, 92, 93, 94, 95]
+        )
     ] = buildings.building_type_id
     # hedonic_id.loc[hedonic_id == 571] = 371
     # hedonic_id.loc[hedonic_id == 584] = 384
@@ -382,8 +384,8 @@ def jobs_home_based(jobs):
 def jobs_non_home_based(jobs, buildings):
     jobs = jobs.to_frame(["building_id", "home_based_status"])
     return pd.Series(
-        index=buildings.index, 
-        data=jobs[jobs.home_based_status == 0].groupby("building_id").size()
+        index=buildings.index,
+        data=jobs[jobs.home_based_status == 0].groupby("building_id").size(),
     ).fillna(0)
 
 
