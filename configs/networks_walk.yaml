@@ -56,6 +56,26 @@ variable_definitions:
     radius: 2500
     aggregation: count
 
+  - name: large_hhs
+    dataframe: households
+    filters:
+    - persons > 4
+    add_fields:
+    - persons
+    varname: persons
+    radius: 2500
+    aggregation: count
+
+  - name: young_hhs
+    dataframe: households
+    filters:
+    - is_young == 1
+    add_fields:
+    - is_young
+    varname: is_young
+    radius: 2500
+    aggregation: count
+
   - name: midinc_hhs
     dataframe: households
     filters:
