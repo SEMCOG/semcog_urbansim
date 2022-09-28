@@ -158,6 +158,7 @@ def get_interaction_vars( df, varname):
     """
     if ":" in varname:
         var1, var2 = varname.split(":")
+        var1, var2 = var1.strip(), var2.strip()
         return (df[var1] * df[var2]).values.reshape(-1, 1)
     else:
         return df[varname].values.reshape(-1, 1)
@@ -193,9 +194,11 @@ if RELOAD:
     orca.run(["neighborhood_vars"])
     orca.run(["mcd_hu_sampling"])
 # TODO: get vars from vars list from last forecast
-    used_vars = pd.read_csv("/home/da/share/urbansim/RDF2050/model_improvements/2022_spring/HLCM_estimation/configs_hlcm_large_area_income_quartile.csv")
-    used_vars = used_vars["variables"]
-    hh_columns, b_columns = columns_in_vars(used_vars)
+    used_vars = pd.read_csv("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050.csv")
+    v1 = used_vars[~used_vars["new variables1"].isna()]["new variables1"].unique()
+    v2 = used_vars[~used_vars["new variables2"].isna()]["new variables2"].unique()
+    vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
+    hh_columns, b_columns = columns_in_vars(vars_to_use)
 
     hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
     b_filter_columns = ["large_area_id", "mcd_model_quota"]
@@ -251,7 +254,7 @@ if RELOAD:
     X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
     orig_var_names = X_df.columns
     # create interaction variables
-    newX_cols_name = used_vars.values 
+    newX_cols_name = vars_to_use
     X_wiv = np.array([])
     for varname in newX_cols_name:
         if X_wiv.size > 0:

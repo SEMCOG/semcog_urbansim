@@ -156,6 +156,15 @@ def logsum_job_low_income(zones, travel_data):
 def z_total_jobs(jobs):
     return jobs.zone_id.value_counts()
 
+@orca.column("zones", cache=True, cache_scope="iteration")
+def transit_jobs_60min(zones, travel_data):
+    td = travel_data.to_frame(["am_transit_total_time"]).reset_index()
+    zemp = zones.to_frame(["employment"])
+    temp = pd.merge(td, zemp, left_on="to_zone_id", right_index=True, how="left")
+    transit_jobs_60min = (
+        temp[temp.am_transit_total_time <= 60].groupby("from_zone_id").employment.sum()
+    )
+    return transit_jobs_60min
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def transit_jobs_50min(zones, travel_data):
