@@ -12,35 +12,37 @@ variable_definitions:
   - name: sum_residential_units
     dataframe: buildings
     varname: residential_units
-    radius: 1640
+    radius: 2500
     decay: flat
     aggregation: sum
 
   - name: sum_vacant_residential_units
     dataframe: buildings
+    add_fields:
+    - vacant_residential_units
     varname: vacant_residential_units
-    radius: 1640
+    radius: 2500
     decay: flat
     aggregation: sum
 
   - name: log_sum_residential_units
     dataframe: buildings
     varname: residential_units
-    radius: 1640
+    radius: 2500
     decay: flat
     apply: np.log1p
 
   - name: log_sum_nonresidential_units
     dataframe: buildings
     varname: job_spaces
-    radius: 1640
+    radius: 2500
     decay: flat
     apply: np.log1p
 
   - name: ave_lot_sqft
     dataframe: buildings
     varname: land_area
-    radius: 1640
+    radius: 2500
     apply: np.log1p
     decay: flat
     aggregation: ave
@@ -50,6 +52,7 @@ variable_definitions:
     varname: persons
     radius: 2500
     decay: flat
+    aggregation: sum
 
   - name: households
     dataframe: households
@@ -60,19 +63,13 @@ variable_definitions:
     dataframe: households
     filters:
     - persons > 4
-    add_fields:
-    - persons
-    varname: persons
     radius: 2500
     aggregation: count
 
   - name: young_hhs
     dataframe: households
     filters:
-    - is_young == 1
-    add_fields:
-    - is_young
-    varname: is_young
+    - age_of_head <= 35
     radius: 2500
     aggregation: count
 
