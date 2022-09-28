@@ -167,7 +167,7 @@ def ln_empden(nodes_walk):
 
 
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
-def vacancy_500m(nodes_walk):
+def vacancy_750m(nodes_walk):
     return (
         nodes_walk.sum_vacant_residential_units / nodes_walk.sum_residential_units
     ).fillna(0)
