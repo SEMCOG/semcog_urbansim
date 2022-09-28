@@ -74,9 +74,11 @@ def mcd_model_quota(households, buildings):
 
 thetas = pd.read_csv("out_theta_50.txt", index_col=0)
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
-b_filter_columns = ["large_area_id", "mcd_model_quota"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
-if False:
+# reload variables?
+RELOAD = False
+if RELOAD:
     orca.add_injectable('year', 2020)
     # config
     choice_column = "building_id"
@@ -139,7 +141,7 @@ m.alt_sample_size = 25
 # m.alt_filters = alts_filter
 
 # use top 40 variables
-selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:25]
+selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:35]
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
