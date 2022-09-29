@@ -175,6 +175,12 @@ def year_built(households, buildings):
 def mcd_model_quota(households, buildings):
     return misc.reindex(buildings.mcd_model_quota, households.building_id)
 
+used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050.xlsx", sheet_name=1)
+v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
+v2 = used_vars[~used_vars["new variables 2"].isna()]["new variables 2"].unique()
+vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
+# vars_to_use = used_vars[0].unique()
+
 # config
 choice_column = "building_id"
 hh_sample_size = 10000
@@ -194,10 +200,6 @@ if RELOAD:
     orca.run(["neighborhood_vars"])
     orca.run(["mcd_hu_sampling"])
 # TODO: get vars from vars list from last forecast
-    used_vars = pd.read_csv("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050.csv")
-    v1 = used_vars[~used_vars["new variables1"].isna()]["new variables1"].unique()
-    v2 = used_vars[~used_vars["new variables2"].isna()]["new variables2"].unique()
-    vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
     hh_columns, b_columns = columns_in_vars(vars_to_use)
 
     hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
@@ -265,8 +267,6 @@ if RELOAD:
     # print("orig_var_names",orig_var_names)
     # df to ndarray
     X = X_wiv
-    # only keep variables with variation
-    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
     # standardize X
     X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
@@ -294,6 +294,10 @@ else:
     cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
     theta, X, Y, Y_onehot, available_choice = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y'], cache_hdf['Y_onehot'], cache_hdf['available_choice']
     theta, X, Y, Y_onehot, available_choice = theta.values, X.values, Y.values, Y_onehot.values, available_choice.values
+    newX_cols_name = vars_to_use
+
+# only keep variables with variation
+used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
 
 # dtypes conversion
 X = {0:X, 1:X}
