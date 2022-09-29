@@ -231,3 +231,8 @@ def percent_large_hhs(nodes_walk):
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
 def percent_young_hhs(nodes_walk):
     return np.log1p(nodes_walk.young_hhs / nodes_walk.households).fillna(0)
+
+
+@orca.column("nodes_walk", cache=True, cache_scope="iteration")
+def percent_senior_hhs(nodes_walk):
+    return np.log1p(nodes_walk.senior_hhs / nodes_walk.households).fillna(0)
