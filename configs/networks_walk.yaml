@@ -69,7 +69,14 @@ variable_definitions:
   - name: young_hhs
     dataframe: households
     filters:
-    - age_of_head <= 35
+    - age_of_head < 35
+    radius: 2500
+    aggregation: count
+
+  - name: senior_hhs
+    dataframe: households
+    filters:
+    - age_of_head >= 65
     radius: 2500
     aggregation: count
 

@@ -184,6 +184,11 @@ def has_cars(households):
 
 
 @orca.column("households", cache=True, cache_scope="iteration")
+def no_car(households):
+    return (households.cars == 0).astype("int32")
+
+
+@orca.column("households", cache=True, cache_scope="iteration")
 def is_young(households):
     return (households.age_of_head < 35).astype("int32")
 

@@ -353,12 +353,27 @@ def building_age_le_10(buildings):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
+def building_age_le_20(buildings):
+    return (buildings.building_age < 20).astype("int32")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
 def b_is_pre_1945(buildings):
     return (buildings.year_built < 1945).astype("int32")
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
+def building_age_le_3(buildings):
+    return (buildings.building_age < 3).astype("int32")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
 def b_is_newerthan2015(buildings):
+    return (buildings.year_built > 2015).astype("int32")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def b_is_new(buildings):
     return (buildings.year_built > 2015).astype("int32")
 
 
