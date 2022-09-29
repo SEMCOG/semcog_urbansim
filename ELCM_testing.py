@@ -185,6 +185,7 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 choice_column = "building_id"
 hh_sample_size = 10000
 estimation_sample_size = 50
+LARGE_AREA_ID = 161
 # load variables
 RELOAD = True
 if RELOAD:
@@ -211,7 +212,7 @@ if RELOAD:
     # sampling hh
     # from the new move-ins, last 5-10 years
     # weighted by mcd_quota
-    hh = hh[hh.large_area_id == 125]
+    hh = hh[hh.large_area_id == LARGE_AREA_ID]
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
     hh = hh[hh.year_built > 2005]
@@ -318,6 +319,6 @@ t1 = time.time()
 out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
 out_theta.index = newX_cols_name[used_val]
 out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
-out_theta.to_csv('out_theta_%s.txt' % (estimation_sample_size))
+out_theta.to_csv('out_theta_%s_%s.txt' % (LARGE_AREA_ID, estimation_sample_size))
 
 print('done')

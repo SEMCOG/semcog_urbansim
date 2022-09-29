@@ -76,14 +76,15 @@ thetas = pd.read_csv("out_theta_50.txt", index_col=0)
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
+hh_sample_size = 10000
+estimation_sample_size = 50
+LARGE_AREA_ID = 161
 # reload variables?
 RELOAD = True
 if RELOAD:
     orca.add_injectable('year', 2020)
     # config
     choice_column = "building_id"
-    hh_sample_size = 10000
-    estimation_sample_size = 50
     # load variables
     orca.add_injectable("store", hdf)
     load_tables_to_store()
@@ -108,14 +109,14 @@ else:
     hh = pd.read_csv('hh.csv', index_col=0)
     b = pd.read_csv('b.csv', index_col=0)
 
-hh = hh[hh.large_area_id == 125]
+hh = hh[hh.large_area_id == LARGE_AREA_ID]
 hh = hh[hh.building_id > 1]
 hh = hh[hh.residential_units > 0]
 hh = hh[hh.year_built > 2005]
 hh = hh.fillna(0) # found 12 missing values in ln_income
 hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"]]+['building_id']]
 
-b = b[b.large_area_id == 125]
+b = b[b.large_area_id == LARGE_AREA_ID]
 b = b[b.residential_units > 0]
 # b = b[b.year_built > 2000]
 b = b[[col for col in b.columns if col not in b_filter_columns]]
@@ -156,8 +157,8 @@ m.alt_capacity = 'residential_units'
 # model estimation and save the results to default folder "configs/"
 
 m.fit()
-m.name = 'hlcm_city_test_125'
-with open("configs/hlcm_city_test_125.yaml", 'w') as f:
+m.name = 'hlcm_city_test_%s' % (LARGE_AREA_ID)
+with open("configs/hlcm_city_test_%s.yaml" % (LARGE_AREA_ID), 'w') as f:
     yaml.dump(m.to_dict(), f, default_flow_style=False)
 #mm.register(m)
 
