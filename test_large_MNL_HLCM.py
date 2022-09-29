@@ -77,7 +77,7 @@ hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_bu
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 # reload variables?
-RELOAD = False
+RELOAD = True
 if RELOAD:
     orca.add_injectable('year', 2020)
     # config
@@ -141,7 +141,7 @@ m.alt_sample_size = 25
 # m.alt_filters = alts_filter
 
 # use top 40 variables
-selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:35]
+selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:40]
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 

@@ -7,6 +7,12 @@ node_col: nodeid_drv
 variable_definitions:
 
 
+  - name: log_sum_15min_jobs
+    dataframe: jobs
+    radius: 15
+    decay: flat
+    apply: np.log1p
+
   - name: log_sum_30min_jobs
     dataframe: jobs
     radius: 30
