@@ -72,13 +72,14 @@ def year_built(households, buildings):
 def mcd_model_quota(households, buildings):
     return misc.reindex(buildings.mcd_model_quota, households.building_id)
 
-thetas = pd.read_csv("out_theta_50.txt", index_col=0)
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 hh_sample_size = 10000
 estimation_sample_size = 50
 LARGE_AREA_ID = 161
+
+thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
 # reload variables?
 RELOAD = True
 if RELOAD:
