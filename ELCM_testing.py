@@ -268,37 +268,39 @@ if RELOAD:
     # print("orig_var_names",orig_var_names)
     # df to ndarray
     X = X_wiv
-    # standardize X
-    X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
-    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
-    # shuffle X
-    shuffled_index = np.arange(Y.size)
-    np.random.shuffle(shuffled_index)
-    X = X[shuffled_index, :].astype(float)
-    Y = Y[shuffled_index].reshape(-1, 1)
-    # TODO: Y_onehot
-    Y_onehot = Y
-    # availablechoice is 1
-    available_choice = np.ones((X.shape[0], 1))
-
-    # theta: m x 1
-    theta = np.zeros((X.shape[1], 1))
     # cache input tables
     cache_hdf = pd.HDFStore('lcm_testing.hdf')
-    cache_hdf["theta"] = pd.DataFrame(theta)
     cache_hdf["X"] = pd.DataFrame(X)
     cache_hdf["Y"] = pd.DataFrame(Y)
-    cache_hdf["Y_onehot"] = pd.DataFrame(Y_onehot) 
-    cache_hdf["available_choice"] = pd.DataFrame(available_choice)
     cache_hdf.close()
 else:
     cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
-    theta, X, Y, Y_onehot, available_choice = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y'], cache_hdf['Y_onehot'], cache_hdf['available_choice']
-    theta, X, Y, Y_onehot, available_choice = theta.values, X.values, Y.values, Y_onehot.values, available_choice.values
+    X, Y = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y']
+    X, Y = X.values, Y.values
     newX_cols_name = vars_to_use
 
-# only keep variables with variation
+# col index with 0 variation
 used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
+unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val]) 
+print("Warning: variables with 0 variation")
+print(newX_cols_name[unused_val])
+
+# only keep variables with variation
+X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
+# standardize X
+X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
+# shuffle X
+shuffled_index = np.arange(Y.size)
+np.random.shuffle(shuffled_index)
+X = X[shuffled_index, :].astype(float)
+Y = Y[shuffled_index].reshape(-1, 1)
+# TODO: Y_onehot
+Y_onehot = Y
+# availablechoice is 1
+available_choice = np.ones((X.shape[0], 1))
+
+# theta: m x 1
+theta = np.zeros((X.shape[1], 1))
 
 # dtypes conversion
 X = {0:X, 1:X}
