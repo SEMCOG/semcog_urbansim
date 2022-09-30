@@ -81,7 +81,7 @@ LARGE_AREA_ID = 161
 
 thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
 # reload variables?
-RELOAD = True
+RELOAD = False
 if RELOAD:
     orca.add_injectable('year', 2020)
     # config
@@ -143,7 +143,12 @@ m.alt_sample_size = 25
 # m.alt_filters = alts_filter
 
 # use top 40 variables
+# filter variables
+# thetas = thetas[~thetas.index.str.contains('race')]
+
 selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:40]
+# add 10 least important variables
+# selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 
 m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
