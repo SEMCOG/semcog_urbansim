@@ -77,7 +77,7 @@ b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 161
+LARGE_AREA_ID = 3
 
 thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
 # reload variables?
@@ -146,7 +146,7 @@ m.alt_sample_size = 25
 # filter variables
 # thetas = thetas[~thetas.index.str.contains('race')]
 
-selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:40]
+selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:50]
 # add 10 least important variables
 # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 
@@ -164,7 +164,7 @@ m.alt_capacity = 'residential_units'
 
 m.fit()
 m.name = 'hlcm_city_test_%s' % (LARGE_AREA_ID)
-with open("configs/hlcm_city_test_%s.yaml" % (LARGE_AREA_ID), 'w') as f:
+with open("configs/hlcm_city_test_%s_%svars.yaml" % (LARGE_AREA_ID, len(selected_variables)), 'w') as f:
     yaml.dump(m.to_dict(), f, default_flow_style=False)
 #mm.register(m)
 

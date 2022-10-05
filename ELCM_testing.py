@@ -51,71 +51,6 @@ valid_b_vars = vars_config["buildings"]["valid variables"]
 valid_hh_vars = vars_config["households"]["valid variables"]
 
 
-vars_to_skip = [
-    "large_area_id",
-    "county_id",
-    "parcel_id",
-    "st_parcel_id",
-    "geoid",
-    "st_geoid",
-    "b_ln_parcels_parcel_far",
-    "parcels_parcel_far",
-    "parcels_st_parcel_far",
-    "parcels_census_bg_id",
-    "nodeid_drv",
-    "st_nodeid_drv",
-    "nodeid_walk",
-    "st_nodeid_walk",
-    "semmcd",
-    "city_id",
-    "census_bg_id",
-    "x",
-    "y",
-    "zone_id",
-    "improvement_value",
-    "market_value",
-    "landvalue",
-    "parcels_landvalue",
-    "b_ln_sqft_price_nonres",
-    "zones_tazce10_n",
-    "tazce10",
-    "parcels_zones_tazce10_n",
-    "parcels_st_zones_tazce10_n",
-    "st_parcels_zones_tazce10_n",
-    "st_parcels_st_zones_tazce10_n",
-    "st_zones_tazce10_n",
-    "parcels_land_use_type_id",
-    "st_parcels_land_use_type_id",
-    "st_parcels_max_dua",
-    "parcels_max_dua",
-    "parcels_max_height",
-    "st_parcels_max_height",
-    "parcels_school_id",
-    "st_parcels_school_id",
-    "parcels_sev_value",
-    "st_parcels_sev_value",
-    "parcels_centroid_x",
-    "st_parcels_centroid_x",
-    "parcels_centroid_y",
-    "st_parcels_centroid_y",
-    "parcels_school_id",
-    "st_parcels_school_id",
-    "parcels_land_cost",
-    "st_parcels_land_cost",
-    "b_ln_market_value",
-    "st_b_ln_market_value",
-    "general_type"
-]
-
-hh_vars_to_skip = [
-	
-]
-
-for var in valid_b_vars:
-    if "parcels_" + var in valid_b_vars:
-        vars_to_skip.append("parcels_" + var)
-
-
 def apply_filter_query(df, filters=None):
     if filters:
         if isinstance(filters, str):
@@ -185,7 +120,7 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 choice_column = "building_id"
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 161
+LARGE_AREA_ID = 3
 # load variables
 RELOAD = True
 if RELOAD:
