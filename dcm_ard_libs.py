@@ -54,8 +54,6 @@ def minimize(X = None, f = None, length = None, *args):
     SIG = 0.1
     RHO = SIG / 2
     
-    REL = 10
-    
     # Powell conditions. SIG is the maximum allowed absolute ratio between
 # previous and new slopes (derivatives in the search direction), thus setting
 # SIG to low (positive) values forces higher precision in the line-searches.
@@ -201,10 +199,8 @@ def minimize(X = None, f = None, length = None, *args):
             M = M - 1
             i = i + (length < 0)
             d3 = np.transpose(df3).dot(s)
-        # relax this constrain to keep the process going
         if (np.abs(d3) < - SIG * d0 and f3 < f0 + x3 * RHO * d0) :
         # if np.abs(d3) <= - SIG * d0:
-            if REL > 0: REL -= 1
             X = X + x3 * s
             f0 = f3
             if np.isclose(lastx3, x3):
