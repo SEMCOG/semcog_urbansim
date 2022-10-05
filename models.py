@@ -13,7 +13,8 @@ from urbansim_parcels import utils as parcel_utils
 
 import utils
 import lcm_utils
-import dataset
+
+# import dataset
 import variables
 from functools import reduce
 
@@ -1712,7 +1713,7 @@ def build_networks(parcels):
         {
             "name": "mgf14_ext_walk",
             "cost": "cost1",
-            "prev": 10560,  # 2 miles
+            "prev": 26500,  # 2 miles
             "net": "net_walk",
         },
         {

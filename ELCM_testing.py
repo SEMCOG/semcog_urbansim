@@ -73,13 +73,13 @@ def columns_in_vars(vars):
     for varname in vars:
         if ':' in varname:
             vs = varname.split(':')
-            hh_columns.append(vs[0])
-            b_columns.append(vs[1])
+            hh_columns.append(vs[0].strip())
+            b_columns.append(vs[1].strip())
         else:
             if varname in valid_hh_vars:
-                hh_columns.append(varname)
+                hh_columns.append(varname.strip())
             elif varname in valid_b_vars:
-                b_columns.append(varname)
+                b_columns.append(varname.strip())
             else:
                 print(varname, " not found in both hh and buildings table")
     return hh_columns, b_columns
@@ -110,7 +110,7 @@ def year_built(households, buildings):
 def mcd_model_quota(households, buildings):
     return misc.reindex(buildings.mcd_model_quota, households.building_id)
 
-used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050.xlsx", sheet_name=1)
+used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050_update3.xlsx", sheet_name=2)
 v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
 v2 = used_vars[~used_vars["new variables 2"].isna()]["new variables 2"].unique()
 vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
@@ -120,20 +120,22 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 choice_column = "building_id"
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 3
+LARGE_AREA_ID = 125
 # load variables
 RELOAD = True
 if RELOAD:
     orca.add_injectable("store", hdf)
     load_tables_to_store()
-    from notebooks.models_test import *
+    # from notebooks.models_test import *
+    import models
     import variables
     buildings = orca.get_table("buildings")
     households = orca.get_table("households")
+    orca.add_injectable('year', 2020)
+    orca.run(["build_networks_2050"])
+    orca.run(["neighborhood_vars"])
     # set year to 2050 
     orca.add_injectable('year', 2050)
-    orca.run(["build_networks"])
-    orca.run(["neighborhood_vars"])
     orca.run(["mcd_hu_sampling"])
 # TODO: get vars from vars list from last forecast
     hh_columns, b_columns = columns_in_vars(vars_to_use)
