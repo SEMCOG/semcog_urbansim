@@ -1080,7 +1080,13 @@ def scheduled_development_events(buildings, iter_var, events_addition):
 
 @orca.step()
 def scheduled_demolition_events(
-    buildings, parcels, households, jobs, iter_var, events_deletion, multi_parcel_buildings
+    buildings,
+    parcels,
+    households,
+    jobs,
+    iter_var,
+    events_deletion,
+    multi_parcel_buildings,
 ):
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
@@ -1115,11 +1121,16 @@ def scheduled_demolition_events(
         # Todo: parcel use need to be updated
         # Todo: parcel use need to be updated
         # get parcel_id if theres only one building in the parcel
-        b_with_multi_parcels = multi_parcel_buildings[multi_parcel_buildings.building_id.isin(drop_buildings.index)]
+        b_with_multi_parcels = multi_parcel_buildings[
+            multi_parcel_buildings.building_id.isin(drop_buildings.index)
+        ]
         parcels_idx_to_update = [
             pid
             # for pid in drop_buildings.parcel_id
-            for pid in set(drop_buildings.parcel_id.values.tolist() + b_with_multi_parcels.parcel_id.values.tolist())
+            for pid in set(
+                drop_buildings.parcel_id.values.tolist()
+                + b_with_multi_parcels.parcel_id.values.tolist()
+            )
             if pid not in new_buildings_table.parcel_id
         ]
         # update pct_undev to 0 if theres only one building in the parcel
@@ -1217,10 +1228,15 @@ def random_demolition_events(
     orca.add_table("jobs", jobs)
     # Todo: parcel use need to be updated
     # get parcel_id if theres only one building in the parcel
-    b_with_multi_parcels = multi_parcel_buildings[multi_parcel_buildings.building_id.isin(drop_buildings.index)]
+    b_with_multi_parcels = multi_parcel_buildings[
+        multi_parcel_buildings.building_id.isin(drop_buildings.index)
+    ]
     parcels_idx_to_update = [
         pid
-        for pid in set(drop_buildings.parcel_id.values.tolist() + b_with_multi_parcels.parcel_id.values.tolist())
+        for pid in set(
+            drop_buildings.parcel_id.values.tolist()
+            + b_with_multi_parcels.parcel_id.values.tolist()
+        )
         if pid not in new_buildings_table.parcel_id
     ]
     # update pct_undev to 0 if theres only one building in the parcel
@@ -1623,7 +1639,7 @@ def build_networks_2050(parcels):
             {
                 "name": "osm_roads_walk_2020",
                 "cost": "cost1",
-                "prev": 10560,  # 2 miles
+                "prev": 26500,  # 5 miles
                 "net": "net_walk",
             },
             {
@@ -1638,7 +1654,7 @@ def build_networks_2050(parcels):
             {
                 "name": "osm_roads_walk_2020",
                 "cost": "cost1",
-                "prev": 10560,  # 2 miles
+                "prev": 26500,  # 5 miles
                 "net": "net_walk",
             },
             {
