@@ -17,8 +17,6 @@ sys.path.append("/home/da/forecast_data_input")
 from data_checks.estimation_variables_2050 import *
 
 
-import utils
-
 # ++++++ estimation input preparation +++++++++++
 #%% load input data
 # data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
@@ -34,6 +32,7 @@ print("HDF data: ", hdf_last)
 
 orca.add_injectable("store", hdf)
 load_tables_to_store()
+import variables
 
 from notebooks.models_test import *
 @orca.column('households', cache=True, cache_scope='iteration')
@@ -50,11 +49,12 @@ orca.run(["neighborhood_vars"])
 
 #%%
 # create yaml
-theta_df = pd.read_csv('~/semcog_urbansim/out_theta.txt', index_col=0)
-varnames = theta_df.index[:20]
-model_expression = ' + '.join(varnames)
-chooser_filter = "large_area_id == 125 & building_id > 1 & residential_units > 0 & year_built > 2010"
+theta_df = pd.read_csv('~/semcog_urbansim/out_theta_50.txt', index_col=0)
+chooser_filter = "large_area_id == 125 & building_id > 1 & residential_units > 0 & year_built > 2005"
 alts_filter = "large_area_id == 125 & residential_units > 0"
+
+varnames = theta_df.index[:40]
+model_expression = ' + '.join(varnames)
 with open("./configs/hlcm_2050_testing.yaml", "w") as f:
     yaml.dump({
         'name': 'MNLDiscreteChoiceModel',
@@ -70,23 +70,42 @@ with open("./configs/hlcm_2050_testing.yaml", "w") as f:
         'model_expression': model_expression,
     }, f, default_flow_style=False)
 
+# create comparison yaml wtih 21 variables
+varnames = theta_df.index[:41]
+model_expression = ' + '.join(varnames)
+with open("./configs/hlcm_2050_testing_2.yaml", "w") as f:
+    yaml.dump({
+        'name': 'MNLDiscreteChoiceModel',
+        'model_type': 'discretechoice',
+        'choosers_fit_filters': chooser_filter,
+        'choosers_predict_filters': chooser_filter,
+        'alts_fit_filters': alts_filter,
+        'alts_predict_filters': alts_filter,
+        'choice_column': 'building_id',
+        'sample_size': 100,
+        'estimation_sample_size': 10000,
+        'prediction_sample_size': 100,
+        'model_expression': model_expression,
+    }, f, default_flow_style=False)
 # ++++++++++ estimate MNLDiscreteChoiceModel ++++++++++++++++++++
 ######## estimation demo ###########
 # %%
-m2 = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config("hlcm_2050_testing.yaml"))
-m2.probability_mode
+m1 = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config("hlcm_2050_testing.yaml"))
+# m1.probability_mode
+# compile data for estimation
+hh = orca.get_table("households").to_frame(m1.columns_used()).fillna(0)
+b = orca.get_table("buildings").to_frame(m1.columns_used()).fillna(0)
+m1.fit(hh, b, hh[m1.choice_column])
+m1.to_yaml("test_indiv1.yaml")  # save configs
 
 # %%
+m2 = MNLDiscreteChoiceModel.from_yaml(str_or_buffer=misc.config("hlcm_2050_testing_2.yaml"))
+# m2.probability_mode
 # compile data for estimation
 hh = orca.get_table("households").to_frame(m2.columns_used()).fillna(0)
 b = orca.get_table("buildings").to_frame(m2.columns_used()).fillna(0)
-
-# %%
 m2.fit(hh, b, hh[m2.choice_column])
-
-#%%
-m2.to_yaml("test_indiv1.yaml")  # save configs
-
+m2.to_yaml("test_indiv2.yaml")  # save configs
 
 # %%
 # ++++++++++++++++ simulation demo +++++++++++++
