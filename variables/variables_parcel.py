@@ -435,6 +435,30 @@ def walk_nearest_park(parcels, nodes_walk):
     return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
 
 
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def bike_nearest_grocery(parcels, nodes_walk):
+    if len(nodes_walk) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
+    return misc.reindex(nodes_walk.bike_nearest_grocery, parcels.nodeid_walk)
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def bike_nearest_library(parcels, nodes_walk):
+    if len(nodes_walk) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
+    return misc.reindex(nodes_walk.bike_nearest_library, parcels.nodeid_walk)
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def bike_nearest_park(parcels, nodes_walk):
+    if len(nodes_walk) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
+    return misc.reindex(nodes_walk.bike_nearest_park, parcels.nodeid_walk)
+
+
 @orca.column("parcels", cache=True, cache_scope="forever")
 def crime_ucr_rate(crime_rates):
     return crime_rates["ucr_crime_rate"]
