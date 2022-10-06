@@ -49,11 +49,11 @@ b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 125
+LARGE_AREA_ID = 161
 
 thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
 # reload variables?
-RELOAD = True
+RELOAD = False
 if RELOAD:
     # config
     choice_column = "building_id"
@@ -97,6 +97,8 @@ hh_cols_to_std = [col for col in hh.columns if col not in ['building_id']]
 # standardize hh
 hh[hh_cols_to_std] = (hh[hh_cols_to_std]-hh[hh_cols_to_std].mean())/hh[hh_cols_to_std].std()
 b_cols_to_std = [col for col in b.columns]
+
+b_cols_with_0_std = b.columns[b.std()==0]
 # standardize buildings
 b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
 # adding hh and b to orca
@@ -116,9 +118,11 @@ m.alt_sample_size = 50
 
 # use top 40 variables
 # filter variables
-# thetas = thetas[~thetas.index.str.contains('race')]
-
-selected_variables = thetas.theta.abs().sort_values(ascending=False).index[:40]
+# some variables has 0 std, need to remove them for the MNL to run
+v = thetas.theta.abs().sort_values(ascending=False).index
+v_wo_0_std = [col for col in v if all(
+    [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
+selected_variables = v_wo_0_std[:40]
 # add 10 least important variables
 # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 
