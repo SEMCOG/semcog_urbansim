@@ -22,9 +22,6 @@ def warn(*args, **kwargs):
     pass
 
 os.chdir("/home/da/semcog_urbansim")
-sys.path.append("/home/da/forecast_data_input")
-from data_checks.estimation_variables_2050 import *
-
 
 # import utils
 # data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
@@ -98,17 +95,6 @@ def get_interaction_vars( df, varname):
     else:
         return df[varname].values.reshape(-1, 1)
 
-@orca.column('households', cache=True, cache_scope='iteration')
-def residential_units(households, buildings):
-    return misc.reindex(buildings.residential_units, households.building_id)
-
-@orca.column('households', cache=True, cache_scope='iteration')
-def year_built(households, buildings):
-    return misc.reindex(buildings.year_built, households.building_id)
-
-@orca.column('households', cache=True, cache_scope='iteration')
-def mcd_model_quota(households, buildings):
-    return misc.reindex(buildings.mcd_model_quota, households.building_id)
 
 used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050_update3.xlsx", sheet_name=2)
 v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
@@ -124,11 +110,8 @@ LARGE_AREA_ID = 125
 # load variables
 RELOAD = True
 if RELOAD:
-    orca.add_injectable("store", hdf)
-    load_tables_to_store()
     # from notebooks.models_test import *
     import models
-    import variables
     buildings = orca.get_table("buildings")
     households = orca.get_table("households")
     orca.add_injectable('year', 2020)
@@ -249,6 +232,7 @@ available_choice = np.concatenate((available_choice, available_choice), axis=1)
 t0 = time.time()
 theta_optim_full = minimize(theta, neglog_DCM, -20000, X, Y, Y_onehot, available_choice)
 t1 = time.time()
+print("minimizer finished in ", t1-t0)
 # print([orig_var_names[used_val][i] for i in theta_optim_full.argsort()[0][:20]])
 # print(Y.argsort()[::-1][:20])
 # print(X.dot(theta_optim_full[0]).reshape(-1).argsort()[::-1][:20])

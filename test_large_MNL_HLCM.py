@@ -11,7 +11,7 @@ from urbansim.models import util
 import sys
 import time
 from tqdm import tqdm
-import time
+import yaml
 
 from dcm_ard_libs import minimize, neglog_DCM
 
@@ -25,22 +25,6 @@ def warn(*args, **kwargs):
     pass
 
 os.chdir("/home/da/semcog_urbansim")
-sys.path.append("/home/da/forecast_data_input")
-from data_checks.estimation_variables_2050 import *
-
-
-# import utils
-# data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
-data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
-hdf_list = [
-    (data_path + "/" + f)
-    for f in os.listdir(data_path)
-    if ("forecast_data_input" in f) & (f[-3:] == ".h5")
-]
-hdf_last = max(hdf_list, key=os.path.getctime)
-hdf = pd.HDFStore(hdf_last, "r")
-# hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
-print("HDF data: ", hdf_last)
 
 def columns_in_vars(vars):
     hh_columns, b_columns = [], []
@@ -60,18 +44,6 @@ def load_hlcm_df(hh_var, b_var):
     b = buildings.to_frame(b_var)
     return hh, b
             
-@orca.column('households', cache=True, cache_scope='iteration')
-def residential_units(households, buildings):
-    return misc.reindex(buildings.residential_units, households.building_id)
-
-@orca.column('households', cache=True, cache_scope='iteration')
-def year_built(households, buildings):
-    return misc.reindex(buildings.year_built, households.building_id)
-
-@orca.column('households', cache=True, cache_scope='iteration')
-def mcd_model_quota(households, buildings):
-    return misc.reindex(buildings.mcd_model_quota, households.building_id)
-
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
@@ -83,24 +55,19 @@ thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_s
 # reload variables?
 RELOAD = True
 if RELOAD:
-    orca.add_injectable('year', 2020)
     # config
     choice_column = "building_id"
     # load variables
-    orca.add_injectable("store", hdf)
-    load_tables_to_store()
-    # from notebooks.models_test import *
     import models
-    import variables
+    orca.add_injectable('year', 2020)
     buildings = orca.get_table("buildings")
     households = orca.get_table("households")
     orca.run(["build_networks_2050"])
     orca.run(["neighborhood_vars"])
-    orca.run(["mcd_hu_sampling"])
+    # orca.run(["mcd_hu_sampling"])
     # TODO: get vars from vars list from last forecast
     used_vars = thetas.index
     hh_columns, b_columns = columns_in_vars(used_vars)
-
 
     hh_var = hh_columns + hh_filter_columns
     b_var = b_columns + b_filter_columns
@@ -125,10 +92,14 @@ b = b[[col for col in b.columns if col not in b_filter_columns]]
 
 # (df-df.mean())/df.std()
 
+# remove extra columns
 hh_cols_to_std = [col for col in hh.columns if col not in ['building_id']]
+# standardize hh
 hh[hh_cols_to_std] = (hh[hh_cols_to_std]-hh[hh_cols_to_std].mean())/hh[hh_cols_to_std].std()
 b_cols_to_std = [col for col in b.columns]
+# standardize buildings
 b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
+# adding hh and b to orca
 orca.add_table('hh', hh)
 orca.add_table('b', b)
 
@@ -140,7 +111,7 @@ m.chooser_sample_size = 10000
 # Define the geographic alternatives agent is selecting amongst
 m.alternatives = ['b']
 m.choice_column = 'building_id'
-m.alt_sample_size = 25
+m.alt_sample_size = 50
 # m.alt_filters = alts_filter
 
 # use top 40 variables
