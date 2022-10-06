@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 table_dir = "~/semcog_urbansim/data"
 
 for name in [
+    "remi_pop_total",
     "persons",
     "parcels",
     "zones",
@@ -28,42 +29,28 @@ for name in [
     "large_areas",
     "building_types",
     "land_use_types",
-    "workers_labor_participation_rates",
-    "workers_employment_rates_by_large_area_age",
-    "workers_employment_rates_by_large_area",
+    # "workers_labor_participation_rates",
+    # "workers_employment_rates_by_large_area_age",
+    # "workers_employment_rates_by_large_area",
     "transit_stops",
     "crime_rates",
     "schools",
     "poi",
-    "group_quarters",
-    "group_quarters_control_totals",
-    "annual_household_control_totals",
-    # "events_addition", # load local csv below
+    # "group_quarters",
+    # "group_quarters_control_totals",
+    # "annual_household_control_totals",
+    "events_addition",
     "events_deletion",
     "refiner_events",
     "income_growth_rates",
+    "target_vacancies",
+    "target_vacancies_mcd",
+    "demolition_rates",    
+    "landmark_worksites",
 ]:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
 
-orca.add_table("events_addition", pd.read_csv(path.join(table_dir, "events_2050.csv")))
-orca.add_table(
-    "remi_pop_total",
-    pd.read_csv(
-        path.join(table_dir, "remi_hhpop_bylarge.csv"), index_col="large_area_id"
-    ),
-)
-orca.add_table(
-    "target_vacancies_mcd",
-    pd.read_excel(path.join(table_dir, "target_vacancies_mcd.xlsx"), index_col=0),
-)
-orca.add_table(
-    "target_vacancies_la", pd.read_excel(path.join(table_dir, "target_vacancies.xlsx"))
-)
-orca.add_table(
-    "demolition_rates",
-    pd.read_csv(path.join(table_dir, "DEMOLITION_RATES.csv"), index_col="city_id"),
-)
 # #35 change csv column name from b_city_id to city_id
 # orca.add_table('extreme_hu_controls', pd.read_csv(
 #     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
@@ -143,8 +130,10 @@ def buildings(store):
     df[
         "sp_filter"
     ] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    landmark_worksites = store["landmark_worksites"]
     df.loc[
-        store["landmark_worksites"].building_id, "sp_filter"
+        landmark_worksites[landmark_worksites.building_id.isin(
+            df.index)].building_id, "sp_filter"
     ] = -1  # set landmark building_id as negative for blocking
 
     df["event_id"] = 0  # also add event_id for event reference
@@ -216,7 +205,7 @@ def parcels(store, zoning):
     # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
     # Parcel is developable, but contains underground storage tanks
     pct_undev[zoning.is_developable == 2] += 10
-    parcels_df["pct_undev"] = pct_undev.clip(0, 100)
+    parcels_df["pct_undev"] = pct_undev.clip(0, 100).astype('int16')
     return parcels_df
 
 

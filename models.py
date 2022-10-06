@@ -14,7 +14,7 @@ from urbansim_parcels import utils as parcel_utils
 import utils
 import lcm_utils
 
-# import dataset
+import dataset
 import variables
 from functools import reduce
 
@@ -250,7 +250,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
 
 
 repm_step_names = []
-for repm_config in os.listdir("./configs/repm"):
+for repm_config in os.listdir(os.path.join(misc.models_dir(),"repm")):
     model_name = repm_config.split(".")[0]
 
     if repm_config.startswith("res"):
@@ -1626,7 +1626,7 @@ def build_networks_2050(parcels):
     import yaml
 
     # networks in semcog_networks.h5
-    with open(r"configs/available_networks_2050.yaml", "r") as stream:
+    with open("/home/da/semcog_urbansim/configs/available_networks_2050.yaml", "r") as stream:
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
     year = orca.get_injectable("year")
