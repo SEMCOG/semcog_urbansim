@@ -11,6 +11,7 @@ import sys
 import time
 from tqdm import tqdm
 import time
+import yaml
 
 from dcm_ard_libs import minimize, neglog_DCM
 
@@ -106,7 +107,7 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 choice_column = "building_id"
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 125
+LARGE_AREA_ID = 161
 # load variables
 RELOAD = True
 if RELOAD:
@@ -195,7 +196,7 @@ if RELOAD:
     cache_hdf.close()
 else:
     cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
-    X, Y = cache_hdf['theta'], cache_hdf['X'], cache_hdf['Y']
+    X, Y = cache_hdf['X'], cache_hdf['Y']
     X, Y = X.values, Y.values
     newX_cols_name = vars_to_use
 
