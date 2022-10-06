@@ -314,3 +314,15 @@ def semmcd(group_quarters, buildings):
 @orca.column("group_quarters", cache=True, cache_scope="iteration")
 def large_area_id(group_quarters, buildings):
     return misc.reindex(buildings.large_area_id, group_quarters.building_id)
+
+@orca.column('households', cache=True, cache_scope='iteration')
+def residential_units(households, buildings):
+    return misc.reindex(buildings.residential_units, households.building_id)
+
+@orca.column('households', cache=True, cache_scope='iteration')
+def year_built(households, buildings):
+    return misc.reindex(buildings.year_built, households.building_id)
+
+@orca.column('households', cache=True, cache_scope='iteration')
+def mcd_model_quota(households, buildings):
+    return misc.reindex(buildings.mcd_model_quota, households.building_id)
