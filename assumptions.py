@@ -9,7 +9,7 @@ import verify_data_structure
 
 @orca.injectable("year")
 def year():
-    default_year = 2015
+    default_year = 2020
     try:
         iter_var = orca.get_injectable("iter_var")
         if iter_var is not None:
@@ -125,13 +125,23 @@ np.random.seed(seed)
 
 def verify():
     # hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear_py2.h5"), mode="r")
-    hdf_store = pd.HDFStore(
-        "~/semcog_urbansim/data/all_semcog_data_02-02-18-final-forecast_newbid.h5",
-        mode="r",
-    )
+    # hdf_store = pd.HDFStore(
+    #     "~/semcog_urbansim/data/all_semcog_data_02-02-18-final-forecast_newbid.h5",
+    #     mode="r",
+    # )
+    data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
+    hdf_list = [
+        (data_path + "/" + f)
+        for f in os.listdir(data_path)
+        if ("forecast_data_input" in f) & (f[-3:] == ".h5")
+    ]
+    hdf_last = max(hdf_list, key=os.path.getctime)
+    hdf_store = pd.HDFStore(hdf_last, "r")
+    # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
+    print("HDF data: ", hdf_last)
 
     new = verify_data_structure.yaml_from_store(hdf_store)
-    with open(r"configs/data_structure.yaml", "w") as out:
+    with open("/home/da/semcog_urbansim/configs/data_structure.yaml", "w") as out:
         out.write(new)
 
     return hdf_store
