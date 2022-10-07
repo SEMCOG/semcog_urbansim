@@ -107,9 +107,11 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 choice_column = "building_id"
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 161
+LARGE_AREA_ID = 147
+hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 # load variables
-RELOAD = True
+RELOAD = False
 if RELOAD:
     # from notebooks.models_test import *
     import models
@@ -124,87 +126,81 @@ if RELOAD:
 # TODO: get vars from vars list from last forecast
     hh_columns, b_columns = columns_in_vars(vars_to_use)
 
-    hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
-    b_filter_columns = ["large_area_id", "mcd_model_quota"]
 
     hh_var = hh_columns + hh_filter_columns
     b_var = b_columns + b_filter_columns
     hh, b = load_hlcm_df(hh_var, b_var)
-    # sampling hh
-    # from the new move-ins, last 5-10 years
-    # weighted by mcd_quota
-    hh = hh[hh.large_area_id == LARGE_AREA_ID]
-    hh = hh[hh.building_id > 1]
-    hh = hh[hh.residential_units > 0]
-    hh = hh[hh.year_built > 2005]
-    hh["mcd_model_quota"] += 1 # add 1 to all hh's mcd_model_quota for weights
-    hh = hh.sample(hh_sample_size, weights="mcd_model_quota")
-    # hh = hh.sample(hh_sample_size)
-    picked_bid = hh["building_id"]
-    hh = hh.reset_index()
-    hh = hh.fillna(0)
-    # sampling b
-    # building age < 10
-    # weighted by mcd_quota
-    # b = b[b.large_area_id == 125]
-    # b = b[b.residential_units > 0]
-    # b = b[b.year_built > 2005]
-    # b["mcd_model_quota"] += 1 # add 1 to all buildings's mcd_model_quota for weights
-    # sample buildings from the chosen HH's buildings list
-    uhh_id = hh.building_id.unique()
-    sampled_b_id = []
-    for _ in range(estimation_sample_size-1):
-        for j in hh.building_id:
-           sampled_b_id.append(np.random.choice(uhh_id[uhh_id!=j])) 
-    # b_sample = b[~b.index.isin(hh.building_id)].sample( # replace sample or not
-    #     (estimation_sample_size-1)*hh_sample_size, replace=False, weights="mcd_model_quota")
-    b_sample = b.loc[sampled_b_id]
-    b_sample = pd.concat([b.loc[hh.building_id], b_sample])
-    b_sample = b_sample.reset_index()
-    b_sample = b_sample.fillna(0)
-    # remove unnecessary col in HH
-    hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"]]]
-    # remove unnecessary col in buildings
-    b_sample = b_sample[[col for col in b_sample.columns if col not in b_filter_columns]]
-
-    X_df = pd.concat(
-        [pd.concat([hh]*estimation_sample_size).reset_index(drop=True), b_sample], axis=1)
-    # Y: 1 for the building picked
-    # Y = X_df.building_id.isin(picked_bid).astype(int).values
-    # Y: set first hh_sample_size item 1
-    Y = np.zeros((hh_sample_size*estimation_sample_size,1), dtype=int)
-    Y[:hh_sample_size,0] = 1
-    # remove extra cols
-    X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
-    orig_var_names = X_df.columns
-    # create interaction variables
-    newX_cols_name = vars_to_use
-    X_wiv = np.array([])
-    for varname in newX_cols_name:
-        if X_wiv.size > 0:
-            X_wiv = np.concatenate((X_wiv, get_interaction_vars(X_df, varname)), axis=1)
-        else:
-            X_wiv = get_interaction_vars(X_df, varname)
-            
-    # print("orig_var_names",orig_var_names)
-    # df to ndarray
-    X = X_wiv
-    # cache input tables
-    cache_hdf = pd.HDFStore('lcm_testing.hdf')
-    cache_hdf["X"] = pd.DataFrame(X)
-    cache_hdf["Y"] = pd.DataFrame(Y)
-    cache_hdf.close()
+    hh.to_csv('hh.csv')
+    b.to_csv('b.csv')
 else:
-    cache_hdf = pd.HDFStore('lcm_testing.hdf', 'r')
-    X, Y = cache_hdf['X'], cache_hdf['Y']
-    X, Y = X.values, Y.values
-    newX_cols_name = vars_to_use
+    hh = pd.read_csv('hh.csv', index_col=0)
+    b = pd.read_csv('b.csv', index_col=0)
+
+# sampling hh
+# from the new move-ins, last 5-10 years
+# weighted by mcd_quota
+hh = hh[hh.large_area_id == LARGE_AREA_ID]
+hh = hh[hh.building_id > 1]
+hh = hh[hh.residential_units > 0]
+hh = hh[hh.year_built > 2005]
+hh["mcd_model_quota"] += 1 # add 1 to all hh's mcd_model_quota for weights
+# if total number of hh is less than hh_sample_size
+hh_sample_size = min(hh_sample_size, hh.shape[0])
+hh = hh.sample(hh_sample_size, weights="mcd_model_quota")
+# hh = hh.sample(hh_sample_size)
+picked_bid = hh["building_id"]
+hh = hh.reset_index()
+hh = hh.fillna(0)
+# sampling b
+# building age < 10
+# weighted by mcd_quota
+# b = b[b.large_area_id == 125]
+# b = b[b.residential_units > 0]
+# b = b[b.year_built > 2005]
+# b["mcd_model_quota"] += 1 # add 1 to all buildings's mcd_model_quota for weights
+# sample buildings from the chosen HH's buildings list
+uhh_id = hh.building_id.unique()
+sampled_b_id = []
+for _ in range(estimation_sample_size-1):
+    for j in hh.building_id:
+        sampled_b_id.append(np.random.choice(uhh_id[uhh_id!=j])) 
+# b_sample = b[~b.index.isin(hh.building_id)].sample( # replace sample or not
+#     (estimation_sample_size-1)*hh_sample_size, replace=False, weights="mcd_model_quota")
+b_sample = b.loc[sampled_b_id]
+b_sample = pd.concat([b.loc[hh.building_id], b_sample])
+b_sample = b_sample.reset_index()
+b_sample = b_sample.fillna(0)
+# remove unnecessary col in HH
+hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"]]]
+# remove unnecessary col in buildings
+b_sample = b_sample[[col for col in b_sample.columns if col not in b_filter_columns]]
+
+X_df = pd.concat(
+    [pd.concat([hh]*estimation_sample_size).reset_index(drop=True), b_sample], axis=1)
+# Y: 1 for the building picked
+# Y = X_df.building_id.isin(picked_bid).astype(int).values
+# Y: set first hh_sample_size item 1
+Y = np.zeros((hh_sample_size*estimation_sample_size,1), dtype=int)
+Y[:hh_sample_size,0] = 1
+# remove extra cols
+X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
+orig_var_names = X_df.columns
+# create interaction variables
+newX_cols_name = vars_to_use
+X_wiv = np.array([])
+for varname in newX_cols_name:
+    if X_wiv.size > 0:
+        X_wiv = np.concatenate((X_wiv, get_interaction_vars(X_df, varname)), axis=1)
+    else:
+        X_wiv = get_interaction_vars(X_df, varname)
+        
+# print("orig_var_names",orig_var_names)
+# df to ndarray
+X = X_wiv
 
 # col index with 0 variation
 used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
 unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val]) 
-print("Warning: variables with 0 variation")
-print(newX_cols_name[unused_val])
 
 # only keep variables with variation
 X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
@@ -231,7 +227,7 @@ Y_onehot = np.concatenate((Y_onehot, 1-Y_onehot), axis=1)
 available_choice = np.concatenate((available_choice, available_choice), axis=1)
 
 t0 = time.time()
-theta_optim_full = minimize(theta, neglog_DCM, -20000, X, Y, Y_onehot, available_choice)
+theta_optim_full = minimize(theta, neglog_DCM, -10000, X, Y, Y_onehot, available_choice)
 t1 = time.time()
 print("minimizer finished in ", t1-t0)
 # print([orig_var_names[used_val][i] for i in theta_optim_full.argsort()[0][:20]])
@@ -245,4 +241,6 @@ out_theta.index = newX_cols_name[used_val]
 out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
 out_theta.to_csv('out_theta_%s_%s.txt' % (LARGE_AREA_ID, estimation_sample_size))
 
+print("Warning: variables with 0 variation")
+print(newX_cols_name[unused_val])
 print('done')

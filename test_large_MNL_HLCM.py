@@ -44,19 +44,20 @@ def load_hlcm_df(hh_var, b_var):
     b = buildings.to_frame(b_var)
     return hh, b
             
-hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
-b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 hh_sample_size = 10000
 estimation_sample_size = 50
-LARGE_AREA_ID = 161
+LARGE_AREA_ID = 147
+number_of_vars_to_use = 40
+choice_column = "building_id"
+hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
 # reload variables?
 RELOAD = False
 if RELOAD:
     # config
-    choice_column = "building_id"
     # load variables
     import models
     orca.add_injectable('year', 2020)
@@ -107,13 +108,13 @@ orca.add_table('b', b)
 
 m = LargeMultinomialLogitStep()
 m.choosers = ['hh']
-m.chooser_sample_size = 10000
+m.chooser_sample_size = min(hh_sample_size, hh.shape[0])
 # m.chooser_filters = chooser_filter
 
 # Define the geographic alternatives agent is selecting amongst
 m.alternatives = ['b']
-m.choice_column = 'building_id'
-m.alt_sample_size = 50
+m.choice_column = choice_column
+m.alt_sample_size = estimation_sample_size
 # m.alt_filters = alts_filter
 
 # use top 40 variables
@@ -122,7 +123,7 @@ m.alt_sample_size = 50
 v = thetas.theta.abs().sort_values(ascending=False).index
 v_wo_0_std = [col for col in v if all(
     [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
-selected_variables = v_wo_0_std[:40]
+selected_variables = v_wo_0_std[:number_of_vars_to_use]
 # add 10 least important variables
 # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 
