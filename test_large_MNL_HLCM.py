@@ -141,7 +141,7 @@ m.alt_capacity = 'residential_units'
 
 m.fit()
 m.name = 'hlcm_city_test_%s' % (LARGE_AREA_ID)
-with open("configs/hlcm_city_test_%s_%svars.yaml" % (LARGE_AREA_ID, len(selected_variables)), 'w') as f:
+with open("configs/hlcm_%s_%svars.yaml" % (LARGE_AREA_ID, len(selected_variables)), 'w') as f:
     yaml.dump(m.to_dict(), f, default_flow_style=False)
 #mm.register(m)
 

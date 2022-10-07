@@ -1,0 +1,131 @@
+alt_capacity: residential_units
+alt_filters: null
+alt_sample_size: 50
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 5880
+chooser_size: null
+choosers: hh
+constrained_choices: true
+fitted_parameters:
+- 0.11383318873789809
+- 0.02131796467391233
+- -0.08874101356371705
+- 0.08727262171743234
+- -0.29970264782974976
+- -0.031402989278647965
+- -0.2826862686181686
+- 0.3538936898699881
+- -0.08765583254262738
+- 0.3583452862576698
+- 0.09994087396793362
+- 0.09372983665984386
+- 0.049249387768999155
+- 0.03948803008784378
+- 2.183696827361117
+- 0.02309381340186896
+- 2.115644110197506
+- 0.13765419661114314
+- -0.04603405276377949
+- 0.14333599390063376
+- 0.3944873904170369
+- 0.0868293040930769
+- -1.0063568581382825
+- 0.10836037922688659
+- -0.03059595993383004
+- 0.4197547456150972
+- 0.0009739402033861602
+- 0.0050895620903671016
+- -0.06842678433225939
+- -0.015349987908649668
+- -0.036174597792651524
+- -0.028188535824479204
+- -0.09456384010897187
+- 0.16192656965769447
+- 0.004176893408871817
+- 0.23234620850524987
+- -0.027220927567734796
+- -0.06902442865605489
+- -3.9782936084285265
+- -0.09526201371489983
+max_iter: null
+mct_intx_ops: null
+model_expression: has_workers:nodes_drv_log_sum_30min_jobs + has_workers:nodes_drv_log_sum_15min_jobs
+  + has_workers:nodes_drv_log_sum_45min_jobs + building_type_id_is_82 + building_type_id_is_81
+  + parcels_total_units + nodes_walk_population + b_ln_parcel_sqft + has_workers:zones_a_ln_emp_50min_transit
+  + nodes_drv_log_sum_60min_jobs + building_type_id_is_83 + has_workers:zones_transit_jobs_60min
+  + high_income:nodes_walk_highinc_hhs + is_race3:nodes_walk_race_3_hhs + zones_logsum_job_high_income
+  + nodes_drv_log_sum_15min_retail_jobs + zones_a_ln_emp_26min_drive_alone + mid_income:nodes_walk_midinc_hhs
+  + no_car:walk_nearest_grocery + low_income:nodes_walk_lowinc_hhs + nodes_walk_ave_lot_sqft
+  + is_race1:nodes_walk_race_1_hhs + nodes_drv_log_sum_30min_jobs + low_income:jobs_within_30_min
+  + has_workers:zones_transit_jobs_50min + zones_transit_jobs_50min + ln_income:improvement_value
+  + ln_income:nodes_walk_ave_lot_sqft + no_car:bike_nearest_park + no_car:bike_nearest_grocery
+  + zones_a_ln_retail_emp_15min_drive_alone + high_income:jobs_within_30_min + mid_income:jobs_within_30_min
+  + nodes_walk_retail_jobs + no_car:walk_nearest_library + drv_nearest_hospital +
+  mid_income:zones_logsum_job_mid_income + low_income:zones_logsum_job_low_income
+  + zones_logsum_pop_high_income + mid_income:zones_logsum_pop_mid_income - 1
+name: hlcm_city_test_5
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          5,880\nModel:         Multinomial\
+  \ Logit   Df Residuals:              5,840\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     40\nDate:                 2022-10-07   Pseudo R-squ.:\
+  \             0.706\nTime:                      17:00   Pseudo R-bar-squ.:     \
+  \    0.704\nAIC:                  13,619.697   Log-Likelihood:       -6,769.848\n\
+  BIC:                  13,886.869   LL-Null:             -23,002.695\n===================================================================================================\n\
+  \                                              coef         std err         z  \
+  \   P>|z|   Conf. Int.\n---------------------------------------------------------------------------------------------------\n\
+  has_workers:nodes_drv_log_sum_30min_jobs    0.1138           0.081     1.400   \
+  \  0.162             \nhas_workers:nodes_drv_log_sum_15min_jobs    0.0213      \
+  \     0.076     0.279     0.780             \nhas_workers:nodes_drv_log_sum_45min_jobs\
+  \   -0.0887           0.096    -0.921     0.357             \nbuilding_type_id_is_82\
+  \                      0.0873           0.034     2.560     0.010             \n\
+  building_type_id_is_81                     -0.2997           0.044    -6.805   \
+  \  0.000             \nparcels_total_units                        -0.0314      \
+  \     0.007    -4.428     0.000             \nnodes_walk_population            \
+  \          -0.2827           0.029    -9.860     0.000             \nb_ln_parcel_sqft\
+  \                            0.3539           0.010    33.867     0.000        \
+  \     \nhas_workers:zones_a_ln_emp_50min_transit   -0.0877           0.037    -2.366\
+  \     0.018             \nnodes_drv_log_sum_60min_jobs                0.3583   \
+  \        0.108     3.321     0.001             \nbuilding_type_id_is_83        \
+  \              0.0999           0.027     3.737     0.000             \nhas_workers:zones_transit_jobs_60min\
+  \        0.0937           0.040     2.338     0.019             \nhigh_income:nodes_walk_highinc_hhs\
+  \          0.0492           0.011     4.300     0.000             \nis_race3:nodes_walk_race_3_hhs\
+  \              0.0395           0.004    11.222     0.000             \nzones_logsum_job_high_income\
+  \                2.1837           0.085    25.769     0.000             \nnodes_drv_log_sum_15min_retail_jobs\
+  \         0.0231           0.037     0.619     0.536             \nzones_a_ln_emp_26min_drive_alone\
+  \            2.1156           0.091    23.351     0.000             \nmid_income:nodes_walk_midinc_hhs\
+  \            0.1377           0.013    10.606     0.000             \nno_car:walk_nearest_grocery\
+  \                -0.0460           0.016    -2.805     0.005             \nlow_income:nodes_walk_lowinc_hhs\
+  \            0.1433           0.013    11.048     0.000             \nnodes_walk_ave_lot_sqft\
+  \                     0.3945           0.013    30.942     0.000             \n\
+  is_race1:nodes_walk_race_1_hhs              0.0868           0.009    10.059   \
+  \  0.000             \nnodes_drv_log_sum_30min_jobs               -1.0064      \
+  \     0.123    -8.170     0.000             \nlow_income:jobs_within_30_min    \
+  \           0.1084   1,223,243.180     0.000     1.000             \nhas_workers:zones_transit_jobs_50min\
+  \       -0.0306           0.039    -0.783     0.434             \nzones_transit_jobs_50min\
+  \                    0.4198           0.031    13.601     0.000             \nln_income:improvement_value\
+  \                 0.0010           0.003     0.377     0.706             \nln_income:nodes_walk_ave_lot_sqft\
+  \           0.0051           0.008     0.646     0.518             \nno_car:bike_nearest_park\
+  \                   -0.0684           0.037    -1.833     0.067             \nno_car:bike_nearest_grocery\
+  \                -0.0153           0.042    -0.367     0.714             \nzones_a_ln_retail_emp_15min_drive_alone\
+  \    -0.0362           0.053    -0.683     0.495             \nhigh_income:jobs_within_30_min\
+  \             -0.0282     700,770.715    -0.000     1.000             \nmid_income:jobs_within_30_min\
+  \              -0.0946   1,192,817.406    -0.000     1.000             \nnodes_walk_retail_jobs\
+  \                      0.1619           0.017     9.276     0.000             \n\
+  no_car:walk_nearest_library                 0.0042           0.020     0.209   \
+  \  0.834             \ndrv_nearest_hospital                        0.2323      \
+  \     0.032     7.301     0.000             \nmid_income:zones_logsum_job_mid_income\
+  \     -0.0272           0.013    -2.147     0.032             \nlow_income:zones_logsum_job_low_income\
+  \     -0.0690           0.012    -5.855     0.000             \nzones_logsum_pop_high_income\
+  \               -3.9783           0.156   -25.537     0.000             \nmid_income:zones_logsum_pop_mid_income\
+  \     -0.0953           0.024    -3.949     0.000             \n==================================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
