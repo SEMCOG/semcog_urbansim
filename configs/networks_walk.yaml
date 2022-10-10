@@ -211,6 +211,132 @@ variable_definitions:
     aggregation: count
     radius: 4920
 
+  - name: sector1_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 1
+    aggregation: count
+    radius: 4920
+
+  - name: sector2_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 2
+    aggregation: count
+    radius: 4920
+
+  - name: sector3_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 3
+    aggregation: count
+    radius: 4920
+
+  - name: sector4_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 4
+    aggregation: count
+    radius: 4920
+
+  - name: sector5_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 5
+    aggregation: count
+    radius: 4920
+
+  - name: sector6_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 6
+    aggregation: count
+    radius: 4920
+
+  - name: sector7_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 7
+    aggregation: count
+    radius: 4920
+
+  - name: sector8_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 8
+    aggregation: count
+    radius: 4920
+
+  - name: sector9_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 9
+    aggregation: count
+    radius: 4920
+
+  - name: sector10_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 10
+    aggregation: count
+    radius: 4920
+
+  - name: sector11_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 11
+    aggregation: count
+    radius: 4920
+
+  - name: sector12_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 12
+    aggregation: count
+    radius: 4920
+
+  - name: sector13_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 13
+    aggregation: count
+    radius: 4920
+
+  - name: sector14_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 14
+    aggregation: count
+    radius: 4920
+
+  - name: sector15_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 15
+    aggregation: count
+    radius: 4920
+
+  - name: sector16_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 16
+    aggregation: count
+    radius: 4920
+
+  - name: sector17_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 17
+    aggregation: count
+    radius: 4920
+
+  - name: sector18_jobs
+    dataframe: jobs
+    filters:
+    - sector_id == 18
+    aggregation: count
+    radius: 4920
+
   - name: node_r1500_sqft
     dataframe: parcels
     varname: parcel_sqft
