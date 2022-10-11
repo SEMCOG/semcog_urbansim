@@ -53,10 +53,13 @@ def load_hlcm_df(hh_var, b_var):
 
 hh_sample_size = 10000
 estimation_sample_size = 50
+job_sample_size = 5000
+job_estimation_sample_size = 50
 # LARGE_AREA_ID = 147
 # number_of_vars_to_use = 40
 choice_column = "building_id"
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
+job_filter_columns = ["building_id", "slid", "home_based_status"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 # reload variables?
@@ -138,13 +141,70 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
     m.alt_capacity = 'residential_units'
     # m.out_chooser_filters = ['building_id == -1']
 
-
-    # %%
-    # model estimation and save the results to default folder "configs/"
-
     m.fit()
     m.name = 'hlcm_city_test_%s' % (LARGE_AREA_ID)
     with open("configs/hlcm_2050/hlcm_%s_%svars.yaml" % (LARGE_AREA_ID, len(selected_variables)), 'w') as f:
+        yaml.dump(m.to_dict(), f, default_flow_style=False)
+    #mm.register(m)
+
+    print('done')
+
+def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
+    thetas = pd.read_csv("out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
+    job = job_region[job_region.slid == SLID]
+    job = job[job.building_id > 1]
+    job = job[job.home_based_status == 0]
+    job = job.fillna(0) # found 12 missing values in ln_income
+    job = job[[col for col in job.columns if col not in job_filter_columns+["job_id"]]+['building_id']]
+
+    b = b_region[b_region.large_area_id == SLID % 1000]
+    b = b[b.non_residential_sqft > 0]
+    b = b[[col for col in b.columns if col not in b_filter_columns]]
+
+    # remove extra columns
+    job_cols_to_std = [col for col in job.columns if col not in ['building_id']]
+    # standardize job
+    job[job_cols_to_std] = (job[job_cols_to_std]-job[job_cols_to_std].mean())/job[job_cols_to_std].std()
+    b_cols_to_std = [col for col in b.columns]
+
+    b_cols_with_0_std = b.columns[b.std()==0]
+    # standardize buildings
+    b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
+    # adding job and b to orca
+    orca.add_table('job', job)
+    orca.add_table('b', b)
+
+    m = LargeMultinomialLogitStep()
+    m.choosers = ['job']
+    m.chooser_sample_size = min(job_sample_size, job.shape[0])
+    # m.chooser_filters = chooser_filter
+
+    # Define the geographic alternatives agent is selecting amongst
+    m.alternatives = ['b']
+    m.choice_column = choice_column
+    m.alt_sample_size = job_estimation_sample_size
+    # m.alt_filters = alts_filter
+
+    # use top 40 variables
+    # filter variables
+    # some variables has 0 std, need to remove them for the MNL to run
+    v = thetas.theta.abs().sort_values(ascending=False).index
+    v_wo_0_std = [col for col in v if all(
+        [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
+    selected_variables = v_wo_0_std[:number_of_vars_to_use]
+    # add 10 least important variables
+    # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
+
+    m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
+
+    # m.out_choosers = 'hh161' # if different from estimation
+    # m.out_alternatives = 'bb161' # if different from estimation
+    m.constrained_choices = False
+    # m.out_chooser_filters = ['building_id == -1']
+
+    m.fit()
+    m.name = 'elcm_%s' % (SLID)
+    with open("configs/elcm_2050/elcm_%s_%svars.yaml" % (SLID, len(selected_variables)), 'w') as f:
         yaml.dump(m.to_dict(), f, default_flow_style=False)
     #mm.register(m)
 
