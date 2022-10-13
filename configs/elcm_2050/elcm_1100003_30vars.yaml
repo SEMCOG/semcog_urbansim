@@ -1,0 +1,103 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.3365431767430014
+- -0.40877552715898874
+- 0.4659719027669688
+- -5.119523691485618
+- -1.2213986262875265
+- -0.06158855374693958
+- 0.11607900892915923
+- 7.363585845200673
+- 1.8996830986063509
+- -0.2112280278034841
+- -1.5408572196359633
+- 1.4533180966263355
+- -3.536622204490381
+- 0.06619469563336494
+- -0.5072984111254374
+- -1.5749066952192985
+- -1.4869062361380496
+- 0.1515187965221491
+- -0.04656084105887329
+- -0.27944754893161433
+- 0.06584564444572412
+- -0.1851936211671616
+- 0.2731208350728096
+- -0.5199234920281612
+- -1.5353174693692306
+- -0.01918062095445174
+- -0.01918062095445174
+- 0.09093944964415424
+- -3.44509142234459
+- -0.10302964772272756
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector11_jobs + nodes_walk_sector9_jobs + b_total_jobs
+  + nodes_walk_sector6_jobs + zones_logsum_job_high_income + nodes_walk_sector12_jobs
+  + nodes_walk_sector10_jobs + b_ln_non_residential_sqft + b_ln_sqft_price_nonres
+  + nodes_walk_sector3_jobs + building_type_id_is_52 + zones_logsum_pop_high_income
+  + b_ln_building_sqft + parcels_land_cost + improvement_value + b_ln_land_area +
+  parcels_acres + building_type_id_is_65 + building_type_id_is_81 + sqft_price_nonres
+  + building_type_id_is_53 + stories + building_type_id_is_51 + zones_logsum_pop_low_income
+  + building_type_id_is_63 + nodes_walk_sector5_jobs + nodes_walk_retail_jobs + nodes_walk_sector4_jobs
+  + parcels_total_sqft + nodes_drv_log_sum_45min_jobs - 1
+name: elcm_1100003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                970\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     30\nDate:                 2022-10-12   Pseudo R-squ.:\
+  \             0.941\nTime:                      20:52   Pseudo R-bar-squ.:     \
+  \    0.935\nAIC:                     573.475   Log-Likelihood:         -256.737\n\
+  BIC:                     720.707   LL-Null:              -4,382.027\n========================================================================================\n\
+  \                                  coef          std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  nodes_walk_sector11_jobs        0.3365            0.042     8.102     0.000    \
+  \         \nnodes_walk_sector9_jobs        -0.4088            0.165    -2.483  \
+  \   0.013             \nb_total_jobs                    0.4660            0.105\
+  \     4.436     0.000             \nnodes_walk_sector6_jobs        -5.1195     \
+  \      19.185    -0.267     0.790             \nzones_logsum_job_high_income   -1.2214\
+  \            0.554    -2.205     0.027             \nnodes_walk_sector12_jobs  \
+  \     -0.0616            0.040    -1.527     0.127             \nnodes_walk_sector10_jobs\
+  \        0.1161            0.095     1.216     0.224             \nb_ln_non_residential_sqft\
+  \       7.3636          389.292     0.019     0.985             \nb_ln_sqft_price_nonres\
+  \          1.8997            1.023     1.856     0.063             \nnodes_walk_sector3_jobs\
+  \        -0.2112            0.366    -0.577     0.564             \nbuilding_type_id_is_52\
+  \         -1.5409   11,003,445.513    -0.000     1.000             \nzones_logsum_pop_high_income\
+  \    1.4533            0.417     3.484     0.000             \nb_ln_building_sqft\
+  \             -3.5366          388.484    -0.009     0.993             \nparcels_land_cost\
+  \               0.0662            0.603     0.110     0.913             \nimprovement_value\
+  \              -0.5073            0.206    -2.460     0.014             \nb_ln_land_area\
+  \                 -1.5749            0.844    -1.867     0.062             \nparcels_acres\
+  \                  -1.4869            6.132    -0.242     0.808             \nbuilding_type_id_is_65\
+  \          0.1515            0.542     0.279     0.780             \nbuilding_type_id_is_81\
+  \         -0.0466    2,010,155.627    -0.000     1.000             \nsqft_price_nonres\
+  \              -0.2794            0.756    -0.369     0.712             \nbuilding_type_id_is_53\
+  \          0.0658            0.086     0.761     0.447             \nstories   \
+  \                     -0.1852            0.082    -2.246     0.025             \n\
+  building_type_id_is_51          0.2731            0.147     1.855     0.064    \
+  \         \nzones_logsum_pop_low_income    -0.5199            0.553    -0.940  \
+  \   0.347             \nbuilding_type_id_is_63         -1.5353      874,313.586\
+  \    -0.000     1.000             \nnodes_walk_sector5_jobs        -0.0192     \
+  \         nan       nan       nan             \nnodes_walk_retail_jobs         -0.0192\
+  \              nan       nan       nan             \nnodes_walk_sector4_jobs   \
+  \      0.0909            0.031     2.919     0.004             \nparcels_total_sqft\
+  \             -3.4451            2.943    -1.171     0.242             \nnodes_drv_log_sum_45min_jobs\
+  \   -0.1030            0.319    -0.323     0.747             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

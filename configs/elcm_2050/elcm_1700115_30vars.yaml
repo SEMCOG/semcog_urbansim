@@ -1,0 +1,104 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.024502860323608967
+- 0.46079128647278333
+- 1.671097856763493
+- -1.75348966858062
+- 0.2958005104035805
+- -0.24192580768034275
+- -5.344332121014916
+- 0.0928781800419076
+- -0.08662794351574134
+- 0.006451409751097167
+- 0.016792275829098965
+- 0.04735601556175363
+- -0.4127947095250819
+- 0.6310777660723829
+- 0.19644861443926898
+- -0.0733497971995106
+- 0.1422055812611345
+- 0.07525442772739062
+- -0.18438892681393204
+- 0.38701556928044833
+- 0.7070865959670055
+- -0.6257924651463442
+- 0.8426038984549897
+- -0.09977239591980093
+- 0.05752865746698435
+- -0.30219716022533977
+- 0.11710752995282384
+- -0.25573664908107285
+- 0.34727645455368034
+- 0.024472740461184098
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_93 + building_type_id_is_21 + zones_logsum_job_high_income
+  + zones_logsum_pop_high_income + building_type_id_is_23 + building_type_id_is_83
+  + building_type_id_is_71 + building_type_id_is_13 + building_type_id_is_33 + building_type_id_is_31
+  + building_type_id_is_65 + building_type_id_is_61 + building_type_id_is_41 + b_ln_non_residential_sqft
+  + building_type_id_is_51 + building_type_id_is_63 + building_type_id_is_14 + building_type_id_is_11
+  + building_type_id_is_53 + nodes_walk_sector17_jobs + zones_population + zones_households
+  + bldg_empratio_17 + zones_empden + building_type_id_is_94 + nodes_walk_log_sum_residential_units
+  + building_type_id_is_42 + b_ln_parcel_sqft + nodes_drv_log_sum_10min_pop + nodes_drv_log_sum_20min_pop
+  - 1
+name: elcm_1700115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                970\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     30\nDate:                 2022-10-12   Pseudo R-squ.:\
+  \             0.457\nTime:                      19:40   Pseudo R-bar-squ.:     \
+  \    0.450\nAIC:                   4,818.241   Log-Likelihood:       -2,379.120\n\
+  BIC:                   4,965.473   LL-Null:              -4,382.027\n===============================================================================================\n\
+  \                                          coef         std err         z     P>|z|\
+  \   Conf. Int.\n-----------------------------------------------------------------------------------------------\n\
+  building_type_id_is_93                 -0.0245           0.013    -1.848     0.065\
+  \             \nbuilding_type_id_is_21                  0.4608           0.325 \
+  \    1.419     0.156             \nzones_logsum_job_high_income            1.6711\
+  \           1.411     1.185     0.236             \nzones_logsum_pop_high_income\
+  \           -1.7535           1.425    -1.230     0.219             \nbuilding_type_id_is_23\
+  \                  0.2958           0.239     1.238     0.216             \nbuilding_type_id_is_83\
+  \                 -0.2419   9,435,717.722    -0.000     1.000             \nbuilding_type_id_is_71\
+  \                 -5.3443     467,071.939    -0.000     1.000             \nbuilding_type_id_is_13\
+  \                  0.0929           0.174     0.533     0.594             \nbuilding_type_id_is_33\
+  \                 -0.0866           0.222    -0.390     0.697             \nbuilding_type_id_is_31\
+  \                  0.0065           0.188     0.034     0.973             \nbuilding_type_id_is_65\
+  \                  0.0168           0.185     0.091     0.928             \nbuilding_type_id_is_61\
+  \                  0.0474           0.156     0.303     0.762             \nbuilding_type_id_is_41\
+  \                 -0.4128           0.257    -1.608     0.108             \nb_ln_non_residential_sqft\
+  \               0.6311           0.057    11.133     0.000             \nbuilding_type_id_is_51\
+  \                  0.1964           0.127     1.541     0.123             \nbuilding_type_id_is_63\
+  \                 -0.0733           0.177    -0.414     0.679             \nbuilding_type_id_is_14\
+  \                  0.1422           0.137     1.038     0.299             \nbuilding_type_id_is_11\
+  \                  0.0753           0.123     0.611     0.541             \nbuilding_type_id_is_53\
+  \                 -0.1844           0.055    -3.349     0.001             \nnodes_walk_sector17_jobs\
+  \                0.3870           0.018    21.825     0.000             \nzones_population\
+  \                        0.7071           0.221     3.201     0.001            \
+  \ \nzones_households                       -0.6258           0.227    -2.761   \
+  \  0.006             \nbldg_empratio_17                        0.8426          \
+  \ 0.033    25.501     0.000             \nzones_empden                         \
+  \  -0.0998           0.043    -2.295     0.022             \nbuilding_type_id_is_94\
+  \                  0.0575           0.036     1.616     0.106             \nnodes_walk_log_sum_residential_units\
+  \   -0.3022           0.041    -7.437     0.000             \nbuilding_type_id_is_42\
+  \                  0.1171           0.061     1.926     0.054             \nb_ln_parcel_sqft\
+  \                       -0.2557           0.072    -3.542     0.000            \
+  \ \nnodes_drv_log_sum_10min_pop             0.3473           0.078     4.474   \
+  \  0.000             \nnodes_drv_log_sum_20min_pop             0.0245          \
+  \ 0.122     0.200     0.841             \n==============================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

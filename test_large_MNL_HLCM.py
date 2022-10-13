@@ -53,8 +53,8 @@ def load_hlcm_df(hh_var, b_var):
 
 hh_sample_size = 10000
 estimation_sample_size = 50
-job_sample_size = 5000
-job_estimation_sample_size = 50
+job_sample_size = 1000
+job_estimation_sample_size = 80
 # LARGE_AREA_ID = 147
 # number_of_vars_to_use = 40
 choice_column = "building_id"
@@ -150,7 +150,7 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
     print('done')
 
 def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
-    thetas = pd.read_csv("out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
+    thetas = pd.read_csv("./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
     job = job_region[job_region.slid == SLID]
     job = job[job.building_id > 1]
     job = job[job.home_based_status == 0]
@@ -192,6 +192,19 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
     v_wo_0_std = [col for col in v if all(
         [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
     selected_variables = v_wo_0_std[:number_of_vars_to_use]
+    # remove variables which with correlation close to 1
+    i = number_of_vars_to_use
+    while ((b[selected_variables].corr()>0.99).sum()>1).sum() > 0 and i<len(v_wo_0_std):
+        corr = b[selected_variables].corr()
+        corr_ge_1_sum = (corr>0.99).sum()
+        # drop the first variable
+        var_to_drop = corr_ge_1_sum[corr_ge_1_sum>1].index[0]
+        print("Removed %s from expression due to close to 1 correlation" % var_to_drop)
+        selected_variables.remove(var_to_drop)
+        print("Added %s as replacement" % v_wo_0_std[i])
+        selected_variables.append(v_wo_0_std[i])
+        i += 1
+        
     # add 10 least important variables
     # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 

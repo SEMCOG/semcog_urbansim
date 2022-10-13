@@ -125,8 +125,8 @@ else:
     b_region = pd.read_csv('b_elcm.csv', index_col=0)
 
 def estimation(SLID):
-    job_sample_size = 5000
-    estimation_sample_size = 50
+    job_sample_size = 1000
+    estimation_sample_size = 80
     # sampling jobs
     # from the new move-ins, last 5-10 years
     # weighted by mcd_quota
@@ -140,11 +140,11 @@ def estimation(SLID):
     job = job.fillna(0)
     # sampling b
     # sample buildings from the chosen job's buildings list
-    ujob_bid = job.building_id.unique()
+    bid_sample_pool = b_region[b_region.large_area_id == SLID % 1000].index
     sampled_b_id = []
     for _ in range(estimation_sample_size-1):
         for j in job.building_id:
-            sampled_b_id.append(np.random.choice(ujob_bid[ujob_bid!=j]))
+            sampled_b_id.append(np.random.choice(bid_sample_pool[bid_sample_pool!=j]))
 
     b_sample = b_region.loc[sampled_b_id]
     b_sample = pd.concat([b_region.loc[job.building_id], b_sample])
@@ -205,7 +205,7 @@ def estimation(SLID):
     available_choice = np.concatenate((available_choice, available_choice), axis=1)
 
     t0 = time.time()
-    theta_optim_full = minimize(theta, neglog_DCM, -10000, X, Y, Y_onehot, available_choice)
+    theta_optim_full = minimize(theta, neglog_DCM, -3000, X, Y, Y_onehot, available_choice)
     t1 = time.time()
     print("minimizer finished in ", t1-t0)
 
@@ -213,16 +213,18 @@ def estimation(SLID):
     out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
     out_theta.index = newX_cols_name[used_val]
     out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
-    out_theta.to_csv('out_theta_job_%s_%s.txt' % (SLID, estimation_sample_size))
+    out_theta.to_csv('./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt' % (SLID, estimation_sample_size))
 
     print("Warning: variables with 0 variation")
-    print(newX_cols_name[unused_val])
+    print(newX_cols_name[unused_val.tolist()])
     print('ARD-DCM done')
 
 if __name__ == "__main__":
-    # slid_list = jobs['slid'].unique()
-    # for slid in slid_list:
-    #     estimation(slid)
-    #     run_elcm_large_MNL(job_region, b_region, slid, 40)
-    estimation(500125)
-    run_elcm_large_MNL(job_region, b_region, 500125, 40)
+    slid_list = job_region['slid'].unique().tolist()
+    for slid in slid_list:
+        estimation(slid)
+        run_elcm_large_MNL(job_region, b_region, slid, 30)
+    # estimation(500125)
+    # run_elcm_large_MNL(job_region, b_region, 500125, 30)
+    # slid which have failed LargeMNL run due to LinAlgError:
+    # [500115, 500093, 1100093, 1500115]
