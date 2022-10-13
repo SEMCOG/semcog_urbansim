@@ -1,0 +1,79 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 50
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 5000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.013973326567538294
+- 0.0695833960044049
+- 0.9373229447195246
+- -0.15581088548565394
+- 1.304743874822196
+- 0.5373882738770693
+- 0.27586516391185484
+- 0.5080750507524894
+- 0.060772442778170226
+- 0.1946397845846356
+- -0.038714537261475994
+- 0.21597478901289435
+- 0.3079359507646438
+- -0.3922641037394844
+- -0.1015226178016301
+- 0.1869758936543982
+- 0.05476587310848718
+- 0.012977192668393202
+- -0.3076041116154912
+- -0.395016713975827
+max_iter: null
+mct_intx_ops: null
+model_expression: improvement_value + b_total_jobs + b_ln_non_residential_sqft + vacant_job_spaces
+  + building_type_id_is_21 + b_ln_land_area + building_type_id_is_31 + building_type_id_is_23
+  + stories + building_type_id_is_33 + b_ln_building_sqft + building_type_id_is_65
+  + b_ln_sqft_price_nonres + building_type_id_is_13 + building_type_id_is_52 + building_type_id_is_51
+  + building_type_id_is_61 + nodes_walk_residential + nodes_walk_sector10_jobs + building_type_id_is_11
+  - 1
+name: elcm_500125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          5,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:              4,980\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     20\nDate:                 2022-10-12   Pseudo R-squ.:\
+  \             0.395\nTime:                      17:05   Pseudo R-bar-squ.:     \
+  \    0.394\nAIC:                  23,698.492   Log-Likelihood:      -11,829.246\n\
+  BIC:                  23,828.836   LL-Null:             -19,560.115\n==============================================================================\n\
+  \                               coef   std err         z     P>|z|   Conf. Int.\n\
+  ------------------------------------------------------------------------------\n\
+  improvement_value            0.0140     0.006     2.501     0.012             \n\
+  b_total_jobs                 0.0696     0.009     7.571     0.000             \n\
+  b_ln_non_residential_sqft    0.9373     1.579     0.593     0.553             \n\
+  vacant_job_spaces           -0.1558     0.013   -11.660     0.000             \n\
+  building_type_id_is_21       1.3047     0.046    28.534     0.000             \n\
+  b_ln_land_area               0.5374     0.090     5.952     0.000             \n\
+  building_type_id_is_31       0.2759     0.041     6.796     0.000             \n\
+  building_type_id_is_23       0.5081     0.044    11.454     0.000             \n\
+  stories                      0.0608     0.014     4.209     0.000             \n\
+  building_type_id_is_33       0.1946     0.036     5.415     0.000             \n\
+  b_ln_building_sqft          -0.0387     1.581    -0.024     0.980             \n\
+  building_type_id_is_65       0.2160     0.046     4.693     0.000             \n\
+  b_ln_sqft_price_nonres       0.3079     0.035     8.866     0.000             \n\
+  building_type_id_is_13      -0.3923     0.101    -3.899     0.000             \n\
+  building_type_id_is_52      -0.1015     0.020    -4.979     0.000             \n\
+  building_type_id_is_51       0.1870     0.033     5.643     0.000             \n\
+  building_type_id_is_61       0.0548     0.038     1.447     0.148             \n\
+  nodes_walk_residential       0.0130     0.019     0.679     0.497             \n\
+  nodes_walk_sector10_jobs    -0.3076     0.039    -7.845     0.000             \n\
+  building_type_id_is_11      -0.3950     0.072    -5.523     0.000             \n\
+  =============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

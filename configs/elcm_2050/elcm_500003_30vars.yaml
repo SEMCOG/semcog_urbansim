@@ -1,0 +1,105 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.06410161698145424
+- -0.19837974029517647
+- 3.0412379836524708
+- -0.07933221549351425
+- -0.7079820239593128
+- -0.07725490184164834
+- 0.8266320499848957
+- -0.3639039703941238
+- -0.13558426127599127
+- 0.17159006283877531
+- -0.07521620488380663
+- -0.002021317133525778
+- 0.3797602514034186
+- -0.061373828106228955
+- -0.14312446714457827
+- 0.13394200108082172
+- 0.13394200108082172
+- 0.1976875263942732
+- -0.40410273565083854
+- -0.2550290354701331
+- -0.03448381604149969
+- 0.06821318493498915
+- -0.3903507739687732
+- -0.09421553435943375
+- -0.26134831589760993
+- -1.9610510320411654
+- 0.19820218369060705
+- -0.17507904700493312
+- -6.512438787862279
+- -0.16875430154997834
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + building_type_id_is_81 + b_ln_non_residential_sqft
+  + improvement_value + building_type_id_is_83 + nodes_walk_sector11_jobs + building_type_id_is_21
+  + building_type_id_is_11 + bldg_empratio_18 + b_ln_land_area + building_type_id_is_53
+  + zones_logsum_job_high_income + b_ln_sqft_price_nonres + bldg_empratio_15 + bldg_empratio_9
+  + nodes_walk_sector5_jobs + nodes_walk_retail_jobs + sqft_price_nonres + bldg_empratio_16
+  + nodes_walk_sector6_jobs + building_type_id_is_33 + building_type_id_is_32 + bldg_empratio_3
+  + bldg_empratio_6 + bldg_empratio_14 + b_ln_building_sqft + building_type_id_is_23
+  + nodes_walk_sector10_jobs + building_type_id_is_13 + vacant_job_spaces - 1
+name: elcm_500003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                970\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     30\nDate:                 2022-10-12   Pseudo R-squ.:\
+  \             0.437\nTime:                      20:29   Pseudo R-bar-squ.:     \
+  \    0.430\nAIC:                   4,997.852   Log-Likelihood:       -2,468.926\n\
+  BIC:                   5,145.084   LL-Null:              -4,382.027\n=================================================================================================\n\
+  \                                  coef                   std err         z    \
+  \ P>|z|   Conf. Int.\n-------------------------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.0641                     0.014     4.581     0.000\
+  \             \nbuilding_type_id_is_81         -0.1984                       nan\
+  \       nan       nan             \nb_ln_non_residential_sqft       3.0412     \
+  \                  nan       nan       nan             \nimprovement_value     \
+  \         -0.0793                     0.014    -5.590     0.000             \nbuilding_type_id_is_83\
+  \         -0.7080            72,463,748.407    -0.000     1.000             \nnodes_walk_sector11_jobs\
+  \       -0.0773                     0.065    -1.191     0.234             \nbuilding_type_id_is_21\
+  \          0.8266                     0.062    13.390     0.000             \nbuilding_type_id_is_11\
+  \         -0.3639                     0.121    -3.015     0.003             \nbldg_empratio_18\
+  \               -0.1356                     0.093    -1.461     0.144          \
+  \   \nb_ln_land_area                  0.1716                       nan       nan\
+  \       nan             \nbuilding_type_id_is_53         -0.0752               \
+  \      0.090    -0.836     0.403             \nzones_logsum_job_high_income   -0.0020\
+  \                     0.039    -0.051     0.959             \nb_ln_sqft_price_nonres\
+  \          0.3798                     0.098     3.891     0.000             \nbldg_empratio_15\
+  \               -0.0614                     0.041    -1.485     0.138          \
+  \   \nbldg_empratio_9                -0.1431                     0.068    -2.103\
+  \     0.035             \nnodes_walk_sector5_jobs         0.1339   386,252,478,525,061.625\
+  \     0.000     1.000             \nnodes_walk_retail_jobs          0.1339   386,252,478,525,061.625\
+  \     0.000     1.000             \nsqft_price_nonres               0.1977     \
+  \                0.061     3.230     0.001             \nbldg_empratio_16      \
+  \         -0.4041                     0.101    -3.997     0.000             \nnodes_walk_sector6_jobs\
+  \        -0.2550                     0.049    -5.200     0.000             \nbuilding_type_id_is_33\
+  \         -0.0345                     0.064    -0.542     0.588             \nbuilding_type_id_is_32\
+  \          0.0682                     0.023     3.017     0.003             \nbldg_empratio_3\
+  \                -0.3904                     0.091    -4.312     0.000         \
+  \    \nbldg_empratio_6                -0.0942                     0.058    -1.636\
+  \     0.102             \nbldg_empratio_14               -0.2613               \
+  \      0.102    -2.555     0.011             \nb_ln_building_sqft             -1.9611\
+  \                     1.671    -1.173     0.241             \nbuilding_type_id_is_23\
+  \          0.1982                     0.071     2.799     0.005             \nnodes_walk_sector10_jobs\
+  \       -0.1751                       nan       nan       nan             \nbuilding_type_id_is_13\
+  \         -6.5124             5,119,282.333    -0.000     1.000             \nvacant_job_spaces\
+  \              -0.1688                     0.028    -6.003     0.000           \
+  \  \n================================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

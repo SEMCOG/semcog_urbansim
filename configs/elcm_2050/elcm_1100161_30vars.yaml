@@ -1,0 +1,109 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.44845277255032423
+- 0.5462539603278922
+- -0.10263734299591327
+- 1.9207700726505703
+- -0.9575565872384566
+- 0.7051687069664168
+- 1.7273120372716644
+- -0.4850326610829484
+- -0.34382485888662523
+- 0.6614689003475179
+- 0.6969093062848253
+- -1.0519231459915193
+- 0.5057121235003538
+- -0.40421291381305574
+- 0.97713296941211
+- -0.22063058712725667
+- -35.59563345934293
+- 0.272802601328543
+- 0.09977667183757231
+- -0.3355490716466153
+- 0.026826135016542827
+- -0.29811048817457836
+- -0.4151007574549507
+- 0.007138347027827523
+- -0.3262430599286332
+- 0.5656431311080511
+- 0.29378152755521536
+- -1.5708523873281501
+- 0.08492436704714697
+- 0.1045619160889912
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector11_jobs + nodes_walk_log_sum_residential_units
+  + building_type_id_is_81 + nodes_drv_log_sum_20min_pop + nodes_drv_log_sum_45min_jobs
+  + zones_population + b_ln_non_residential_sqft + zones_logsum_pop_high_income +
+  zones_households + zones_logsum_job_high_income + nodes_drv_log_sum_60min_jobs +
+  building_type_id_is_83 + nodes_drv_log_sum_15min_retail_jobs + nodes_walk_lowinc_hhs
+  + nodes_walk_log_sum_nonresidential_units + nodes_walk_max_medical_far + parcels_total_sqft
+  + b_ln_parcel_sqft + zones_ln_empden_11 + nodes_walk_ave_income + nodes_drv_log_sum_30min_jobs
+  + zones_empden + nodes_walk_sector6_jobs + building_type_id_is_23 + zones_ln_empden_8
+  + zones_ln_empden_16 + nodes_walk_ave_nonres_sqft_price + nodes_drv_log_sum_10min_pop
+  + nodes_walk_office + nodes_walk_residential - 1
+name: elcm_1100161
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                970\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     30\nDate:                 2022-10-12   Pseudo R-squ.:\
+  \             0.932\nTime:                      19:05   Pseudo R-bar-squ.:     \
+  \    0.925\nAIC:                     656.360   Log-Likelihood:         -298.180\n\
+  BIC:                     803.593   LL-Null:              -4,382.027\n====================================================================================================\n\
+  \                                              coef          std err         z \
+  \    P>|z|   Conf. Int.\n----------------------------------------------------------------------------------------------------\n\
+  nodes_walk_sector11_jobs                    0.4485            0.055     8.086  \
+  \   0.000             \nnodes_walk_log_sum_residential_units        0.5463     \
+  \       1.019     0.536     0.592             \nbuilding_type_id_is_81         \
+  \            -0.1026   13,609,928.069    -0.000     1.000             \nnodes_drv_log_sum_20min_pop\
+  \                 1.9208            3.089     0.622     0.534             \nnodes_drv_log_sum_45min_jobs\
+  \               -0.9576            3.982    -0.240     0.810             \nzones_population\
+  \                            0.7052            1.115     0.633     0.527       \
+  \      \nb_ln_non_residential_sqft                   1.7273            0.368   \
+  \  4.697     0.000             \nzones_logsum_pop_high_income               -0.4850\
+  \           10.770    -0.045     0.964             \nzones_households          \
+  \                 -0.3438            1.002    -0.343     0.732             \nzones_logsum_job_high_income\
+  \                0.6615           11.764     0.056     0.955             \nnodes_drv_log_sum_60min_jobs\
+  \                0.6969            6.584     0.106     0.916             \nbuilding_type_id_is_83\
+  \                     -1.0519    2,202,026.438    -0.000     1.000             \n\
+  nodes_drv_log_sum_15min_retail_jobs         0.5057            2.113     0.239  \
+  \   0.811             \nnodes_walk_lowinc_hhs                      -0.4042     \
+  \       1.614    -0.250     0.802             \nnodes_walk_log_sum_nonresidential_units\
+  \     0.9771            0.556     1.758     0.079             \nnodes_walk_max_medical_far\
+  \                 -0.2206            0.457    -0.482     0.630             \nparcels_total_sqft\
+  \                        -35.5956            4.487    -7.934     0.000         \
+  \    \nb_ln_parcel_sqft                            0.2728            0.360     0.757\
+  \     0.449             \nzones_ln_empden_11                          0.0998   \
+  \         0.048     2.066     0.039             \nnodes_walk_ave_income        \
+  \              -0.3355            1.094    -0.307     0.759             \nnodes_drv_log_sum_30min_jobs\
+  \                0.0268            5.297     0.005     0.996             \nzones_empden\
+  \                               -0.2981            1.613    -0.185     0.853   \
+  \          \nnodes_walk_sector6_jobs                    -0.4151            5.256\
+  \    -0.079     0.937             \nbuilding_type_id_is_23                     \
+  \ 0.0071            0.299     0.024     0.981             \nzones_ln_empden_8  \
+  \                        -0.3262            1.043    -0.313     0.755          \
+  \   \nzones_ln_empden_16                          0.5656            0.802     0.706\
+  \     0.480             \nnodes_walk_ave_nonres_sqft_price            0.2938   \
+  \         0.485     0.606     0.545             \nnodes_drv_log_sum_10min_pop  \
+  \              -1.5709            1.094    -1.436     0.151             \nnodes_walk_office\
+  \                           0.0849            0.350     0.242     0.808        \
+  \     \nnodes_walk_residential                      0.1046            0.739    \
+  \ 0.141     0.888             \n===================================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
