@@ -1,0 +1,54 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.09455005458294936
+- 1.458229743171194
+- 0.06264191994485227
+- -0.3415126669843611
+- 0.00941516393963071
+- -4.5047340826793985
+- 0.01898780175717676
+- 0.4411563223933346
+- 0.7777245579303085
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + b_ln_non_residential_sqft + zones_ln_empden_14 +
+  b_ln_land_area + nodes_drv_log_sum_45min_jobs + building_type_id_is_11 + building_age
+  + building_type_id_is_23 + bldg_empratio_10 - 1
+name: elcm_2045_1000125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                991\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      9\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.598\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.596\nAIC:                   3,536.889   Log-Likelihood:       -1,759.445\n\
+  BIC:                   3,581.059   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.0946     0.009    11.013     0.000           \
+  \  \nb_ln_non_residential_sqft       1.4582     0.085    17.246     0.000      \
+  \       \nzones_ln_empden_14              0.0626     0.033     1.898     0.058 \
+  \            \nb_ln_land_area                 -0.3415     0.089    -3.854     0.000\
+  \             \nnodes_drv_log_sum_45min_jobs    0.0094     0.071     0.132     0.895\
+  \             \nbuilding_type_id_is_11         -4.5047     0.615    -7.327     0.000\
+  \             \nbuilding_age                    0.0190     0.061     0.311     0.756\
+  \             \nbuilding_type_id_is_23          0.4412     0.036    12.339     0.000\
+  \             \nbldg_empratio_10                0.7777     0.026    30.068     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

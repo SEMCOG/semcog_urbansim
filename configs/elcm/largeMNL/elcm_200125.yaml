@@ -1,0 +1,43 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.4881040775548801
+- -0.19775848310035601
+- 0.5963793160742991
+- 0.2038130809348274
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_23 + zones_population + b_ln_non_residential_sqft
+  + nodes_drv_log_sum_60min_jobs - 1
+name: elcm_2045_200125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                996\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      4\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.102\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.102\nAIC:                   7,873.822   Log-Likelihood:       -3,932.911\n\
+  BIC:                   7,893.453   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  building_type_id_is_23          0.4881     0.025    19.330     0.000           \
+  \  \nzones_population               -0.1978     0.036    -5.448     0.000      \
+  \       \nb_ln_non_residential_sqft       0.5964     0.032    18.678     0.000 \
+  \            \nnodes_drv_log_sum_60min_jobs    0.2038     0.048     4.268     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

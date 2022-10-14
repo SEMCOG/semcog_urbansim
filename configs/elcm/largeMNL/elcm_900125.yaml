@@ -1,0 +1,48 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 1.3674796522750319
+- 0.07055348121946141
+- -0.4203622528684982
+- 0.11737859758511611
+- 0.029614948981986803
+- 0.9928599820242373
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + nodes_walk_quarter_mile_to_transit +
+  building_type_id_is_31 + building_age + zones_transit_jobs_50min + bldg_empratio_9
+  - 1
+name: elcm_2045_900125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.535\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.533\nAIC:                   4,090.175   Log-Likelihood:       -2,039.088\n\
+  BIC:                   4,119.622   LL-Null:              -4,382.027\n=======================================================================================\n\
+  \                                        coef   std err         z     P>|z|   Conf.\
+  \ Int.\n---------------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft             1.3675     0.030    46.287     0.000     \
+  \        \nnodes_walk_quarter_mile_to_transit    0.0706     0.039     1.789    \
+  \ 0.074             \nbuilding_type_id_is_31               -0.4204     0.064   \
+  \ -6.594     0.000             \nbuilding_age                          0.1174  \
+  \   0.059     2.002     0.045             \nzones_transit_jobs_50min           \
+  \   0.0296     0.039     0.752     0.452             \nbldg_empratio_9         \
+  \              0.9929     0.015    64.247     0.000             \n======================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.8305430904754818
+- 0.04478542114731977
+- 0.16918608112111885
+- -0.6440636751444072
+- 0.41899702125366983
+- 0.02077655488093712
+- 0.297121732661235
+- -0.1055177317392082
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + zones_ln_empden_4 + zones_employment
+  + building_type_id_is_11 + nodes_walk_ave_lot_sqft + nodes_walk_ave_nonres_sqft_price
+  + building_type_id_is_41 + b_is_pre_1945 - 1
+name: elcm_2045_600003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.464\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.462\nAIC:                   4,715.238   Log-Likelihood:       -2,349.619\n\
+  BIC:                   4,754.500   LL-Null:              -4,382.027\n=====================================================================================\n\
+  \                                      coef   std err         z     P>|z|   Conf.\
+  \ Int.\n-------------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft           0.8305     0.055    15.157     0.000       \
+  \      \nzones_ln_empden_4                   0.0448     0.035     1.267     0.205\
+  \             \nzones_employment                    0.1692     0.012    14.424 \
+  \    0.000             \nbuilding_type_id_is_11             -0.6441     0.157  \
+  \  -4.104     0.000             \nnodes_walk_ave_lot_sqft             0.4190   \
+  \  0.060     6.960     0.000             \nnodes_walk_ave_nonres_sqft_price    0.0208\
+  \     0.059     0.350     0.726             \nbuilding_type_id_is_41           \
+  \   0.2971     0.014    20.560     0.000             \nb_is_pre_1945           \
+  \           -0.1055     0.058    -1.831     0.067             \n====================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

@@ -1,0 +1,45 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.0479573487313099
+- 0.11575087268708047
+- -1.360786164679228
+- 1.229593042682908
+- 0.5966661696160811
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_ln_empden_6 + nodes_drv_log_sum_30min_jobs + building_type_id_is_42
+  + b_ln_non_residential_sqft + building_type_id_is_31 - 1
+name: elcm_2045_300003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                995\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      5\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.486\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.485\nAIC:                   4,516.741   Log-Likelihood:       -2,253.370\n\
+  BIC:                   4,541.279   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_ln_empden_6               0.0480     0.029     1.637     0.102           \
+  \  \nnodes_drv_log_sum_30min_jobs    0.1158     0.046     2.499     0.012      \
+  \       \nbuilding_type_id_is_42         -1.3608     1.433    -0.949     0.342 \
+  \            \nb_ln_non_residential_sqft       1.2296     0.029    43.001     0.000\
+  \             \nbuilding_type_id_is_31          0.5967     0.024    24.714     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

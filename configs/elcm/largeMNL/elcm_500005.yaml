@@ -1,0 +1,47 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.49803231641369083
+- 0.08125828822121844
+- 0.09979303334445694
+- -0.5551749393368438
+- -0.48161520995241974
+- 0.027949435588301454
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + nodes_walk_hhsize + nodes_drv_log_sum_45min_jobs
+  + building_type_id_is_11 + building_age + zones_logsum_pop_high_income - 1
+name: elcm_2045_500005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.084\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.083\nAIC:                   8,036.116   Log-Likelihood:       -4,012.058\n\
+  BIC:                   8,065.563   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft       0.4980     0.029    17.294     0.000           \
+  \  \nnodes_walk_hhsize               0.0813     0.036     2.256     0.024      \
+  \       \nnodes_drv_log_sum_45min_jobs    0.0998     0.033     3.009     0.003 \
+  \            \nbuilding_type_id_is_11         -0.5552     0.090    -6.163     0.000\
+  \             \nbuilding_age                   -0.4816     0.028   -17.391     0.000\
+  \             \nzones_logsum_pop_high_income    0.0279     0.022     1.245     0.213\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

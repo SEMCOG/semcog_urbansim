@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.37808301929732613
+- -0.04706730025334065
+- 1.131645873772058
+- -0.11957408089662183
+- 0.09375730366293815
+- -0.47753314328529595
+- -0.0076543158097720455
+- -0.31687154404954726
+- 0.025112948485328298
+- 0.9535484352461789
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_ln_empden_14 + nodes_drv_log_sum_60min_jobs + b_ln_building_sqft
+  + zones_logsum_job_low_income + b_total_jobs + building_type_id_is_31 + nodes_walk_medical
+  + b_ln_land_area + building_type_id_is_51 + bldg_empratio_14 - 1
+name: elcm_2045_1400003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.500\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.498\nAIC:                   4,403.931   Log-Likelihood:       -2,191.966\n\
+  BIC:                   4,453.009   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_ln_empden_14              0.3781     0.030    12.623     0.000           \
+  \  \nnodes_drv_log_sum_60min_jobs   -0.0471     0.045    -1.044     0.297      \
+  \       \nb_ln_building_sqft              1.1316     0.109    10.359     0.000 \
+  \            \nzones_logsum_job_low_income    -0.1196     0.041    -2.926     0.003\
+  \             \nb_total_jobs                    0.0938     0.006    14.477     0.000\
+  \             \nbuilding_type_id_is_31         -0.4775     0.101    -4.748     0.000\
+  \             \nnodes_walk_medical             -0.0077     0.027    -0.285     0.775\
+  \             \nb_ln_land_area                 -0.3169     0.116    -2.740     0.006\
+  \             \nbuilding_type_id_is_51          0.0251     0.019     1.302     0.193\
+  \             \nbldg_empratio_14                0.9535     0.017    54.975     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

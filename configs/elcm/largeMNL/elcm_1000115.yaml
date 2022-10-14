@@ -1,0 +1,54 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.3211277945206984
+- -0.060624540252129794
+- 0.10604079522413097
+- 0.11281892926431718
+- 0.052790365398647496
+- 0.654941493204798
+- 0.3258973111036582
+- -0.63182594126777
+- -0.026819683514028383
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + b_is_pre_1945 + b_ln_building_sqft + b_ln_parcels_parcel_far
+  + nodes_walk_medical + nodes_drv_log_sum_10min_pop + building_type_id_is_31 + building_type_id_is_13
+  + zones_transit_jobs_50min - 1
+name: elcm_2045_1000115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                991\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      9\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.359\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.357\nAIC:                   5,638.809   Log-Likelihood:       -2,810.405\n\
+  BIC:                   5,682.979   LL-Null:              -4,382.027\n================================================================================\n\
+  \                                 coef   std err         z     P>|z|   Conf. Int.\n\
+  --------------------------------------------------------------------------------\n\
+  b_total_jobs                   0.3211     0.012    27.412     0.000            \
+  \ \nb_is_pre_1945                 -0.0606     0.063    -0.959     0.338        \
+  \     \nb_ln_building_sqft             0.1060     0.055     1.932     0.053    \
+  \         \nb_ln_parcels_parcel_far        0.1128     0.043     2.623     0.009\
+  \             \nnodes_walk_medical             0.0528     0.040     1.324     0.186\
+  \             \nnodes_drv_log_sum_10min_pop    0.6549     0.059    11.181     0.000\
+  \             \nbuilding_type_id_is_31         0.3259     0.026    12.546     0.000\
+  \             \nbuilding_type_id_is_13        -0.6318     0.139    -4.551     0.000\
+  \             \nzones_transit_jobs_50min      -0.0268     0.046    -0.586     0.558\
+  \             \n================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

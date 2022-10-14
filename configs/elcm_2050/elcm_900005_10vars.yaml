@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.34917435489248455
+- 0.43754702279426094
+- -0.2691128910264444
+- -0.34422841399601095
+- -0.093940653768006
+- -0.20820380527059698
+- -0.12314419590097683
+- 0.1317186963685263
+- 0.09530586503680633
+- 0.07034601794065341
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + nodes_walk_sector9_jobs + bldg_empratio_11 + nodes_walk_sector3_jobs
+  + building_type_id_is_14 + nodes_walk_sector10_jobs + parcels_land_cost + improvement_value
+  + nodes_walk_sector11_jobs + zones_logsum_job_high_income - 1
+name: elcm_900005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.593\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.591\nAIC:                   3,586.142   Log-Likelihood:       -1,783.071\n\
+  BIC:                   3,635.220   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.3492     0.007    47.856     0.000           \
+  \  \nnodes_walk_sector9_jobs         0.4375     0.017    26.001     0.000      \
+  \       \nbldg_empratio_11               -0.2691     0.031    -8.611     0.000 \
+  \            \nnodes_walk_sector3_jobs        -0.3442     0.058    -5.925     0.000\
+  \             \nbuilding_type_id_is_14         -0.0939     0.041    -2.287     0.022\
+  \             \nnodes_walk_sector10_jobs       -0.2082     0.021    -9.786     0.000\
+  \             \nparcels_land_cost              -0.1231     0.025    -5.008     0.000\
+  \             \nimprovement_value               0.1317     0.019     7.026     0.000\
+  \             \nnodes_walk_sector11_jobs        0.0953     0.020     4.709     0.000\
+  \             \nzones_logsum_job_high_income    0.0703     0.025     2.810     0.005\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

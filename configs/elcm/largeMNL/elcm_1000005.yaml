@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.12721995084346113
+- 0.10958805229779289
+- 0.7992241894506878
+- 0.113426510851249
+- 0.09828525318038571
+- 0.19932996735714273
+- -0.8666563719381927
+- -0.0779196539383954
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_pop_low_income + nodes_drv_log_sum_60min_jobs + b_ln_building_sqft
+  + b_ln_parcels_parcel_far + b_total_jobs + zones_ln_empden_17 + building_type_id_is_52
+  + building_type_id_is_21 - 1
+name: elcm_2045_1000005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.533\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.531\nAIC:                   4,111.873   Log-Likelihood:       -2,047.937\n\
+  BIC:                   4,151.136   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_pop_low_income    -0.1272     0.032    -3.984     0.000           \
+  \  \nnodes_drv_log_sum_60min_jobs    0.1096     0.056     1.946     0.052      \
+  \       \nb_ln_building_sqft              0.7992     0.042    19.070     0.000 \
+  \            \nb_ln_parcels_parcel_far         0.1134     0.031     3.684     0.000\
+  \             \nb_total_jobs                    0.0983     0.006    15.519     0.000\
+  \             \nzones_ln_empden_17              0.1993     0.022     8.939     0.000\
+  \             \nbuilding_type_id_is_52         -0.8667     2.239    -0.387     0.699\
+  \             \nbuilding_type_id_is_21         -0.0779     0.063    -1.243     0.214\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

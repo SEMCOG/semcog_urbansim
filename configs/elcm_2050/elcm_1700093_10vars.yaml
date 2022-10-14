@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.40153769131033307
+- 0.5656183262865216
+- 0.16870894526367258
+- 0.00999080884112848
+- -0.1547912551651497
+- -0.46257642389871995
+- -0.1390828624098934
+- 0.1924250740781774
+- 0.07746491454503801
+- 0.20554230188379707
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector17_jobs + zones_logsum_pop_high_income + b_total_jobs
+  + zones_empden + nodes_walk_sector9_jobs + zones_logsum_pop_low_income + zones_households
+  + zones_population + zones_ln_empden_3 + zones_ln_empden_9 - 1
+name: elcm_1700093
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.245\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.243\nAIC:                   6,636.930   Log-Likelihood:       -3,308.465\n\
+  BIC:                   6,686.007   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  nodes_walk_sector17_jobs        0.4015     0.007    57.321     0.000           \
+  \  \nzones_logsum_pop_high_income    0.5656     0.252     2.243     0.025      \
+  \       \nb_total_jobs                    0.1687     0.026     6.537     0.000 \
+  \            \nzones_empden                    0.0100     0.104     0.096     0.924\
+  \             \nnodes_walk_sector9_jobs        -0.1548     0.049    -3.190     0.001\
+  \             \nzones_logsum_pop_low_income    -0.4626     0.251    -1.845     0.065\
+  \             \nzones_households               -0.1391     0.190    -0.734     0.463\
+  \             \nzones_population                0.1924     0.191     1.007     0.314\
+  \             \nzones_ln_empden_3               0.0775     0.064     1.205     0.228\
+  \             \nzones_ln_empden_9               0.2055     0.077     2.655     0.008\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

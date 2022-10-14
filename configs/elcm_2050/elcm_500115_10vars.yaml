@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.19690811433964672
+- 0.20138363544045557
+- 1.0059968373295793
+- 1.4443227630159579
+- -0.03788610992204779
+- -0.2333370426901247
+- -0.19130824878439204
+- 0.4706481746310173
+- -0.3714378722722519
+- -0.7692018055801167
+max_iter: null
+mct_intx_ops: null
+model_expression: vacant_job_spaces + b_total_jobs + b_ln_non_residential_sqft + building_type_id_is_21
+  + building_type_id_is_71 + building_type_id_is_33 + building_type_id_is_13 + building_type_id_is_23
+  + building_type_id_is_93 + building_type_id_is_41 - 1
+name: elcm_500115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.366\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.364\nAIC:                   5,574.105   Log-Likelihood:       -2,777.053\n\
+  BIC:                   5,623.183   LL-Null:              -4,382.027\n==============================================================================\n\
+  \                               coef   std err         z     P>|z|   Conf. Int.\n\
+  ------------------------------------------------------------------------------\n\
+  vacant_job_spaces           -0.1969     0.022    -9.022     0.000             \n\
+  b_total_jobs                 0.2014     0.015    13.181     0.000             \n\
+  b_ln_non_residential_sqft    1.0060     0.045    22.213     0.000             \n\
+  building_type_id_is_21       1.4443     0.050    28.653     0.000             \n\
+  building_type_id_is_71      -0.0379     0.106    -0.358     0.720             \n\
+  building_type_id_is_33      -0.2333     0.102    -2.279     0.023             \n\
+  building_type_id_is_13      -0.1913     0.123    -1.555     0.120             \n\
+  building_type_id_is_23       0.4706     0.056     8.400     0.000             \n\
+  building_type_id_is_93      -0.3714     5.049    -0.074     0.941             \n\
+  building_type_id_is_41      -0.7692     0.205    -3.760     0.000             \n\
+  =============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

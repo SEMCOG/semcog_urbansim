@@ -1,0 +1,48 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.7855285677361846
+- 0.17556330917951496
+- -0.25025747980905816
+- -0.6627677079687233
+- 0.060209497252465057
+- 1.3183646018647805
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + b_total_jobs + nodes_walk_lowinc_hhs
+  + building_type_id_is_41 + nodes_drv_log_sum_30min_jobs + building_type_id_is_21
+  - 1
+name: elcm_2045_500115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.349\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.348\nAIC:                   5,713.020   Log-Likelihood:       -2,850.510\n\
+  BIC:                   5,742.467   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft       0.7855     0.037    21.127     0.000           \
+  \  \nb_total_jobs                    0.1756     0.015    11.439     0.000      \
+  \       \nnodes_walk_lowinc_hhs          -0.2503     0.065    -3.822     0.000 \
+  \            \nbuilding_type_id_is_41         -0.6628     0.175    -3.794     0.000\
+  \             \nnodes_drv_log_sum_30min_jobs    0.0602     0.041     1.464     0.143\
+  \             \nbuilding_type_id_is_21          1.3184     0.033    40.559     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

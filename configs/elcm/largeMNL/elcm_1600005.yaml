@@ -1,0 +1,58 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.08746717643241421
+- -0.2585754427790357
+- 0.10635426099932747
+- 0.08952671020004097
+- 0.7437814548733145
+- 0.1287032269836608
+- 0.1192549873336553
+- -0.4182284652047356
+- 0.033137271359832216
+- -0.08247554550479261
+- 1.119159454585756
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_low_income + b_is_pre_1945 + zones_ln_empden_4
+  + nodes_drv_log_sum_60min_jobs + b_ln_building_sqft + popden + b_total_jobs + building_type_id_is_31
+  + nodes_walk_ave_lot_sqft + nodes_walk_ave_income + bldg_empratio_16 - 1
+name: elcm_2045_1600005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                989\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     11\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.665\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.662\nAIC:                   2,960.976   Log-Likelihood:       -1,469.488\n\
+  BIC:                   3,014.961   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_low_income     0.0875     0.037     2.359     0.018           \
+  \  \nb_is_pre_1945                  -0.2586     0.049    -5.244     0.000      \
+  \       \nzones_ln_empden_4               0.1064     0.030     3.523     0.000 \
+  \            \nnodes_drv_log_sum_60min_jobs    0.0895     0.048     1.871     0.061\
+  \             \nb_ln_building_sqft              0.7438     0.058    12.879     0.000\
+  \             \npopden                          0.1287     0.026     4.991     0.000\
+  \             \nb_total_jobs                    0.1193     0.010    12.317     0.000\
+  \             \nbuilding_type_id_is_31         -0.4182     0.099    -4.233     0.000\
+  \             \nnodes_walk_ave_lot_sqft         0.0331     0.068     0.485     0.628\
+  \             \nnodes_walk_ave_income          -0.0825     0.045    -1.819     0.069\
+  \             \nbldg_empratio_16                1.1192     0.015    73.622     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

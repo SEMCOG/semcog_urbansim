@@ -1,0 +1,50 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.6808346455605537
+- 0.07793385158664885
+- 0.09661160761228459
+- -0.16908199363756782
+- -4.886786962702163
+- -0.059012913998858996
+- 0.4866282249427115
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_building_sqft + nodes_drv_log_sum_10min_pop + building_type_id_is_31
+  + nodes_walk_ave_lot_sqft + building_type_id_is_13 + nodes_walk_max_retail_far +
+  nodes_drv_log_sum_30min_jobs - 1
+name: elcm_2045_200093
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                993\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      7\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.078\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.077\nAIC:                   8,092.357   Log-Likelihood:       -4,039.179\n\
+  BIC:                   8,126.711   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_ln_building_sqft              0.6808     0.087     7.858     0.000           \
+  \  \nnodes_drv_log_sum_10min_pop     0.0779     0.081     0.961     0.336      \
+  \       \nbuilding_type_id_is_31          0.0966     0.028     3.500     0.000 \
+  \            \nnodes_walk_ave_lot_sqft        -0.1691     0.083    -2.026     0.043\
+  \             \nbuilding_type_id_is_13         -4.8868     0.256   -19.126     0.000\
+  \             \nnodes_walk_max_retail_far      -0.0590     0.040    -1.459     0.145\
+  \             \nnodes_drv_log_sum_30min_jobs    0.4866     0.055     8.910     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

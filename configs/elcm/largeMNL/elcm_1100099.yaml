@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.9562683626439654
+- -0.1301823694173346
+- -1.1524541578890746
+- 3.615228896586465
+- 0.4925132463606298
+- 1.537230301253075
+- 0.8912882852808184
+- -0.1801363229837806
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_low_income + year_built + nodes_walk_log_sum_residential_units
+  + nodes_drv_log_sum_45min_jobs + zones_z_total_jobs + b_ln_non_residential_sqft
+  + building_type_id_is_23 + building_type_id_is_21 - 1
+name: elcm_2045_1100099
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.681\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.680\nAIC:                   2,808.331   Log-Likelihood:       -1,396.165\n\
+  BIC:                   2,847.593   LL-Null:              -4,382.027\n=========================================================================================\n\
+  \                                          coef   std err         z     P>|z|  \
+  \ Conf. Int.\n-----------------------------------------------------------------------------------------\n\
+  zones_logsum_job_low_income            -0.9563     0.089   -10.751     0.000   \
+  \          \nyear_built                             -0.1302     0.066    -1.961\
+  \     0.050             \nnodes_walk_log_sum_residential_units   -1.1525     0.141\
+  \    -8.188     0.000             \nnodes_drv_log_sum_45min_jobs            3.6152\
+  \     0.175    20.712     0.000             \nzones_z_total_jobs               \
+  \       0.4925     0.035    14.164     0.000             \nb_ln_non_residential_sqft\
+  \               1.5372     0.045    33.809     0.000             \nbuilding_type_id_is_23\
+  \                  0.8913     0.040    22.145     0.000             \nbuilding_type_id_is_21\
+  \                 -0.1801     0.099    -1.816     0.069             \n========================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

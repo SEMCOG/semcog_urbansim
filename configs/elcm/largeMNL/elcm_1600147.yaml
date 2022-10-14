@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.43962974946279676
+- 0.0535016858283986
+- 0.20354009293635242
+- 0.046645670597997284
+- -6.863412403788601
+- 0.256996951029602
+- 0.02018987667228565
+- 1.2125103754580775
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_building_sqft + zones_ln_empden_8 + b_total_jobs + nodes_drv_log_sum_15min_retail_jobs
+  + building_type_id_is_41 + nodes_drv_log_sum_20min_pop + nodes_walk_retail + bldg_empratio_16
+  - 1
+name: elcm_2045_1600147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.506\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.504\nAIC:                   4,348.479   Log-Likelihood:       -2,166.239\n\
+  BIC:                   4,387.741   LL-Null:              -4,382.027\n========================================================================================\n\
+  \                                         coef   std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  b_ln_building_sqft                     0.4396     0.046     9.531     0.000    \
+  \         \nzones_ln_empden_8                      0.0535     0.046     1.174  \
+  \   0.241             \nb_total_jobs                           0.2035     0.012\
+  \    17.316     0.000             \nnodes_drv_log_sum_15min_retail_jobs    0.0466\
+  \     0.123     0.380     0.704             \nbuilding_type_id_is_41           \
+  \     -6.8634     0.527   -13.015     0.000             \nnodes_drv_log_sum_20min_pop\
+  \            0.2570     0.131     1.965     0.049             \nnodes_walk_retail\
+  \                      0.0202     0.036     0.560     0.576             \nbldg_empratio_16\
+  \                       1.2125     0.038    31.721     0.000             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
