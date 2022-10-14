@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.013565022892742596
+- -0.17856523350194298
+- 0.8475124686545309
+- -0.12599140968781378
+- 0.11481287593682638
+- 1.0023512994441899
+- -12.580161179004074
+- 0.18634865775907805
+- 0.02242593308448679
+- 0.2168998009907986
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_52 + building_type_id_is_81 + b_ln_non_residential_sqft
+  + parcels_total_sqft + b_total_jobs + bldg_empratio_14 + building_type_id_is_83
+  + nodes_walk_sector14_jobs + parcels_land_cost + building_type_id_is_23 - 1
+name: elcm_1400005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.648\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.646\nAIC:                   3,106.577   Log-Likelihood:       -1,543.288\n\
+  BIC:                   3,155.654   LL-Null:              -4,382.027\n===============================================================================\n\
+  \                                coef   std err         z     P>|z|   Conf. Int.\n\
+  -------------------------------------------------------------------------------\n\
+  building_type_id_is_52        0.0136     0.010     1.346     0.178             \n\
+  building_type_id_is_81       -0.1786       nan       nan       nan             \n\
+  b_ln_non_residential_sqft     0.8475     0.045    18.796     0.000             \n\
+  parcels_total_sqft           -0.1260     0.030    -4.247     0.000             \n\
+  b_total_jobs                  0.1148     0.015     7.878     0.000             \n\
+  bldg_empratio_14              1.0024     0.028    35.221     0.000             \n\
+  building_type_id_is_83      -12.5802       nan       nan       nan             \n\
+  nodes_walk_sector14_jobs      0.1863     0.016    11.626     0.000             \n\
+  parcels_land_cost             0.0224     0.021     1.094     0.274             \n\
+  building_type_id_is_23        0.2169     0.031     6.928     0.000             \n\
+  ==============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

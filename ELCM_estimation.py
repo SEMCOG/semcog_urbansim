@@ -220,10 +220,15 @@ def estimation(SLID):
     print('ARD-DCM done')
 
 if __name__ == "__main__":
+    # run_elcm_large_MNL(job_region, b_region, 1100115, 10)
     slid_list = job_region['slid'].unique().tolist()
     for slid in slid_list:
-        estimation(slid)
-        run_elcm_large_MNL(job_region, b_region, slid, 30)
+        # if selected sector_id, skip it and use job scaling model instead
+        sector_id = slid // 100000
+        if sector_id in [1, 7, 12, 13, 15, 18]:
+            continue
+        # estimation(slid)
+        run_elcm_large_MNL(job_region, b_region, slid, 10, True)
     # estimation(500125)
     # run_elcm_large_MNL(job_region, b_region, 500125, 30)
     # slid which have failed LargeMNL run due to LinAlgError:

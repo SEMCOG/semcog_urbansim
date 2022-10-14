@@ -1,0 +1,54 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.18767350345210806
+- 9.683257078405369e-05
+- 0.9916236767815513
+- 0.35651746678172913
+- -0.4073563461841389
+- -0.1494107140782291
+- -3.7228453173159184
+- 0.025203681564966034
+- 0.39735148706966245
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_high_income + b_total_jobs + b_ln_non_residential_sqft
+  + zones_ln_empden_4 + nodes_drv_log_sum_10min_pop + stories + building_type_id_is_11
+  + year_built + nodes_drv_log_sum_30min_jobs - 1
+name: elcm_2045_400147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                991\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      9\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.290\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.288\nAIC:                   6,240.620   Log-Likelihood:       -3,111.310\n\
+  BIC:                   6,284.790   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_high_income   -0.1877     0.039    -4.848     0.000           \
+  \  \nb_total_jobs                    0.0001     0.024     0.004     0.997      \
+  \       \nb_ln_non_residential_sqft       0.9916     0.042    23.488     0.000 \
+  \            \nzones_ln_empden_4               0.3565     0.023    15.210     0.000\
+  \             \nnodes_drv_log_sum_10min_pop    -0.4074     0.050    -8.086     0.000\
+  \             \nstories                        -0.1494     0.040    -3.742     0.000\
+  \             \nbuilding_type_id_is_11         -3.7228     0.418    -8.898     0.000\
+  \             \nyear_built                      0.0252     0.054     0.465     0.642\
+  \             \nnodes_drv_log_sum_30min_jobs    0.3974     0.052     7.612     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

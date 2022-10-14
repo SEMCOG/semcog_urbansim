@@ -1,0 +1,47 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.47513757279388863
+- -0.23320169403344979
+- -0.7759927817154622
+- 0.23821332565006548
+- 0.07940335814853978
+- 0.06206087528456878
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_building_sqft + nodes_walk_industrial + building_type_id_is_31
+  + nodes_drv_log_sum_15min_retail_jobs + zones_z_total_jobs + parcels_acres - 1
+name: elcm_2045_1600125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.070\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.068\nAIC:                   8,163.969   Log-Likelihood:       -4,075.984\n\
+  BIC:                   8,193.415   LL-Null:              -4,382.027\n========================================================================================\n\
+  \                                         coef   std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  b_ln_building_sqft                     0.4751     0.028    16.757     0.000    \
+  \         \nnodes_walk_industrial                 -0.2332     0.065    -3.561  \
+  \   0.000             \nbuilding_type_id_is_31                -0.7760     0.078\
+  \    -9.973     0.000             \nnodes_drv_log_sum_15min_retail_jobs    0.2382\
+  \     0.044     5.422     0.000             \nzones_z_total_jobs               \
+  \      0.0794     0.032     2.473     0.013             \nparcels_acres        \
+  \                  0.0621     0.025     2.528     0.011             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

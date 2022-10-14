@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.06552597511252842
+- 0.08741374896032739
+- 0.6708985578663906
+- -0.12375213374723995
+- -0.17064879764072294
+- 0.28724423701503293
+- 0.24298692293638244
+- -0.551023912780973
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_ln_empden_3 + nodes_drv_log_sum_60min_jobs + b_ln_building_sqft
+  + popden + nodes_walk_quarter_mile_to_transit + building_type_id_is_31 + nodes_walk_ave_lot_sqft
+  + building_type_id_is_13 - 1
+name: elcm_2045_400005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.236\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.234\nAIC:                   6,713.322   Log-Likelihood:       -3,348.661\n\
+  BIC:                   6,752.584   LL-Null:              -4,382.027\n=======================================================================================\n\
+  \                                        coef   std err         z     P>|z|   Conf.\
+  \ Int.\n---------------------------------------------------------------------------------------\n\
+  zones_ln_empden_3                     0.0655     0.024     2.720     0.007     \
+  \        \nnodes_drv_log_sum_60min_jobs          0.0874     0.044     1.996    \
+  \ 0.046             \nb_ln_building_sqft                    0.6709     0.040   \
+  \ 16.812     0.000             \npopden                               -0.1238  \
+  \   0.037    -3.318     0.001             \nnodes_walk_quarter_mile_to_transit \
+  \  -0.1706     0.048    -3.565     0.000             \nbuilding_type_id_is_31  \
+  \              0.2872     0.021    13.907     0.000             \nnodes_walk_ave_lot_sqft\
+  \               0.2430     0.039     6.208     0.000             \nbuilding_type_id_is_13\
+  \               -0.5510     0.092    -5.978     0.000             \n======================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

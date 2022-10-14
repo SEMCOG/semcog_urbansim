@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.12298143242664003
+- 0.9461628937227805
+- 0.028760895948506702
+- 0.11114867154377628
+- -0.0499315603714927
+- -0.02945224286983182
+- 1.2170356217992755
+- 0.1829233487392663
+max_iter: null
+mct_intx_ops: null
+model_expression: year_built + building_type_id_is_23 + nodes_walk_industrial + b_ln_parcels_parcel_far
+  + stories + zones_logsum_pop_high_income + b_ln_non_residential_sqft + nodes_drv_log_sum_30min_jobs
+  - 1
+name: elcm_2045_800161
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.313\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.311\nAIC:                   6,040.059   Log-Likelihood:       -3,012.029\n\
+  BIC:                   6,079.321   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  year_built                     -0.1230     0.043    -2.865     0.004           \
+  \  \nbuilding_type_id_is_23          0.9462     0.028    33.914     0.000      \
+  \       \nnodes_walk_industrial           0.0288     0.033     0.880     0.379 \
+  \            \nb_ln_parcels_parcel_far         0.1111     0.024     4.553     0.000\
+  \             \nstories                        -0.0499     0.032    -1.572     0.116\
+  \             \nzones_logsum_pop_high_income   -0.0295     0.050    -0.587     0.557\
+  \             \nb_ln_non_residential_sqft       1.2170     0.036    33.549     0.000\
+  \             \nnodes_drv_log_sum_30min_jobs    0.1829     0.080     2.286     0.022\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

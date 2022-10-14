@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.20725915831659908
+- 0.7968030212824884
+- 0.4880623043634451
+- -0.3581900948682363
+- 0.7524476803494526
+- -0.08658511217041615
+- 0.1971555484953547
+- -0.41850152807859686
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + b_ln_non_residential_sqft + nodes_drv_log_sum_60min_jobs
+  + nodes_drv_log_sum_10min_pop + building_type_id_is_31 + nodes_walk_ave_lot_sqft
+  + zones_ln_empden_3 + building_type_id_is_41 - 1
+name: elcm_2045_300147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.586\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.584\nAIC:                   3,648.650   Log-Likelihood:       -1,816.325\n\
+  BIC:                   3,687.912   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.2073     0.011    18.261     0.000           \
+  \  \nb_ln_non_residential_sqft       0.7968     0.065    12.259     0.000      \
+  \       \nnodes_drv_log_sum_60min_jobs    0.4881     0.075     6.510     0.000 \
+  \            \nnodes_drv_log_sum_10min_pop    -0.3582     0.077    -4.656     0.000\
+  \             \nbuilding_type_id_is_31          0.7524     0.029    26.068     0.000\
+  \             \nnodes_walk_ave_lot_sqft        -0.0866     0.043    -2.026     0.043\
+  \             \nzones_ln_empden_3               0.1972     0.018    11.101     0.000\
+  \             \nbuilding_type_id_is_41         -0.4185     0.163    -2.561     0.010\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

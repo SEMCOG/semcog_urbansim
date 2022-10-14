@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 268
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.11960259174587214
+- 0.13366602392470422
+- -0.23029797581006278
+- 0.011396133357398058
+- 0.6678683241438336
+- -0.10640103593719882
+- 0.5312360688027228
+- -0.672557077879062
+- -0.09254810205335909
+- 0.4288823027461982
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_high_income + b_total_jobs + b_is_pre_1945 + zones_ln_empden_7
+  + b_ln_building_sqft + nodes_walk_industrial + nodes_drv_log_sum_10min_pop + building_type_id_is_31
+  + zones_transit_jobs_50min + bldg_empratio_8 - 1
+name: elcm_2045_800147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:            268\nModel:         Multinomial\
+  \ Logit   Df Residuals:                258\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.539\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.530\nAIC:                   1,103.045   Log-Likelihood:         -541.523\n\
+  BIC:                   1,138.955   LL-Null:              -1,174.383\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_high_income    0.1196     0.074     1.622     0.105           \
+  \  \nb_total_jobs                    0.1337     0.018     7.599     0.000      \
+  \       \nb_is_pre_1945                  -0.2303     0.086    -2.667     0.008 \
+  \            \nzones_ln_empden_7               0.0114     0.067     0.169     0.866\
+  \             \nb_ln_building_sqft              0.6679     0.079     8.480     0.000\
+  \             \nnodes_walk_industrial          -0.1064     0.164    -0.649     0.516\
+  \             \nnodes_drv_log_sum_10min_pop     0.5312     0.140     3.793     0.000\
+  \             \nbuilding_type_id_is_31         -0.6726     0.172    -3.899     0.000\
+  \             \nzones_transit_jobs_50min       -0.0925     0.082    -1.129     0.259\
+  \             \nbldg_empratio_8                 0.4289     0.010    42.691     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

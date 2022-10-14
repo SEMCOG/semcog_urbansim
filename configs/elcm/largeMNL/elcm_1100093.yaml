@@ -1,0 +1,50 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 342
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 1.2741980500828798
+- -0.04200343726419167
+- -0.02900364262059952
+- 1.5559647056791843
+- 0.4129914438617378
+- 0.23649350507854155
+- 0.5698704426940009
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + b_total_jobs + building_type_id_is_31
+  + nodes_drv_log_sum_15min_retail_jobs + year_built + bldg_empratio_2 + bldg_empratio_11
+  - 1
+name: elcm_2045_1100093
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:            342\nModel:         Multinomial\
+  \ Logit   Df Residuals:                335\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      7\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.934\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.929\nAIC:                     212.527   Log-Likelihood:          -99.263\n\
+  BIC:                     239.370   LL-Null:              -1,498.653\n========================================================================================\n\
+  \                                         coef   std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft              1.2742     0.383     3.323     0.001    \
+  \         \nb_total_jobs                          -0.0420     0.158    -0.265  \
+  \   0.791             \nbuilding_type_id_is_31                -0.0290     0.245\
+  \    -0.118     0.906             \nnodes_drv_log_sum_15min_retail_jobs    1.5560\
+  \     0.836     1.862     0.063             \nyear_built                       \
+  \      0.4130     0.657     0.628     0.530             \nbldg_empratio_2      \
+  \                  0.2365     0.233     1.016     0.310             \nbldg_empratio_11\
+  \                       0.5699     0.022    26.293     0.000             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

@@ -1,0 +1,47 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.00837145532152178
+- 0.7947053799112769
+- 0.18122499051308308
+- -0.3666186750831709
+- 1.2504862862078714
+- -0.8169265217018545
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_ln_empden_3 + b_ln_non_residential_sqft + b_total_jobs + building_type_id_is_31
+  + nodes_drv_log_sum_15min_retail_jobs + nodes_drv_log_sum_20min_pop - 1
+name: elcm_2045_500147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.277\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.276\nAIC:                   6,345.939   Log-Likelihood:       -3,166.970\n\
+  BIC:                   6,375.386   LL-Null:              -4,382.027\n========================================================================================\n\
+  \                                         coef   std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  zones_ln_empden_3                     -0.0084     0.031    -0.269     0.788    \
+  \         \nb_ln_non_residential_sqft              0.7947     0.031    25.600  \
+  \   0.000             \nb_total_jobs                           0.1812     0.009\
+  \    20.051     0.000             \nbuilding_type_id_is_31                -0.3666\
+  \     0.043    -8.561     0.000             \nnodes_drv_log_sum_15min_retail_jobs\
+  \    1.2505     0.148     8.453     0.000             \nnodes_drv_log_sum_20min_pop\
+  \           -0.8169     0.136    -6.010     0.000             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

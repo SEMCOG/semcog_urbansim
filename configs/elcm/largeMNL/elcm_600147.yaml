@@ -1,0 +1,50 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.07431126030350847
+- 0.04966770770347742
+- 0.6784725317880285
+- 0.7042626045194337
+- 0.23292644226985973
+- -0.19802315712042978
+- 0.013511986290392538
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_sqft_price_nonres + zones_employment + b_ln_building_sqft +
+  nodes_drv_log_sum_15min_retail_jobs + building_type_id_is_33 + building_type_id_is_11
+  + nodes_walk_ave_income - 1
+name: elcm_2045_600147
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                993\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      7\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.121\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.120\nAIC:                   7,715.101   Log-Likelihood:       -3,850.551\n\
+  BIC:                   7,749.456   LL-Null:              -4,382.027\n========================================================================================\n\
+  \                                         coef   std err         z     P>|z|   Conf.\
+  \ Int.\n----------------------------------------------------------------------------------------\n\
+  b_ln_sqft_price_nonres                 0.0743     0.043     1.732     0.083    \
+  \         \nzones_employment                       0.0497     0.032     1.550  \
+  \   0.121             \nb_ln_building_sqft                     0.6785     0.037\
+  \    18.530     0.000             \nnodes_drv_log_sum_15min_retail_jobs    0.7043\
+  \     0.055    12.746     0.000             \nbuilding_type_id_is_33           \
+  \      0.2329     0.024     9.841     0.000             \nbuilding_type_id_is_11\
+  \                -0.1980     0.044    -4.516     0.000             \nnodes_walk_ave_income\
+  \                  0.0135     0.035     0.383     0.702             \n========================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

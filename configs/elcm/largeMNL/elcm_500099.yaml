@@ -1,0 +1,49 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -4.352601839091372
+- 0.8969917695334806
+- 0.18443979311412542
+- 0.3290849009558776
+- 0.4884861973467413
+- 0.0012089109382877332
+- 0.11690436076409914
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_11 + b_ln_land_area + zones_ln_empden_9 + b_ln_building_sqft
+  + nodes_walk_retail + nodes_drv_log_sum_20min_pop + zones_transit_jobs_50min - 1
+name: elcm_2045_500099
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                993\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      7\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.248\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.246\nAIC:                   6,606.975   Log-Likelihood:       -3,296.487\n\
+  BIC:                   6,641.329   LL-Null:              -4,382.027\n================================================================================\n\
+  \                                 coef   std err         z     P>|z|   Conf. Int.\n\
+  --------------------------------------------------------------------------------\n\
+  building_type_id_is_11        -4.3526     0.352   -12.361     0.000            \
+  \ \nb_ln_land_area                 0.8970     0.162     5.523     0.000        \
+  \     \nzones_ln_empden_9              0.1844     0.029     6.442     0.000    \
+  \         \nb_ln_building_sqft             0.3291     0.161     2.046     0.041\
+  \             \nnodes_walk_retail              0.4885     0.027    18.193     0.000\
+  \             \nnodes_drv_log_sum_20min_pop    0.0012     0.052     0.023     0.982\
+  \             \nzones_transit_jobs_50min       0.1169     0.040     2.888     0.004\
+  \             \n================================================================================"
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

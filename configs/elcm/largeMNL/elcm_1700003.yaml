@@ -1,0 +1,45 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -3.6170059803133143
+- 0.5098773942136743
+- 0.06164458082244442
+- 0.2185095713873508
+- 0.007313434311691061
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_41 + b_ln_building_sqft + b_total_jobs + building_type_id_is_21
+  + nodes_drv_log_sum_60min_jobs - 1
+name: elcm_2045_1700003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                995\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      5\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.052\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.051\nAIC:                   8,320.948   Log-Likelihood:       -4,155.474\n\
+  BIC:                   8,345.486   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  building_type_id_is_41         -3.6170     0.257   -14.061     0.000           \
+  \  \nb_ln_building_sqft              0.5099     0.033    15.238     0.000      \
+  \       \nb_total_jobs                    0.0616     0.018     3.430     0.001 \
+  \            \nbuilding_type_id_is_21          0.2185     0.033     6.699     0.000\
+  \             \nnodes_drv_log_sum_60min_jobs    0.0073     0.034     0.214     0.830\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

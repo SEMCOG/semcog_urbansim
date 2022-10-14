@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 1.0007509356271307
+- 0.6688777747111964
+- 0.19270636724663043
+- -0.09062909559963805
+- 0.03147325375848457
+- -4.237147067904095
+- 0.02949993024614322
+- -0.08342142698459515
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + building_type_id_is_23 + b_total_jobs
+  + nodes_walk_lowinc_hhs + nodes_walk_ave_lot_sqft + building_type_id_is_11 + zones_transit_jobs_50min
+  + bldg_empratio_12 - 1
+name: elcm_2045_1000099
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.475\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.473\nAIC:                   4,617.465   Log-Likelihood:       -2,300.733\n\
+  BIC:                   4,656.727   LL-Null:              -4,382.027\n==============================================================================\n\
+  \                               coef   std err         z     P>|z|   Conf. Int.\n\
+  ------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft    1.0008     0.076    13.218     0.000             \n\
+  building_type_id_is_23       0.6689     0.032    20.993     0.000             \n\
+  b_total_jobs                 0.1927     0.008    23.165     0.000             \n\
+  nodes_walk_lowinc_hhs       -0.0906     0.025    -3.568     0.000             \n\
+  nodes_walk_ave_lot_sqft      0.0315     0.069     0.458     0.647             \n\
+  building_type_id_is_11      -4.2371     0.443    -9.560     0.000             \n\
+  zones_transit_jobs_50min     0.0295     0.046     0.648     0.517             \n\
+  bldg_empratio_12            -0.0834     0.081    -1.032     0.302             \n\
+  =============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

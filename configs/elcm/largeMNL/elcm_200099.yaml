@@ -1,0 +1,53 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.29683967165893155
+- -0.21113467613987594
+- -0.14069718530996092
+- 0.0826179239503044
+- 0.2799029872304335
+- -0.25360254296238094
+- -0.16928070863202466
+- 0.22608468536020287
+max_iter: null
+mct_intx_ops: null
+model_expression: b_ln_non_residential_sqft + zones_logsum_pop_low_income + nodes_walk_log_sum_residential_units
+  + b_total_jobs + building_type_id_is_31 + building_type_id_is_11 + building_age
+  + nodes_drv_log_sum_30min_jobs - 1
+name: elcm_2045_200099
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.064\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.062\nAIC:                   8,220.312   Log-Likelihood:       -4,102.156\n\
+  BIC:                   8,259.574   LL-Null:              -4,382.027\n=========================================================================================\n\
+  \                                          coef   std err         z     P>|z|  \
+  \ Conf. Int.\n-----------------------------------------------------------------------------------------\n\
+  b_ln_non_residential_sqft               0.2968     0.039     7.706     0.000   \
+  \          \nzones_logsum_pop_low_income            -0.2111     0.047    -4.494\
+  \     0.000             \nnodes_walk_log_sum_residential_units   -0.1407     0.047\
+  \    -3.014     0.003             \nb_total_jobs                            0.0826\
+  \     0.010     8.140     0.000             \nbuilding_type_id_is_31           \
+  \       0.2799     0.026    10.619     0.000             \nbuilding_type_id_is_11\
+  \                 -0.2536     0.065    -3.872     0.000             \nbuilding_age\
+  \                           -0.1693     0.044    -3.850     0.000             \n\
+  nodes_drv_log_sum_30min_jobs            0.2261     0.059     3.852     0.000   \
+  \          \n========================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

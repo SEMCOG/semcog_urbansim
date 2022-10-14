@@ -1,0 +1,48 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.1175861146130353
+- -0.5275043144022872
+- 1.6242838018365198
+- -0.07555340917244045
+- -4.853876464850126
+- -0.25839651930480306
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_high_income + nodes_walk_office + b_ln_non_residential_sqft
+  + nodes_drv_log_sum_10min_pop + building_type_id_is_11 + building_type_id_is_51
+  - 1
+name: elcm_2045_300115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.516\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.515\nAIC:                   4,253.677   Log-Likelihood:       -2,120.838\n\
+  BIC:                   4,283.123   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_high_income   -0.1176     0.042    -2.807     0.005           \
+  \  \nnodes_walk_office              -0.5275     0.126    -4.191     0.000      \
+  \       \nb_ln_non_residential_sqft       1.6243     0.033    49.198     0.000 \
+  \            \nnodes_drv_log_sum_10min_pop    -0.0756     0.051    -1.496     0.135\
+  \             \nbuilding_type_id_is_11         -4.8539     0.532    -9.122     0.000\
+  \             \nbuilding_type_id_is_51         -0.2584     0.168    -1.540     0.124\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

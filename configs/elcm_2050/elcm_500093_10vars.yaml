@@ -1,0 +1,57 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.05722680958188616
+- 0.19420146965140528
+- 1.1629316058040018
+- 0.11169863649731938
+- 1.1863017339742474
+- -0.22534142393641649
+- 0.016231778902523614
+- -0.2242330760459062
+- -0.17269639834185227
+- 0.02273843876307557
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector5_jobs + b_total_jobs + b_ln_non_residential_sqft
+  + zones_logsum_pop_high_income + building_type_id_is_21 + nodes_walk_sector3_jobs
+  + zones_empden + nodes_walk_sector10_jobs + nodes_walk_sector9_jobs + nodes_walk_sector16_jobs
+  - 1
+name: elcm_500093
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.519\nTime:                      15:27   Pseudo R-bar-squ.:     \
+  \    0.517\nAIC:                   4,237.219   Log-Likelihood:       -2,108.610\n\
+  BIC:                   4,286.297   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  nodes_walk_sector5_jobs         0.0572     0.014     4.123     0.000           \
+  \  \nb_total_jobs                    0.1942     0.022     8.715     0.000      \
+  \       \nb_ln_non_residential_sqft       1.1629     0.044    26.427     0.000 \
+  \            \nzones_logsum_pop_high_income    0.1117     0.048     2.351     0.019\
+  \             \nbuilding_type_id_is_21          1.1863     0.037    32.403     0.000\
+  \             \nnodes_walk_sector3_jobs        -0.2253     0.107    -2.105     0.035\
+  \             \nzones_empden                    0.0162     0.037     0.439     0.661\
+  \             \nnodes_walk_sector10_jobs       -0.2242     0.520    -0.431     0.667\
+  \             \nnodes_walk_sector9_jobs        -0.1727     0.068    -2.558     0.011\
+  \             \nnodes_walk_sector16_jobs        0.0227     0.029     0.780     0.435\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

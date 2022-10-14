@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.15433544338035826
+- 0.5641077241735536
+- 0.27768488825013304
+- 0.3494383102550355
+- 0.1369019739834282
+- -0.46648447087734113
+- 0.24980511764887203
+- -0.6665072870356178
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + b_ln_non_residential_sqft + nodes_drv_log_sum_60min_jobs
+  + b_ln_land_area + nodes_drv_log_sum_10min_pop + building_type_id_is_33 + zones_ln_empden_12
+  + zones_logsum_pop_high_income - 1
+name: elcm_2045_1000161
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.197\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.195\nAIC:                   7,055.867   Log-Likelihood:       -3,519.934\n\
+  BIC:                   7,095.129   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.1543     0.008    18.996     0.000           \
+  \  \nb_ln_non_residential_sqft       0.5641     0.096     5.894     0.000      \
+  \       \nnodes_drv_log_sum_60min_jobs    0.2777     0.101     2.746     0.006 \
+  \            \nb_ln_land_area                  0.3494     0.092     3.809     0.000\
+  \             \nnodes_drv_log_sum_10min_pop     0.1369     0.072     1.913     0.056\
+  \             \nbuilding_type_id_is_33         -0.4665     0.077    -6.094     0.000\
+  \             \nzones_ln_empden_12              0.2498     0.025    10.142     0.000\
+  \             \nzones_logsum_pop_high_income   -0.6665     0.055   -12.011     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

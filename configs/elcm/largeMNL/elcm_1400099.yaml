@@ -1,0 +1,54 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.19025216276651202
+- 0.11153698120056511
+- 0.8378435190526979
+- 0.29766478303445176
+- 0.07849955594300126
+- -1.0778979562990492
+- 0.09998133064619236
+- -0.04067910763983528
+- 0.3795222468078445
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_high_income + b_total_jobs + b_ln_building_sqft
+  + nodes_walk_medical + nodes_drv_log_sum_45min_jobs + building_type_id_is_31 + zones_ln_empden_17
+  + building_age + building_type_id_is_51 - 1
+name: elcm_2045_1400099
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                991\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      9\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.283\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.281\nAIC:                   6,298.254   Log-Likelihood:       -3,140.127\n\
+  BIC:                   6,342.424   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_high_income   -0.1903     0.051    -3.758     0.000           \
+  \  \nb_total_jobs                    0.1115     0.010    11.093     0.000      \
+  \       \nb_ln_building_sqft              0.8378     0.037    22.480     0.000 \
+  \            \nnodes_walk_medical              0.2977     0.024    12.647     0.000\
+  \             \nnodes_drv_log_sum_45min_jobs    0.0785     0.041     1.926     0.054\
+  \             \nbuilding_type_id_is_31         -1.0779     0.070   -15.401     0.000\
+  \             \nzones_ln_empden_17              0.1000     0.033     3.012     0.003\
+  \             \nbuilding_age                   -0.0407     0.041    -0.981     0.327\
+  \             \nbuilding_type_id_is_51          0.3795     0.018    21.061     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

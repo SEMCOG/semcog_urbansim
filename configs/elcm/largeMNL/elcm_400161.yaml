@@ -1,0 +1,52 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.1352308440825142
+- -0.5382253861358033
+- -0.30109581619507897
+- 0.10085278497518968
+- 0.20856183824473343
+- 0.13060935275516442
+- 0.7540907882934237
+- -0.39107681862716553
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_job_high_income + vacant_job_spaces + b_is_pre_1945
+  + nodes_drv_log_sum_45min_jobs + building_type_id_is_32 + zones_ln_empden_17 + b_ln_non_residential_sqft
+  + nodes_walk_ave_income - 1
+name: elcm_2045_400161
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-14   Pseudo R-squ.:\
+  \             0.214\nTime:                      15:26   Pseudo R-bar-squ.:     \
+  \    0.212\nAIC:                   6,902.222   Log-Likelihood:       -3,443.111\n\
+  BIC:                   6,941.485   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_job_high_income   -0.1352     0.060    -2.259     0.024           \
+  \  \nvacant_job_spaces              -0.5382     0.062    -8.634     0.000      \
+  \       \nb_is_pre_1945                  -0.3011     0.058    -5.224     0.000 \
+  \            \nnodes_drv_log_sum_45min_jobs    0.1009     0.049     2.074     0.038\
+  \             \nbuilding_type_id_is_32          0.2086     0.007    30.841     0.000\
+  \             \nzones_ln_empden_17              0.1306     0.047     2.751     0.006\
+  \             \nb_ln_non_residential_sqft       0.7541     0.043    17.603     0.000\
+  \             \nnodes_walk_ave_income          -0.3911     0.052    -7.466     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

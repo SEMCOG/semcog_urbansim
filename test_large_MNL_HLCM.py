@@ -63,7 +63,7 @@ job_filter_columns = ["building_id", "slid", "home_based_status"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 
 # reload variables?
-def load_hh_and_b(LARGE_AREA_ID, RELOAD=False):
+def load_hh_and_b(LARGE_AREA_ID=5, RELOAD=False):
     if RELOAD:
         thetas = pd.read_csv("out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
         # config
@@ -149,7 +149,8 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     print('done')
 
-def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
+def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, compare_2045=False):
+    print("Running elcm largeMNL on slid %s..." % SLID)
     thetas = pd.read_csv("./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
     job = job_region[job_region.slid == SLID]
     job = job[job.building_id > 1]
@@ -220,7 +221,29 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
     with open("configs/elcm_2050/elcm_%s_%svars.yaml" % (SLID, len(selected_variables)), 'w') as f:
         yaml.dump(m.to_dict(), f, default_flow_style=False)
     #mm.register(m)
+    if compare_2045:
+        m_2045 = LargeMultinomialLogitStep()
+        m_2045.choosers = ['job']
+        m_2045.chooser_sample_size = min(job_sample_size, job.shape[0])
 
+        # Define the geographic alternatives agent is selecting amongst
+        m_2045.alternatives = ['b']
+        m_2045.choice_column = choice_column
+        m_2045.alt_sample_size = job_estimation_sample_size
+            
+        with open("./configs/elcm/large_area_sector/elcm%s.yaml" % SLID, 'r') as f:
+            config_2045 = yaml.load(f, Loader=yaml.FullLoader)
+        selected_variables = config_2045['model_expression']
+        # filter out those unavailable
+        selected_variables = [col for col in selected_variables if col in b.columns]
+
+        m_2045.model_expression = util.str_model_expression(selected_variables, add_constant=False)
+        m_2045.constrained_choices = False
+        m_2045.fit()
+        m_2045.name = 'elcm_2045_%s' % (SLID)
+        with open("configs/elcm/largeMNL/elcm_%s.yaml" % (SLID), 'w') as f:
+            yaml.dump(m_2045.to_dict(), f, default_flow_style=False)
+            
     print('done')
 
 if __name__ == '__main__':
