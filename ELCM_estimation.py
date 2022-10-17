@@ -14,7 +14,7 @@ import time
 import yaml
 
 from dcm_ard_libs import minimize, neglog_DCM
-from test_large_MNL_HLCM import run_elcm_large_MNL, run_large_MNL
+from fit_large_MNL_LCM import run_elcm_large_MNL
 
 # from guppy import hpy; h=hpy()
 # import pymrmr
