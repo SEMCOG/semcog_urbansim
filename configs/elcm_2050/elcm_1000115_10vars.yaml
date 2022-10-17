@@ -9,16 +9,16 @@ chooser_size: null
 choosers: job
 constrained_choices: false
 fitted_parameters:
-- 0.237196947995071
-- 0.15141546733817604
-- -553.3833196974799
-- -0.1775262526991855
-- 0.0402787161053761
-- -0.07971387648416214
-- 0.014760557296246106
-- 0.3180253667961498
-- 0.17583705091504298
-- 0.0283417153578732
+- 0.22878181054270563
+- 0.09632575687416921
+- -561.3192922025545
+- -0.13108185009495676
+- 0.05384159150299435
+- -0.049844040936240105
+- -0.027330898721123403
+- 0.32250483415149434
+- 0.15546763055066412
+- 0.05099212264125809
 max_iter: null
 mct_intx_ops: null
 model_expression: nodes_walk_sector10_jobs + b_total_jobs + nodes_walk_sector7_jobs
@@ -35,23 +35,23 @@ summary_table: "                  CHOICEMODELS ESTIMATION RESULTS               
   \  \n===================================================================\nDep. Var.:\
   \                chosen   No. Observations:          1,000\nModel:         Multinomial\
   \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
-  \             0.472\nTime:                      15:27   Pseudo R-bar-squ.:     \
-  \    0.469\nAIC:                   4,651.409   Log-Likelihood:       -2,315.704\n\
-  BIC:                   4,700.486   LL-Null:              -4,382.027\n===================================================================================\n\
+  \ Model:                     10\nDate:                 2022-10-17   Pseudo R-squ.:\
+  \             0.430\nTime:                      15:42   Pseudo R-bar-squ.:     \
+  \    0.428\nAIC:                   5,012.206   Log-Likelihood:       -2,496.103\n\
+  BIC:                   5,061.283   LL-Null:              -4,382.027\n===================================================================================\n\
   \                                 coef   std err            z     P>|z|   Conf.\
   \ Int.\n-----------------------------------------------------------------------------------\n\
-  nodes_walk_sector10_jobs       0.2372     0.011       21.898     0.000         \
-  \    \nb_total_jobs                   0.1514     0.021        7.045     0.000  \
-  \           \nnodes_walk_sector7_jobs     -553.3833     0.513   -1,078.454     0.000\
-  \             \nnodes_walk_sector3_jobs       -0.1775     0.165       -1.078   \
-  \  0.281             \nnodes_walk_sector9_jobs        0.0403     0.048        0.833\
-  \     0.405             \nnodes_walk_sector14_jobs      -0.0797     0.060      \
-  \ -1.334     0.182             \nnodes_walk_sector8_jobs        0.0148     0.057\
-  \        0.261     0.794             \nb_ln_non_residential_sqft      0.3180   \
-  \  0.056        5.642     0.000             \nzones_empden                   0.1758\
-  \     0.035        4.961     0.000             \nnodes_walk_sector6_jobs       \
-  \ 0.0283     0.012        2.332     0.020             \n==================================================================================="
+  nodes_walk_sector10_jobs       0.2288     0.011       21.408     0.000         \
+  \    \nb_total_jobs                   0.0963     0.021        4.516     0.000  \
+  \           \nnodes_walk_sector7_jobs     -561.3193     0.488   -1,150.506     0.000\
+  \             \nnodes_walk_sector3_jobs       -0.1311     0.129       -1.014   \
+  \  0.310             \nnodes_walk_sector9_jobs        0.0538     0.050        1.083\
+  \     0.279             \nnodes_walk_sector14_jobs      -0.0498     0.066      \
+  \ -0.757     0.449             \nnodes_walk_sector8_jobs       -0.0273     0.058\
+  \       -0.473     0.636             \nb_ln_non_residential_sqft      0.3225   \
+  \  0.055        5.850     0.000             \nzones_empden                   0.1555\
+  \     0.038        4.137     0.000             \nnodes_walk_sector6_jobs       \
+  \ 0.0510     0.012        4.200     0.000             \n==================================================================================="
 tags: []
 template: LargeMultinomialLogitStep
 template_version: 0.2.dev9

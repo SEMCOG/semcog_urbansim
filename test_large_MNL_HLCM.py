@@ -60,7 +60,7 @@ job_estimation_sample_size = 80
 choice_column = "building_id"
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 job_filter_columns = ["building_id", "slid", "home_based_status"]
-b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units", "non_residential_sqft"]
 
 # reload variables?
 def load_hh_and_b(LARGE_AREA_ID=5, RELOAD=False):

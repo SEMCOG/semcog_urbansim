@@ -9,16 +9,16 @@ chooser_size: null
 choosers: job
 constrained_choices: false
 fitted_parameters:
-- 0.03152455277086345
-- -0.104735643883606
-- -0.49300694441405485
-- 0.03523862040652826
-- -3.60167154481918
-- 0.9812460030375636
-- 0.7260012448868921
-- 0.24957590738805563
-- 0.4634030552610555
-- 0.3086670773103361
+- 0.02332776884841517
+- -0.11275056055335604
+- -0.9233093686923508
+- 0.028816969623187076
+- -16.35486670379462
+- 0.9789661024024247
+- 0.6621342932293556
+- 0.25127682561234516
+- 0.4422148595966944
+- 0.2921376140917473
 max_iter: null
 mct_intx_ops: null
 model_expression: building_type_id_is_91 + building_type_id_is_81 + building_type_id_is_82
@@ -34,23 +34,23 @@ summary_table: "                  CHOICEMODELS ESTIMATION RESULTS               
   \  \n===================================================================\nDep. Var.:\
   \                chosen   No. Observations:          1,000\nModel:         Multinomial\
   \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
-  \             0.546\nTime:                      15:26   Pseudo R-bar-squ.:     \
-  \    0.544\nAIC:                   3,999.357   Log-Likelihood:       -1,989.678\n\
-  BIC:                   4,048.434   LL-Null:              -4,382.027\n======================================================================================\n\
-  \                               coef           std err         z     P>|z|   Conf.\
-  \ Int.\n--------------------------------------------------------------------------------------\n\
-  building_type_id_is_91       0.0315             0.006     4.948     0.000      \
-  \       \nbuilding_type_id_is_81      -0.1047   103,422,342.309    -0.000     1.000\
-  \             \nbuilding_type_id_is_82      -0.4930               nan       nan\
-  \       nan             \nb_total_jobs                 0.0352             0.006\
-  \     5.548     0.000             \nbuilding_type_id_is_83      -3.6017        \
-  \       nan       nan       nan             \nb_ln_non_residential_sqft    0.9812\
-  \             0.044    22.252     0.000             \nbuilding_type_id_is_23   \
-  \    0.7260             0.037    19.472     0.000             \nnodes_walk_sector8_jobs\
-  \      0.2496             0.015    17.139     0.000             \nbldg_empratio_8\
-  \              0.4634             0.012    39.425     0.000             \nbuilding_type_id_is_21\
-  \       0.3087             0.055     5.612     0.000             \n======================================================================================"
+  \ Model:                     10\nDate:                 2022-10-17   Pseudo R-squ.:\
+  \             0.529\nTime:                      15:41   Pseudo R-bar-squ.:     \
+  \    0.526\nAIC:                   4,150.300   Log-Likelihood:       -2,065.150\n\
+  BIC:                   4,199.378   LL-Null:              -4,382.027\n=======================================================================================\n\
+  \                                coef           std err         z     P>|z|   Conf.\
+  \ Int.\n---------------------------------------------------------------------------------------\n\
+  building_type_id_is_91        0.0233             0.006     3.735     0.000     \
+  \        \nbuilding_type_id_is_81       -0.1128   293,895,889.143    -0.000    \
+  \ 1.000             \nbuilding_type_id_is_82       -0.9233    50,521,317.376   \
+  \ -0.000     1.000             \nb_total_jobs                  0.0288          \
+  \   0.006     4.731     0.000             \nbuilding_type_id_is_83      -16.3549\
+  \               nan       nan       nan             \nb_ln_non_residential_sqft\
+  \     0.9790             0.045    21.968     0.000             \nbuilding_type_id_is_23\
+  \        0.6621             0.037    18.105     0.000             \nnodes_walk_sector8_jobs\
+  \       0.2513             0.015    17.113     0.000             \nbldg_empratio_8\
+  \               0.4422             0.011    38.740     0.000             \nbuilding_type_id_is_21\
+  \        0.2921             0.054     5.388     0.000             \n======================================================================================="
 tags: []
 template: LargeMultinomialLogitStep
 template_version: 0.2.dev9

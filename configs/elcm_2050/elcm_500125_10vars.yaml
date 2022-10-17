@@ -9,16 +9,16 @@ chooser_size: null
 choosers: job
 constrained_choices: false
 fitted_parameters:
-- 0.1257356700910692
-- 0.024068097566820174
-- 0.8781234164276283
-- -0.1525504812414665
-- -0.14609977516852612
-- -0.45801599371939916
-- -0.16057587129184026
-- -0.7003171118940038
-- 1.1514693737027457
-- 0.4829428231920439
+- -0.010519516888182928
+- 0.04704072633493608
+- 0.8990364727604537
+- -0.3565597261341247
+- -0.17275864061616508
+- -0.8190746803459471
+- 0.004407395486194907
+- -0.6679348561935026
+- 1.0267572544663492
+- 0.46129696227085243
 max_iter: null
 mct_intx_ops: null
 model_expression: b_total_jobs + improvement_value + b_ln_non_residential_sqft + building_type_id_is_81
@@ -34,23 +34,23 @@ summary_table: "                  CHOICEMODELS ESTIMATION RESULTS               
   \  \n===================================================================\nDep. Var.:\
   \                chosen   No. Observations:          1,000\nModel:         Multinomial\
   \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
-  \             0.384\nTime:                      15:26   Pseudo R-bar-squ.:     \
-  \    0.382\nAIC:                   5,420.561   Log-Likelihood:       -2,700.281\n\
-  BIC:                   5,469.639   LL-Null:              -4,382.027\n======================================================================================\n\
+  \ Model:                     10\nDate:                 2022-10-17   Pseudo R-squ.:\
+  \             0.327\nTime:                      15:41   Pseudo R-bar-squ.:     \
+  \    0.325\nAIC:                   5,915.533   Log-Likelihood:       -2,947.766\n\
+  BIC:                   5,964.610   LL-Null:              -4,382.027\n======================================================================================\n\
   \                               coef           std err         z     P>|z|   Conf.\
   \ Int.\n--------------------------------------------------------------------------------------\n\
-  b_total_jobs                 0.1257             0.012    10.298     0.000      \
-  \       \nimprovement_value            0.0241             0.009     2.760     0.006\
-  \             \nb_ln_non_residential_sqft    0.8781             0.119     7.364\
-  \     0.000             \nbuilding_type_id_is_81      -0.1526   103,080,110.428\
-  \    -0.000     1.000             \nvacant_job_spaces           -0.1461        \
-  \     0.026    -5.632     0.000             \nbuilding_type_id_is_82      -0.4580\
+  b_total_jobs                -0.0105             0.012    -0.870     0.384      \
+  \       \nimprovement_value            0.0470             0.012     3.876     0.000\
+  \             \nb_ln_non_residential_sqft    0.8990             0.125     7.173\
+  \     0.000             \nbuilding_type_id_is_81      -0.3566   145,944,199.548\
+  \    -0.000     1.000             \nvacant_job_spaces           -0.1728        \
+  \     0.025    -6.824     0.000             \nbuilding_type_id_is_82      -0.8191\
   \               nan       nan       nan             \nbuilding_type_id_is_52   \
-  \   -0.1606             0.034    -4.665     0.000             \nbuilding_type_id_is_83\
-  \      -0.7003               nan       nan       nan             \nbuilding_type_id_is_21\
-  \       1.1515             0.036    31.766     0.000             \nb_ln_land_area\
-  \               0.4829             0.114     4.254     0.000             \n======================================================================================"
+  \    0.0044             0.022     0.198     0.843             \nbuilding_type_id_is_83\
+  \      -0.6679               nan       nan       nan             \nbuilding_type_id_is_21\
+  \       1.0268             0.034    30.285     0.000             \nb_ln_land_area\
+  \               0.4613             0.118     3.908     0.000             \n======================================================================================"
 tags: []
 template: LargeMultinomialLogitStep
 template_version: 0.2.dev9
