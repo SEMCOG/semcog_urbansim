@@ -9,16 +9,16 @@ chooser_size: null
 choosers: job
 constrained_choices: false
 fitted_parameters:
-- -0.7554273652905353
-- -1.7142240076456665
-- -0.05883301607920148
-- 0.15537151800670795
-- -0.4499145253416434
-- 1.1051511572580701
-- 0.42252399731916257
-- -0.7054880480018776
-- -2.654829339850427
-- 0.08567838814442509
+- -0.699028343548935
+- -1.5626811338944673
+- 0.010188405161177888
+- 0.1590631465870023
+- -0.4091246446682457
+- 1.0725091937996665
+- 0.4302617900038128
+- -0.7934121164892531
+- -2.2515110360960304
+- 0.07916868690171824
 max_iter: null
 mct_intx_ops: null
 model_expression: nodes_walk_sector15_jobs + building_type_id_is_92 + bldg_empratio_15
@@ -34,23 +34,23 @@ summary_table: "                  CHOICEMODELS ESTIMATION RESULTS               
   \  \n===================================================================\nDep. Var.:\
   \                chosen   No. Observations:          1,000\nModel:         Multinomial\
   \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     10\nDate:                 2022-10-14   Pseudo R-squ.:\
-  \             0.342\nTime:                      15:26   Pseudo R-bar-squ.:     \
-  \    0.340\nAIC:                   5,785.605   Log-Likelihood:       -2,882.802\n\
-  BIC:                   5,834.682   LL-Null:              -4,382.027\n====================================================================================\n\
+  \ Model:                     10\nDate:                 2022-10-17   Pseudo R-squ.:\
+  \             0.347\nTime:                      15:41   Pseudo R-bar-squ.:     \
+  \    0.345\nAIC:                   5,738.944   Log-Likelihood:       -2,859.472\n\
+  BIC:                   5,788.021   LL-Null:              -4,382.027\n====================================================================================\n\
   \                              coef          std err         z     P>|z|   Conf.\
   \ Int.\n------------------------------------------------------------------------------------\n\
-  nodes_walk_sector15_jobs   -0.7554            0.025   -30.740     0.000        \
-  \     \nbuilding_type_id_is_92     -1.7142   23,314,230.908    -0.000     1.000\
-  \             \nbldg_empratio_15           -0.0588            0.014    -4.104  \
-  \   0.000             \nb_total_jobs                0.1554            0.011    14.534\
-  \     0.000             \nbuilding_type_id_is_81     -0.4499   61,563,830.862  \
-  \  -0.000     1.000             \nnodes_walk_sector14_jobs    1.1052           \
-  \ 0.029    38.260     0.000             \nbuilding_type_id_is_51      0.4225   \
-  \         0.015    27.283     0.000             \nzones_empden               -0.7055\
-  \            0.033   -21.145     0.000             \nbuilding_type_id_is_83    \
-  \ -2.6548              nan       nan       nan             \nnodes_walk_sector11_jobs\
-  \    0.0857            0.009     9.994     0.000             \n===================================================================================="
+  nodes_walk_sector15_jobs   -0.6990            0.024   -29.005     0.000        \
+  \     \nbuilding_type_id_is_92     -1.5627   24,836,307.644    -0.000     1.000\
+  \             \nbldg_empratio_15            0.0102            0.013     0.764  \
+  \   0.445             \nb_total_jobs                0.1591            0.011    14.906\
+  \     0.000             \nbuilding_type_id_is_81     -0.4091   97,712,822.460  \
+  \  -0.000     1.000             \nnodes_walk_sector14_jobs    1.0725           \
+  \ 0.030    35.878     0.000             \nbuilding_type_id_is_51      0.4303   \
+  \         0.015    28.282     0.000             \nzones_empden               -0.7934\
+  \            0.035   -22.376     0.000             \nbuilding_type_id_is_83    \
+  \ -2.2515              nan       nan       nan             \nnodes_walk_sector11_jobs\
+  \    0.0792            0.010     8.021     0.000             \n===================================================================================="
 tags: []
 template: LargeMultinomialLogitStep
 template_version: 0.2.dev9

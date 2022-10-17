@@ -123,6 +123,8 @@ if RELOAD:
 else:
     job_region = pd.read_csv('jobs.csv', index_col=0)
     b_region = pd.read_csv('b_elcm.csv', index_col=0)
+    orca.add_table('jobs', job_region)
+    orca.add_table('buildings', b_region)
 
 def estimation(SLID):
     job_sample_size = 1000
@@ -227,8 +229,11 @@ if __name__ == "__main__":
         sector_id = slid // 100000
         if sector_id in [1, 7, 12, 13, 15, 18]:
             continue
+        # skip slid which have very small sample size
+        if slid in [800115, 1100115, 1100147]:
+            continue
         # estimation(slid)
-        run_elcm_large_MNL(job_region, b_region, slid, 10, True)
+        run_elcm_large_MNL(job_region, b_region, slid, 10, False)
     # estimation(500125)
     # run_elcm_large_MNL(job_region, b_region, 500125, 30)
     # slid which have failed LargeMNL run due to LinAlgError:
