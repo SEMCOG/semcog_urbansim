@@ -1,0 +1,46 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.05534452419936354
+- 0.9178096495091644
+- 0.1405446279434667
+- 0.833364073238436
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector14_jobs + b_ln_non_residential_sqft + zones_logsum_job_high_income
+  + bldg_empratio_14 - 1
+name: elcm_1400093
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.6185382541473383
+- 0.6051095597893037
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                996\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      4\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.606\nTime:                      16:10   Pseudo R-bar-squ.:     \
+  \    0.605\nAIC:                   3,460.841   Log-Likelihood:       -1,726.420\n\
+  BIC:                   3,480.472   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  nodes_walk_sector14_jobs        0.0553     0.006     8.560     0.000           \
+  \  \nb_ln_non_residential_sqft       0.9178     0.043    21.451     0.000      \
+  \       \nzones_logsum_job_high_income    0.1405     0.048     2.932     0.003 \
+  \            \nbldg_empratio_14                0.8334     0.012    67.942     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

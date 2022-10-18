@@ -1,0 +1,64 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.18705158433302224
+- -0.9122837730289499
+- 1.3506919549065834
+- 1.2218673752303197
+- 0.8845286854242077
+- -0.5756953801349083
+- 0.8599727560596347
+- 0.9838082832213991
+- 0.6557781082154003
+- 0.48546003944443905
+- 0.5542412829572088
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_52 + zones_logsum_pop_high_income + building_type_id_is_21
+  + building_type_id_is_23 + building_type_id_is_61 + zones_ln_empden_12 + building_type_id_is_51
+  + zones_logsum_pop_low_income + building_type_id_is_13 + building_type_id_is_53
+  + building_type_id_is_14 - 1
+name: elcm_1400115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.35014794442517394
+- 0.36627985863373713
+- 0.34346707264280163
+- 0.3387223236297252
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                989\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     11\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.341\nTime:                      16:09   Pseudo R-bar-squ.:     \
+  \    0.339\nAIC:                   5,795.473   Log-Likelihood:       -2,886.736\n\
+  BIC:                   5,849.458   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  building_type_id_is_52          0.1871     0.005    35.829     0.000           \
+  \  \nzones_logsum_pop_high_income   -0.9123     0.078   -11.647     0.000      \
+  \       \nbuilding_type_id_is_21          1.3507     0.059    22.733     0.000 \
+  \            \nbuilding_type_id_is_23          1.2219     0.040    30.536     0.000\
+  \             \nbuilding_type_id_is_61          0.8845     0.029    30.139     0.000\
+  \             \nzones_ln_empden_12             -0.5757     0.057   -10.038     0.000\
+  \             \nbuilding_type_id_is_51          0.8600     0.018    46.743     0.000\
+  \             \nzones_logsum_pop_low_income     0.9838     0.078    12.628     0.000\
+  \             \nbuilding_type_id_is_13          0.6558     0.052    12.524     0.000\
+  \             \nbuilding_type_id_is_53          0.4855     0.008    60.431     0.000\
+  \             \nbuilding_type_id_is_14          0.5542     0.043    12.886     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

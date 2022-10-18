@@ -1,0 +1,51 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.20163757878666402
+- 0.40915845751683216
+- 0.3122389039184449
+- 1.0626478373926707
+- 0.2283839434164127
+- 0.16117183221229794
+max_iter: null
+mct_intx_ops: null
+model_expression: zones_logsum_pop_high_income + b_ln_non_residential_sqft + nodes_walk_sector16_jobs
+  + bldg_empratio_16 + sqft_price_nonres + b_total_jobs - 1
+name: elcm_1600115
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.513050737890057
+- 0.505579578934173
+- 0.5124304452822084
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                994\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      6\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.514\nTime:                      16:09   Pseudo R-bar-squ.:     \
+  \    0.512\nAIC:                   4,273.086   Log-Likelihood:       -2,130.543\n\
+  BIC:                   4,302.532   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  zones_logsum_pop_high_income   -0.2016     0.039    -5.220     0.000           \
+  \  \nb_ln_non_residential_sqft       0.4092     0.048     8.581     0.000      \
+  \       \nnodes_walk_sector16_jobs        0.3122     0.022    14.208     0.000 \
+  \            \nbldg_empratio_16                1.0626     0.018    59.021     0.000\
+  \             \nsqft_price_nonres               0.2284     0.025     8.967     0.000\
+  \             \nb_total_jobs                    0.1612     0.037     4.372     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

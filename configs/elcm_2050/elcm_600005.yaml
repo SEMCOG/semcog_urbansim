@@ -1,0 +1,58 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.04355243969207622
+- 0.15964161823411677
+- 0.12375953426175268
+- 0.4049971053357276
+- 0.6304675250629865
+- 0.23123865687166406
+- -0.0680954172198716
+- 0.14527096422538954
+max_iter: null
+mct_intx_ops: null
+model_expression: building_type_id_is_42 + nodes_walk_sector6_jobs + b_total_jobs
+  + b_ln_non_residential_sqft + bldg_empratio_6 + zones_ln_empden_6 + nodes_walk_sector16_jobs
+  + building_type_id_is_33 - 1
+name: elcm_600005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.787471440174364
+- 0.7933486861814254
+- 0.7686572761465031
+- 0.8005795278892491
+- 0.7788492982927238
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.781\nTime:                      16:08   Pseudo R-bar-squ.:     \
+  \    0.779\nAIC:                   1,938.177   Log-Likelihood:         -961.088\n\
+  BIC:                   1,977.439   LL-Null:              -4,382.027\n==============================================================================\n\
+  \                               coef   std err         z     P>|z|   Conf. Int.\n\
+  ------------------------------------------------------------------------------\n\
+  building_type_id_is_42       0.0436     0.006     7.210     0.000             \n\
+  nodes_walk_sector6_jobs      0.1596     0.014    11.713     0.000             \n\
+  b_total_jobs                 0.1238     0.015     8.201     0.000             \n\
+  b_ln_non_residential_sqft    0.4050     0.047     8.581     0.000             \n\
+  bldg_empratio_6              0.6305     0.011    58.637     0.000             \n\
+  zones_ln_empden_6            0.2312     0.027     8.446     0.000             \n\
+  nodes_walk_sector16_jobs    -0.0681     0.033    -2.076     0.038             \n\
+  building_type_id_is_33       0.1453     0.032     4.498     0.000             \n\
+  =============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

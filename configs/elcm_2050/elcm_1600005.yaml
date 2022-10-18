@@ -1,0 +1,68 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.340075671126922
+- 0.17508607382173008
+- -0.23450715952279236
+- 0.15462297596066688
+- -0.4948636574393051
+- -0.11805105539023251
+- 0.18175528891028908
+- -0.1335833514840672
+- 0.48372316997414183
+- 0.2915014816005967
+- 0.3266934049265757
+- 0.8519529224011666
+- 0.24824469276589367
+- 1.0160652612933865
+max_iter: null
+mct_intx_ops: null
+model_expression: parcels_total_sqft + b_total_jobs + bldg_empratio_11 + nodes_walk_sector11_jobs
+  + nodes_walk_sector3_jobs + building_type_id_is_52 + nodes_walk_sector16_jobs +
+  bldg_empratio_18 + building_type_id_is_21 + b_ln_parcel_sqft + building_type_id_is_61
+  + b_ln_building_sqft + b_ln_parcels_parcel_far + building_type_id_is_65 - 1
+name: elcm_1600005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.5838579392150827
+- 0.5618535448035797
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                986\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     14\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.565\nTime:                      16:08   Pseudo R-bar-squ.:     \
+  \    0.562\nAIC:                   3,839.939   Log-Likelihood:       -1,905.969\n\
+  BIC:                   3,908.647   LL-Null:              -4,382.027\n=============================================================================\n\
+  \                              coef   std err         z     P>|z|   Conf. Int.\n\
+  -----------------------------------------------------------------------------\n\
+  parcels_total_sqft         -0.3401     0.032   -10.753     0.000             \n\
+  b_total_jobs                0.1751     0.018     9.724     0.000             \n\
+  bldg_empratio_11           -0.2345     0.056    -4.185     0.000             \n\
+  nodes_walk_sector11_jobs    0.1546     0.015    10.547     0.000             \n\
+  nodes_walk_sector3_jobs    -0.4949     0.103    -4.819     0.000             \n\
+  building_type_id_is_52     -0.1181     0.031    -3.750     0.000             \n\
+  nodes_walk_sector16_jobs    0.1818     0.015    12.445     0.000             \n\
+  bldg_empratio_18           -0.1336     0.047    -2.827     0.005             \n\
+  building_type_id_is_21      0.4837     0.072     6.690     0.000             \n\
+  b_ln_parcel_sqft            0.2915     0.083     3.512     0.000             \n\
+  building_type_id_is_61      0.3267     0.018    17.838     0.000             \n\
+  b_ln_building_sqft          0.8520     0.070    12.168     0.000             \n\
+  b_ln_parcels_parcel_far     0.2482     0.035     7.117     0.000             \n\
+  building_type_id_is_65      1.0161     0.024    42.461     0.000             \n\
+  ============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

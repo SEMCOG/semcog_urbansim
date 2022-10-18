@@ -1,0 +1,62 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- -0.07951105923537996
+- 1.378808571118104
+- 0.95010383055356
+- 0.2673786605843031
+- 0.4190454360992286
+- 0.12079017347088034
+- 0.40169558907906594
+- -0.1823193903564864
+- 0.31231927342195015
+- 0.14900896566146496
+- 0.1346052554211845
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector11_jobs + building_type_id_is_23 + building_type_id_is_21
+  + building_type_id_is_31 + building_type_id_is_33 + bldg_empratio_11 + building_type_id_is_51
+  + building_type_id_is_41 + nodes_walk_sector9_jobs + building_type_id_is_63 + building_type_id_is_32
+  - 1
+name: elcm_900003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.2447526452606671
+- 0.2219912595981678
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                989\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     11\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.225\nTime:                      16:09   Pseudo R-bar-squ.:     \
+  \    0.222\nAIC:                   6,818.510   Log-Likelihood:       -3,398.255\n\
+  BIC:                   6,872.495   LL-Null:              -4,382.027\n=============================================================================\n\
+  \                              coef   std err         z     P>|z|   Conf. Int.\n\
+  -----------------------------------------------------------------------------\n\
+  nodes_walk_sector11_jobs   -0.0795     0.010    -7.969     0.000             \n\
+  building_type_id_is_23      1.3788     0.061    22.581     0.000             \n\
+  building_type_id_is_21      0.9501     0.079    12.059     0.000             \n\
+  building_type_id_is_31      0.2674     0.087     3.062     0.002             \n\
+  building_type_id_is_33      0.4190     0.062     6.768     0.000             \n\
+  bldg_empratio_11            0.1208     0.019     6.246     0.000             \n\
+  building_type_id_is_51      0.4017     0.050     7.955     0.000             \n\
+  building_type_id_is_41     -0.1823     0.077    -2.380     0.017             \n\
+  nodes_walk_sector9_jobs     0.3123     0.012    26.558     0.000             \n\
+  building_type_id_is_63      0.1490     0.048     3.104     0.002             \n\
+  building_type_id_is_32      0.1346     0.023     5.893     0.000             \n\
+  ============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

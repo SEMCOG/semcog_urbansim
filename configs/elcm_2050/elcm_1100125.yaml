@@ -1,0 +1,58 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.31822775464058817
+- -1.1193552808140241
+- -0.37229638643641183
+- -1.9430699990038127
+- 3.2058824103324035
+- -0.16557560099945412
+- -1.3203289028795915
+- 0.7678309962779359
+- 0.33429610761569994
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + parcels_total_sqft + parcels_land_cost + parcels_acres
+  + b_ln_building_sqft + stories + b_ln_land_area + nodes_walk_sector11_jobs + zones_ln_empden_10
+  - 1
+name: elcm_1100125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.855816093682239
+- 0.8389356512172164
+- 0.8783321593088169
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                991\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      9\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.880\nTime:                      16:10   Pseudo R-bar-squ.:     \
+  \    0.878\nAIC:                   1,066.303   Log-Likelihood:         -524.152\n\
+  BIC:                   1,110.473   LL-Null:              -4,382.027\n=============================================================================\n\
+  \                              coef   std err         z     P>|z|   Conf. Int.\n\
+  -----------------------------------------------------------------------------\n\
+  b_total_jobs                0.3182     0.025    12.876     0.000             \n\
+  parcels_total_sqft         -1.1194     0.145    -7.720     0.000             \n\
+  parcels_land_cost          -0.3723     0.106    -3.511     0.000             \n\
+  parcels_acres              -1.9431     0.448    -4.334     0.000             \n\
+  b_ln_building_sqft          3.2059     0.430     7.452     0.000             \n\
+  stories                    -0.1656     0.093    -1.772     0.076             \n\
+  b_ln_land_area             -1.3203     0.439    -3.009     0.003             \n\
+  nodes_walk_sector11_jobs    0.7678     0.019    39.802     0.000             \n\
+  zones_ln_empden_10          0.3343     0.058     5.747     0.000             \n\
+  ============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

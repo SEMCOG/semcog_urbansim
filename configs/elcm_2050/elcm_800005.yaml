@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.11788771616817866
+- 0.2876145160285001
+- -0.0852310589494146
+- -0.1502134209309002
+- -0.025841036152657825
+- 1.0400229289160465
+- -0.128684401198472
+- -0.24237780048904678
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + nodes_walk_sector8_jobs + nodes_walk_sector9_jobs
+  + zones_logsum_job_high_income + parcels_land_cost + b_ln_non_residential_sqft +
+  bldg_empratio_11 + b_ln_land_area - 1
+name: elcm_800005
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.5020989141863575
+- 0.5032821448684802
+- 0.47667138245629115
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.478\nTime:                      16:08   Pseudo R-bar-squ.:     \
+  \    0.477\nAIC:                   4,586.480   Log-Likelihood:       -2,285.240\n\
+  BIC:                   4,625.742   LL-Null:              -4,382.027\n=================================================================================\n\
+  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
+  ---------------------------------------------------------------------------------\n\
+  b_total_jobs                    0.1179     0.010    12.396     0.000           \
+  \  \nnodes_walk_sector8_jobs         0.2876     0.015    19.444     0.000      \
+  \       \nnodes_walk_sector9_jobs        -0.0852     0.015    -5.594     0.000 \
+  \            \nzones_logsum_job_high_income   -0.1502     0.029    -5.159     0.000\
+  \             \nparcels_land_cost              -0.0258     0.013    -1.982     0.048\
+  \             \nb_ln_non_residential_sqft       1.0400     0.062    16.679     0.000\
+  \             \nbldg_empratio_11               -0.1287     0.035    -3.651     0.000\
+  \             \nb_ln_land_area                 -0.2424     0.069    -3.502     0.000\
+  \             \n================================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
