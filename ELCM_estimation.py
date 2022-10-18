@@ -230,10 +230,10 @@ if __name__ == "__main__":
         if sector_id in [1, 7, 12, 13, 15, 18]:
             continue
         # skip slid which have very small sample size
-        if slid in [800115, 1100115, 1100147]:
+        if slid in [1100115, 1100147]:
             continue
         # estimation(slid)
-        run_elcm_large_MNL(job_region, b_region, slid, 10, False)
+        run_elcm_large_MNL(job_region, b_region, slid, 20, False)
     # estimation(500125)
     # run_elcm_large_MNL(job_region, b_region, 500125, 30)
     # slid which have failed LargeMNL run due to LinAlgError:

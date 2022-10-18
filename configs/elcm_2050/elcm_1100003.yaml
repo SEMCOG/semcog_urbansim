@@ -1,0 +1,56 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.34296031915774466
+- -0.521484652010886
+- 0.20368860276261425
+- 1.579025791130799
+- 3.6517550249450528
+- -0.1731925194690511
+- -2.110932767080154
+- -0.18289464387004847
+max_iter: null
+mct_intx_ops: null
+model_expression: nodes_walk_sector11_jobs + nodes_walk_sector9_jobs + b_total_jobs
+  + b_ln_sqft_price_nonres + b_ln_building_sqft + improvement_value + b_ln_land_area
+  + stories - 1
+name: elcm_1100003
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.929186857404073
+- 0.9147296338527022
+- 0.9086924000387626
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                992\nMethod:       Maximum Likelihood   Df\
+  \ Model:                      8\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.911\nTime:                      16:10   Pseudo R-bar-squ.:     \
+  \    0.909\nAIC:                     800.225   Log-Likelihood:         -392.112\n\
+  BIC:                     839.487   LL-Null:              -4,382.027\n=============================================================================\n\
+  \                              coef   std err         z     P>|z|   Conf. Int.\n\
+  -----------------------------------------------------------------------------\n\
+  nodes_walk_sector11_jobs    0.3430     0.010    35.045     0.000             \n\
+  nodes_walk_sector9_jobs    -0.5215     0.019   -27.256     0.000             \n\
+  b_total_jobs                0.2037     0.011    17.744     0.000             \n\
+  b_ln_sqft_price_nonres      1.5790     0.188     8.408     0.000             \n\
+  b_ln_building_sqft          3.6518     0.451     8.106     0.000             \n\
+  improvement_value          -0.1732     0.036    -4.861     0.000             \n\
+  b_ln_land_area             -2.1109     0.444    -4.755     0.000             \n\
+  stories                    -0.1829     0.060    -3.025     0.002             \n\
+  ============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9

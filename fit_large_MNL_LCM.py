@@ -13,8 +13,6 @@ import time
 from tqdm import tqdm
 import yaml
 
-from dcm_ard_libs import minimize, neglog_DCM
-
 from urbansim_templates.models import LargeMultinomialLogitStep
 
 # from guppy import hpy; h=hpy()
@@ -217,9 +215,24 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
     # m.out_chooser_filters = ['building_id == -1']
 
     m.fit()
+    fp = m.model.results['fit_parameters']
+    rho = [m.model.results['log_likelihood']['rho_bar_squared']]
+    while fp[(fp['P-Values']>0.1) | (fp['P-Values'].isna())].shape[0]>0:
+        # when there are variables with p > .1
+        # removing them and refit
+        new_vars_inds = [i for i in range(
+            fp.shape[0]) if i not in fp[(fp['P-Values']>0.1) | (fp['P-Values'].isna())].index]
+        new_vars = [m.model.results['x_names'][i] for i in new_vars_inds]
+        m.model_expression = util.str_model_expression(new_vars, add_constant=False)
+        m.fit()
+        fp = m.model.results['fit_parameters']
+        rho.append(m.model.results['log_likelihood']['rho_bar_squared'])
+
     m.name = 'elcm_%s' % (SLID)
-    with open("configs/elcm_2050/elcm_%s_%svars.yaml" % (SLID, len(selected_variables)), 'w') as f:
-        yaml.dump(m.to_dict(), f, default_flow_style=False)
+    with open("configs/elcm_2050/elcm_%s.yaml" % (SLID), 'w') as f:
+        out_obj = m.to_dict()
+        out_obj['rsquared_change'] = rho
+        yaml.dump(out_obj, f, default_flow_style=False)
     #mm.register(m)
     if compare_2045:
         m_2045 = LargeMultinomialLogitStep()

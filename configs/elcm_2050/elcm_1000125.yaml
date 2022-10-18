@@ -1,0 +1,60 @@
+alt_capacity: null
+alt_filters: null
+alt_sample_size: 80
+alternatives: b
+choice_column: building_id
+chooser_filters: null
+chooser_sample_size: 1000
+chooser_size: null
+choosers: job
+constrained_choices: false
+fitted_parameters:
+- 0.23569474183192266
+- 0.8973859206905587
+- 1.1841319412933369
+- 0.20820996979547243
+- 0.09699614570276713
+- -0.4187228573128889
+- -0.6032061702564615
+- -1.1353435384013022
+- -0.15230254541702226
+- 0.06622977408154568
+max_iter: null
+mct_intx_ops: null
+model_expression: b_total_jobs + nodes_walk_sector10_jobs + b_ln_non_residential_sqft
+  + improvement_value + bldg_empratio_11 + parcels_land_cost + nodes_walk_sector11_jobs
+  + parcels_total_sqft + nodes_walk_sector5_jobs + stories - 1
+name: elcm_1000125
+out_alt_filters: null
+out_alternatives: null
+out_chooser_filters: null
+out_choosers: null
+out_column: null
+rsquared_change:
+- 0.4361967677038362
+- 0.4360129263804866
+- 0.4217508148540777
+summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
+  \  \n===================================================================\nDep. Var.:\
+  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
+  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
+  \ Model:                     10\nDate:                 2022-10-18   Pseudo R-squ.:\
+  \             0.424\nTime:                      16:07   Pseudo R-bar-squ.:     \
+  \    0.422\nAIC:                   5,067.807   Log-Likelihood:       -2,523.903\n\
+  BIC:                   5,116.884   LL-Null:              -4,382.027\n==============================================================================\n\
+  \                               coef   std err         z     P>|z|   Conf. Int.\n\
+  ------------------------------------------------------------------------------\n\
+  b_total_jobs                 0.2357     0.014    16.507     0.000             \n\
+  nodes_walk_sector10_jobs     0.8974     0.039    22.767     0.000             \n\
+  b_ln_non_residential_sqft    1.1841     0.037    32.233     0.000             \n\
+  improvement_value            0.2082     0.030     6.931     0.000             \n\
+  bldg_empratio_11             0.0970     0.029     3.387     0.001             \n\
+  parcels_land_cost           -0.4187     0.069    -6.036     0.000             \n\
+  nodes_walk_sector11_jobs    -0.6032     0.041   -14.764     0.000             \n\
+  parcels_total_sqft          -1.1353     0.064   -17.854     0.000             \n\
+  nodes_walk_sector5_jobs     -0.1523     0.047    -3.234     0.001             \n\
+  stories                      0.0662     0.010     6.751     0.000             \n\
+  =============================================================================="
+tags: []
+template: LargeMultinomialLogitStep
+template_version: 0.2.dev9
