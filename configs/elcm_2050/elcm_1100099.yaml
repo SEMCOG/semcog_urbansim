@@ -1,54 +1,57 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.1888645043351719
-- 0.7875734191881824
-- 1.8908861026236294
-- -0.5197320356165119
-- -0.570426910936997
-- -0.8776975991974516
-- -1.2203801622042465
-max_iter: null
-mct_intx_ops: null
-model_expression: nodes_walk_sector11_jobs + nodes_drv_log_sum_20min_pop + b_ln_non_residential_sqft
-  + bldg_empratio_14 + nodes_walk_log_sum_residential_units + nodes_walk_sector5_jobs
-  + b_ln_parcel_sqft - 1
-name: elcm_1100099
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.8381817362373367
-- 0.8341072414376314
-- 0.8372319765277494
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                993\nMethod:       Maximum Likelihood   Df\
-  \ Model:                      7\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.839\nTime:                      16:10   Pseudo R-bar-squ.:     \
-  \    0.837\nAIC:                   1,426.508   Log-Likelihood:         -706.254\n\
-  BIC:                   1,460.862   LL-Null:              -4,382.027\n=========================================================================================\n\
-  \                                          coef   std err         z     P>|z|  \
-  \ Conf. Int.\n-----------------------------------------------------------------------------------------\n\
-  nodes_walk_sector11_jobs                0.1889     0.003    55.329     0.000   \
-  \          \nnodes_drv_log_sum_20min_pop             0.7876     0.183     4.306\
-  \     0.000             \nb_ln_non_residential_sqft               1.8909     0.097\
-  \    19.555     0.000             \nbldg_empratio_14                       -0.5197\
-  \     0.248    -2.099     0.036             \nnodes_walk_log_sum_residential_units\
-  \   -0.5704     0.173    -3.292     0.001             \nnodes_walk_sector5_jobs\
-  \                -0.8777     0.236    -3.721     0.000             \nb_ln_parcel_sqft\
-  \                       -1.2204     0.145    -8.436     0.000             \n========================================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.3908481841249293
+    - 1.4109073901436984
+    - -1.0646493604492222
+    - 1.5938266256662912
+    - -0.1759597054173328
+    - -0.4283037120798025
+    - -0.758084377259135
+    - -0.6299003458822529
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: nodes_walk_sector11_jobs + b_ln_non_residential_sqft + nodes_drv_log_sum_15min_retail_jobs
+        + nodes_drv_log_sum_10min_pop + nodes_walk_sector6_jobs + nodes_walk_log_sum_residential_units
+        + nodes_walk_sector5_jobs + b_ln_parcel_sqft - 1
+    name: elcm_1100099
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                992\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      8\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.867\nTime:          \
+        \            17:54   Pseudo R-bar-squ.:         0.865\nAIC:              \
+        \     1,184.735   Log-Likelihood:         -584.368\nBIC:                 \
+        \  1,223.997   LL-Null:              -4,382.027\n=========================================================================================\n\
+        \                                          coef   std err         z     P>|z|\
+        \   Conf. Int.\n-----------------------------------------------------------------------------------------\n\
+        nodes_walk_sector11_jobs                0.3908     0.005    74.032     0.000\
+        \             \nb_ln_non_residential_sqft               1.4109     0.115 \
+        \   12.255     0.000             \nnodes_drv_log_sum_15min_retail_jobs   \
+        \ -1.0646     0.451    -2.358     0.018             \nnodes_drv_log_sum_10min_pop\
+        \             1.5938     0.372     4.288     0.000             \nnodes_walk_sector6_jobs\
+        \                -0.1760     0.023    -7.769     0.000             \nnodes_walk_log_sum_residential_units\
+        \   -0.4283     0.153    -2.794     0.005             \nnodes_walk_sector5_jobs\
+        \                -0.7581     0.265    -2.861     0.004             \nb_ln_parcel_sqft\
+        \                       -0.6299     0.179    -3.521     0.000            \
+        \ \n========================================================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

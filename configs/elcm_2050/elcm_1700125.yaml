@@ -1,59 +1,60 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.088974160749111
-- 0.9820233510052603
-- 0.366950891963409
-- 0.4691497079386178
-- -0.46073731328193546
-- 0.3880207139082219
-- -0.7107807211028191
-- 0.08754371080229639
-- 0.12540953802217775
-- 0.8851669441968569
-max_iter: null
-mct_intx_ops: null
-model_expression: b_total_jobs + b_ln_non_residential_sqft + nodes_walk_sector17_jobs
-  + building_type_id_is_23 + vacant_job_spaces + building_type_id_is_21 + nodes_walk_sector10_jobs
-  + improvement_value + b_ln_sqft_price_nonres + bldg_empratio_17 - 1
-name: elcm_1700125
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.33310999829775956
-- 0.3262239803860122
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                990\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     10\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.329\nTime:                      16:07   Pseudo R-bar-squ.:     \
-  \    0.326\nAIC:                   5,905.009   Log-Likelihood:       -2,942.504\n\
-  BIC:                   5,954.086   LL-Null:              -4,382.027\n==============================================================================\n\
-  \                               coef   std err         z     P>|z|   Conf. Int.\n\
-  ------------------------------------------------------------------------------\n\
-  b_total_jobs                 0.0890     0.018     4.950     0.000             \n\
-  b_ln_non_residential_sqft    0.9820     0.039    25.167     0.000             \n\
-  nodes_walk_sector17_jobs     0.3670     0.020    18.186     0.000             \n\
-  building_type_id_is_23       0.4691     0.037    12.616     0.000             \n\
-  vacant_job_spaces           -0.4607     0.039   -11.809     0.000             \n\
-  building_type_id_is_21       0.3880     0.039    10.064     0.000             \n\
-  nodes_walk_sector10_jobs    -0.7108     0.065   -10.986     0.000             \n\
-  improvement_value            0.0875     0.023     3.817     0.000             \n\
-  b_ln_sqft_price_nonres       0.1254     0.039     3.246     0.001             \n\
-  bldg_empratio_17             0.8852     0.019    46.640     0.000             \n\
-  =============================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.05021786601804691
+    - 1.0801706242385045
+    - 0.33782988941613473
+    - 0.3858529195399055
+    - -0.5379522999772497
+    - 0.36513464377423926
+    - -0.5397158544920482
+    - 0.16031398707767952
+    - -0.16531708194758638
+    - 0.8544679310640626
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: b_total_jobs + b_ln_non_residential_sqft + nodes_walk_sector17_jobs
+        + building_type_id_is_23 + vacant_job_spaces + building_type_id_is_21 + nodes_walk_sector10_jobs
+        + b_ln_sqft_price_nonres + building_type_id_is_33 + bldg_empratio_17 - 1
+    name: elcm_1700125
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     10\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.325\nTime:          \
+        \            17:50   Pseudo R-bar-squ.:         0.323\nAIC:              \
+        \     5,936.094   Log-Likelihood:       -2,958.047\nBIC:                 \
+        \  5,985.172   LL-Null:              -4,382.027\n==============================================================================\n\
+        \                               coef   std err         z     P>|z|   Conf.\
+        \ Int.\n------------------------------------------------------------------------------\n\
+        b_total_jobs                 0.0502     0.019     2.618     0.009        \
+        \     \nb_ln_non_residential_sqft    1.0802     0.036    29.946     0.000\
+        \             \nnodes_walk_sector17_jobs     0.3378     0.017    19.595  \
+        \   0.000             \nbuilding_type_id_is_23       0.3859     0.040    \
+        \ 9.754     0.000             \nvacant_job_spaces           -0.5380     0.041\
+        \   -13.233     0.000             \nbuilding_type_id_is_21       0.3651  \
+        \   0.041     8.953     0.000             \nnodes_walk_sector10_jobs    -0.5397\
+        \     0.059    -9.131     0.000             \nb_ln_sqft_price_nonres     \
+        \  0.1603     0.038     4.185     0.000             \nbuilding_type_id_is_33\
+        \      -0.1653     0.071    -2.322     0.020             \nbldg_empratio_17\
+        \             0.8545     0.020    43.681     0.000             \n=============================================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

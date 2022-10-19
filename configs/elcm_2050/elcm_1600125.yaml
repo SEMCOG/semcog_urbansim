@@ -1,61 +1,60 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- -0.15098272678991492
-- 0.06432346945513645
-- 0.09682843163445919
-- 0.05026656074455773
-- 0.0840877264857618
-- 1.1310257825969958
-- 0.35336204867745036
-- -0.30671509266451275
-- -0.3670451373058398
-- 0.17350032373417357
-- 1.0521820192621156
-max_iter: null
-mct_intx_ops: null
-model_expression: building_type_id_is_63 + improvement_value + b_total_jobs + stories
-  + building_type_id_is_65 + bldg_empratio_16 + b_ln_sqft_price_nonres + vacant_job_spaces
-  + nodes_walk_sector10_jobs + nodes_walk_sector16_jobs + b_ln_building_sqft - 1
-name: elcm_1600125
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.42386353529513365
-- 0.45192817723407686
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                989\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     11\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.454\nTime:                      16:08   Pseudo R-bar-squ.:     \
-  \    0.452\nAIC:                   4,803.331   Log-Likelihood:       -2,390.665\n\
-  BIC:                   4,857.316   LL-Null:              -4,382.027\n=============================================================================\n\
-  \                              coef   std err         z     P>|z|   Conf. Int.\n\
-  -----------------------------------------------------------------------------\n\
-  building_type_id_is_63     -0.1510     0.018    -8.334     0.000             \n\
-  improvement_value           0.0643     0.012     5.554     0.000             \n\
-  b_total_jobs                0.0968     0.019     4.977     0.000             \n\
-  stories                     0.0503     0.016     3.215     0.001             \n\
-  building_type_id_is_65      0.0841     0.022     3.781     0.000             \n\
-  bldg_empratio_16            1.1310     0.021    53.613     0.000             \n\
-  b_ln_sqft_price_nonres      0.3534     0.048     7.399     0.000             \n\
-  vacant_job_spaces          -0.3067     0.037    -8.209     0.000             \n\
-  nodes_walk_sector10_jobs   -0.3670     0.097    -3.800     0.000             \n\
-  nodes_walk_sector16_jobs    0.1735     0.020     8.485     0.000             \n\
-  b_ln_building_sqft          1.0522     0.044    24.137     0.000             \n\
-  ============================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - -0.1168711152451644
+    - 0.12044798936913458
+    - 0.06144855505346777
+    - 0.10881913697081462
+    - 1.0868760826778867
+    - 0.4851453798278519
+    - -0.11968631537611898
+    - -0.2607348502650808
+    - 0.1929480715637336
+    - 1.0447521373252158
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: building_type_id_is_63 + b_total_jobs + stories + building_type_id_is_65
+        + bldg_empratio_16 + b_ln_sqft_price_nonres + vacant_job_spaces + nodes_walk_sector10_jobs
+        + nodes_walk_sector16_jobs + b_ln_building_sqft - 1
+    name: elcm_1600125
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     10\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.449\nTime:          \
+        \            17:50   Pseudo R-bar-squ.:         0.447\nAIC:              \
+        \     4,846.073   Log-Likelihood:       -2,413.036\nBIC:                 \
+        \  4,895.150   LL-Null:              -4,382.027\n=============================================================================\n\
+        \                              coef   std err         z     P>|z|   Conf.\
+        \ Int.\n-----------------------------------------------------------------------------\n\
+        building_type_id_is_63     -0.1169     0.019    -6.217     0.000         \
+        \    \nb_total_jobs                0.1204     0.015     7.936     0.000  \
+        \           \nstories                     0.0614     0.016     3.840     0.000\
+        \             \nbuilding_type_id_is_65      0.1088     0.022     5.018   \
+        \  0.000             \nbldg_empratio_16            1.0869     0.021    52.428\
+        \     0.000             \nb_ln_sqft_price_nonres      0.4851     0.048   \
+        \ 10.189     0.000             \nvacant_job_spaces          -0.1197     0.025\
+        \    -4.850     0.000             \nnodes_walk_sector10_jobs   -0.2607   \
+        \  0.062    -4.234     0.000             \nnodes_walk_sector16_jobs    0.1929\
+        \     0.019    10.303     0.000             \nb_ln_building_sqft         \
+        \ 1.0448     0.044    23.532     0.000             \n============================================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

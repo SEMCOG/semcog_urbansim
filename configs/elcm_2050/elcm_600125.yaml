@@ -1,63 +1,63 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.1808011622897654
-- 0.11734274382601842
-- 0.5946505208412145
-- 1.05921116876666
-- 0.15292630511421482
-- 1.059978722987084
-- -0.6814395327234324
-- 0.12249997282839954
-- -0.24010252769443244
-- -0.5791667806901182
-- -0.5027324466343929
-max_iter: null
-mct_intx_ops: null
-model_expression: nodes_walk_sector6_jobs + b_total_jobs + bldg_empratio_6 + b_ln_non_residential_sqft
-  + b_ln_sqft_price_nonres + nodes_walk_log_sum_nonresidential_units + b_ln_land_area
-  + nodes_walk_sector3_jobs + nodes_walk_max_medical_far + parcels_total_sqft + nodes_walk_population
-  - 1
-name: elcm_600125
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.7378308482329771
-- 0.7204623195815361
-- 0.7397427202421669
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                989\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     11\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.742\nTime:                      16:08   Pseudo R-bar-squ.:     \
-  \    0.740\nAIC:                   2,280.909   Log-Likelihood:       -1,129.454\n\
-  BIC:                   2,334.894   LL-Null:              -4,382.027\n============================================================================================\n\
-  \                                             coef   std err         z     P>|z|\
-  \   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
-  nodes_walk_sector6_jobs                    0.1808     0.018     9.915     0.000\
-  \             \nb_total_jobs                               0.1173     0.022    \
-  \ 5.351     0.000             \nbldg_empratio_6                            0.5947\
-  \     0.010    62.376     0.000             \nb_ln_non_residential_sqft        \
-  \          1.0592     0.140     7.589     0.000             \nb_ln_sqft_price_nonres\
-  \                     0.1529     0.053     2.859     0.004             \nnodes_walk_log_sum_nonresidential_units\
-  \    1.0600     0.084    12.643     0.000             \nb_ln_land_area         \
-  \                   -0.6814     0.127    -5.377     0.000             \nnodes_walk_sector3_jobs\
-  \                    0.1225     0.039     3.130     0.002             \nnodes_walk_max_medical_far\
-  \                -0.2401     0.079    -3.024     0.002             \nparcels_total_sqft\
-  \                        -0.5792     0.049   -11.940     0.000             \nnodes_walk_population\
-  \                     -0.5027     0.121    -4.165     0.000             \n============================================================================================"
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.2716702671840411
+    - 0.10929086001316492
+    - 0.5617176360992102
+    - 1.336697625509159
+    - 0.2713171649978342
+    - 1.145830118972313
+    - -0.9099032130704371
+    - -0.21950564718042803
+    - -0.6440281926187101
+    - -0.22584296432471063
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: nodes_walk_sector6_jobs + b_total_jobs + bldg_empratio_6 + b_ln_non_residential_sqft
+        + b_ln_sqft_price_nonres + nodes_walk_log_sum_nonresidential_units + b_ln_land_area
+        + nodes_walk_max_medical_far + parcels_total_sqft + nodes_walk_population
+        - 1
+    name: elcm_600125
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     10\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.747\nTime:          \
+        \            17:50   Pseudo R-bar-squ.:         0.744\nAIC:              \
+        \     2,241.213   Log-Likelihood:       -1,110.607\nBIC:                 \
+        \  2,290.291   LL-Null:              -4,382.027\n============================================================================================\n\
+        \                                             coef   std err         z   \
+        \  P>|z|   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
+        nodes_walk_sector6_jobs                    0.2717     0.019    14.386    \
+        \ 0.000             \nb_total_jobs                               0.1093  \
+        \   0.027     4.052     0.000             \nbldg_empratio_6              \
+        \              0.5617     0.010    57.674     0.000             \nb_ln_non_residential_sqft\
+        \                  1.3367     0.142     9.415     0.000             \nb_ln_sqft_price_nonres\
+        \                     0.2713     0.056     4.841     0.000             \n\
+        nodes_walk_log_sum_nonresidential_units    1.1458     0.083    13.863    \
+        \ 0.000             \nb_ln_land_area                            -0.9099  \
+        \   0.126    -7.228     0.000             \nnodes_walk_max_medical_far   \
+        \             -0.2195     0.077    -2.833     0.005             \nparcels_total_sqft\
+        \                        -0.6440     0.040   -16.236     0.000           \
+        \  \nnodes_walk_population                     -0.2258     0.073    -3.075\
+        \     0.002             \n============================================================================================"
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

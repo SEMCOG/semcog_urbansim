@@ -15,6 +15,8 @@ import yaml
 
 from dcm_ard_libs import minimize, neglog_DCM
 from fit_large_MNL_LCM import run_elcm_large_MNL
+from urbansim_templates import modelmanager as mm
+mm.initialize('configs/elcm_2050')
 
 # from guppy import hpy; h=hpy()
 # import pymrmr
@@ -233,7 +235,7 @@ if __name__ == "__main__":
         if slid in [1100115, 1100147]:
             continue
         # estimation(slid)
-        run_elcm_large_MNL(job_region, b_region, slid, 20, False)
+        run_elcm_large_MNL(slid, 20)
     # estimation(500125)
     # run_elcm_large_MNL(job_region, b_region, 500125, 30)
     # slid which have failed LargeMNL run due to LinAlgError:
