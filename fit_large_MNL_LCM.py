@@ -14,6 +14,7 @@ from tqdm import tqdm
 import yaml
 
 from urbansim_templates.models import LargeMultinomialLogitStep
+from urbansim_templates import modelmanager as mm
 
 # from guppy import hpy; h=hpy()
 # import pymrmr
@@ -147,9 +148,13 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     print('done')
 
-def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, compare_2045=False):
+def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
     print("Running elcm largeMNL on slid %s..." % SLID)
     thetas = pd.read_csv("./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
+    # job = job.fillna(0) # found 12 missing values in ln_income
+    job_region = orca.get_table('jobs').to_frame(list(thetas.index)+job_filter_columns)
+    b_region = orca.get_table('buildings').to_frame(list(thetas.index)+b_filter_columns)
+
     job = job_region[job_region.slid == SLID]
     job = job[job.building_id > 1]
     job = job[job.home_based_status == 0]
@@ -159,7 +164,6 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
     b = b_region[b_region.large_area_id == SLID % 1000]
     b = b[b.non_residential_sqft > 0]
     b = b[[col for col in b.columns if col not in b_filter_columns]]
-
     # remove extra columns
     job_cols_to_std = [col for col in job.columns if col not in ['building_id']]
     # standardize job
@@ -170,21 +174,22 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
     # adding job and b to orca
-    orca.add_table('job', job)
-    orca.add_table('b', b)
+    orca.add_table('job_elcm', job)
+    orca.add_table('b_elcm', b)
 
     m = LargeMultinomialLogitStep()
-    m.choosers = ['job']
+    m.choosers = ['job_elcm']
     m.chooser_sample_size = min(job_sample_size, job.shape[0])
-    # m.chooser_filters = chooser_filter
+    # m.chooser_filters = "(slid==%s) & (building_id>1) & (home_based_status==0)" % (SLID)
+    # m.chooser_sample_size = min(job_sample_size, jobs.query(m.chooser_filters).shape[0])
 
     # Define the geographic alternatives agent is selecting amongst
-    m.alternatives = ['b']
+    m.alternatives = ['b_elcm']
     m.choice_column = choice_column
     m.alt_sample_size = job_estimation_sample_size
-    # m.alt_filters = alts_filter
+    # m.alt_filters = "(large_area_id==%s) & (non_residential_sqft>0)" % (SLID % 100)
 
-    # use top 40 variables
+    # use top k variables
     # filter variables
     # some variables has 0 std, need to remove them for the MNL to run
     v = thetas.theta.abs().sort_values(ascending=False).index
@@ -204,9 +209,6 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
         selected_variables.append(v_wo_0_std[i])
         i += 1
         
-    # add 10 least important variables
-    # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
-
     m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
     # m.out_choosers = 'hh161' # if different from estimation
@@ -217,7 +219,7 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
     m.fit()
     fp = m.model.results['fit_parameters']
     rho = [m.model.results['log_likelihood']['rho_bar_squared']]
-    while fp[(fp['P-Values']>0.1) | (fp['P-Values'].isna())].shape[0]>0:
+    while fp[(fp['P-Values']>0.1) | (fp['P-Values'].isna())].shape[0]>0 and fp.shape[0] > 2:
         # when there are variables with p > .1
         # removing them and refit
         new_vars_inds = [i for i in range(
@@ -229,34 +231,7 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40, com
         rho.append(m.model.results['log_likelihood']['rho_bar_squared'])
 
     m.name = 'elcm_%s' % (SLID)
-    with open("configs/elcm_2050/elcm_%s.yaml" % (SLID), 'w') as f:
-        out_obj = m.to_dict()
-        out_obj['rsquared_change'] = rho
-        yaml.dump(out_obj, f, default_flow_style=False)
-    #mm.register(m)
-    if compare_2045:
-        m_2045 = LargeMultinomialLogitStep()
-        m_2045.choosers = ['job']
-        m_2045.chooser_sample_size = min(job_sample_size, job.shape[0])
-
-        # Define the geographic alternatives agent is selecting amongst
-        m_2045.alternatives = ['b']
-        m_2045.choice_column = choice_column
-        m_2045.alt_sample_size = job_estimation_sample_size
-            
-        with open("./configs/elcm/large_area_sector/elcm%s.yaml" % SLID, 'r') as f:
-            config_2045 = yaml.load(f, Loader=yaml.FullLoader)
-        selected_variables = config_2045['model_expression']
-        # filter out those unavailable
-        selected_variables = [col for col in selected_variables if col in b.columns]
-
-        m_2045.model_expression = util.str_model_expression(selected_variables, add_constant=False)
-        m_2045.constrained_choices = False
-        m_2045.fit()
-        m_2045.name = 'elcm_2045_%s' % (SLID)
-        with open("configs/elcm/largeMNL/elcm_%s.yaml" % (SLID), 'w') as f:
-            yaml.dump(m_2045.to_dict(), f, default_flow_style=False)
-            
+    mm.register(m)
     print('done')
 
 if __name__ == '__main__':

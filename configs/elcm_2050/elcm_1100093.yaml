@@ -1,37 +1,38 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 342
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.3131327908317169
-max_iter: null
-mct_intx_ops: null
-model_expression: bldg_empratio_11 - 1
-name: elcm_1100093
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.9732907161126009
-- 0.8887234017435329
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:            342\nModel:         Multinomial\
-  \ Logit   Df Residuals:                341\nMethod:       Maximum Likelihood   Df\
-  \ Model:                      1\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.889\nTime:                      16:11   Pseudo R-bar-squ.:     \
-  \    0.889\nAIC:                     333.530   Log-Likelihood:         -165.765\n\
-  BIC:                     337.365   LL-Null:              -1,498.653\n=====================================================================\n\
-  \                      coef   std err         z     P>|z|   Conf. Int.\n---------------------------------------------------------------------\n\
-  bldg_empratio_11    0.3131     0.008    41.188     0.000             \n====================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 342
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.0
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: ''
+    name: elcm_1100093
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:            342\nModel:\
+        \         Multinomial Logit   Df Residuals:                341\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      1\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.000\nTime:          \
+        \            17:55   Pseudo R-bar-squ.:        -0.001\nAIC:              \
+        \     2,999.306   Log-Likelihood:       -1,498.653\nBIC:                 \
+        \  3,003.141   LL-Null:              -1,498.653\n==============================================================\n\
+        \               coef   std err         z     P>|z|   Conf. Int.\n--------------------------------------------------------------\n\
+        Intercept    0.0000     0.054     0.000     1.000             \n=============================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

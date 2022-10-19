@@ -1,45 +1,44 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.29369351408093053
-- -0.20625661747141597
-- 0.6732598012316758
-max_iter: null
-mct_intx_ops: null
-model_expression: b_total_jobs + nodes_walk_sector3_jobs + bldg_empratio_6 - 1
-name: elcm_600099
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.8010823486445211
-- 0.8046051900651455
-- 0.7933567512951076
-- 0.7986069697500779
-- 0.7762947839103442
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                997\nMethod:       Maximum Likelihood   Df\
-  \ Model:                      3\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.777\nTime:                      16:10   Pseudo R-bar-squ.:     \
-  \    0.776\nAIC:                   1,960.564   Log-Likelihood:         -977.282\n\
-  BIC:                   1,975.288   LL-Null:              -4,382.027\n============================================================================\n\
-  \                             coef   std err         z     P>|z|   Conf. Int.\n\
-  ----------------------------------------------------------------------------\nb_total_jobs\
-  \               0.2937     0.010    29.916     0.000             \nnodes_walk_sector3_jobs\
-  \   -0.2063     0.022    -9.185     0.000             \nbldg_empratio_6        \
-  \    0.6733     0.007    94.729     0.000             \n============================================================================"
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.07114749911206004
+    - 0.18863047490623402
+    - 0.6294345987006432
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: nodes_walk_sector6_jobs + b_total_jobs + bldg_empratio_6 - 1
+    name: elcm_600099
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                997\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      3\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.782\nTime:          \
+        \            17:55   Pseudo R-bar-squ.:         0.781\nAIC:              \
+        \     1,919.908   Log-Likelihood:         -956.954\nBIC:                 \
+        \  1,934.631   LL-Null:              -4,382.027\n============================================================================\n\
+        \                             coef   std err         z     P>|z|   Conf. Int.\n\
+        ----------------------------------------------------------------------------\n\
+        nodes_walk_sector6_jobs    0.0711     0.007     9.877     0.000          \
+        \   \nb_total_jobs               0.1886     0.009    20.161     0.000    \
+        \         \nbldg_empratio_6            0.6294     0.008    82.619     0.000\
+        \             \n============================================================================"
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

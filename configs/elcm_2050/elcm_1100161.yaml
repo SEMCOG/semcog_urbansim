@@ -1,48 +1,50 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.5027272557418767
-- 1.4902127186747272
-- 0.5346269621878501
-- -36.692785324251275
-- 0.12535766489024736
-max_iter: null
-mct_intx_ops: null
-model_expression: nodes_walk_sector11_jobs + b_ln_non_residential_sqft + nodes_walk_log_sum_nonresidential_units
-  + parcels_total_sqft + zones_ln_empden_11 - 1
-name: elcm_1100161
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.9223433684772385
-- 0.9247569318566483
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                995\nMethod:       Maximum Likelihood   Df\
-  \ Model:                      5\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.926\nTime:                      16:08   Pseudo R-bar-squ.:     \
-  \    0.925\nAIC:                     659.434   Log-Likelihood:         -324.717\n\
-  BIC:                     683.973   LL-Null:              -4,382.027\n=============================================================================================\n\
-  \                                              coef   std err         z     P>|z|\
-  \   Conf. Int.\n---------------------------------------------------------------------------------------------\n\
-  nodes_walk_sector11_jobs                    0.5027     0.016    30.774     0.000\
-  \             \nb_ln_non_residential_sqft                   1.4902     0.185   \
-  \  8.035     0.000             \nnodes_walk_log_sum_nonresidential_units     0.5346\
-  \     0.219     2.446     0.014             \nparcels_total_sqft               \
-  \         -36.6928     0.543   -67.593     0.000             \nzones_ln_empden_11\
-  \                          0.1254     0.024     5.334     0.000             \n============================================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.4522577191183691
+    - 1.7259837139048533
+    - 0.7460448365560041
+    - -34.48120269151071
+    - 0.12133995425711845
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: nodes_walk_sector11_jobs + b_ln_non_residential_sqft + nodes_walk_log_sum_nonresidential_units
+        + parcels_total_sqft + zones_ln_empden_11 - 1
+    name: elcm_1100161
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                995\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      5\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.916\nTime:          \
+        \            17:52   Pseudo R-bar-squ.:         0.915\nAIC:              \
+        \       743.723   Log-Likelihood:         -366.862\nBIC:                 \
+        \    768.262   LL-Null:              -4,382.027\n=============================================================================================\n\
+        \                                              coef   std err         z  \
+        \   P>|z|   Conf. Int.\n---------------------------------------------------------------------------------------------\n\
+        nodes_walk_sector11_jobs                    0.4523     0.017    26.684   \
+        \  0.000             \nb_ln_non_residential_sqft                   1.7260\
+        \     0.156    11.063     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \     0.7460     0.193     3.871     0.000             \nparcels_total_sqft\
+        \                        -34.4812     0.521   -66.201     0.000          \
+        \   \nzones_ln_empden_11                          0.1213     0.025     4.768\
+        \     0.000             \n============================================================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

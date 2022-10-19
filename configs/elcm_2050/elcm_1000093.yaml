@@ -1,74 +1,75 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 1.411426626433502
-- 0.32019568362799367
-- -0.21743386892466676
-- -2.860692069738016
-- -8.283354794207716
-- -0.32963618437957903
-- 0.7214190947944542
-- 9.262463509288224
-- 0.4979501706996896
-- 0.2081761943288466
-- -0.0990255545015097
-- 0.26404573203224124
-- 0.2958895115461044
-- -1.8935095270697082
-- -0.09006175727052283
-max_iter: null
-mct_intx_ops: null
-model_expression: nodes_walk_sector10_jobs + b_total_jobs + nodes_walk_sector9_jobs
-  + parcels_total_sqft + b_ln_land_area + zones_empden + nodes_walk_log_sum_nonresidential_units
-  + b_ln_building_sqft + zones_ln_empden_10 + nodes_walk_max_office_far + nodes_walk_sector14_jobs
-  + nodes_drv_log_sum_20min_pop + parcels_land_cost + stories + nodes_walk_sector3_jobs
-  - 1
-name: elcm_1000093
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.4341658273464164
-- 0.4643461632710215
-- 0.43297260287488515
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                985\nMethod:       Maximum Likelihood   Df\
-  \ Model:                     15\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.436\nTime:                      16:11   Pseudo R-bar-squ.:     \
-  \    0.433\nAIC:                   4,969.458   Log-Likelihood:       -2,469.729\n\
-  BIC:                   5,043.075   LL-Null:              -4,382.027\n============================================================================================\n\
-  \                                             coef   std err         z     P>|z|\
-  \   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
-  nodes_walk_sector10_jobs                   1.4114     0.051    27.913     0.000\
-  \             \nb_total_jobs                               0.3202     0.030    10.499\
-  \     0.000             \nnodes_walk_sector9_jobs                   -0.2174    \
-  \ 0.042    -5.117     0.000             \nparcels_total_sqft                   \
-  \     -2.8607     0.117   -24.469     0.000             \nb_ln_land_area       \
-  \                     -8.2834     1.754    -4.723     0.000             \nzones_empden\
-  \                              -0.3296     0.046    -7.199     0.000           \
-  \  \nnodes_walk_log_sum_nonresidential_units    0.7214     0.077     9.359     0.000\
-  \             \nb_ln_building_sqft                         9.2625     1.790    \
-  \ 5.175     0.000             \nzones_ln_empden_10                         0.4980\
-  \     0.039    12.706     0.000             \nnodes_walk_max_office_far        \
-  \          0.2082     0.029     7.124     0.000             \nnodes_walk_sector14_jobs\
-  \                  -0.0990     0.039    -2.549     0.011             \nnodes_drv_log_sum_20min_pop\
-  \                0.2640     0.063     4.199     0.000             \nparcels_land_cost\
-  \                          0.2959     0.082     3.604     0.000             \nstories\
-  \                                   -1.8935     0.431    -4.395     0.000      \
-  \       \nnodes_walk_sector3_jobs                   -0.0901     0.040    -2.239\
-  \     0.025             \n============================================================================================"
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 1.1244850731320408
+    - 0.3897434252067265
+    - -0.1936819299445839
+    - -2.3353539672463257
+    - -5.9714248360692475
+    - -0.45625630864384703
+    - 0.6824529919695201
+    - 6.780527167373331
+    - 0.584901872880627
+    - 0.16928106141497556
+    - -0.1283026234786877
+    - 0.31348768470724053
+    - 0.2508808213574812
+    - -1.3227539648208615
+    - -0.11776990955003304
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: nodes_walk_sector10_jobs + b_total_jobs + nodes_walk_sector9_jobs
+        + parcels_total_sqft + b_ln_land_area + zones_empden + nodes_walk_log_sum_nonresidential_units
+        + b_ln_building_sqft + zones_ln_empden_10 + nodes_walk_max_office_far + nodes_walk_sector14_jobs
+        + nodes_drv_log_sum_20min_pop + parcels_land_cost + stories + nodes_walk_sector3_jobs
+        - 1
+    name: elcm_1000093
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                985\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     15\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.452\nTime:          \
+        \            17:55   Pseudo R-bar-squ.:         0.449\nAIC:              \
+        \     4,828.969   Log-Likelihood:       -2,399.484\nBIC:                 \
+        \  4,902.585   LL-Null:              -4,382.027\n============================================================================================\n\
+        \                                             coef   std err         z   \
+        \  P>|z|   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
+        nodes_walk_sector10_jobs                   1.1245     0.046    24.665    \
+        \ 0.000             \nb_total_jobs                               0.3897  \
+        \   0.032    12.137     0.000             \nnodes_walk_sector9_jobs      \
+        \             -0.1937     0.042    -4.664     0.000             \nparcels_total_sqft\
+        \                        -2.3354     0.087   -26.984     0.000           \
+        \  \nb_ln_land_area                            -5.9714     1.588    -3.760\
+        \     0.000             \nzones_empden                              -0.4563\
+        \     0.048    -9.513     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \    0.6825     0.078     8.717     0.000             \nb_ln_building_sqft\
+        \                         6.7805     1.622     4.182     0.000           \
+        \  \nzones_ln_empden_10                         0.5849     0.038    15.236\
+        \     0.000             \nnodes_walk_max_office_far                  0.1693\
+        \     0.036     4.747     0.000             \nnodes_walk_sector14_jobs   \
+        \               -0.1283     0.046    -2.770     0.006             \nnodes_drv_log_sum_20min_pop\
+        \                0.3135     0.062     5.047     0.000             \nparcels_land_cost\
+        \                          0.2509     0.068     3.670     0.000          \
+        \   \nstories                                   -1.3228     0.380    -3.481\
+        \     0.000             \nnodes_walk_sector3_jobs                   -0.1178\
+        \     0.043    -2.758     0.006             \n============================================================================================"
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9

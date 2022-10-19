@@ -1,46 +1,45 @@
-alt_capacity: null
-alt_filters: null
-alt_sample_size: 80
-alternatives: b
-choice_column: building_id
-chooser_filters: null
-chooser_sample_size: 1000
-chooser_size: null
-choosers: job
-constrained_choices: false
-fitted_parameters:
-- 0.5905345419164325
-- -0.1016364929399516
-- 0.17741440186339846
-- 0.6751043853167328
-max_iter: null
-mct_intx_ops: null
-model_expression: b_ln_non_residential_sqft + zones_logsum_job_high_income + nodes_walk_sector4_jobs
-  + bldg_empratio_4 - 1
-name: elcm_400115
-out_alt_filters: null
-out_alternatives: null
-out_chooser_filters: null
-out_choosers: null
-out_column: null
-rsquared_change:
-- 0.71481284299107
-- 0.7302118222009899
-summary_table: "                  CHOICEMODELS ESTIMATION RESULTS                \
-  \  \n===================================================================\nDep. Var.:\
-  \                chosen   No. Observations:          1,000\nModel:         Multinomial\
-  \ Logit   Df Residuals:                996\nMethod:       Maximum Likelihood   Df\
-  \ Model:                      4\nDate:                 2022-10-18   Pseudo R-squ.:\
-  \             0.731\nTime:                      16:11   Pseudo R-bar-squ.:     \
-  \    0.730\nAIC:                   2,364.438   Log-Likelihood:       -1,178.219\n\
-  BIC:                   2,384.069   LL-Null:              -4,382.027\n=================================================================================\n\
-  \                                  coef   std err         z     P>|z|   Conf. Int.\n\
-  ---------------------------------------------------------------------------------\n\
-  b_ln_non_residential_sqft       0.5905     0.051    11.643     0.000           \
-  \  \nzones_logsum_job_high_income   -0.1016     0.041    -2.480     0.013      \
-  \       \nnodes_walk_sector4_jobs         0.1774     0.014    13.059     0.000 \
-  \            \nbldg_empratio_4                 0.6751     0.012    56.184     0.000\
-  \             \n================================================================================="
-tags: []
-template: LargeMultinomialLogitStep
-template_version: 0.2.dev9
+modelmanager_version: 0.2.dev9
+
+saved_object:
+    alt_capacity: null
+    alt_filters: null
+    alt_sample_size: 80
+    alternatives: b_elcm
+    choice_column: building_id
+    chooser_filters: null
+    chooser_sample_size: 1000
+    chooser_size: null
+    choosers: job_elcm
+    constrained_choices: false
+    fitted_parameters:
+    - 0.5580909231015816
+    - 0.18420269338203885
+    - 0.6691876636532451
+    max_iter: null
+    mct_intx_ops: null
+    model_expression: b_ln_non_residential_sqft + nodes_walk_sector4_jobs + bldg_empratio_4
+        - 1
+    name: elcm_400115
+    out_alt_filters: null
+    out_alternatives: null
+    out_chooser_filters: null
+    out_choosers: null
+    out_column: null
+    summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
+        \      \n===================================================================\n\
+        Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
+        \         Multinomial Logit   Df Residuals:                997\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      3\nDate:       \
+        \          2022-10-19   Pseudo R-squ.:             0.731\nTime:          \
+        \            17:56   Pseudo R-bar-squ.:         0.731\nAIC:              \
+        \     2,360.248   Log-Likelihood:       -1,177.124\nBIC:                 \
+        \  2,374.972   LL-Null:              -4,382.027\n==============================================================================\n\
+        \                               coef   std err         z     P>|z|   Conf.\
+        \ Int.\n------------------------------------------------------------------------------\n\
+        b_ln_non_residential_sqft    0.5581     0.052    10.793     0.000        \
+        \     \nnodes_walk_sector4_jobs      0.1842     0.014    12.843     0.000\
+        \             \nbldg_empratio_4              0.6692     0.011    58.304  \
+        \   0.000             \n=============================================================================="
+    tags: []
+    template: LargeMultinomialLogitStep
+    template_version: 0.2.dev9
