@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,17 +10,17 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.16618151753993932
-    - 1.2930776470380505
-    - 1.4773469940819839
-    - 1.1642451148396098
-    - 0.9012692878568888
-    - 0.13969062434090418
-    - -0.15313416897035276
-    - 0.7174676554192714
-    - 0.9908024279144662
+    - 0.18236479132177277
+    - 1.4035921164739056
+    - 1.5488147036308222
+    - 1.3271505384941527
+    - 0.9300230881031671
+    - 0.15104215559735507
+    - -0.2925154856231275
+    - 0.9147219726690833
+    - 1.0753357967692425
     max_iter: null
     mct_intx_ops: null
     model_expression: b_total_jobs + building_type_id_is_21 + building_type_id_is_31
@@ -37,22 +37,22 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                991\nMethod:  \
         \     Maximum Likelihood   Df Model:                      9\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.611\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.609\nAIC:              \
-        \     3,428.785   Log-Likelihood:       -1,705.392\nBIC:                 \
-        \  3,472.955   LL-Null:              -4,382.027\n============================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.609\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.607\nAIC:              \
+        \     3,444.126   Log-Likelihood:       -1,713.063\nBIC:                 \
+        \  3,488.295   LL-Null:              -4,382.027\n============================================================================\n\
         \                             coef   std err         z     P>|z|   Conf. Int.\n\
         ----------------------------------------------------------------------------\n\
-        b_total_jobs               0.1662     0.012    13.366     0.000          \
-        \   \nbuilding_type_id_is_21     1.2931     0.139     9.316     0.000    \
-        \         \nbuilding_type_id_is_31     1.4773     0.066    22.318     0.000\
-        \             \nbuilding_type_id_is_23     1.1642     0.076    15.286    \
-        \ 0.000             \nbuilding_type_id_is_33     0.9013     0.061    14.760\
-        \     0.000             \nnodes_walk_sector3_jobs    0.1397     0.012    11.545\
-        \     0.000             \nparcels_land_cost         -0.1531     0.025    -6.150\
-        \     0.000             \nbuilding_type_id_is_65     0.7175     0.110    \
-        \ 6.496     0.000             \nb_ln_land_area             0.9908     0.036\
-        \    27.507     0.000             \n============================================================================"
+        b_total_jobs               0.1824     0.012    14.618     0.000          \
+        \   \nbuilding_type_id_is_21     1.4036     0.147     9.533     0.000    \
+        \         \nbuilding_type_id_is_31     1.5488     0.073    21.162     0.000\
+        \             \nbuilding_type_id_is_23     1.3272     0.077    17.151    \
+        \ 0.000             \nbuilding_type_id_is_33     0.9300     0.067    13.959\
+        \     0.000             \nnodes_walk_sector3_jobs    0.1510     0.014    10.844\
+        \     0.000             \nparcels_land_cost         -0.2925     0.036    -8.221\
+        \     0.000             \nbuilding_type_id_is_65     0.9147     0.102    \
+        \ 8.927     0.000             \nb_ln_land_area             1.0753     0.038\
+        \    27.978     0.000             \n============================================================================"
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,19 +10,19 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.13869380436523915
-    - 0.9231955265305588
-    - -0.19274946522996078
-    - 0.8682414299686935
-    - 0.2666355639051179
-    - -0.1307561348330877
-    - -0.30862610805117746
-    - 0.556904143903901
-    - 0.15843007758712596
-    - 0.16146767178444713
-    - 0.11694455107036375
+    - 0.10399512354917319
+    - 0.9213014440084245
+    - -0.18881604227479293
+    - 0.8647799118274251
+    - 0.409375876098546
+    - -0.13215096417820493
+    - -0.1600267773480593
+    - 0.45741125415840317
+    - 0.15539754368374545
+    - 0.13790228476098662
+    - 0.11921730640776691
     max_iter: null
     mct_intx_ops: null
     model_expression: b_total_jobs + b_ln_non_residential_sqft + improvement_value
@@ -40,24 +40,24 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                989\nMethod:  \
         \     Maximum Likelihood   Df Model:                     11\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.384\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.382\nAIC:              \
-        \     5,416.880   Log-Likelihood:       -2,697.440\nBIC:                 \
-        \  5,470.865   LL-Null:              -4,382.027\n==============================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.394\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.391\nAIC:              \
+        \     5,334.543   Log-Likelihood:       -2,656.272\nBIC:                 \
+        \  5,388.529   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        b_total_jobs                 0.1387     0.020     6.876     0.000        \
-        \     \nb_ln_non_residential_sqft    0.9232     0.040    22.811     0.000\
-        \             \nimprovement_value           -0.1927     0.062    -3.108  \
-        \   0.002             \nbldg_empratio_5              0.8682     0.020    44.127\
-        \     0.000             \nbuilding_type_id_is_21       0.2666     0.043  \
-        \   6.232     0.000             \nnodes_walk_sector9_jobs     -0.1308    \
-        \ 0.029    -4.541     0.000             \nparcels_total_sqft          -0.3086\
-        \     0.066    -4.693     0.000             \nb_ln_sqft_price_nonres     \
-        \  0.5569     0.047    11.961     0.000             \nnodes_walk_retail_jobs\
-        \       0.1584     0.023     6.858     0.000             \nparcels_land_cost\
-        \            0.1615     0.074     2.177     0.030             \nzones_ln_empden_5\
-        \            0.1169     0.027     4.368     0.000             \n=============================================================================="
+        b_total_jobs                 0.1040     0.019     5.549     0.000        \
+        \     \nb_ln_non_residential_sqft    0.9213     0.040    22.932     0.000\
+        \             \nimprovement_value           -0.1888     0.050    -3.756  \
+        \   0.000             \nbldg_empratio_5              0.8648     0.020    42.482\
+        \     0.000             \nbuilding_type_id_is_21       0.4094     0.044  \
+        \   9.255     0.000             \nnodes_walk_sector9_jobs     -0.1322    \
+        \ 0.030    -4.476     0.000             \nparcels_total_sqft          -0.1600\
+        \     0.064    -2.497     0.013             \nb_ln_sqft_price_nonres     \
+        \  0.4574     0.045    10.189     0.000             \nnodes_walk_retail_jobs\
+        \       0.1554     0.023     6.655     0.000             \nparcels_land_cost\
+        \            0.1379     0.073     1.880     0.060             \nzones_ln_empden_5\
+        \            0.1192     0.028     4.210     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

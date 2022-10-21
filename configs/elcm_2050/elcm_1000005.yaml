@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,22 +10,21 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.0874104620469901
-    - -0.4241841812966163
-    - -1.3733563069604713
-    - 0.4116064661889728
-    - -0.20486677391782124
-    - 0.6174962859077712
-    - 0.7242946431360686
-    - 0.45561203282832596
-    - 0.4225052049603485
-    - -0.2751693440223527
+    - -0.06009005278224069
+    - -0.24102755967009556
+    - 0.2623429437007007
+    - -0.1489776141982187
+    - 0.58027782603859
+    - 0.7531803786262697
+    - 0.43784233848917653
+    - 0.38955971170647846
+    - -0.24185159530803144
     max_iter: null
     mct_intx_ops: null
-    model_expression: nodes_walk_sector11_jobs + bldg_empratio_11 + nodes_walk_sector15_jobs
-        + b_total_jobs + nodes_walk_sector9_jobs + nodes_walk_sector10_jobs + building_type_id_is_23
+    model_expression: nodes_walk_sector11_jobs + bldg_empratio_11 + b_total_jobs +
+        nodes_walk_sector9_jobs + nodes_walk_sector10_jobs + building_type_id_is_23
         + building_type_id_is_31 + building_type_id_is_33 + nodes_walk_sector8_jobs
         - 1
     name: elcm_1000005
@@ -37,25 +36,24 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     10\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.582\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.580\nAIC:              \
-        \     3,680.689   Log-Likelihood:       -1,830.345\nBIC:                 \
-        \  3,729.767   LL-Null:              -4,382.027\n=============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                991\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      9\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.569\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.567\nAIC:              \
+        \     3,792.511   Log-Likelihood:       -1,887.255\nBIC:                 \
+        \  3,836.680   LL-Null:              -4,382.027\n=============================================================================\n\
         \                              coef   std err         z     P>|z|   Conf.\
         \ Int.\n-----------------------------------------------------------------------------\n\
-        nodes_walk_sector11_jobs   -0.0874     0.009    -9.658     0.000         \
-        \    \nbldg_empratio_11           -0.4242     0.033   -12.935     0.000  \
-        \           \nnodes_walk_sector15_jobs   -1.3734     0.833    -1.649     0.099\
-        \             \nb_total_jobs                0.4116     0.011    37.415   \
-        \  0.000             \nnodes_walk_sector9_jobs    -0.2049     0.026    -7.955\
-        \     0.000             \nnodes_walk_sector10_jobs    0.6175     0.025   \
-        \ 24.913     0.000             \nbuilding_type_id_is_23      0.7243     0.033\
-        \    22.140     0.000             \nbuilding_type_id_is_31      0.4556   \
-        \  0.044    10.355     0.000             \nbuilding_type_id_is_33      0.4225\
-        \     0.040    10.623     0.000             \nnodes_walk_sector8_jobs    -0.2752\
-        \     0.027   -10.369     0.000             \n============================================================================="
+        nodes_walk_sector11_jobs   -0.0601     0.008    -7.963     0.000         \
+        \    \nbldg_empratio_11           -0.2410     0.019   -12.803     0.000  \
+        \           \nb_total_jobs                0.2623     0.006    45.467     0.000\
+        \             \nnodes_walk_sector9_jobs    -0.1490     0.026    -5.674   \
+        \  0.000             \nnodes_walk_sector10_jobs    0.5803     0.020    29.370\
+        \     0.000             \nbuilding_type_id_is_23      0.7532     0.028   \
+        \ 26.453     0.000             \nbuilding_type_id_is_31      0.4378     0.041\
+        \    10.633     0.000             \nbuilding_type_id_is_33      0.3896   \
+        \  0.041     9.600     0.000             \nnodes_walk_sector8_jobs    -0.2419\
+        \     0.024   -10.157     0.000             \n============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

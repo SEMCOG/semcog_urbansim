@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,27 +10,20 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.09520187122184125
-    - 0.03710431545008161
-    - 2.93728964460648
-    - 1.407917716740131
-    - 0.07224314978395568
-    - 0.3358712311266602
-    - 0.4127842256424529
-    - -1.6467522363254805
-    - -4.482343097053369
-    - 0.33685976959950814
-    - -0.6921582795841708
-    - 0.718624974209646
-    - -0.4628425130967642
+    - 1.2289204499409698
+    - 1.4314104305187096
+    - 0.24670813328467012
+    - 0.3998693197225446
+    - 0.22977152409497292
+    - -0.19156169059599304
+    - 0.2663005539791928
     max_iter: null
     mct_intx_ops: null
-    model_expression: vacant_job_spaces + b_total_jobs + b_ln_non_residential_sqft
-        + building_type_id_is_21 + improvement_value + building_type_id_is_23 + building_type_id_is_65
-        + b_ln_land_area + building_type_id_is_14 + building_type_id_is_71 + zones_logsum_job_high_income
-        + zones_logsum_pop_high_income + stories - 1
+    model_expression: b_ln_non_residential_sqft + building_type_id_is_21 + building_type_id_is_23
+        + building_type_id_is_65 + building_type_id_is_51 + building_type_id_is_14
+        + building_type_id_is_71 - 1
     name: elcm_500099
     out_alt_filters: null
     out_alternatives: null
@@ -40,28 +33,22 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     13\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.379\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.376\nAIC:              \
-        \     5,468.674   Log-Likelihood:       -2,721.337\nBIC:                 \
-        \  5,532.474   LL-Null:              -4,382.027\n=================================================================================\n\
-        \                                  coef   std err         z     P>|z|   Conf.\
-        \ Int.\n---------------------------------------------------------------------------------\n\
-        vacant_job_spaces              -0.0952     0.010    -9.459     0.000     \
-        \        \nb_total_jobs                    0.0371     0.019     1.918    \
-        \ 0.055             \nb_ln_non_residential_sqft       2.9373     0.992   \
-        \  2.962     0.003             \nbuilding_type_id_is_21          1.4079  \
-        \   0.045    31.319     0.000             \nimprovement_value            \
-        \   0.0722     0.020     3.654     0.000             \nbuilding_type_id_is_23\
-        \          0.3359     0.071     4.757     0.000             \nbuilding_type_id_is_65\
-        \          0.4128     0.066     6.246     0.000             \nb_ln_land_area\
-        \                 -1.6468     0.963    -1.709     0.087             \nbuilding_type_id_is_14\
-        \         -4.4823     0.384   -11.664     0.000             \nbuilding_type_id_is_71\
-        \          0.3369     0.035     9.711     0.000             \nzones_logsum_job_high_income\
-        \   -0.6922     0.146    -4.737     0.000             \nzones_logsum_pop_high_income\
-        \    0.7186     0.160     4.503     0.000             \nstories          \
-        \              -0.4628     0.226    -2.051     0.040             \n================================================================================="
+        \         Multinomial Logit   Df Residuals:                993\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      7\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.372\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.370\nAIC:              \
+        \     5,521.874   Log-Likelihood:       -2,753.937\nBIC:                 \
+        \  5,556.228   LL-Null:              -4,382.027\n==============================================================================\n\
+        \                               coef   std err         z     P>|z|   Conf.\
+        \ Int.\n------------------------------------------------------------------------------\n\
+        b_ln_non_residential_sqft    1.2289     0.025    48.826     0.000        \
+        \     \nbuilding_type_id_is_21       1.4314     0.040    36.156     0.000\
+        \             \nbuilding_type_id_is_23       0.2467     0.075     3.301  \
+        \   0.001             \nbuilding_type_id_is_65       0.3999     0.065    \
+        \ 6.105     0.000             \nbuilding_type_id_is_51       0.2298     0.065\
+        \     3.529     0.000             \nbuilding_type_id_is_14      -0.1916  \
+        \   0.112    -1.715     0.086             \nbuilding_type_id_is_71       0.2663\
+        \     0.038     6.936     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

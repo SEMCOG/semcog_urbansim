@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,31 +10,29 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.02607322148543426
-    - -0.12190116022008868
-    - -0.18046734411721305
-    - -1.3508395876920642
-    - 0.21409104691839037
-    - -0.6311435966470522
-    - -0.20609911343230292
-    - -0.2996293461348376
-    - -0.15201787475695
-    - -0.7841427452113606
-    - 0.43939987355905985
-    - -0.14965098391154735
-    - -0.2071651676740625
-    - -0.1747039588717364
-    - 0.4429979255418764
+    - 0.5769439086993656
+    - -0.14116805649325848
+    - 0.3282673685594889
+    - 0.5201571075041361
+    - -0.18548395001850507
+    - -0.136321541222717
+    - 0.1345777607035514
+    - -0.540610028581481
+    - 0.47857024026947265
+    - 0.09519567327239896
+    - -0.29743530957694597
+    - -0.06702144035311661
+    - 0.43127784219558407
+    - 0.11015919162852608
     max_iter: null
     mct_intx_ops: null
-    model_expression: building_type_id_is_93 + zones_logsum_pop_high_income + building_type_id_is_23
-        + building_type_id_is_71 + building_type_id_is_13 + building_type_id_is_33
-        + building_type_id_is_31 + building_type_id_is_65 + building_type_id_is_61
-        + building_type_id_is_41 + b_ln_non_residential_sqft + building_type_id_is_14
-        + building_type_id_is_11 + building_type_id_is_53 + nodes_walk_sector17_jobs
-        - 1
+    model_expression: building_type_id_is_21 + zones_logsum_pop_high_income + building_type_id_is_23
+        + building_type_id_is_13 + building_type_id_is_33 + building_type_id_is_65
+        + building_type_id_is_61 + building_type_id_is_41 + b_ln_non_residential_sqft
+        + building_type_id_is_51 + building_type_id_is_63 + building_type_id_is_53
+        + nodes_walk_sector17_jobs + zones_population - 1
     name: elcm_1700115
     out_alt_filters: null
     out_alternatives: null
@@ -44,30 +42,29 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                985\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     15\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.296\nTime:          \
-        \            17:53   Pseudo R-bar-squ.:         0.292\nAIC:              \
-        \     6,203.941   Log-Likelihood:       -3,086.970\nBIC:                 \
-        \  6,277.557   LL-Null:              -4,382.027\n=================================================================================\n\
+        \         Multinomial Logit   Df Residuals:                986\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     14\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.291\nTime:          \
+        \            18:04   Pseudo R-bar-squ.:         0.288\nAIC:              \
+        \     6,241.317   Log-Likelihood:       -3,106.659\nBIC:                 \
+        \  6,310.026   LL-Null:              -4,382.027\n=================================================================================\n\
         \                                  coef   std err         z     P>|z|   Conf.\
         \ Int.\n---------------------------------------------------------------------------------\n\
-        building_type_id_is_93         -0.0261     0.005    -4.857     0.000     \
-        \        \nzones_logsum_pop_high_income   -0.1219     0.037    -3.274    \
-        \ 0.001             \nbuilding_type_id_is_23         -0.1805     0.040   \
-        \ -4.459     0.000             \nbuilding_type_id_is_71         -1.3508  \
-        \   0.161    -8.374     0.000             \nbuilding_type_id_is_13       \
-        \   0.2141     0.022     9.630     0.000             \nbuilding_type_id_is_33\
-        \         -0.6311     0.102    -6.183     0.000             \nbuilding_type_id_is_31\
-        \         -0.2061     0.039    -5.302     0.000             \nbuilding_type_id_is_65\
-        \         -0.2996     0.056    -5.351     0.000             \nbuilding_type_id_is_61\
-        \         -0.1520     0.042    -3.627     0.000             \nbuilding_type_id_is_41\
-        \         -0.7841     0.140    -5.590     0.000             \nb_ln_non_residential_sqft\
-        \       0.4394     0.040    10.882     0.000             \nbuilding_type_id_is_14\
-        \         -0.1497     0.049    -3.079     0.002             \nbuilding_type_id_is_11\
-        \         -0.2072     0.045    -4.569     0.000             \nbuilding_type_id_is_53\
-        \         -0.1747     0.020    -8.543     0.000             \nnodes_walk_sector17_jobs\
-        \        0.4430     0.015    28.908     0.000             \n================================================================================="
+        building_type_id_is_21          0.5769     0.052    11.047     0.000     \
+        \        \nzones_logsum_pop_high_income   -0.1412     0.038    -3.684    \
+        \ 0.000             \nbuilding_type_id_is_23          0.3283     0.047   \
+        \  7.058     0.000             \nbuilding_type_id_is_13          0.5202  \
+        \   0.029    18.126     0.000             \nbuilding_type_id_is_33       \
+        \  -0.1855     0.088    -2.098     0.036             \nbuilding_type_id_is_65\
+        \         -0.1363     0.076    -1.787     0.074             \nbuilding_type_id_is_61\
+        \          0.1346     0.046     2.954     0.003             \nbuilding_type_id_is_41\
+        \         -0.5406     0.134    -4.032     0.000             \nb_ln_non_residential_sqft\
+        \       0.4786     0.039    12.160     0.000             \nbuilding_type_id_is_51\
+        \          0.0952     0.049     1.961     0.050             \nbuilding_type_id_is_63\
+        \         -0.2974     0.159    -1.872     0.061             \nbuilding_type_id_is_53\
+        \         -0.0670     0.021    -3.210     0.001             \nnodes_walk_sector17_jobs\
+        \        0.4313     0.014    31.766     0.000             \nzones_population\
+        \                0.1102     0.036     3.068     0.002             \n================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

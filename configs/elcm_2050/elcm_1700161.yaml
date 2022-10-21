@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,28 +10,30 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.0754110471779694
-    - 0.09059089560501978
-    - 0.6673539276022501
-    - 0.5771281484349283
-    - -0.4210426645294407
-    - -0.5444225710364067
-    - -0.33979137572410617
-    - -0.2937335928914593
-    - -0.2993391806805494
-    - -0.2911389523533679
-    - -0.24681643602412778
-    - -0.31458806428849917
-    - -0.44795746088108024
+    - -0.08467359216497591
+    - 0.09190097476211657
+    - 0.7210187099014465
+    - 0.08280578624475383
+    - 0.5673584736627083
+    - -0.3499455928058647
+    - -0.41504191173800614
+    - -0.4916235248742076
+    - -0.730916657059276
+    - -0.2875442141462796
+    - -0.5996530493167508
+    - -0.30383479725618434
+    - -0.19062642554387482
+    - -0.39258738817794864
+    - -0.422691518673897
     max_iter: null
     mct_intx_ops: null
     model_expression: improvement_value + b_total_jobs + nodes_walk_sector17_jobs
-        + b_ln_land_area + building_type_id_is_31 + building_type_id_is_33 + building_type_id_is_65
-        + building_type_id_is_61 + nodes_walk_sector14_jobs + building_type_id_is_11
-        + building_type_id_is_41 + building_type_id_is_14 + nodes_walk_sector16_jobs
-        - 1
+        + building_type_id_is_21 + b_ln_land_area + building_type_id_is_31 + building_type_id_is_33
+        + building_type_id_is_65 + building_type_id_is_71 + building_type_id_is_61
+        + nodes_walk_sector14_jobs + building_type_id_is_11 + building_type_id_is_41
+        + building_type_id_is_14 + nodes_walk_sector16_jobs - 1
     name: elcm_1700161
     out_alt_filters: null
     out_alternatives: null
@@ -41,28 +43,30 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     13\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.197\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.194\nAIC:              \
-        \     7,061.020   Log-Likelihood:       -3,517.510\nBIC:                 \
-        \  7,124.821   LL-Null:              -4,382.027\n=============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                985\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     15\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.215\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.212\nAIC:              \
+        \     6,907.201   Log-Likelihood:       -3,438.600\nBIC:                 \
+        \  6,980.817   LL-Null:              -4,382.027\n=============================================================================\n\
         \                              coef   std err         z     P>|z|   Conf.\
         \ Int.\n-----------------------------------------------------------------------------\n\
-        improvement_value          -0.0754     0.021    -3.541     0.000         \
-        \    \nb_total_jobs                0.0906     0.046     1.958     0.050  \
-        \           \nnodes_walk_sector17_jobs    0.6674     0.012    55.491     0.000\
-        \             \nb_ln_land_area              0.5771     0.038    15.089   \
-        \  0.000             \nbuilding_type_id_is_31     -0.4210     0.048    -8.686\
-        \     0.000             \nbuilding_type_id_is_33     -0.5444     0.069   \
-        \ -7.923     0.000             \nbuilding_type_id_is_65     -0.3398     0.058\
-        \    -5.890     0.000             \nbuilding_type_id_is_61     -0.2937   \
-        \  0.053    -5.565     0.000             \nnodes_walk_sector14_jobs   -0.2993\
-        \     0.117    -2.552     0.011             \nbuilding_type_id_is_11     -0.2911\
-        \     0.043    -6.835     0.000             \nbuilding_type_id_is_41     -0.2468\
-        \     0.058    -4.223     0.000             \nbuilding_type_id_is_14     -0.3146\
-        \     0.056    -5.658     0.000             \nnodes_walk_sector16_jobs   -0.4480\
-        \     0.036   -12.344     0.000             \n============================================================================="
+        improvement_value          -0.0847     0.023    -3.696     0.000         \
+        \    \nb_total_jobs                0.0919     0.051     1.819     0.069  \
+        \           \nnodes_walk_sector17_jobs    0.7210     0.014    53.286     0.000\
+        \             \nbuilding_type_id_is_21      0.0828     0.032     2.584   \
+        \  0.010             \nb_ln_land_area              0.5674     0.039    14.648\
+        \     0.000             \nbuilding_type_id_is_31     -0.3499     0.045   \
+        \ -7.696     0.000             \nbuilding_type_id_is_33     -0.4150     0.060\
+        \    -6.969     0.000             \nbuilding_type_id_is_65     -0.4916   \
+        \  0.069    -7.091     0.000             \nbuilding_type_id_is_71     -0.7309\
+        \     0.130    -5.614     0.000             \nbuilding_type_id_is_61     -0.2875\
+        \     0.052    -5.529     0.000             \nnodes_walk_sector14_jobs   -0.5997\
+        \     0.137    -4.385     0.000             \nbuilding_type_id_is_11     -0.3038\
+        \     0.046    -6.581     0.000             \nbuilding_type_id_is_41     -0.1906\
+        \     0.051    -3.703     0.000             \nbuilding_type_id_is_14     -0.3926\
+        \     0.062    -6.282     0.000             \nnodes_walk_sector16_jobs   -0.4227\
+        \     0.031   -13.604     0.000             \n============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

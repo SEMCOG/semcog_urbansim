@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,30 +10,26 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.06422274080769579
-    - 1.1139715760187863
-    - 0.47095698146052645
-    - 0.915160640322242
-    - 0.4546565785506615
-    - 0.3261161756805189
-    - 0.7697277419955265
-    - -0.31348176299771274
-    - -0.45884847340284396
-    - -2.4399240258472226
-    - 0.24965685994001277
-    - 0.26950287731091505
-    - 0.6347194670331685
-    - 0.0496045154486792
-    - -0.17827794320447946
+    - -0.06613949724125684
+    - 0.9875430330494567
+    - 0.30406268418201887
+    - 0.9690943656225222
+    - 0.5044986388122269
+    - 0.3433796386820626
+    - 0.5230190439107603
+    - -0.512108131137409
+    - -1.3663316272326367
+    - 0.486093432299704
+    - 0.22819100735208034
+    - 0.5182097834760427
     max_iter: null
     mct_intx_ops: null
-    model_expression: building_type_id_is_63 + b_ln_non_residential_sqft + building_type_id_is_65
+    model_expression: improvement_value + b_ln_non_residential_sqft + building_type_id_is_65
         + bldg_empratio_16 + nodes_walk_sector16_jobs + b_total_jobs + building_type_id_is_21
-        + nodes_walk_sector10_jobs + vacant_job_spaces + parcels_total_sqft + b_ln_sqft_price_nonres
-        + building_type_id_is_61 + building_type_id_is_23 + nodes_walk_sector11_jobs
-        + nodes_walk_sector9_jobs - 1
+        + nodes_walk_sector10_jobs + parcels_total_sqft + b_ln_sqft_price_nonres +
+        building_type_id_is_61 + building_type_id_is_23 - 1
     name: elcm_1600161
     out_alt_filters: null
     out_alternatives: null
@@ -43,30 +39,27 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                985\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     15\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.477\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.473\nAIC:              \
-        \     4,614.306   Log-Likelihood:       -2,292.153\nBIC:                 \
-        \  4,687.922   LL-Null:              -4,382.027\n==============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                988\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     12\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.473\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.470\nAIC:              \
+        \     4,641.481   Log-Likelihood:       -2,308.741\nBIC:                 \
+        \  4,700.374   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        building_type_id_is_63       0.0642     0.024     2.648     0.008        \
-        \     \nb_ln_non_residential_sqft    1.1140     0.053    20.860     0.000\
-        \             \nbuilding_type_id_is_65       0.4710     0.041    11.622  \
-        \   0.000             \nbldg_empratio_16             0.9152     0.032    28.842\
-        \     0.000             \nnodes_walk_sector16_jobs     0.4547     0.051  \
-        \   8.966     0.000             \nb_total_jobs                 0.3261    \
-        \ 0.039     8.309     0.000             \nbuilding_type_id_is_21       0.7697\
-        \     0.070    11.044     0.000             \nnodes_walk_sector10_jobs   \
-        \ -0.3135     0.077    -4.052     0.000             \nvacant_job_spaces  \
-        \         -0.4588     0.091    -5.042     0.000             \nparcels_total_sqft\
-        \          -2.4399     0.378    -6.449     0.000             \nb_ln_sqft_price_nonres\
-        \       0.2497     0.062     4.000     0.000             \nbuilding_type_id_is_61\
-        \       0.2695     0.042     6.436     0.000             \nbuilding_type_id_is_23\
-        \       0.6347     0.074     8.575     0.000             \nnodes_walk_sector11_jobs\
-        \     0.0496     0.021     2.328     0.020             \nnodes_walk_sector9_jobs\
-        \     -0.1783     0.059    -2.997     0.003             \n=============================================================================="
+        improvement_value           -0.0661     0.022    -2.983     0.003        \
+        \     \nb_ln_non_residential_sqft    0.9875     0.046    21.277     0.000\
+        \             \nbuilding_type_id_is_65       0.3041     0.030    10.093  \
+        \   0.000             \nbldg_empratio_16             0.9691     0.026    37.441\
+        \     0.000             \nnodes_walk_sector16_jobs     0.5045     0.043  \
+        \  11.730     0.000             \nb_total_jobs                 0.3434    \
+        \ 0.044     7.767     0.000             \nbuilding_type_id_is_21       0.5230\
+        \     0.050    10.391     0.000             \nnodes_walk_sector10_jobs   \
+        \ -0.5121     0.053    -9.664     0.000             \nparcels_total_sqft \
+        \         -1.3663     0.257    -5.323     0.000             \nb_ln_sqft_price_nonres\
+        \       0.4861     0.069     7.025     0.000             \nbuilding_type_id_is_61\
+        \       0.2282     0.033     6.910     0.000             \nbuilding_type_id_is_23\
+        \       0.5182     0.061     8.503     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

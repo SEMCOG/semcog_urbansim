@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,28 +10,27 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.2172179933986929
-    - 0.3396098801567915
-    - -0.04316717911878062
-    - -0.07725896468310868
-    - -0.2003936945718007
-    - -0.15717748167252904
-    - 0.10365986003420143
-    - -0.07358181569460595
-    - -0.4139796175795468
-    - 0.9870417763149262
-    - -0.22857803095641926
-    - 0.11207893150314523
-    - -0.0550780936943887
-    - -0.3518787058393899
+    - 0.1714183970439962
+    - 0.29862881467324354
+    - -0.07648387184575262
+    - -0.1706654677969824
+    - -0.13550452037109945
+    - 0.0631767934781165
+    - -0.09080049048006632
+    - -0.29491035415669153
+    - 1.2049845555114356
+    - -0.08777909917282699
+    - 0.08465350047485137
+    - -0.05222832717856157
+    - -0.5080486826209883
     max_iter: null
     mct_intx_ops: null
-    model_expression: b_total_jobs + nodes_walk_sector8_jobs + nodes_walk_sector10_jobs
-        + nodes_walk_sector9_jobs + zones_logsum_job_high_income + parcels_land_cost
-        + improvement_value + bldg_empratio_18 + bldg_empratio_15 + b_ln_non_residential_sqft
-        + bldg_empratio_11 + parcels_total_sqft + stories + b_ln_land_area - 1
+    model_expression: b_total_jobs + nodes_walk_sector8_jobs + nodes_walk_sector9_jobs
+        + zones_logsum_job_high_income + parcels_land_cost + improvement_value + bldg_empratio_18
+        + bldg_empratio_15 + b_ln_non_residential_sqft + bldg_empratio_11 + parcels_total_sqft
+        + stories + b_ln_land_area - 1
     name: elcm_800005
     out_alt_filters: null
     out_alternatives: null
@@ -41,29 +40,28 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                986\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     14\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.491\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.488\nAIC:              \
-        \     4,490.356   Log-Likelihood:       -2,231.178\nBIC:                 \
-        \  4,559.064   LL-Null:              -4,382.027\n=================================================================================\n\
+        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     13\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.505\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.502\nAIC:              \
+        \     4,360.225   Log-Likelihood:       -2,167.113\nBIC:                 \
+        \  4,424.026   LL-Null:              -4,382.027\n=================================================================================\n\
         \                                  coef   std err         z     P>|z|   Conf.\
         \ Int.\n---------------------------------------------------------------------------------\n\
-        b_total_jobs                    0.2172     0.015    14.336     0.000     \
-        \        \nnodes_walk_sector8_jobs         0.3396     0.023    14.699    \
-        \ 0.000             \nnodes_walk_sector10_jobs       -0.0432     0.025   \
-        \ -1.749     0.080             \nnodes_walk_sector9_jobs        -0.0773  \
-        \   0.020    -3.823     0.000             \nzones_logsum_job_high_income \
-        \  -0.2004     0.037    -5.438     0.000             \nparcels_land_cost \
-        \             -0.1572     0.030    -5.194     0.000             \nimprovement_value\
-        \               0.1037     0.025     4.153     0.000             \nbldg_empratio_18\
-        \               -0.0736     0.038    -1.938     0.053             \nbldg_empratio_15\
-        \               -0.4140     0.081    -5.085     0.000             \nb_ln_non_residential_sqft\
-        \       0.9870     0.130     7.572     0.000             \nbldg_empratio_11\
-        \               -0.2286     0.050    -4.588     0.000             \nparcels_total_sqft\
-        \              0.1121     0.030     3.737     0.000             \nstories\
-        \                        -0.0551     0.026    -2.159     0.031           \
-        \  \nb_ln_land_area                 -0.3519     0.130    -2.716     0.007\
+        b_total_jobs                    0.1714     0.015    11.086     0.000     \
+        \        \nnodes_walk_sector8_jobs         0.2986     0.017    17.337    \
+        \ 0.000             \nnodes_walk_sector9_jobs        -0.0765     0.017   \
+        \ -4.451     0.000             \nzones_logsum_job_high_income   -0.1707  \
+        \   0.038    -4.476     0.000             \nparcels_land_cost            \
+        \  -0.1355     0.032    -4.194     0.000             \nimprovement_value \
+        \              0.0632     0.022     2.894     0.004             \nbldg_empratio_18\
+        \               -0.0908     0.044    -2.061     0.039             \nbldg_empratio_15\
+        \               -0.2949     0.046    -6.369     0.000             \nb_ln_non_residential_sqft\
+        \       1.2050     0.124     9.686     0.000             \nbldg_empratio_11\
+        \               -0.0878     0.044    -1.979     0.048             \nparcels_total_sqft\
+        \              0.0847     0.032     2.645     0.008             \nstories\
+        \                        -0.0522     0.025    -2.098     0.036           \
+        \  \nb_ln_land_area                 -0.5080     0.126    -4.025     0.000\
         \             \n================================================================================="
     tags: []
     template: LargeMultinomialLogitStep

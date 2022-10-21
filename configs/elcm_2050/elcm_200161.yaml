@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,17 +10,17 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.11365988734088385
-    - 0.34376838256017317
-    - 0.6559218191148826
-    - 1.0131030288450968
-    - 0.16161153603891806
-    - 0.514719590222951
-    - -0.22871048669254673
-    - 0.3042389140414536
-    - -0.3639977127881198
+    - -0.14986983634159967
+    - 0.34434033858777
+    - 0.6634102722934511
+    - 1.1298640846904806
+    - 0.14543929076593137
+    - 0.5179837352529565
+    - -0.2928485227670602
+    - 0.22714470400845413
+    - -0.5233369618950526
     max_iter: null
     mct_intx_ops: null
     model_expression: building_type_id_is_32 + nodes_walk_sector2_jobs + b_ln_non_residential_sqft
@@ -37,23 +37,23 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                991\nMethod:  \
         \     Maximum Likelihood   Df Model:                      9\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.528\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.526\nAIC:              \
-        \     4,157.428   Log-Likelihood:       -2,069.714\nBIC:                 \
-        \  4,201.598   LL-Null:              -4,382.027\n============================================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.527\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.525\nAIC:              \
+        \     4,159.310   Log-Likelihood:       -2,070.655\nBIC:                 \
+        \  4,203.480   LL-Null:              -4,382.027\n============================================================================================\n\
         \                                             coef   std err         z   \
         \  P>|z|   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
-        building_type_id_is_32                    -0.1137     0.023    -4.979    \
-        \ 0.000             \nnodes_walk_sector2_jobs                    0.3438  \
-        \   0.015    22.268     0.000             \nb_ln_non_residential_sqft    \
-        \              0.6559     0.052    12.537     0.000             \nb_ln_sqft_price_nonres\
-        \                     1.0131     0.099    10.211     0.000             \n\
-        building_type_id_is_23                     0.1616     0.032     5.055    \
-        \ 0.000             \nbldg_empratio_2                            0.5147  \
-        \   0.012    41.995     0.000             \nnodes_walk_lowinc_hhs        \
-        \             -0.2287     0.046    -4.929     0.000             \nnodes_walk_log_sum_nonresidential_units\
-        \    0.3042     0.078     3.900     0.000             \nsqft_price_nonres\
-        \                         -0.3640     0.096    -3.789     0.000          \
+        building_type_id_is_32                    -0.1499     0.018    -8.398    \
+        \ 0.000             \nnodes_walk_sector2_jobs                    0.3443  \
+        \   0.015    23.436     0.000             \nb_ln_non_residential_sqft    \
+        \              0.6634     0.052    12.817     0.000             \nb_ln_sqft_price_nonres\
+        \                     1.1299     0.098    11.559     0.000             \n\
+        building_type_id_is_23                     0.1454     0.033     4.450    \
+        \ 0.000             \nbldg_empratio_2                            0.5180  \
+        \   0.012    43.473     0.000             \nnodes_walk_lowinc_hhs        \
+        \             -0.2928     0.056    -5.242     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \    0.2271     0.078     2.909     0.004             \nsqft_price_nonres\
+        \                         -0.5233     0.101    -5.182     0.000          \
         \   \n============================================================================================"
     tags: []
     template: LargeMultinomialLogitStep

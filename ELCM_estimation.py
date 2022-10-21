@@ -103,7 +103,7 @@ vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
 # config
 choice_column = "building_id"
 job_filter_columns = ["building_id", "slid", "home_based_status"]
-b_filter_columns = ["large_area_id", "non_residential_sqft"]
+b_filter_columns = ["large_area_id", "non_residential_sqft", "vacant_job_spaces"]
 # load variables
 RELOAD = False
 if RELOAD:

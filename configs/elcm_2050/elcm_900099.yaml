@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,22 +10,22 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.3037531128237188
-    - 0.9675707470684236
-    - -0.6166060281899598
-    - -0.2529427491814466
-    - 0.8888416686717396
-    - 0.9866707884406095
-    - -0.5210294906302722
-    - 0.4192200852552928
-    - -0.22735417455420104
+    - 0.23749025736467463
+    - 0.9460126100982674
+    - -0.26180675172318557
+    - 0.9466598976063467
+    - 1.1812755658532035
+    - -0.6215806187640168
+    - 0.40230211270982164
+    - -0.2610837724835493
+    - -0.17958058989301381
     max_iter: null
     mct_intx_ops: null
-    model_expression: b_total_jobs + b_ln_non_residential_sqft + vacant_job_spaces
-        + improvement_value + building_type_id_is_23 + b_ln_sqft_price_nonres + bldg_empratio_3
-        + building_type_id_is_21 + bldg_empratio_16 - 1
+    model_expression: b_total_jobs + b_ln_non_residential_sqft + improvement_value
+        + building_type_id_is_23 + b_ln_sqft_price_nonres + bldg_empratio_3 + building_type_id_is_21
+        + bldg_empratio_16 + bldg_empratio_14 - 1
     name: elcm_900099
     out_alt_filters: null
     out_alternatives: null
@@ -37,22 +37,22 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                991\nMethod:  \
         \     Maximum Likelihood   Df Model:                      9\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.260\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.258\nAIC:              \
-        \     6,504.220   Log-Likelihood:       -3,243.110\nBIC:                 \
-        \  6,548.389   LL-Null:              -4,382.027\n==============================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.277\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.275\nAIC:              \
+        \     6,356.106   Log-Likelihood:       -3,169.053\nBIC:                 \
+        \  6,400.276   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        b_total_jobs                 0.3038     0.012    25.420     0.000        \
-        \     \nb_ln_non_residential_sqft    0.9676     0.049    19.653     0.000\
-        \             \nvacant_job_spaces           -0.6166     0.030   -20.648  \
-        \   0.000             \nimprovement_value           -0.2529     0.040    -6.321\
-        \     0.000             \nbuilding_type_id_is_23       0.8888     0.029  \
-        \  30.151     0.000             \nb_ln_sqft_price_nonres       0.9867    \
-        \ 0.054    18.435     0.000             \nbldg_empratio_3             -0.5210\
-        \     0.103    -5.063     0.000             \nbuilding_type_id_is_21     \
-        \  0.4192     0.046     9.031     0.000             \nbldg_empratio_16   \
-        \         -0.2274     0.086    -2.658     0.008             \n=============================================================================="
+        b_total_jobs                 0.2375     0.011    20.820     0.000        \
+        \     \nb_ln_non_residential_sqft    0.9460     0.048    19.891     0.000\
+        \             \nimprovement_value           -0.2618     0.024   -10.800  \
+        \   0.000             \nbuilding_type_id_is_23       0.9467     0.030    31.931\
+        \     0.000             \nb_ln_sqft_price_nonres       1.1813     0.055  \
+        \  21.639     0.000             \nbldg_empratio_3             -0.6216    \
+        \ 0.097    -6.426     0.000             \nbuilding_type_id_is_21       0.4023\
+        \     0.050     8.031     0.000             \nbldg_empratio_16           \
+        \ -0.2611     0.086    -3.039     0.002             \nbldg_empratio_14   \
+        \         -0.1796     0.050    -3.577     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

@@ -59,7 +59,9 @@ job_estimation_sample_size = 80
 choice_column = "building_id"
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 job_filter_columns = ["building_id", "slid", "home_based_status"]
-b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units", "non_residential_sqft"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units", "non_residential_sqft", "vacant_job_spaces"]
+building_hh_capacity_col = 'residential_units'
+building_job_capacity_col = 'vacant_job_spaces'
 
 # reload variables?
 def load_hh_and_b(LARGE_AREA_ID=5, RELOAD=False):
@@ -82,8 +84,11 @@ def load_hh_and_b(LARGE_AREA_ID=5, RELOAD=False):
         b_region = pd.read_csv('b.csv', index_col=0)
     return hh_region, b_region
 
-def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
+def run_large_MNL(LARGE_AREA_ID, number_of_vars_to_use=40):
     thetas = pd.read_csv("./configs/hlcm_2050/thetas/out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
+    hh_region = orca.get_table('households').to_frame(list(thetas.index)+hh_filter_columns)
+    b_region = orca.get_table('buildings').to_frame(list(thetas.index)+b_filter_columns)
+
     hh = hh_region[hh_region.large_area_id == LARGE_AREA_ID]
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
@@ -93,58 +98,48 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     b = b_region[b_region.large_area_id == LARGE_AREA_ID]
     b = b[b.residential_units > 0]
-    # b = b[b.year_built > 2000]
-    b = b[[col for col in b.columns if col not in b_filter_columns]]
-
-    # (df-df.mean())/df.std()
+    b = b[[col for col in b.columns if col not in b_filter_columns or col == building_hh_capacity_col]]
 
     # remove extra columns
     hh_cols_to_std = [col for col in hh.columns if col not in ['building_id']]
     # standardize hh
     hh[hh_cols_to_std] = (hh[hh_cols_to_std]-hh[hh_cols_to_std].mean())/hh[hh_cols_to_std].std()
-    b_cols_to_std = [col for col in b.columns]
+    b_cols_to_std = [col for col in b.columns if col not in [building_hh_capacity_col]]
 
     b_cols_with_0_std = b.columns[b.std()==0]
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
     # adding hh and b to orca
-    orca.add_table('hh', hh)
-    orca.add_table('b', b)
+    orca.add_table('hh_hlcm', hh)
+    orca.add_table('b_hlcm', b)
 
     m = LargeMultinomialLogitStep()
-    m.choosers = ['hh']
+    m.choosers = ['hh_hlcm']
     m.chooser_sample_size = min(hh_sample_size, hh.shape[0])
     # m.chooser_filters = chooser_filter
 
     # Define the geographic alternatives agent is selecting amongst
-    m.alternatives = ['b']
+    m.alternatives = ['b_hlcm']
     m.choice_column = choice_column
     m.alt_sample_size = estimation_sample_size
     # m.alt_filters = alts_filter
 
-    # use top 40 variables
+    # use top k variables
     # filter variables
     # some variables has 0 std, need to remove them for the MNL to run
     v = thetas.theta.abs().sort_values(ascending=False).index
     v_wo_0_std = [col for col in v if all(
         [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
     selected_variables = v_wo_0_std[:number_of_vars_to_use]
-    # add 10 least important variables
-    # selected_variables = np.concatenate((selected_variables, thetas.theta.abs().sort_values(ascending=False).index[-10:]))
 
     m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
-    # m.out_choosers = 'hh161' # if different from estimation
-    # m.out_alternatives = 'bb161' # if different from estimation
     m.constrained_choices = True
-    m.alt_capacity = 'residential_units'
-    # m.out_chooser_filters = ['building_id == -1']
+    m.alt_capacity = building_hh_capacity_col
 
     m.fit()
-    m.name = 'hlcm_city_test_%s' % (LARGE_AREA_ID)
-    with open("configs/hlcm_2050/hlcm_%s_%svars.yaml" % (LARGE_AREA_ID, len(selected_variables)), 'w') as f:
-        yaml.dump(m.to_dict(), f, default_flow_style=False)
-    #mm.register(m)
+    m.name = 'hlcm_%s' % (LARGE_AREA_ID)
+    mm.register(m)
 
     print('done')
 
@@ -163,13 +158,13 @@ def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
 
     b = b_region[b_region.large_area_id == SLID % 1000]
     b = b[b.non_residential_sqft > 0]
-    b = b[[col for col in b.columns if col not in b_filter_columns]]
+    b = b[[col for col in b.columns if col not in b_filter_columns or col == building_job_capacity_col]]
     # remove extra columns
-    job_cols_to_std = [col for col in job.columns if col not in ['building_id']]
+    job_cols_to_std = [col for col in job.columns if col not in ['building_id', building_job_capacity_col]]
     # standardize job
     job[job_cols_to_std] = (job[job_cols_to_std]-job[job_cols_to_std].mean())/job[job_cols_to_std].std()
-    b_cols_to_std = [col for col in b.columns]
 
+    b_cols_to_std = [col for col in b.columns if col not in [building_job_capacity_col]]
     b_cols_with_0_std = b.columns[b.std()==0]
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
@@ -195,6 +190,8 @@ def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
     v = thetas.theta.abs().sort_values(ascending=False).index
     v_wo_0_std = [col for col in v if all(
         [vv.strip() not in b_cols_with_0_std for vv in col.split(':')])]
+    # remove vacant_job_spaces from selected variables
+    v_wo_0_std = [col for col in v_wo_0_std if col not in ['vacant_job_spaces']]
     selected_variables = v_wo_0_std[:number_of_vars_to_use]
     # remove variables which with correlation close to 1
     i = number_of_vars_to_use
@@ -211,10 +208,8 @@ def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
         
     m.model_expression = util.str_model_expression(selected_variables, add_constant=False)
 
-    # m.out_choosers = 'hh161' # if different from estimation
-    # m.out_alternatives = 'bb161' # if different from estimation
-    m.constrained_choices = False
-    # m.out_chooser_filters = ['building_id == -1']
+    m.constrained_choices = True
+    m.alt_capacity = building_job_capacity_col
 
     m.fit()
     fp = m.model.results['fit_parameters']
