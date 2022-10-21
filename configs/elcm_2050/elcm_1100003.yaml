@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,20 +10,19 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.2680116122762752
-    - 0.14686327496695814
-    - 2.681250907899077
-    - 0.08967289249903258
-    - 2.7705771137832826
-    - -0.35789128839591455
-    - -0.8948711470070895
+    - 0.4281838649720878
+    - 0.07068440586334897
+    - 1.6038847852239084
+    - 4.573124427657506
+    - -0.16007595139997366
+    - -3.0370036494173815
+    - -0.5571445546497357
     max_iter: null
     mct_intx_ops: null
     model_expression: nodes_walk_sector11_jobs + b_total_jobs + b_ln_sqft_price_nonres
-        + zones_logsum_pop_high_income + b_ln_building_sqft + improvement_value +
-        b_ln_land_area - 1
+        + b_ln_building_sqft + improvement_value + b_ln_land_area + stories - 1
     name: elcm_1100003
     out_alt_filters: null
     out_alternatives: null
@@ -35,20 +34,20 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                993\nMethod:  \
         \     Maximum Likelihood   Df Model:                      7\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.884\nTime:          \
-        \            17:54   Pseudo R-bar-squ.:         0.882\nAIC:              \
-        \     1,033.593   Log-Likelihood:         -509.797\nBIC:                 \
-        \  1,067.948   LL-Null:              -4,382.027\n=================================================================================\n\
-        \                                  coef   std err         z     P>|z|   Conf.\
-        \ Int.\n---------------------------------------------------------------------------------\n\
-        nodes_walk_sector11_jobs        0.2680     0.006    43.007     0.000     \
-        \        \nb_total_jobs                    0.1469     0.013    11.216    \
-        \ 0.000             \nb_ln_sqft_price_nonres          2.6813     0.189   \
-        \ 14.176     0.000             \nzones_logsum_pop_high_income    0.0897  \
-        \   0.033     2.717     0.007             \nb_ln_building_sqft           \
-        \   2.7706     0.242    11.466     0.000             \nimprovement_value \
-        \             -0.3579     0.028   -12.593     0.000             \nb_ln_land_area\
-        \                 -0.8949     0.226    -3.954     0.000             \n================================================================================="
+        \          2022-10-21   Pseudo R-squ.:             0.895\nTime:          \
+        \            18:04   Pseudo R-bar-squ.:         0.893\nAIC:              \
+        \       938.603   Log-Likelihood:         -462.301\nBIC:                 \
+        \    972.957   LL-Null:              -4,382.027\n=============================================================================\n\
+        \                              coef   std err         z     P>|z|   Conf.\
+        \ Int.\n-----------------------------------------------------------------------------\n\
+        nodes_walk_sector11_jobs    0.4282     0.007    58.199     0.000         \
+        \    \nb_total_jobs                0.0707     0.012     6.018     0.000  \
+        \           \nb_ln_sqft_price_nonres      1.6039     0.194     8.287     0.000\
+        \             \nb_ln_building_sqft          4.5731     0.473     9.676   \
+        \  0.000             \nimprovement_value          -0.1601     0.049    -3.271\
+        \     0.001             \nb_ln_land_area             -3.0370     0.465   \
+        \ -6.529     0.000             \nstories                    -0.5571     0.066\
+        \    -8.380     0.000             \n============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

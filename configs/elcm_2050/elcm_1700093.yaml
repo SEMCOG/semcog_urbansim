@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,27 +10,23 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.1837836438055762
-    - 1.0980328253772704
-    - 0.5692101679047515
-    - 0.2613105873456062
-    - -0.2825786381661382
-    - -0.8450699764142425
-    - 0.7571408374283918
-    - -0.6219893189136224
-    - -0.2028447101233451
-    - 0.1070236836291954
-    - -0.09691100781245097
-    - -0.5317522779064363
-    - 0.7954367300770472
+    - 0.18370259099961758
+    - 0.5009423508098741
+    - -0.23003496884697405
+    - 0.6206694359176443
+    - -0.5103262014540417
+    - 0.10456392089066156
+    - -0.06444345831030772
+    - -0.4486057063706876
+    - 0.7572985403790342
+    - 0.10369379686093941
     max_iter: null
     mct_intx_ops: null
-    model_expression: nodes_walk_sector17_jobs + zones_logsum_pop_high_income + b_total_jobs
-        + zones_empden + nodes_walk_sector9_jobs + zones_logsum_pop_low_income + zones_households
-        + zones_population + zones_ln_empden_3 + nodes_walk_sector4_jobs + nodes_walk_sector14_jobs
-        + parcels_total_sqft + bldg_empratio_17 - 1
+    model_expression: nodes_walk_sector17_jobs + b_total_jobs + nodes_walk_sector9_jobs
+        + zones_households + zones_population + nodes_walk_sector4_jobs + nodes_walk_sector14_jobs
+        + parcels_total_sqft + bldg_empratio_17 + nodes_walk_max_retail_far - 1
     name: elcm_1700093
     out_alt_filters: null
     out_alternatives: null
@@ -40,28 +36,25 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     13\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.453\nTime:          \
-        \            17:55   Pseudo R-bar-squ.:         0.450\nAIC:              \
-        \     4,816.229   Log-Likelihood:       -2,395.114\nBIC:                 \
-        \  4,880.030   LL-Null:              -4,382.027\n=================================================================================\n\
-        \                                  coef   std err         z     P>|z|   Conf.\
-        \ Int.\n---------------------------------------------------------------------------------\n\
-        nodes_walk_sector17_jobs        0.1838     0.008    21.933     0.000     \
-        \        \nzones_logsum_pop_high_income    1.0980     0.255     4.303    \
-        \ 0.000             \nb_total_jobs                    0.5692     0.029   \
-        \ 19.948     0.000             \nzones_empden                    0.2613  \
-        \   0.060     4.342     0.000             \nnodes_walk_sector9_jobs      \
-        \  -0.2826     0.036    -7.848     0.000             \nzones_logsum_pop_low_income\
-        \    -0.8451     0.257    -3.286     0.001             \nzones_households\
-        \                0.7571     0.188     4.035     0.000             \nzones_population\
-        \               -0.6220     0.190    -3.274     0.001             \nzones_ln_empden_3\
-        \              -0.2028     0.053    -3.818     0.000             \nnodes_walk_sector4_jobs\
-        \         0.1070     0.025     4.212     0.000             \nnodes_walk_sector14_jobs\
-        \       -0.0969     0.032    -3.028     0.002             \nparcels_total_sqft\
-        \             -0.5318     0.079    -6.707     0.000             \nbldg_empratio_17\
-        \                0.7954     0.015    52.804     0.000             \n================================================================================="
+        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     10\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.419\nTime:          \
+        \            18:06   Pseudo R-bar-squ.:         0.417\nAIC:              \
+        \     5,108.235   Log-Likelihood:       -2,544.118\nBIC:                 \
+        \  5,157.313   LL-Null:              -4,382.027\n==============================================================================\n\
+        \                               coef   std err         z     P>|z|   Conf.\
+        \ Int.\n------------------------------------------------------------------------------\n\
+        nodes_walk_sector17_jobs     0.1837     0.007    24.698     0.000        \
+        \     \nb_total_jobs                 0.5009     0.027    18.412     0.000\
+        \             \nnodes_walk_sector9_jobs     -0.2300     0.034    -6.730  \
+        \   0.000             \nzones_households             0.6207     0.172    \
+        \ 3.605     0.000             \nzones_population            -0.5103     0.169\
+        \    -3.013     0.003             \nnodes_walk_sector4_jobs      0.1046  \
+        \   0.023     4.581     0.000             \nnodes_walk_sector14_jobs    -0.0644\
+        \     0.034    -1.921     0.055             \nparcels_total_sqft         \
+        \ -0.4486     0.080    -5.630     0.000             \nbldg_empratio_17   \
+        \          0.7573     0.015    51.743     0.000             \nnodes_walk_max_retail_far\
+        \    0.1037     0.035     2.949     0.003             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

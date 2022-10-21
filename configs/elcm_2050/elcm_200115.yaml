@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,21 +10,21 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.6445472604265767
-    - 0.1196880606939617
-    - -0.3762824516696377
-    - -0.8265540327401497
-    - 0.22551240985084067
-    - 0.12867939032905062
-    - 1.0850966217744116
-    - -0.2954768886521747
-    - 0.20165144296375995
-    - -0.2542276754427258
-    - -0.6863849593156811
-    - 0.39968459830682523
-    - -0.21745295184539087
+    - 0.5999135257886383
+    - 0.14039415107252246
+    - -0.38029313142092713
+    - -0.7541930086182904
+    - 0.24565573975090763
+    - 0.14247691289870681
+    - 1.1529834097270841
+    - -0.31485172552290347
+    - 0.18672707507218442
+    - -0.25661391131707517
+    - -0.7358229365998357
+    - 0.418184334396956
+    - -0.21831771489125495
     max_iter: null
     mct_intx_ops: null
     model_expression: nodes_walk_sector2_jobs + b_total_jobs + zones_logsum_job_high_income
@@ -42,27 +42,27 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                987\nMethod:  \
         \     Maximum Likelihood   Df Model:                     13\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.428\nTime:          \
-        \            17:55   Pseudo R-bar-squ.:         0.425\nAIC:              \
-        \     5,041.211   Log-Likelihood:       -2,507.606\nBIC:                 \
-        \  5,105.012   LL-Null:              -4,382.027\n=========================================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.421\nTime:          \
+        \            18:05   Pseudo R-bar-squ.:         0.418\nAIC:              \
+        \     5,100.713   Log-Likelihood:       -2,537.357\nBIC:                 \
+        \  5,164.514   LL-Null:              -4,382.027\n=========================================================================================\n\
         \                                          coef   std err         z     P>|z|\
         \   Conf. Int.\n-----------------------------------------------------------------------------------------\n\
-        nodes_walk_sector2_jobs                 0.6445     0.010    61.457     0.000\
-        \             \nb_total_jobs                            0.1197     0.035 \
-        \    3.421     0.001             \nzones_logsum_job_high_income          \
-        \ -0.3763     0.103    -3.668     0.000             \nnodes_walk_sector16_jobs\
-        \               -0.8266     0.074   -11.180     0.000             \nzones_logsum_job_low_income\
-        \             0.2255     0.124     1.822     0.069             \nbuilding_type_id_is_31\
-        \                  0.1287     0.024     5.379     0.000             \nb_ln_sqft_price_nonres\
-        \                  1.0851     0.092    11.826     0.000             \nnodes_walk_log_sum_residential_units\
-        \   -0.2955     0.054    -5.502     0.000             \nnodes_walk_max_office_far\
-        \               0.2017     0.059     3.410     0.001             \nzones_empden\
-        \                           -0.2542     0.075    -3.403     0.001        \
-        \     \nsqft_price_nonres                      -0.6864     0.081    -8.460\
-        \     0.000             \npopden                                  0.3997 \
-        \    0.063     6.379     0.000             \nzones_households            \
-        \           -0.2175     0.045    -4.788     0.000             \n========================================================================================="
+        nodes_walk_sector2_jobs                 0.5999     0.010    57.170     0.000\
+        \             \nb_total_jobs                            0.1404     0.036 \
+        \    3.892     0.000             \nzones_logsum_job_high_income          \
+        \ -0.3803     0.103    -3.705     0.000             \nnodes_walk_sector16_jobs\
+        \               -0.7542     0.074   -10.186     0.000             \nzones_logsum_job_low_income\
+        \             0.2457     0.124     1.979     0.048             \nbuilding_type_id_is_31\
+        \                  0.1425     0.024     6.005     0.000             \nb_ln_sqft_price_nonres\
+        \                  1.1530     0.092    12.496     0.000             \nnodes_walk_log_sum_residential_units\
+        \   -0.3149     0.054    -5.830     0.000             \nnodes_walk_max_office_far\
+        \               0.1867     0.059     3.156     0.002             \nzones_empden\
+        \                           -0.2566     0.076    -3.396     0.001        \
+        \     \nsqft_price_nonres                      -0.7358     0.081    -9.079\
+        \     0.000             \npopden                                  0.4182 \
+        \    0.063     6.683     0.000             \nzones_households            \
+        \           -0.2183     0.045    -4.829     0.000             \n========================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

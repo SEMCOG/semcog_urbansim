@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,11 +10,11 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.44599701056611174
-    - 0.2811221704891016
-    - 0.7239919684371646
+    - 0.46331790110347715
+    - 0.34096984330799723
+    - 0.7183860837024332
     max_iter: null
     mct_intx_ops: null
     model_expression: nodes_walk_sector6_jobs + zones_logsum_job_low_income + b_ln_non_residential_sqft
@@ -30,15 +30,15 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                997\nMethod:  \
         \     Maximum Likelihood   Df Model:                      3\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.598\nTime:          \
-        \            17:55   Pseudo R-bar-squ.:         0.598\nAIC:              \
-        \     3,525.130   Log-Likelihood:       -1,759.565\nBIC:                 \
-        \  3,539.853   LL-Null:              -4,382.027\n================================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.611\nTime:          \
+        \            18:06   Pseudo R-bar-squ.:         0.611\nAIC:              \
+        \     3,412.147   Log-Likelihood:       -1,703.074\nBIC:                 \
+        \  3,426.871   LL-Null:              -4,382.027\n================================================================================\n\
         \                                 coef   std err         z     P>|z|   Conf.\
         \ Int.\n--------------------------------------------------------------------------------\n\
-        nodes_walk_sector6_jobs        0.4460     0.006    81.014     0.000      \
-        \       \nzones_logsum_job_low_income    0.2811     0.041     6.927     0.000\
-        \             \nb_ln_non_residential_sqft      0.7240     0.039    18.420\
+        nodes_walk_sector6_jobs        0.4633     0.006    77.841     0.000      \
+        \       \nzones_logsum_job_low_income    0.3410     0.042     8.144     0.000\
+        \             \nb_ln_non_residential_sqft      0.7184     0.041    17.407\
         \     0.000             \n================================================================================"
     tags: []
     template: LargeMultinomialLogitStep

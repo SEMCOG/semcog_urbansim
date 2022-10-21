@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,26 +10,27 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.08919058074323093
-    - 0.5798670064749962
-    - 0.37865922627423565
-    - 0.1783273476068419
-    - -0.6762025036149719
-    - -1.2482433954226753
-    - 0.22692821976153937
-    - -3.3851288004618474
-    - 0.6856587556787732
-    - -0.22455986985997925
-    - -0.13404976545654956
-    - -0.07171354943122767
+    - -0.04349434640663272
+    - 0.5505896690760396
+    - 0.4559075805921824
+    - 0.21618028601557124
+    - -0.41847535007681097
+    - -1.3119976227044012
+    - 0.17161277746978199
+    - -0.36486570986814515
+    - 0.6411567660180856
+    - -0.21571532777469027
+    - -0.6264937659503713
+    - -0.07258319745298233
+    - 0.4955511220418813
     max_iter: null
     mct_intx_ops: null
     model_expression: building_type_id_is_53 + nodes_walk_sector2_jobs + zones_logsum_job_high_income
         + b_total_jobs + nodes_walk_population + parcels_total_sqft + nodes_walk_log_sum_residential_units
         + building_type_id_is_11 + b_ln_non_residential_sqft + nodes_walk_sector12_jobs
-        + zones_population + zones_ln_empden_9 - 1
+        + zones_population + zones_ln_empden_9 + zones_households - 1
     name: elcm_200093
     out_alt_filters: null
     out_alternatives: null
@@ -39,29 +40,30 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                988\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     12\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.416\nTime:          \
-        \            17:55   Pseudo R-bar-squ.:         0.413\nAIC:              \
-        \     5,146.077   Log-Likelihood:       -2,561.039\nBIC:                 \
-        \  5,204.970   LL-Null:              -4,382.027\n=========================================================================================\n\
+        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     13\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.411\nTime:          \
+        \            18:06   Pseudo R-bar-squ.:         0.408\nAIC:              \
+        \     5,188.744   Log-Likelihood:       -2,581.372\nBIC:                 \
+        \  5,252.545   LL-Null:              -4,382.027\n=========================================================================================\n\
         \                                          coef   std err         z     P>|z|\
         \   Conf. Int.\n-----------------------------------------------------------------------------------------\n\
-        building_type_id_is_53                 -0.0892     0.024    -3.693     0.000\
-        \             \nnodes_walk_sector2_jobs                 0.5799     0.010 \
-        \   56.002     0.000             \nzones_logsum_job_high_income          \
-        \  0.3787     0.046     8.251     0.000             \nb_total_jobs       \
-        \                     0.1783     0.024     7.333     0.000             \n\
-        nodes_walk_population                  -0.6762     0.182    -3.715     0.000\
-        \             \nparcels_total_sqft                     -1.2482     0.096 \
-        \  -13.061     0.000             \nnodes_walk_log_sum_residential_units  \
-        \  0.2269     0.087     2.606     0.009             \nbuilding_type_id_is_11\
-        \                 -3.3851     0.495    -6.837     0.000             \nb_ln_non_residential_sqft\
-        \               0.6857     0.059    11.599     0.000             \nnodes_walk_sector12_jobs\
-        \               -0.2246     0.011   -20.125     0.000             \nzones_population\
-        \                       -0.1340     0.040    -3.360     0.001            \
-        \ \nzones_ln_empden_9                      -0.0717     0.042    -1.699   \
-        \  0.089             \n========================================================================================="
+        building_type_id_is_53                 -0.0435     0.025    -1.733     0.083\
+        \             \nnodes_walk_sector2_jobs                 0.5506     0.009 \
+        \   60.622     0.000             \nzones_logsum_job_high_income          \
+        \  0.4559     0.045    10.179     0.000             \nb_total_jobs       \
+        \                     0.2162     0.022     9.614     0.000             \n\
+        nodes_walk_population                  -0.4185     0.136    -3.087     0.002\
+        \             \nparcels_total_sqft                     -1.3120     0.099 \
+        \  -13.309     0.000             \nnodes_walk_log_sum_residential_units  \
+        \  0.1716     0.075     2.277     0.023             \nbuilding_type_id_is_11\
+        \                 -0.3649     0.163    -2.236     0.025             \nb_ln_non_residential_sqft\
+        \               0.6412     0.055    11.598     0.000             \nnodes_walk_sector12_jobs\
+        \               -0.2157     0.012   -18.715     0.000             \nzones_population\
+        \                       -0.6265     0.241    -2.597     0.009            \
+        \ \nzones_ln_empden_9                      -0.0726     0.043    -1.687   \
+        \  0.092             \nzones_households                        0.4956    \
+        \ 0.237     2.091     0.036             \n========================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

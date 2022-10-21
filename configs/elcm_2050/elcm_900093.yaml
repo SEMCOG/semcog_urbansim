@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,19 +10,20 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.06785335727061839
-    - 0.12952994197190631
-    - 0.5716418518525761
-    - 1.100915371479435
-    - 0.6493113173736634
-    - 0.33076527743789574
+    - 0.17651829483570547
+    - 0.21120806436237974
+    - 0.39526432591691285
+    - 1.114226451578187
+    - 0.7010942362575092
+    - 0.15915790326079174
+    - 0.3449374684786705
     max_iter: null
     mct_intx_ops: null
     model_expression: b_total_jobs + nodes_walk_sector9_jobs + b_ln_non_residential_sqft
-        + building_type_id_is_23 + building_type_id_is_21 + building_type_id_is_51
-        - 1
+        + building_type_id_is_23 + building_type_id_is_21 + building_type_id_is_33
+        + building_type_id_is_51 - 1
     name: elcm_900093
     out_alt_filters: null
     out_alternatives: null
@@ -32,21 +33,22 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                994\nMethod:  \
-        \     Maximum Likelihood   Df Model:                      6\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.403\nTime:          \
-        \            17:55   Pseudo R-bar-squ.:         0.402\nAIC:              \
-        \     5,243.492   Log-Likelihood:       -2,615.746\nBIC:                 \
-        \  5,272.938   LL-Null:              -4,382.027\n==============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                993\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      7\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.441\nTime:          \
+        \            18:06   Pseudo R-bar-squ.:         0.440\nAIC:              \
+        \     4,909.503   Log-Likelihood:       -2,447.751\nBIC:                 \
+        \  4,943.857   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        b_total_jobs                 0.0679     0.033     2.077     0.038        \
-        \     \nnodes_walk_sector9_jobs      0.1295     0.020     6.350     0.000\
-        \             \nb_ln_non_residential_sqft    0.5716     0.053    10.762  \
-        \   0.000             \nbuilding_type_id_is_23       1.1009     0.024    45.279\
-        \     0.000             \nbuilding_type_id_is_21       0.6493     0.047  \
-        \  13.828     0.000             \nbuilding_type_id_is_51       0.3308    \
-        \ 0.031    10.741     0.000             \n=============================================================================="
+        b_total_jobs                 0.1765     0.026     6.745     0.000        \
+        \     \nnodes_walk_sector9_jobs      0.2112     0.016    13.220     0.000\
+        \             \nb_ln_non_residential_sqft    0.3953     0.055     7.188  \
+        \   0.000             \nbuilding_type_id_is_23       1.1142     0.029    37.858\
+        \     0.000             \nbuilding_type_id_is_21       0.7011     0.053  \
+        \  13.181     0.000             \nbuilding_type_id_is_33       0.1592    \
+        \ 0.076     2.099     0.036             \nbuilding_type_id_is_51       0.3449\
+        \     0.031    11.036     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

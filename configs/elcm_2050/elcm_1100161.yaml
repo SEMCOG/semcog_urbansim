@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,13 +10,13 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.4522577191183691
-    - 1.7259837139048533
-    - 0.7460448365560041
-    - -34.48120269151071
-    - 0.12133995425711845
+    - 0.5242328003778431
+    - 1.776645151667509
+    - 0.6292547265694621
+    - -37.47596761834666
+    - 0.11744748313497647
     max_iter: null
     mct_intx_ops: null
     model_expression: nodes_walk_sector11_jobs + b_ln_non_residential_sqft + nodes_walk_log_sum_nonresidential_units
@@ -32,18 +32,18 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                995\nMethod:  \
         \     Maximum Likelihood   Df Model:                      5\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.916\nTime:          \
-        \            17:52   Pseudo R-bar-squ.:         0.915\nAIC:              \
-        \       743.723   Log-Likelihood:         -366.862\nBIC:                 \
-        \    768.262   LL-Null:              -4,382.027\n=============================================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.937\nTime:          \
+        \            18:03   Pseudo R-bar-squ.:         0.936\nAIC:              \
+        \       560.852   Log-Likelihood:         -275.426\nBIC:                 \
+        \    585.391   LL-Null:              -4,382.027\n=============================================================================================\n\
         \                                              coef   std err         z  \
         \   P>|z|   Conf. Int.\n---------------------------------------------------------------------------------------------\n\
-        nodes_walk_sector11_jobs                    0.4523     0.017    26.684   \
-        \  0.000             \nb_ln_non_residential_sqft                   1.7260\
-        \     0.156    11.063     0.000             \nnodes_walk_log_sum_nonresidential_units\
-        \     0.7460     0.193     3.871     0.000             \nparcels_total_sqft\
-        \                        -34.4812     0.521   -66.201     0.000          \
-        \   \nzones_ln_empden_11                          0.1213     0.025     4.768\
+        nodes_walk_sector11_jobs                    0.5242     0.018    29.461   \
+        \  0.000             \nb_ln_non_residential_sqft                   1.7766\
+        \     0.195     9.097     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \     0.6293     0.221     2.852     0.004             \nparcels_total_sqft\
+        \                        -37.4760     0.588   -63.710     0.000          \
+        \   \nzones_ln_empden_11                          0.1174     0.027     4.299\
         \     0.000             \n============================================================================================="
     tags: []
     template: LargeMultinomialLogitStep

@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,27 +10,25 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.17914145632404843
-    - -0.09942187029744066
-    - -0.3124799037974891
-    - 0.13107782998720358
-    - -0.11546208489645643
-    - 0.5972629167195525
-    - -0.12348533460236362
-    - 0.38992456792986635
-    - -0.12038334308512157
-    - -0.13916585668137046
-    - -0.25230049391259046
-    - 0.06883041870970877
-    - -0.45470807923558343
+    - 0.1564953885610227
+    - -0.08730584708339896
+    - -0.3326968593771516
+    - 0.08034929159904347
+    - -0.14483151521342952
+    - 0.5283693980742892
+    - -0.09756705726834398
+    - 0.4314557856769728
+    - -0.09475214902402533
+    - -0.14816549278741145
+    - -0.5333709747253974
     max_iter: null
     mct_intx_ops: null
     model_expression: b_total_jobs + building_type_id_is_52 + nodes_walk_sector9_jobs
         + parcels_land_cost + building_type_id_is_11 + b_ln_non_residential_sqft +
-        improvement_value + nodes_walk_sector17_jobs + bldg_empratio_13 + bldg_empratio_18
-        + parcels_total_sqft + building_type_id_is_23 + building_type_id_is_31 - 1
+        improvement_value + nodes_walk_sector17_jobs + bldg_empratio_18 + parcels_total_sqft
+        + building_type_id_is_31 - 1
     name: elcm_1700005
     out_alt_filters: null
     out_alternatives: null
@@ -40,28 +38,26 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                987\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     13\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.127\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.124\nAIC:              \
-        \     7,681.107   Log-Likelihood:       -3,827.554\nBIC:                 \
-        \  7,744.908   LL-Null:              -4,382.027\n==============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                989\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     11\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.119\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.117\nAIC:              \
+        \     7,742.594   Log-Likelihood:       -3,860.297\nBIC:                 \
+        \  7,796.579   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        b_total_jobs                 0.1791     0.014    12.820     0.000        \
-        \     \nbuilding_type_id_is_52      -0.0994     0.019    -5.111     0.000\
-        \             \nnodes_walk_sector9_jobs     -0.3125     0.023   -13.667  \
-        \   0.000             \nparcels_land_cost            0.1311     0.026    \
-        \ 5.094     0.000             \nbuilding_type_id_is_11      -0.1155     0.043\
-        \    -2.680     0.007             \nb_ln_non_residential_sqft    0.5973  \
-        \   0.032    18.558     0.000             \nimprovement_value           -0.1235\
-        \     0.025    -4.856     0.000             \nnodes_walk_sector17_jobs   \
-        \  0.3899     0.023    16.710     0.000             \nbldg_empratio_13   \
-        \         -0.1204     0.058    -2.092     0.036             \nbldg_empratio_18\
-        \            -0.1392     0.034    -4.070     0.000             \nparcels_total_sqft\
-        \          -0.2523     0.029    -8.799     0.000             \nbuilding_type_id_is_23\
-        \       0.0688     0.030     2.274     0.023             \nbuilding_type_id_is_31\
-        \      -0.4547     0.051    -8.866     0.000             \n=============================================================================="
+        b_total_jobs                 0.1565     0.014    11.375     0.000        \
+        \     \nbuilding_type_id_is_52      -0.0873     0.022    -3.889     0.000\
+        \             \nnodes_walk_sector9_jobs     -0.3327     0.022   -15.043  \
+        \   0.000             \nparcels_land_cost            0.0803     0.028    \
+        \ 2.823     0.005             \nbuilding_type_id_is_11      -0.1448     0.034\
+        \    -4.269     0.000             \nb_ln_non_residential_sqft    0.5284  \
+        \   0.032    16.327     0.000             \nimprovement_value           -0.0976\
+        \     0.025    -3.970     0.000             \nnodes_walk_sector17_jobs   \
+        \  0.4315     0.023    19.092     0.000             \nbldg_empratio_18   \
+        \         -0.0948     0.035    -2.726     0.006             \nparcels_total_sqft\
+        \          -0.1482     0.030    -4.935     0.000             \nbuilding_type_id_is_31\
+        \      -0.5334     0.055    -9.647     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

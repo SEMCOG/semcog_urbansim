@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,20 +10,21 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.21139623894791232
-    - 0.3221617299605748
-    - -0.7389157833555173
-    - 1.1761108027581508
-    - -3.314530845251742
-    - 0.6911764021555962
-    - 0.5087988046800784
+    - 0.19370754166246915
+    - -0.8087958789579536
+    - 1.2839795630736406
+    - -0.8320916398317346
+    - 0.7012860993369286
+    - 0.43154077872242236
+    - -1.4105889084109688
+    - 0.21151448760880534
     max_iter: null
     mct_intx_ops: null
-    model_expression: vacant_job_spaces + b_total_jobs + nodes_walk_sector16_jobs
-        + nodes_walk_log_sum_nonresidential_units + parcels_total_sqft + bldg_empratio_6
-        + b_ln_non_residential_sqft - 1
+    model_expression: b_total_jobs + nodes_walk_sector16_jobs + nodes_walk_log_sum_nonresidential_units
+        + parcels_total_sqft + bldg_empratio_6 + b_ln_non_residential_sqft + parcels_acres
+        + b_ln_sqft_price_nonres - 1
     name: elcm_600161
     out_alt_filters: null
     out_alternatives: null
@@ -33,23 +34,25 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                993\nMethod:  \
-        \     Maximum Likelihood   Df Model:                      7\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.816\nTime:          \
-        \            17:54   Pseudo R-bar-squ.:         0.814\nAIC:              \
-        \     1,626.589   Log-Likelihood:         -806.295\nBIC:                 \
-        \  1,660.944   LL-Null:              -4,382.027\n============================================================================================\n\
+        \         Multinomial Logit   Df Residuals:                992\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      8\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.813\nTime:          \
+        \            18:05   Pseudo R-bar-squ.:         0.812\nAIC:              \
+        \     1,651.125   Log-Likelihood:         -817.563\nBIC:                 \
+        \  1,690.387   LL-Null:              -4,382.027\n============================================================================================\n\
         \                                             coef   std err         z   \
         \  P>|z|   Conf. Int.\n--------------------------------------------------------------------------------------------\n\
-        vacant_job_spaces                          0.2114     0.036     5.801    \
-        \ 0.000             \nb_total_jobs                               0.3222  \
-        \   0.040     8.040     0.000             \nnodes_walk_sector16_jobs     \
-        \             -0.7389     0.247    -2.997     0.003             \nnodes_walk_log_sum_nonresidential_units\
-        \    1.1761     0.129     9.126     0.000             \nparcels_total_sqft\
-        \                        -3.3145     0.413    -8.033     0.000           \
-        \  \nbldg_empratio_6                            0.6912     0.013    54.698\
-        \     0.000             \nb_ln_non_residential_sqft                  0.5088\
-        \     0.076     6.666     0.000             \n============================================================================================"
+        b_total_jobs                               0.1937     0.027     7.154    \
+        \ 0.000             \nnodes_walk_sector16_jobs                  -0.8088  \
+        \   0.209    -3.875     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \    1.2840     0.122    10.504     0.000             \nparcels_total_sqft\
+        \                        -0.8321     0.097    -8.622     0.000           \
+        \  \nbldg_empratio_6                            0.7013     0.010    67.794\
+        \     0.000             \nb_ln_non_residential_sqft                  0.4315\
+        \     0.080     5.379     0.000             \nparcels_acres              \
+        \               -1.4106     0.434    -3.249     0.001             \nb_ln_sqft_price_nonres\
+        \                     0.2115     0.069     3.064     0.002             \n\
+        ============================================================================================"
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

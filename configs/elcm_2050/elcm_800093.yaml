@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,15 +10,15 @@ saved_object:
     chooser_sample_size: 621
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.6944866967076133
-    - -0.1939320038516302
-    - -0.5491824148343676
-    - -0.3085590140236794
-    - 0.38944255860974375
-    - 0.2817516123400209
-    - 0.3320665460901158
+    - 0.5804086921102974
+    - -0.25535666320564904
+    - -0.5857782397414996
+    - -0.5609988208676654
+    - 0.45051553946884815
+    - 0.2668268182252592
+    - 0.24288015003306312
     max_iter: null
     mct_intx_ops: null
     model_expression: nodes_walk_sector8_jobs + building_type_id_is_31 + building_type_id_is_63
@@ -35,20 +35,20 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:            621\nModel:\
         \         Multinomial Logit   Df Residuals:                614\nMethod:  \
         \     Maximum Likelihood   Df Model:                      7\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.637\nTime:          \
-        \            17:56   Pseudo R-bar-squ.:         0.634\nAIC:              \
-        \     1,990.773   Log-Likelihood:         -988.386\nBIC:                 \
-        \  2,021.792   LL-Null:              -2,721.239\n==============================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.591\nTime:          \
+        \            18:06   Pseudo R-bar-squ.:         0.589\nAIC:              \
+        \     2,238.522   Log-Likelihood:       -1,112.261\nBIC:                 \
+        \  2,269.541   LL-Null:              -2,721.239\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        nodes_walk_sector8_jobs      0.6945     0.009    80.051     0.000        \
-        \     \nbuilding_type_id_is_31      -0.1939     0.070    -2.764     0.006\
-        \             \nbuilding_type_id_is_63      -0.5492     0.179    -3.069  \
-        \   0.002             \nbuilding_type_id_is_33      -0.3086     0.090    -3.416\
-        \     0.001             \nb_ln_non_residential_sqft    0.3894     0.065  \
-        \   6.003     0.000             \nzones_empden                 0.2818    \
-        \ 0.051     5.568     0.000             \nzones_population             0.3321\
-        \     0.072     4.632     0.000             \n=============================================================================="
+        nodes_walk_sector8_jobs      0.5804     0.008    75.727     0.000        \
+        \     \nbuilding_type_id_is_31      -0.2554     0.055    -4.628     0.000\
+        \             \nbuilding_type_id_is_63      -0.5858     0.174    -3.363  \
+        \   0.001             \nbuilding_type_id_is_33      -0.5610     0.072    -7.804\
+        \     0.000             \nb_ln_non_residential_sqft    0.4505     0.065  \
+        \   6.931     0.000             \nzones_empden                 0.2668    \
+        \ 0.050     5.348     0.000             \nzones_population             0.2429\
+        \     0.066     3.682     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

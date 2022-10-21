@@ -15,6 +15,8 @@ import yaml
 
 from dcm_ard_libs import minimize, neglog_DCM
 from fit_large_MNL_LCM import run_large_MNL
+from urbansim_templates import modelmanager as mm
+mm.initialize('configs/hlcm_2050')
 
 # from guppy import hpy; h=hpy()
 # import pymrmr
@@ -132,10 +134,12 @@ if RELOAD:
     b_var = b_columns + b_filter_columns
     hh_region, b_region = load_hlcm_df(hh_var, b_var)
     hh_region.to_csv('hh.csv')
-    b_region.to_csv('b.csv')
+    b_region.to_csv('b_hlcm.csv')
 else:
     hh_region = pd.read_csv('hh.csv', index_col=0)
-    b_region = pd.read_csv('b.csv', index_col=0)
+    b_region = pd.read_csv('b_hlcm.csv', index_col=0)
+    orca.add_table('households', hh_region)
+    orca.add_table('buildings', b_region)
 
 def estimation(LARGE_AREA_ID):
     hh_sample_size = 10000
@@ -274,4 +278,4 @@ if __name__ == "__main__":
     for la_id, la_config in la_estimation_configs.items():
         if not la_config['skip_estimation']:
             estimation(la_id)
-        run_large_MNL(hh_region, b_region, la_id, la_config['number_of_var_to_use'])
+        run_large_MNL(la_id, la_config['number_of_var_to_use'])

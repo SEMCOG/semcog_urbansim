@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,20 +10,20 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.09787821262767091
-    - 1.3317856141721076
-    - 0.26083438777226536
-    - 0.12908515715350352
-    - 0.5016657735664426
-    - 0.5656848041615554
-    - 1.4651789666437853
+    - 1.2421264952249553
+    - 0.27182674864537515
+    - 0.15349725688153587
+    - -0.06088439334387304
+    - 0.4472419169355476
+    - 0.5769541487449724
+    - 1.4191314349017279
     max_iter: null
     mct_intx_ops: null
-    model_expression: vacant_job_spaces + building_type_id_is_21 + building_type_id_is_31
-        + building_type_id_is_33 + building_type_id_is_23 + b_ln_sqft_price_nonres
-        + b_ln_building_sqft - 1
+    model_expression: building_type_id_is_21 + building_type_id_is_31 + building_type_id_is_33
+        + stories + building_type_id_is_23 + b_ln_sqft_price_nonres + b_ln_building_sqft
+        - 1
     name: elcm_500125
     out_alt_filters: null
     out_alternatives: null
@@ -35,19 +35,19 @@ saved_object:
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
         \         Multinomial Logit   Df Residuals:                993\nMethod:  \
         \     Maximum Likelihood   Df Model:                      7\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.366\nTime:          \
-        \            17:49   Pseudo R-bar-squ.:         0.364\nAIC:              \
-        \     5,570.116   Log-Likelihood:       -2,778.058\nBIC:                 \
-        \  5,604.471   LL-Null:              -4,382.027\n===========================================================================\n\
+        \          2022-10-21   Pseudo R-squ.:             0.353\nTime:          \
+        \            18:01   Pseudo R-bar-squ.:         0.352\nAIC:              \
+        \     5,681.838   Log-Likelihood:       -2,833.919\nBIC:                 \
+        \  5,716.193   LL-Null:              -4,382.027\n===========================================================================\n\
         \                            coef   std err         z     P>|z|   Conf. Int.\n\
         ---------------------------------------------------------------------------\n\
-        vacant_job_spaces        -0.0979     0.022    -4.379     0.000           \
-        \  \nbuilding_type_id_is_21    1.3318     0.063    21.294     0.000      \
-        \       \nbuilding_type_id_is_31    0.2608     0.065     4.043     0.000 \
-        \            \nbuilding_type_id_is_33    0.1291     0.074     1.745     0.081\
-        \             \nbuilding_type_id_is_23    0.5017     0.067     7.446     0.000\
-        \             \nb_ln_sqft_price_nonres    0.5657     0.066     8.518     0.000\
-        \             \nb_ln_building_sqft        1.4652     0.031    47.136     0.000\
+        building_type_id_is_21    1.2421     0.062    19.998     0.000           \
+        \  \nbuilding_type_id_is_31    0.2718     0.060     4.542     0.000      \
+        \       \nbuilding_type_id_is_33    0.1535     0.070     2.201     0.028 \
+        \            \nstories                  -0.0609     0.016    -3.785     0.000\
+        \             \nbuilding_type_id_is_23    0.4472     0.066     6.735     0.000\
+        \             \nb_ln_sqft_price_nonres    0.5770     0.062     9.279     0.000\
+        \             \nb_ln_building_sqft        1.4191     0.030    47.906     0.000\
         \             \n==========================================================================="
     tags: []
     template: LargeMultinomialLogitStep

@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,19 +10,20 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - -0.06270833193252733
-    - 0.21600293358541542
-    - 0.8773700391470317
-    - 0.28774380982491127
-    - 0.15038338262659623
-    - -0.17916691942923207
-    - 0.03269771888904103
+    - -0.19964267956130455
+    - 0.24172298753572916
+    - 0.864404117711012
+    - 0.3616886625293139
+    - 0.047826792336496886
+    - 0.1822974158765177
+    - -0.3285730586919409
+    - 0.019713345321092347
     max_iter: null
     mct_intx_ops: null
     model_expression: parcels_total_sqft + b_total_jobs + bldg_empratio_14 + nodes_walk_sector14_jobs
-        + building_type_id_is_23 + building_type_id_is_21 + building_type_id_is_53
+        + parcels_land_cost + building_type_id_is_23 + building_type_id_is_21 + building_type_id_is_53
         - 1
     name: elcm_1400005
     out_alt_filters: null
@@ -33,22 +34,23 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                993\nMethod:  \
-        \     Maximum Likelihood   Df Model:                      7\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.591\nTime:          \
-        \            17:51   Pseudo R-bar-squ.:         0.590\nAIC:              \
-        \     3,596.695   Log-Likelihood:       -1,791.348\nBIC:                 \
-        \  3,631.049   LL-Null:              -4,382.027\n=============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                992\nMethod:  \
+        \     Maximum Likelihood   Df Model:                      8\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.598\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.596\nAIC:              \
+        \     3,541.907   Log-Likelihood:       -1,762.953\nBIC:                 \
+        \  3,581.169   LL-Null:              -4,382.027\n=============================================================================\n\
         \                              coef   std err         z     P>|z|   Conf.\
         \ Int.\n-----------------------------------------------------------------------------\n\
-        parcels_total_sqft         -0.0627     0.023    -2.774     0.006         \
-        \    \nb_total_jobs                0.2160     0.010    21.667     0.000  \
-        \           \nbldg_empratio_14            0.8774     0.013    65.561     0.000\
-        \             \nnodes_walk_sector14_jobs    0.2877     0.013    22.502   \
-        \  0.000             \nbuilding_type_id_is_23      0.1504     0.029     5.143\
-        \     0.000             \nbuilding_type_id_is_21     -0.1792     0.063   \
-        \ -2.866     0.004             \nbuilding_type_id_is_53      0.0327     0.010\
-        \     3.260     0.001             \n============================================================================="
+        parcels_total_sqft         -0.1996     0.030    -6.714     0.000         \
+        \    \nb_total_jobs                0.2417     0.011    22.394     0.000  \
+        \           \nbldg_empratio_14            0.8644     0.014    59.964     0.000\
+        \             \nnodes_walk_sector14_jobs    0.3617     0.014    25.768   \
+        \  0.000             \nparcels_land_cost           0.0478     0.019     2.459\
+        \     0.014             \nbuilding_type_id_is_23      0.1823     0.029   \
+        \  6.232     0.000             \nbuilding_type_id_is_21     -0.3286     0.069\
+        \    -4.731     0.000             \nbuilding_type_id_is_53      0.0197   \
+        \  0.010     1.998     0.046             \n============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

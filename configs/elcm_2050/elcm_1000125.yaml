@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,21 +10,23 @@ saved_object:
     chooser_sample_size: 1000
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.20124948007362747
-    - 1.0522856563673368
-    - 1.0868006211907182
-    - 0.24962309842133748
-    - -0.515488882986871
-    - -1.350175032566034
-    - 0.19364855416931812
-    - 0.12057264360525854
+    - 0.21470059621966225
+    - 0.7564198594805719
+    - 1.2683476306325825
+    - 0.1394800671254081
+    - 0.09037017363640096
+    - -0.3233538945370537
+    - 0.03116335025280444
+    - -0.48575013980410686
+    - -1.0194463585732148
+    - 0.0736918237621374
     max_iter: null
     mct_intx_ops: null
     model_expression: b_total_jobs + nodes_walk_sector10_jobs + b_ln_non_residential_sqft
-        + improvement_value + parcels_land_cost + parcels_total_sqft + nodes_walk_ave_lot_sqft
-        + stories - 1
+        + improvement_value + bldg_empratio_11 + parcels_land_cost + nodes_walk_sector12_jobs
+        + nodes_walk_sector11_jobs + parcels_total_sqft + stories - 1
     name: elcm_1000125
     out_alt_filters: null
     out_alternatives: null
@@ -34,23 +36,25 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:          1,000\nModel:\
-        \         Multinomial Logit   Df Residuals:                992\nMethod:  \
-        \     Maximum Likelihood   Df Model:                      8\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.432\nTime:          \
-        \            17:50   Pseudo R-bar-squ.:         0.430\nAIC:              \
-        \     4,995.271   Log-Likelihood:       -2,489.635\nBIC:                 \
-        \  5,034.533   LL-Null:              -4,382.027\n==============================================================================\n\
+        \         Multinomial Logit   Df Residuals:                990\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     10\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.415\nTime:          \
+        \            18:01   Pseudo R-bar-squ.:         0.413\nAIC:              \
+        \     5,148.334   Log-Likelihood:       -2,564.167\nBIC:                 \
+        \  5,197.411   LL-Null:              -4,382.027\n==============================================================================\n\
         \                               coef   std err         z     P>|z|   Conf.\
         \ Int.\n------------------------------------------------------------------------------\n\
-        b_total_jobs                 0.2012     0.014    14.262     0.000        \
-        \     \nnodes_walk_sector10_jobs     1.0523     0.037    28.116     0.000\
-        \             \nb_ln_non_residential_sqft    1.0868     0.074    14.713  \
-        \   0.000             \nimprovement_value            0.2496     0.032    \
-        \ 7.789     0.000             \nparcels_land_cost           -0.5155     0.069\
-        \    -7.479     0.000             \nparcels_total_sqft          -1.3502  \
-        \   0.079   -17.099     0.000             \nnodes_walk_ave_lot_sqft      0.1936\
-        \     0.074     2.626     0.009             \nstories                    \
-        \  0.1206     0.013     9.399     0.000             \n=============================================================================="
+        b_total_jobs                 0.2147     0.013    15.914     0.000        \
+        \     \nnodes_walk_sector10_jobs     0.7564     0.033    23.143     0.000\
+        \             \nb_ln_non_residential_sqft    1.2683     0.035    36.635  \
+        \   0.000             \nimprovement_value            0.1395     0.026    \
+        \ 5.365     0.000             \nbldg_empratio_11             0.0904     0.032\
+        \     2.823     0.005             \nparcels_land_cost           -0.3234  \
+        \   0.059    -5.467     0.000             \nnodes_walk_sector12_jobs     0.0312\
+        \     0.016     1.971     0.049             \nnodes_walk_sector11_jobs   \
+        \ -0.4858     0.037   -13.146     0.000             \nparcels_total_sqft \
+        \         -1.0194     0.060   -16.993     0.000             \nstories    \
+        \                  0.0737     0.010     7.244     0.000             \n=============================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9

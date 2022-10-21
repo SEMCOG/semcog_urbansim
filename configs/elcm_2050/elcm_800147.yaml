@@ -1,7 +1,7 @@
 modelmanager_version: 0.2.dev9
 
 saved_object:
-    alt_capacity: null
+    alt_capacity: vacant_job_spaces
     alt_filters: null
     alt_sample_size: 80
     alternatives: b_elcm
@@ -10,22 +10,25 @@ saved_object:
     chooser_sample_size: 268
     chooser_size: null
     choosers: job_elcm
-    constrained_choices: false
+    constrained_choices: true
     fitted_parameters:
-    - 0.07420107834206251
-    - 0.15837088612952668
-    - 0.38995708275482055
-    - 1.0270727178898902
-    - 0.2800712680310381
-    - -0.7883662274242172
-    - 0.5061100641173668
-    - 0.16228163120942765
-    - 0.1833700322793371
+    - 0.04927992506391937
+    - 0.14705270320493805
+    - 0.34874916100810543
+    - 0.8825143004189991
+    - 0.2212945037751946
+    - -0.26863667383279666
+    - -0.6760552825998744
+    - 0.42811314501810144
+    - 1.3686913551851536
+    - -1.448784661532129
+    - 0.19458619698411553
     max_iter: null
     mct_intx_ops: null
     model_expression: building_type_id_is_91 + zones_logsum_job_high_income + building_type_id_is_21
-        + nodes_walk_sector8_jobs + building_type_id_is_23 + nodes_walk_sector12_jobs
-        + nodes_drv_log_sum_10min_pop + b_total_jobs + building_type_id_is_92 - 1
+        + nodes_walk_sector8_jobs + building_type_id_is_23 + building_type_id_is_31
+        + nodes_walk_sector12_jobs + nodes_drv_log_sum_10min_pop + zones_households
+        + zones_population + building_type_id_is_92 - 1
     name: elcm_800147
     out_alt_filters: null
     out_alternatives: null
@@ -35,24 +38,26 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:            268\nModel:\
-        \         Multinomial Logit   Df Residuals:                259\nMethod:  \
-        \     Maximum Likelihood   Df Model:                      9\nDate:       \
-        \          2022-10-19   Pseudo R-squ.:             0.514\nTime:          \
-        \            17:54   Pseudo R-bar-squ.:         0.507\nAIC:              \
-        \     1,158.382   Log-Likelihood:         -570.191\nBIC:                 \
-        \  1,190.701   LL-Null:              -1,174.383\n=================================================================================\n\
+        \         Multinomial Logit   Df Residuals:                257\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     11\nDate:       \
+        \          2022-10-21   Pseudo R-squ.:             0.490\nTime:          \
+        \            18:05   Pseudo R-bar-squ.:         0.480\nAIC:              \
+        \     1,220.689   Log-Likelihood:         -599.345\nBIC:                 \
+        \  1,260.190   LL-Null:              -1,174.383\n=================================================================================\n\
         \                                  coef   std err         z     P>|z|   Conf.\
         \ Int.\n---------------------------------------------------------------------------------\n\
-        building_type_id_is_91          0.0742     0.015     4.919     0.000     \
-        \        \nzones_logsum_job_high_income    0.1584     0.062     2.537    \
-        \ 0.011             \nbuilding_type_id_is_21          0.3900     0.088   \
-        \  4.452     0.000             \nnodes_walk_sector8_jobs         1.0271  \
-        \   0.026    38.837     0.000             \nbuilding_type_id_is_23       \
-        \   0.2801     0.071     3.941     0.000             \nnodes_walk_sector12_jobs\
-        \       -0.7884     0.057   -13.719     0.000             \nnodes_drv_log_sum_10min_pop\
-        \     0.5061     0.117     4.329     0.000             \nb_total_jobs    \
-        \                0.1623     0.027     6.043     0.000             \nbuilding_type_id_is_92\
-        \          0.1834     0.012    14.815     0.000             \n================================================================================="
+        building_type_id_is_91          0.0493     0.016     3.078     0.002     \
+        \        \nzones_logsum_job_high_income    0.1471     0.064     2.313    \
+        \ 0.021             \nbuilding_type_id_is_21          0.3487     0.090   \
+        \  3.876     0.000             \nnodes_walk_sector8_jobs         0.8825  \
+        \   0.023    38.418     0.000             \nbuilding_type_id_is_23       \
+        \   0.2213     0.073     3.051     0.002             \nbuilding_type_id_is_31\
+        \         -0.2686     0.163    -1.650     0.099             \nnodes_walk_sector12_jobs\
+        \       -0.6761     0.059   -11.464     0.000             \nnodes_drv_log_sum_10min_pop\
+        \     0.4281     0.140     3.054     0.002             \nzones_households\
+        \                1.3687     0.635     2.155     0.031             \nzones_population\
+        \               -1.4488     0.663    -2.187     0.029             \nbuilding_type_id_is_92\
+        \          0.1946     0.014    14.270     0.000             \n================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9
