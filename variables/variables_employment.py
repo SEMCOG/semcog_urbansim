@@ -19,11 +19,6 @@ def zone_id(jobs, buildings):
 
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
-def b_zone_id(jobs, buildings):
-    return misc.reindex(buildings.b_zone_id, jobs.building_id)
-
-
-@orca.column('jobs', cache=True, cache_scope='iteration')
 def city_id(jobs, buildings):
     return misc.reindex(buildings.city_id, jobs.building_id)
 
