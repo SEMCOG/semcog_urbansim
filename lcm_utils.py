@@ -13,6 +13,10 @@ from urbansim.models import dcm
 from urbansim.models import util
 from urbansim.urbanchoice import interaction
 from urbansim.models import MNLDiscreteChoiceModel
+from urbansim_templates.models import LargeMultinomialLogitStep
+from urbansim.models.util import (apply_filter_query, columns_in_filters, 
+        columns_in_formula)
+
 
 
 def random_choices(model, choosers, alternatives):
@@ -148,19 +152,56 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_choice_model_step(model_name, agents_name, choice_function):
+def register_choice_model_step(model_name, agents_name):
 
     @orca.step(model_name)
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
+        if 'hlcm' in model_name:
+            chooser_filter = "(building_id==-1) & (large_area_id==%s)" % (model_name.split('_')[1])
+            alt_filter = "(residential_units>0) & (large_area_id==%s)" % (model_name.split('_')[1])
+        elif 'elcm' in model_name:
+            # chooser_filter = "(building_id==-1) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])
+            chooser_filter = "(building_id==1904133) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])
+            alt_filter = "(non_residential_sqft>0) & (large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
+            
+        # initialize simulation choosers and alts table
+        formula_cols = columns_in_formula(model.model_expression)
+        choosers_filter_cols = columns_in_filters(chooser_filter)
+        alts_filter_cols = columns_in_filters(alt_filter)
+        # choosers
+        choosers = orca.get_table(model.choosers)
+        formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
+        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
+        choosers_df = choosers_df.query(chooser_filter)
+        # std choosers columns
+        choosers_df[formula_chooser_col] = (
+            choosers_df[formula_chooser_col]-choosers_df[formula_chooser_col].mean())/choosers_df[formula_chooser_col].std()
 
-        choices = model.simulate(choice_function=choice_function)
+        # alternatives
+        alts = orca.get_table(model.alternatives)
+        formula_alts_col = [col for col in formula_cols if col in alts.columns]
+        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols)
+        alts_df = alts_df.query(alt_filter)
+        # std alts columns
+        alts_df[formula_alts_col] = (
+            alts_df[formula_alts_col]-alts_df[formula_alts_col].mean())/alts_df[formula_alts_col].std()
+
+        orca.add_table('choosers', choosers_df)
+        orca.add_table('alternatives', alts_df)
+        
+        model.out_chooser = 'choosers'
+        model.out_chooser_filters = None # already filtered
+        model.out_alternatives = 'alternatives'
+        model.out_alt_filters = None # already filtered
+
+        model.run()
 
         print('There are {} unplaced agents.'
-              .format(choices.isnull().sum()))
+              .format(model.choices.isnull().sum()))
 
         orca.get_table(agents_name).update_col_from_series(
-            model.choice_column, choices, cast=True)
+            model.choice_column, model.choices, cast=True)
 
     return choice_model_simulate
 
@@ -469,7 +510,7 @@ def get_model_category_configs():
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs.yaml')) as f:
+    with open(os.path.join(misc.configs_dir(), 'yaml_configs_2050.yaml')) as f:
         yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
@@ -484,24 +525,18 @@ def get_model_category_configs():
 def create_lcm_from_config(config_filename, model_attributes):
     """
     For a given model config filename and dictionary of model category
-    attributes, instantiate a SimulationChoiceModel object.
+    attributes, instantiate a LargeMultinomialLogitStep object.
+
+    config_filename: model name
+    model_attributes: model_structure.yaml
     """
-    model_name = config_filename.split('.')[0]
-    model = SimulationChoiceModel.from_yaml(
-        str_or_buffer=misc.config(config_filename))
-    merge_tables = model_attributes['merge_tables'] \
-        if 'merge_tables' in model_attributes else None
-    agent_units = model_attributes['agent_units'] \
-        if 'agent_units' in model_attributes else None
-    choice_column = model_attributes['alternatives_id_name'] \
-        if model.choice_column is None and 'alternatives_id_name' \
-        in model_attributes else None
-    model.set_simulation_params(model_name,
-                                model_attributes['supply_variable'],
-                                model_attributes['vacant_variable'],
-                                model_attributes['agents_name'],
-                                model_attributes['alternatives_name'],
-                                choice_column=choice_column,
-                                merge_tables=merge_tables,
-                                agent_units=agent_units)
+    with open(misc.config(config_filename), "r") as f:
+        config_obj = yaml.load(f, Loader=yaml.FullLoader)
+
+    model = LargeMultinomialLogitStep.from_dict(config_obj['saved_object'])
+    model.choosers = model_attributes['agents_name']
+    model.alternatives = model_attributes['alternatives_name']
+    model.choice_column = model_attributes['alternatives_id_name']
+    # is it alt_capacity in largeMNL equals vacant_variable in 2045?
+    model.alt_capacity = model_attributes['vacant_variable']
     return model

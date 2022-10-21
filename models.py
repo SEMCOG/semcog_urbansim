@@ -46,7 +46,7 @@ orca.add_injectable("elcm_step_names", sorted(elcm_step_names, reverse=True))
 
 for name, model in list(location_choice_models.items()):
     lcm_utils.register_choice_model_step(
-        model.name, model.choosers, choice_function=lcm_utils.unit_choices
+        model.name, model.choosers
     )
 
 
