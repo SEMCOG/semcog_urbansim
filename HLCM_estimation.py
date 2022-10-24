@@ -278,4 +278,4 @@ if __name__ == "__main__":
     for la_id, la_config in la_estimation_configs.items():
         if not la_config['skip_estimation']:
             estimation(la_id)
-        run_large_MNL(la_id, la_config['number_of_var_to_use'])
+        run_large_MNL(hh_region, b_region, la_id, la_config['number_of_var_to_use'])
