@@ -181,7 +181,7 @@ def register_choice_model_step(model_name, agents_name):
         # alternatives
         alts = orca.get_table(model.alternatives)
         formula_alts_col = [col for col in formula_cols if col in alts.columns]
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols)
+        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
         alts_df = alts_df.query(alt_filter)
         # std alts columns
         alts_df[formula_alts_col] = (
@@ -190,12 +190,12 @@ def register_choice_model_step(model_name, agents_name):
         orca.add_table('choosers', choosers_df)
         orca.add_table('alternatives', alts_df)
         
-        model.out_chooser = 'choosers'
+        model.out_choosers = 'choosers'
         model.out_chooser_filters = None # already filtered
         model.out_alternatives = 'alternatives'
         model.out_alt_filters = None # already filtered
 
-        model.run()
+        model.run(chooser_batch_size=100)
 
         print('There are {} unplaced agents.'
               .format(model.choices.isnull().sum()))

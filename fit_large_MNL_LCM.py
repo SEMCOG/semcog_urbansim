@@ -84,10 +84,8 @@ def load_hh_and_b(LARGE_AREA_ID=5, RELOAD=False):
         b_region = pd.read_csv('b.csv', index_col=0)
     return hh_region, b_region
 
-def run_large_MNL(LARGE_AREA_ID, number_of_vars_to_use=40):
+def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
     thetas = pd.read_csv("./configs/hlcm_2050/thetas/out_theta_%s_%s.txt" % (LARGE_AREA_ID, estimation_sample_size), index_col=0)
-    hh_region = orca.get_table('households').to_frame(list(thetas.index)+hh_filter_columns)
-    b_region = orca.get_table('buildings').to_frame(list(thetas.index)+b_filter_columns)
 
     hh = hh_region[hh_region.large_area_id == LARGE_AREA_ID]
     hh = hh[hh.building_id > 1]
