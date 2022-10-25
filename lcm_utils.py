@@ -158,8 +158,9 @@ def register_choice_model_step(model_name, agents_name):
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
         if 'hlcm' in model_name:
-            chooser_filter = "(building_id==-1) & (large_area_id==%s)" % (model_name.split('_')[1])
-            alt_filter = "(residential_units>0) & (large_area_id==%s)" % (model_name.split('_')[1])
+            # chooser_filter = "(building_id==-1) & (large_area_id==%s)" % (model_name.split('_')[1])
+            chooser_filter = "(building_id < 2010000) & (large_area_id==%s)" % (model_name.split('_')[1])
+            alt_filter = "(residential_units>0) & (large_area_id==%s) & (mcd_model_quota>0)" % (model_name.split('_')[1])
         elif 'elcm' in model_name:
             # chooser_filter = "(building_id==-1) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])
             chooser_filter = "(building_id==1904133) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])

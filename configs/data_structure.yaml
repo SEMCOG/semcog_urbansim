@@ -7,6 +7,26 @@ columns:
   large_area_id: int16
   total_number_of_jobs: int32
 ---
+name: annual_household_control_totals
+indexs:
+- year
+columns:
+  age_of_head_max: int8
+  age_of_head_min: int8
+  cars_max: int8
+  cars_min: int8
+  children_max: int8
+  children_min: int8
+  income_max: int8
+  income_min: int8
+  large_area_id: int8
+  persons_max: int8
+  persons_min: int8
+  race_id: int8
+  total_number_of_households: int16
+  workers_max: int8
+  workers_min: int8
+---
 name: annual_relocation_rates_for_households
 indexs:
 - None
