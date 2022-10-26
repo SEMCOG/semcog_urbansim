@@ -36,9 +36,9 @@ for name in [
     "crime_rates",
     "schools",
     "poi",
-    # "group_quarters",
-    # "group_quarters_control_totals",
-    # "annual_household_control_totals",
+    "group_quarters",
+    "group_quarters_control_totals",
+    "annual_household_control_totals",
     "events_addition",
     "events_deletion",
     "refiner_events",
@@ -47,6 +47,7 @@ for name in [
     "target_vacancies_mcd",
     "demolition_rates",    
     "landmark_worksites",
+    "multi_parcel_buildings"
 ]:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])

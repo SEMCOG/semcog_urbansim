@@ -1511,8 +1511,8 @@ def residential_developer(
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies_la):
-    target_vacancies = target_vacancies_la.to_frame()
+def non_residential_developer(jobs, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
