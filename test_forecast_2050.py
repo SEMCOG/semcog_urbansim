@@ -51,7 +51,7 @@ orca.run(
         "elcm_home_based",
         "jobs_scaling_model",
         "gq_pop_scaling_model",
-        # "travel_model", Fixme: on hold
+        "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
     iter_vars=list(range(2020, 2025)),
@@ -70,7 +70,7 @@ orca.run(
         "semmcds",
         "counties",
         "target_vacancies_mcd",
-        "target_vacancies_la",
+        "target_vacancies",
         "building_sqft_per_job",
         "annual_employment_control_totals",
         "travel_data",
@@ -78,9 +78,9 @@ orca.run(
         "large_areas",
         "building_types",
         "land_use_types",
-        "workers_labor_participation_rates",
-        "workers_employment_rates_by_large_area_age",
-        "workers_employment_rates_by_large_area",
+        # "workers_labor_participation_rates",
+        # "workers_employment_rates_by_large_area_age",
+        # "workers_employment_rates_by_large_area",
         "transit_stops",
         "crime_rates",
         "schools",
@@ -106,7 +106,7 @@ orca.run(
     compress=True,
 )
 
-# output_indicators.main(data_out)
+output_indicators.main(data_out)
 
 # dir_out = data_out.replace('.h5', '')
 # shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))

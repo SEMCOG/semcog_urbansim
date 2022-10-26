@@ -250,7 +250,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
 
 
 repm_step_names = []
-for repm_config in os.listdir(os.path.join(misc.models_dir(),"repm")):
+for repm_config in os.listdir(os.path.join(misc.models_dir(),"repm_2050")):
     model_name = repm_config.split(".")[0]
 
     if repm_config.startswith("res"):
@@ -258,7 +258,7 @@ for repm_config in os.listdir(os.path.join(misc.models_dir(),"repm")):
     elif repm_config.startswith("nonres"):
         dep_var = "sqft_price_nonres"
 
-    make_repm_func(model_name, "repm/" + repm_config, dep_var)
+    make_repm_func(model_name, "repm_2050/" + repm_config, dep_var)
     repm_step_names.append(model_name)
 orca.add_injectable("repm_step_names", repm_step_names)
 
@@ -1089,6 +1089,7 @@ def scheduled_demolition_events(
     events_deletion,
     multi_parcel_buildings,
 ):
+    multi_parcel_buildings = multi_parcel_buildings.to_frame()
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -1150,6 +1151,8 @@ def random_demolition_events(
     buildings = buildings.to_frame(
         buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
     )
+    multi_parcel_buildings = multi_parcel_buildings.to_frame()
+
     b = buildings.copy()
     allowed = variables.parcel_is_allowed()
     b = b[b.parcel_id.isin(allowed[allowed].index)]
@@ -1572,8 +1575,8 @@ def residential_developer(
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies_la):
-    target_vacancies = target_vacancies_la.to_frame()
+def non_residential_developer(jobs, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
