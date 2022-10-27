@@ -11,28 +11,28 @@ name: annual_household_control_totals
 indexs:
 - year
 columns:
-  age_of_head_max: int8
-  age_of_head_min: int8
-  cars_max: int8
-  cars_min: int8
-  children_max: int8
-  children_min: int8
-  income_max: int8
-  income_min: int8
-  large_area_id: int8
-  persons_max: int8
-  persons_min: int8
-  race_id: int8
+  age_of_head_max: int16
+  age_of_head_min: int16
+  cars_max: int16
+  cars_min: int16
+  children_max: int16
+  children_min: int16
+  income_max: int32
+  income_min: int32
+  large_area_id: int16
+  persons_max: int16
+  persons_min: int16
+  race_id: int16
   total_number_of_households: int16
-  workers_max: int8
-  workers_min: int8
+  workers_max: int16
+  workers_min: int16
 ---
 name: annual_relocation_rates_for_households
 indexs:
 - None
 columns:
-  age_max: int8
-  age_min: int8
+  age_max: int16
+  age_min: int16
   income_max: int32
   income_min: int32
   probability_of_relocating: float64
@@ -133,18 +133,17 @@ indexs:
 columns:
   building_id: int32
   demolished: object
-  median_hgt: int32
+  median_hgt: float16
   year_built: int16
-  zone_id: int32
 ---
 name: group_quarters
 indexs:
 - personid
 columns:
-  age: int8
+  age: int16
   building_id: int32
   gq_code: int16
-  race_id: int8
+  race_id: int16
   type: object
 ---
 name: group_quarters_control_totals
@@ -159,18 +158,18 @@ name: households
 indexs:
 - household_id
 columns:
-  age_of_head: int8
+  age_of_head: int16
   blkgrp: int64
   building_id: int32
-  cars: int8
-  children: int8
+  cars: int16
+  children: int16
   household_type: int8
   income: float64
-  persons: int8
-  race_id: int8
+  persons: int16
+  race_id: int16
   ten: int8
   valp: int32
-  workers: int8
+  workers: int16
 ---
 name: income_growth_rates
 indexs:
@@ -221,8 +220,8 @@ name: large_areas
 indexs:
 - large_area_id
 columns:
-  alt_large_id: int8
-  large_area_group_id: int8
+  alt_large_id: int16
+  large_area_group_id: int16
   large_area_name: object
 ---
 name: multi_parcel_buildings
@@ -255,7 +254,7 @@ name: persons
 indexs:
 - person_id
 columns:
-  age: int8
+  age: int16
   household_id: int32
   industry: int8
   member_id: int8
