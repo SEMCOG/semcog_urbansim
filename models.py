@@ -377,6 +377,13 @@ def presses_trans(xxx_todo_changeme1):
     best_qal = np.inf
     best = []
     for _ in range(3):
+        # if there is no HH to transition for ct_inf, break
+        if sum([
+            utils.filter_table(
+                hh, r, ignore={"total_number_of_households"}).shape[0]
+            for _, r in ct_inf.loc[iter_var].iterrows()
+        ]) == 0:
+            break
         tran = transition.TabularTotalsTransition(ct_inf, "total_number_of_households")
         model = transition.TransitionModel(tran)
         new, added_hh_idx, new_linked = model.transition(
@@ -420,12 +427,16 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    # cunks_per_la = map(presses_trans, arg_per_la)
     pool = Pool(8)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
     out = reduce(operator.concat, cunks_per_la)
+
+    # Sync for testing
+    # out = []
+    # for la_arg in arg_per_la:
+    #     out.append(presses_trans(la_arg))
 
     # fix indexes
     hhidmax = region_hh.index.values.max() + 1
