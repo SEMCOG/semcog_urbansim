@@ -1524,7 +1524,7 @@ def residential_developer(
     # get current year
     year = orca.get_injectable("year")
     target_vacancies = target_vacancies_mcd.to_frame()
-    target_vacancies = target_vacancies[year]
+    target_vacancies = target_vacancies[str(year)]
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
@@ -1533,6 +1533,9 @@ def residential_developer(
     debug_res_developer = debug_res_developer.to_frame()
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
+        # handle missing mcdid
+        if mcdid not in mcd_total.index:
+            continue
         target_vacancy = float(target_vacancies[mcdid])
         num_agents = mcd_total.loc[mcdid]
         num_units = mcd_orig_buildings.residential_units.sum()

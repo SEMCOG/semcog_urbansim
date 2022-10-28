@@ -375,7 +375,7 @@ columns:
 ---
 name: target_vacancies_mcd
 indexs:
-- None
+- cityid
 columns:
   '2020': float64
   '2021': float64
@@ -408,7 +408,6 @@ columns:
   '2048': float64
   '2049': float64
   '2050': float64
-  cityid: int32
   cityname: object
 ---
 name: transit_stops
