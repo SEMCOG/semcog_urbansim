@@ -383,6 +383,10 @@ def presses_trans(xxx_todo_changeme1):
                 hh, r, ignore={"total_number_of_households"}).shape[0]
             for _, r in ct_inf.loc[iter_var].iterrows()
         ]) == 0:
+            # add empty hh and persons dh
+            new = hh.loc[[]]
+            pers = p.loc[[]]
+            best = (new, pers)
             break
         tran = transition.TabularTotalsTransition(ct_inf, "total_number_of_households")
         model = transition.TransitionModel(tran)
@@ -1314,6 +1318,7 @@ def add_extra_columns_nonres(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     for col in [
         "market_value",
+        "improvement_value",
         "land_area",
         "tax_exempt",
         "sqft_price_nonres",
