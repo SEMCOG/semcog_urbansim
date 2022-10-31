@@ -19,6 +19,7 @@ if freespace < 10:
     sys.exit()
 
 
+# orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
     ["refiner", "build_networks_2050", "neighborhood_vars"]
     + orca.get_injectable("repm_step_names")
@@ -34,7 +35,7 @@ orca.run(
         "scheduled_development_events",
         "refiner",
         "households_transition",
-        "fix_lpr",
+        # "fix_lpr", # await data
         "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
@@ -51,7 +52,7 @@ orca.run(
         "elcm_home_based",
         "jobs_scaling_model",
         "gq_pop_scaling_model",
-        "travel_model", #Fixme: on hold
+        # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
     iter_vars=list(range(2020, 2025)),
