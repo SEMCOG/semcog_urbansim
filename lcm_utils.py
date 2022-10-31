@@ -158,37 +158,45 @@ def register_choice_model_step(model_name, agents_name):
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
         if 'hlcm' in model_name:
-            chooser_filter = "(building_id==-1) & (large_area_id==%s)" % (model_name.split('_')[1])
-            # chooser_filter = "(building_id < 2010000) & (large_area_id==%s)" % (model_name.split('_')[1])
-            alt_filter = "(residential_units>0) & (large_area_id==%s) & (mcd_model_quota>0)" % (model_name.split('_')[1])
+            la_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
+            # filter for picking hh with no building_id assigned
+            chooser_filter = "(building_id==-1)"
+            alt_filter = "(residential_units>0) & (mcd_model_quota>0)"
         elif 'elcm' in model_name:
-            chooser_filter = "(building_id==-1) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])
-            # chooser_filter = "(building_id==1904133) & (home_based_status==0) & (slid==%s)" % (model_name.split('_')[1])
-            alt_filter = "(non_residential_sqft>0) & (large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
+            la_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
+            # filter for picking jobs with not building_id assigned
+            chooser_filter = "(building_id==-1)"
+            alt_filter = "(non_residential_sqft>0)"
             
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)
-        choosers_filter_cols = columns_in_filters(chooser_filter)
-        alts_filter_cols = columns_in_filters(alt_filter)
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(la_filter)
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(la_filter)
         # choosers
         choosers = orca.get_table(model.choosers)
         formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
         choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
-        choosers_df = choosers_df.query(chooser_filter)
+        # query using la_filter to match whats used in estimation
+        choosers_df = choosers_df.query(la_filter)
         # std choosers columns
         chooser_col_df = choosers_df[formula_chooser_col]
         choosers_df.loc[:, formula_chooser_col] = (
             chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
+        # filter using chooser_filter
+        choosers_df = choosers_df.query(chooser_filter)
 
         # alternatives
         alts = orca.get_table(model.alternatives)
         formula_alts_col = [col for col in formula_cols if col in alts.columns]
         alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
-        alts_df = alts_df.query(alt_filter)
+        # query using la_filter to match whats used in estimation
+        alts_df = alts_df.query(la_filter)
         # std alts columns
         alts_col_df = alts_df[formula_alts_col]
         alts_df.loc[:, formula_alts_col] = (
             alts_col_df-alts_col_df.mean())/alts_col_df.std()
+        # filter using alt_filter
+        alts_df = alts_df.query(alt_filter)
 
         orca.add_table('choosers', choosers_df)
         orca.add_table('alternatives', alts_df)
@@ -201,8 +209,10 @@ def register_choice_model_step(model_name, agents_name):
         model.run(chooser_batch_size=100)
 
         # if not choices, return
-        if not model.choices:
+        if not type(model.choices) == pd.Series:
+            print('There are 0 unplaced agents.')
             return
+
         print('There are {} unplaced agents.'
               .format(model.choices.isnull().sum()))
 
