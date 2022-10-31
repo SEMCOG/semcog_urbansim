@@ -158,26 +158,27 @@ def register_choice_model_step(model_name, agents_name):
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
         if 'hlcm' in model_name:
-            la_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
+            alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
             # filter for picking hh with no building_id assigned
             chooser_filter = "(building_id==-1)"
             alt_filter = "(residential_units>0) & (mcd_model_quota>0)"
         elif 'elcm' in model_name:
-            la_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
+            chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
+            alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
             # filter for picking jobs with not building_id assigned
             chooser_filter = "(building_id==-1)"
             alt_filter = "(non_residential_sqft>0)"
             
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)
-        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(la_filter)
-        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(la_filter)
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
         # choosers
         choosers = orca.get_table(model.choosers)
         formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
         choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
-        # query using la_filter to match whats used in estimation
-        choosers_df = choosers_df.query(la_filter)
+        # query using chooser_pre_filter to match whats used in estimation
+        choosers_df = choosers_df.query(chooser_pre_filter)
         # std choosers columns
         chooser_col_df = choosers_df[formula_chooser_col]
         choosers_df.loc[:, formula_chooser_col] = (
@@ -189,8 +190,8 @@ def register_choice_model_step(model_name, agents_name):
         alts = orca.get_table(model.alternatives)
         formula_alts_col = [col for col in formula_cols if col in alts.columns]
         alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
-        # query using la_filter to match whats used in estimation
-        alts_df = alts_df.query(la_filter)
+        # query using alts_pre_filter to match whats used in estimation
+        alts_df = alts_df.query(alts_pre_filter)
         # std alts columns
         alts_col_df = alts_df[formula_alts_col]
         alts_df.loc[:, formula_alts_col] = (
