@@ -31,7 +31,7 @@ for name in [
     "land_use_types",
     # "workers_labor_participation_rates",
     # "workers_employment_rates_by_large_area_age",
-    # "workers_employment_rates_by_large_area",
+    "workers_employment_rates_by_large_area",
     "transit_stops",
     "crime_rates",
     "schools",

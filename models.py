@@ -431,7 +431,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(8)
+    pool = Pool(4)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
@@ -546,8 +546,9 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
             & (p.age >= row.age_min)
             & (p.age <= row.age_max)
         )
-        lpr = row[str(iter_var)]
-        lpr_workers = int(select.sum() * lpr)
+        lpr_segment = row[str(iter_var)]
+        #lpr_workers = int(select.sum() * lpr)
+        lpr_workers = int(lpr_segment)
         num_workers = (select & employed).sum()
 
         if lpr_workers > num_workers:

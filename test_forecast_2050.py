@@ -35,7 +35,7 @@ orca.run(
         "scheduled_development_events",
         "refiner",
         "households_transition",
-        # "fix_lpr", # await data
+        "fix_lpr", # await data
         "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
@@ -55,7 +55,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2020, 2025)),
+    iter_vars=list(range(2020, 2026)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -81,7 +81,7 @@ orca.run(
         "land_use_types",
         # "workers_labor_participation_rates",
         # "workers_employment_rates_by_large_area_age",
-        # "workers_employment_rates_by_large_area",
+        "workers_employment_rates_by_large_area",
         "transit_stops",
         "crime_rates",
         "schools",
