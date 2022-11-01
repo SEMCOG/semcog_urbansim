@@ -3,7 +3,8 @@ import shutil
 
 import os
 
-import models, utils
+import models
+import utils
 from urbansim.utils import misc, networks
 import output_indicators
 
@@ -16,5 +17,5 @@ for i in range(start_num, 1, -1):
         print("runnum:", i)
         break
 
-data_out = './runs/run4032_hu_hh_base_2_gq_jobs_v5_hhpop_agegrp.h5'
+data_out = './runs/run268.h5'
 output_indicators.main(data_out)

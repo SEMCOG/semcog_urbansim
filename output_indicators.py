@@ -410,7 +410,7 @@ def main(run_name):
     print(store_la)
 
     base_year = 2020
-    target_year = 2050
+    target_year = 2024
 
     spacing = 30 // len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year))
     if spacing == 1:
@@ -495,6 +495,7 @@ def main(run_name):
         #     columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
         parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id'])
         parcels['parcel_id'] = parcels.index
+        parcels.index.name = None
         parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), 'parcel_id'] = 0
         # #35
         # whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
@@ -603,14 +604,14 @@ def main(run_name):
 
     geom = ['cities', 'semmcds', 'zones', 'large_areas', 'whatnots']
 
-    start = time.clock()
+    start = time.time()
     dict_ind = defaultdict(list)
     for year in years:
         print('processing ', year)
         orca_year_dataset(store_la, year)
         for tab in geom:
             dict_ind[tab].append(orca.get_table(tab).to_frame(indicators))
-    end = time.clock()
+    end = time.time()
     print("runtime:", end - start)
 
     # region should have same value no matter how you slice it.
@@ -635,7 +636,7 @@ def main(run_name):
     # Todo: add part of fenton to semmcd table
     print(set(orca.get_table('semmcds').to_frame(indicators).hh_pop.index) ^ set(orca.get_table('semmcds').hh_pop.index))
 
-    start = time.clock()
+    start = time.time()
 
     whatnots_output = []
     whatnots_local = orca.get_table('whatnots').local.fillna(0)
@@ -670,10 +671,10 @@ def main(run_name):
     if spacing == 1:
         whatnots_output[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_output.csv"))
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
-    end = time.clock()
+    end = time.time()
     print("runtime whatnots:", end - start)
 
-    start = time.clock()
+    start = time.time()
     geom = ['cities', 'large_areas', 'semmcds', 'zones']
     for tab in geom:
         print(tab)
@@ -753,11 +754,11 @@ def main(run_name):
             else:
                 print("somtning is wrong with:", ind)
         writer.save()
-    end = time.clock()
+    end = time.time()
     print("runtime geom:", end - start)
 
-    start = time.clock()
-    for year in range(2020, 2046, 5):
+    start = time.time()
+    for year in range(base_year, target_year+1, 5):
         print("buildings for", year)
         orca_year_dataset(store_la, year)
         buildings = orca.get_table('buildings')
@@ -778,10 +779,10 @@ def main(run_name):
         df = df.fillna(0)
         df = df.sort_index().sort_index(1)
         df.to_csv(os.path.join(outdir, "households_yr" + str(year) + ".csv"))
-    end = time.clock()
+    end = time.time()
     print("runtime:", end - start)
 
-    start = time.clock()
+    start = time.time()
     years = years[1:]
     year_names = ["yr" + str(i) for i in years]
     writer = pd.ExcelWriter(os.path.join(outdir, "buildings_dif_by_year.xlsx"))
@@ -803,7 +804,7 @@ def main(run_name):
         df.to_excel(writer, "demo_" + year_name)
 
     writer.save()
-    end = time.clock()
+    end = time.time()
     print("runtime:", end - start)
 
     store_la.close()
