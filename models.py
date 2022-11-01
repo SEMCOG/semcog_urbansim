@@ -553,9 +553,14 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
 
         if lpr_workers > num_workers:
             # employ some persons
+            # handle if not enough unemployed ppl
+            if p[select & (~employed)].shape[0] < int(lpr_workers - num_workers):
+                print("large_area %s in year %s has not enough ppl to fix lpr: target is %s ppl avaialable is %s" % (
+                    large_area_id, iter_var, int(lpr_workers - num_workers), p[select & (~employed)].shape[0]))
+            num_new_employ = min(p[select & (~employed)].shape[0], int(lpr_workers - num_workers))
             new_employ.append(
                 choice(
-                    p[select & (~employed)].index, int(lpr_workers - num_workers), False
+                    p[select & (~employed)].index, num_new_employ, False
                 )
             )
         else:
