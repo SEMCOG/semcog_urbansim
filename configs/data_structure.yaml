@@ -11,21 +11,21 @@ name: annual_household_control_totals
 indexs:
 - year
 columns:
-  age_of_head_max: int16
-  age_of_head_min: int16
-  cars_max: int16
-  cars_min: int16
-  children_max: int16
-  children_min: int16
+  age_of_head_max: int8
+  age_of_head_min: int8
+  cars_max: int8
+  cars_min: int8
+  children_max: int8
+  children_min: int8
   income_max: int32
   income_min: int32
   large_area_id: int16
-  persons_max: int16
-  persons_min: int16
-  race_id: int16
-  total_number_of_households: int16
-  workers_max: int16
-  workers_min: int16
+  persons_max: int8
+  persons_min: int8
+  race_id: int8
+  total_number_of_households: int32
+  workers_max: int8
+  workers_min: int8
 ---
 name: annual_relocation_rates_for_households
 indexs:
@@ -158,18 +158,18 @@ name: households
 indexs:
 - household_id
 columns:
-  age_of_head: int16
+  age_of_head: int8
   blkgrp: int64
   building_id: int32
-  cars: int16
-  children: int16
+  cars: int8
+  children: int8
   household_type: int8
   income: float64
-  persons: int16
-  race_id: int16
+  persons: int8
+  race_id: int8
   ten: int8
   valp: int32
-  workers: int16
+  workers: int8
 ---
 name: income_growth_rates
 indexs:
@@ -254,7 +254,7 @@ name: persons
 indexs:
 - person_id
 columns:
-  age: int16
+  age: int8
   household_id: int32
   industry: int8
   member_id: int8
@@ -444,6 +444,49 @@ columns:
   midday_auto_total_time: float32
   midday_other_logsum: float32
   midday_transit_total_time: float32
+---
+name: workers_employment_rates_by_large_area
+indexs:
+- large_area_id
+columns:
+  '2010': int32
+  '2015': int32
+  '2018': int32
+  '2019': int32
+  '2020': int32
+  '2021': int32
+  '2022': int32
+  '2023': int32
+  '2024': int32
+  '2025': int32
+  '2026': int32
+  '2027': int32
+  '2028': int32
+  '2029': int32
+  '2030': int32
+  '2031': int32
+  '2032': int32
+  '2033': int32
+  '2034': int32
+  '2035': int32
+  '2036': int32
+  '2037': int32
+  '2038': int32
+  '2039': int32
+  '2040': int32
+  '2041': int32
+  '2042': int32
+  '2043': int32
+  '2044': int32
+  '2045': int32
+  '2046': int32
+  '2047': int32
+  '2048': int32
+  '2049': int32
+  '2050': int32
+  age group: object
+  age_max: int8
+  age_min: int8
 ---
 name: zones
 indexs:
