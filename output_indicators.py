@@ -410,9 +410,10 @@ def main(run_name):
     print(store_la)
 
     base_year = 2020
-    target_year = 2024
+    target_year = 2025
 
-    spacing = 30 // len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year))
+    spacing = 5
+    # spacing = 30 // (len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year)))
     if spacing == 1:
         all_years_dir = os.path.join(outdir, 'annual')
         if not (os.path.exists(all_years_dir)):
