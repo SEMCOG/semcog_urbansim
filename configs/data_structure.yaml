@@ -99,6 +99,49 @@ columns:
   type83units: int32
   typenonsqft: int32
 ---
+name: employed_workers_rate
+indexs:
+- large_area_id
+columns:
+  '2010': float64
+  '2015': float64
+  '2018': float64
+  '2019': float64
+  '2020': float64
+  '2021': float64
+  '2022': float64
+  '2023': float64
+  '2024': float64
+  '2025': float64
+  '2026': float64
+  '2027': float64
+  '2028': float64
+  '2029': float64
+  '2030': float64
+  '2031': float64
+  '2032': float64
+  '2033': float64
+  '2034': float64
+  '2035': float64
+  '2036': float64
+  '2037': float64
+  '2038': float64
+  '2039': float64
+  '2040': float64
+  '2041': float64
+  '2042': float64
+  '2043': float64
+  '2044': float64
+  '2045': float64
+  '2046': float64
+  '2047': float64
+  '2048': float64
+  '2049': float64
+  '2050': float64
+  age group: object
+  age_max: int8
+  age_min: int8
+---
 name: employment_sectors
 indexs:
 - sector_id
@@ -444,49 +487,6 @@ columns:
   midday_auto_total_time: float32
   midday_other_logsum: float32
   midday_transit_total_time: float32
----
-name: workers_employment_rates_by_large_area
-indexs:
-- large_area_id
-columns:
-  '2010': int32
-  '2015': int32
-  '2018': int32
-  '2019': int32
-  '2020': int32
-  '2021': int32
-  '2022': int32
-  '2023': int32
-  '2024': int32
-  '2025': int32
-  '2026': int32
-  '2027': int32
-  '2028': int32
-  '2029': int32
-  '2030': int32
-  '2031': int32
-  '2032': int32
-  '2033': int32
-  '2034': int32
-  '2035': int32
-  '2036': int32
-  '2037': int32
-  '2038': int32
-  '2039': int32
-  '2040': int32
-  '2041': int32
-  '2042': int32
-  '2043': int32
-  '2044': int32
-  '2045': int32
-  '2046': int32
-  '2047': int32
-  '2048': int32
-  '2049': int32
-  '2050': int32
-  age group: object
-  age_max: int8
-  age_min: int8
 ---
 name: zones
 indexs:
