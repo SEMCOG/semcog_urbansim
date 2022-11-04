@@ -516,13 +516,13 @@ def households_transition(
 
 
 @orca.step()
-def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_area):
+def fix_lpr(households, persons, iter_var, employed_workers_rate):
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
-    lpr = workers_employment_rates_by_large_area.to_frame(
+    lpr = employed_workers_rate.to_frame(
         ["age_min", "age_max", str(iter_var)]
     )
     employed = p.worker == True
@@ -546,18 +546,14 @@ def fix_lpr(households, persons, iter_var, workers_employment_rates_by_large_are
             & (p.age >= row.age_min)
             & (p.age <= row.age_max)
         )
-        lpr_segment = row[str(iter_var)]
-        #lpr_workers = int(select.sum() * lpr)
-        lpr_workers = int(lpr_segment)
+        emp_wokers_rate = row[str(iter_var)]
+        lpr_workers = int(select.sum() * emp_wokers_rate)
+        # lpr_workers = int(lpr_segment)
         num_workers = (select & employed).sum()
 
         if lpr_workers > num_workers:
             # employ some persons
-            # handle if not enough unemployed ppl
-            if p[select & (~employed)].shape[0] < int(lpr_workers - num_workers):
-                print("large_area %s in year %s has not enough ppl to fix lpr: target is %s ppl avaialable is %s" % (
-                    large_area_id, iter_var, int(lpr_workers - num_workers), p[select & (~employed)].shape[0]))
-            num_new_employ = min(p[select & (~employed)].shape[0], int(lpr_workers - num_workers))
+            num_new_employ = int(lpr_workers - num_workers)
             new_employ.append(
                 choice(
                     p[select & (~employed)].index, num_new_employ, False
