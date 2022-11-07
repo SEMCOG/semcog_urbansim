@@ -25,6 +25,7 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
+    "travel_data_2030",
     "zoning",
     "large_areas",
     "building_types",

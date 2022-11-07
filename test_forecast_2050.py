@@ -4,6 +4,7 @@ import shutil
 import os
 import models, utils
 from urbansim.utils import misc, networks
+import time
 import output_indicators
 
 data_out = utils.get_run_filename()
@@ -18,6 +19,7 @@ if freespace < 10:
     print(freespace, "GB available. Disk space is too small, stop running")
     sys.exit()
 
+start_time = time.ctime()
 
 # orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
@@ -55,7 +57,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2020, 2026)),
+    iter_vars=list(range(2020, 2051)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -75,13 +77,13 @@ orca.run(
         "building_sqft_per_job",
         "annual_employment_control_totals",
         "travel_data",
+        "travel_data_2030",
         "zoning",
         "large_areas",
         "building_types",
         "land_use_types",
         # "workers_labor_participation_rates",
-        # "workers_employment_rates_by_large_area_age",
-        "workers_employment_rates_by_large_area",
+        "employed_workers_rate",
         "transit_stops",
         "crime_rates",
         "schools",
@@ -108,6 +110,7 @@ orca.run(
 )
 
 output_indicators.main(data_out)
+print("Simulation started at %s, finished at %s. " % (start_time, time.ctime()))
 
 # dir_out = data_out.replace('.h5', '')
 # shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))
