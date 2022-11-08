@@ -45,9 +45,7 @@ orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
 orca.add_injectable("elcm_step_names", sorted(elcm_step_names, reverse=True))
 
 for name, model in list(location_choice_models.items()):
-    lcm_utils.register_choice_model_step(
-        model.name, model.choosers
-    )
+    lcm_utils.register_choice_model_step(model.name, model.choosers)
 
 
 @orca.step()
@@ -250,7 +248,7 @@ def make_repm_func(model_name, yaml_file, dep_var):
 
 
 repm_step_names = []
-for repm_config in os.listdir(os.path.join(misc.models_dir(),"repm_2050")):
+for repm_config in os.listdir(os.path.join(misc.models_dir(), "repm_2050")):
     model_name = repm_config.split(".")[0]
 
     if repm_config.startswith("res"):
@@ -378,11 +376,17 @@ def presses_trans(xxx_todo_changeme1):
     best = []
     for _ in range(3):
         # if there is no HH to transition for ct_inf, break
-        if sum([
-            utils.filter_table(
-                hh, r, ignore={"total_number_of_households"}).shape[0]
-            for _, r in ct_inf.loc[iter_var].iterrows()
-        ]) == 0:
+        if (
+            sum(
+                [
+                    utils.filter_table(
+                        hh, r, ignore={"total_number_of_households"}
+                    ).shape[0]
+                    for _, r in ct_inf.loc[iter_var].iterrows()
+                ]
+            )
+            == 0
+        ):
             # add empty hh and persons dh
             new = hh.loc[[]]
             pers = p.loc[[]]
@@ -522,9 +526,7 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
-    lpr = employed_workers_rate.to_frame(
-        ["age_min", "age_max", str(iter_var)]
-    )
+    lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
@@ -555,9 +557,7 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
             # employ some persons
             num_new_employ = int(lpr_workers - num_workers)
             new_employ.append(
-                choice(
-                    p[select & (~employed)].index, num_new_employ, False
-                )
+                choice(p[select & (~employed)].index, num_new_employ, False)
             )
         else:
             # unemploy some persons
@@ -1650,13 +1650,15 @@ def build_networks_2050(parcels):
     import yaml
 
     # networks in semcog_networks.h5
-    with open("/home/da/semcog_urbansim/configs/available_networks_2050.yaml", "r") as stream:
+    with open(
+        "/home/da/semcog_urbansim/configs/available_networks_2050.yaml", "r"
+    ) as stream:
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
     year = orca.get_injectable("year")
     # change travel data to 2030, enable when travel data 2030 is inplace
     if year == 2030:
-        orca.add_table("travel_data", orca.get_table("travel_data_2030"))
+        orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
         orca.clear_columns("zones")
 
     if year < 2030:
