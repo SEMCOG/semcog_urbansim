@@ -18,6 +18,7 @@ from urbansim.utils import misc
 import sys
 import scipy
 import time
+import yaml
 from tqdm import tqdm
 
 # from guppy import hpy; h=hpy()
@@ -26,8 +27,6 @@ from tqdm import tqdm
 # suppress sklearn warnings
 def warn(*args, **kwargs):
     pass
-
-
 import warnings
 
 warnings.warn = warn
@@ -37,101 +36,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import Lasso
 
-os.chdir("/home/da/semcog_urbansim")
-sys.path.append("/home/da/forecast_data_input")
-from data_checks.estimation_variables_2050 import *
-
-
-# import utils
-# data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
-data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
-hdf_list = [
-    (data_path + "/" + f)
-    for f in os.listdir(data_path)
-    if ("forecast_data_input" in f) & (f[-3:] == ".h5")
-]
-hdf_last = max(hdf_list, key=os.path.getctime)
-hdf = pd.HDFStore(hdf_last, "r")
-print("HDF data: ", hdf_last)
-
-var_validation_list = [
-    (data_path + "/" + f)
-    for f in os.listdir(data_path)
-    if ("variable_validation" in f) & (f[-5:] == ".yaml")
-]
-var_validation_last = max(var_validation_list, key=os.path.getctime)
-with open(var_validation_last, "r") as f:
-    vars_config = yaml.load(f, Loader=yaml.FullLoader)
-valid_b_vars = vars_config["buildings"]["valid variables"]
-
-
-orca.add_injectable("store", hdf)
-load_tables_to_store()
-from notebooks.models_test import *
-import variables
-
+import models
 orca.run(["build_networks"])
 orca.run(["neighborhood_vars"])
 
-vars_to_skip = [
-    "large_area_id",
-    "county_id",
-    "parcel_id",
-    "st_parcel_id",
-    "geoid",
-    "st_geoid",
-    "b_ln_parcels_parcel_far",
-    "parcels_parcel_far",
-    "parcels_st_parcel_far",
-    "parcels_census_bg_id",
-    "nodeid_drv",
-    "st_nodeid_drv",
-    "nodeid_walk",
-    "st_nodeid_walk",
-    "semmcd",
-    "city_id",
-    "census_bg_id",
-    "x",
-    "y",
-    "zone_id",
-    "improvement_value",
-    "market_value",
-    "landvalue",
-    "parcels_landvalue",
-    "b_ln_sqft_price_nonres",
-    "zones_tazce10_n",
-    "tazce10",
-    "parcels_zones_tazce10_n",
-    "parcels_st_zones_tazce10_n",
-    "st_parcels_zones_tazce10_n",
-    "st_parcels_st_zones_tazce10_n",
-    "st_zones_tazce10_n",
-    "parcels_land_use_type_id",
-    "st_parcels_land_use_type_id",
-    "st_parcels_max_dua",
-    "parcels_max_dua",
-    "parcels_max_height",
-    "st_parcels_max_height",
-    "parcels_school_id",
-    "st_parcels_school_id",
-    "parcels_sev_value",
-    "st_parcels_sev_value",
-    "parcels_centroid_x",
-    "st_parcels_centroid_x",
-    "parcels_centroid_y",
-    "st_parcels_centroid_y",
-    "parcels_school_id",
-    "st_parcels_school_id",
-    "parcels_land_cost",
-    "st_parcels_land_cost",
-    "b_ln_market_value",
-    "st_b_ln_market_value",
-]
-
-
-for var in valid_b_vars:
-    if "parcels_" + var in valid_b_vars:
-        vars_to_skip.append("parcels_" + var)
 
 def estimate_repm(yaml_config):
     model = RegressionModel.from_yaml(str_or_buffer=misc.config(yaml_config))
@@ -193,7 +101,7 @@ def generate_repm_config(mat, vars_used):
         config["target_variable"] = "np.log1p(%s)" % price_col
         config_name = prefix + str(hid)
         with open("configs/repm_2050/%s.yaml" % config_name, "w") as f:
-            yaml.dump(config, f, default_flow_style=False)
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
     return
 
 
@@ -316,6 +224,11 @@ def load_variables():
         if var in vars_to_skip or "st_" in var or var not in buildings.columns:
             continue
         s = buildings.to_frame(var).iloc[:, 0]
+        # fill inf with 0
+        s.replace(np.inf, 0, inplace=True)
+        s.replace(-np.inf, 0, inplace=True)
+        # fill nan with 0
+        s.fillna(0, inplace=True)
         if pd.api.types.is_numeric_dtype(s):
             vars_used.append(var)
             sparse_mat = scipy.sparse.csr_matrix(s.values)
@@ -333,8 +246,70 @@ def load_variables():
 
 
 buildings = orca.get_table("buildings")
+valid_b_vars = buildings.columns
+
+vars_to_skip = [
+    "large_area_id",
+    "county_id",
+    "parcel_id",
+    "st_parcel_id",
+    "geoid",
+    "st_geoid",
+    "b_ln_parcels_parcel_far",
+    "parcels_parcel_far",
+    "parcels_st_parcel_far",
+    "parcels_census_bg_id",
+    "nodeid_drv",
+    "st_nodeid_drv",
+    "nodeid_walk",
+    "st_nodeid_walk",
+    "semmcd",
+    "city_id",
+    "census_bg_id",
+    "x",
+    "y",
+    "zone_id",
+    "improvement_value",
+    "market_value",
+    "landvalue",
+    "parcels_landvalue",
+    "b_ln_sqft_price_nonres",
+    "zones_tazce10_n",
+    "tazce10",
+    "parcels_zones_tazce10_n",
+    "parcels_st_zones_tazce10_n",
+    "st_parcels_zones_tazce10_n",
+    "st_parcels_st_zones_tazce10_n",
+    "st_zones_tazce10_n",
+    "parcels_land_use_type_id",
+    "st_parcels_land_use_type_id",
+    "st_parcels_max_dua",
+    "parcels_max_dua",
+    "parcels_max_height",
+    "st_parcels_max_height",
+    "parcels_school_id",
+    "st_parcels_school_id",
+    "parcels_sev_value",
+    "st_parcels_sev_value",
+    "parcels_centroid_x",
+    "st_parcels_centroid_x",
+    "parcels_centroid_y",
+    "st_parcels_centroid_y",
+    "parcels_school_id",
+    "st_parcels_school_id",
+    "parcels_land_cost",
+    "st_parcels_land_cost",
+    "b_ln_market_value",
+    "st_b_ln_market_value",
+]
+
+for var in valid_b_vars:
+    if "parcels_" + var in valid_b_vars:
+        vars_to_skip.append("parcels_" + var)
+
 # load variables
 n = len(valid_b_vars)
+# nodes_walk_vacancy_750m contains odd values
 vars_used, mat = load_variables()
 # cannot use orca from now on
 
@@ -392,6 +367,6 @@ for config in repm_configs:
         result[config]["fit_parameters"]["Coefficient"][coe] = float(
             result[config]["fit_parameters"]["Coefficient"][coe])
     with open(config, "a") as f:
-        yaml.dump(result[config], f, default_flow_style=False)
+        yaml.dump(result[config], f, default_flow_style=False, sort_keys=False)
 print("done")
 

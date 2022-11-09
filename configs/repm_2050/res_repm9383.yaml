@@ -1,58 +1,69 @@
+name: RegressionModel
+model_type: regression
 fit_filters:
 - residential_units > 0
 - sqft_price_res > 1
 - sqft_price_res < 650
 - hedonic_id == 9383
-model_type: regression
-name: RegressionModel
 predict_filters: hedonic_id == 9383
-target_variable: np.log1p(sqft_price_res)
 ytransform: np.exp
+target_variable: np.log1p(sqft_price_res)
+fitted: true
 fit_parameters:
   Coefficient:
-    Intercept: 5.63977154520337
-    building_sqft: 0.00013866854473954296
-    crime_other_rate: -2.461817334913868e-05
-    jobs_within_30_min: -4.8328454351799965e-06
-    land_area: 7.047775954732881e-06
-    nodes_walk_ave_nonres_sqft_price: -0.0017926612424941295
-    nodes_walk_highinc_hhs: 0.0009934545409313214
-    nodes_walk_housing_cost: 2.250158142424742e-06
-    nodes_walk_industrial: 0.0014417429482126932
-    nodes_walk_jobs: 0.00014567435701242216
-    nodes_walk_lowinc_hhs: -0.00369134978762924
-    nodes_walk_medical: 0.001482550899201394
-    nodes_walk_node_r1500_sqft: -4.744924193831642e-08
-    nodes_walk_office: 2.463760900929434e-05
-    nodes_walk_population: 0.0004771081853790497
-    nodes_walk_retail: -0.0006571577390380206
-    nodes_walk_retail_jobs: -0.00011966791125518918
-    parcel_sqft: 4.374697784144151e-07
-    parcels_ave_unit_size: 6.282925433489747e-05
-    parcels_parcel_size: -1.2249016569752227e-06
-    parcels_pct_undev: -0.0022577726603571196
-    parcels_total_sqft: 9.85532901966889e-07
-    parcels_total_units: 0.0002952698951832098
-    parcels_zones_jobs_within_30_min: 1.0068963335538746e-06
-    residential_sqft: -0.00013984863071111282
-    school_district_achievement: -0.015221410055569184
-    sqft_per_unit: -0.00018638629112774642
-    year_built: 0.00013942334253722798
-    zones_acres: -1.4857242036689045e-06
-    zones_employment: -4.121415757375972e-07
-    zones_households: 0.0003162715429296593
-    zones_logsum_job_high_income: -8.503698130217722e-06
-    zones_logsum_job_low_income: 9.031183436791407e-06
-    zones_logsum_job_mid_income: -4.706205527126128e-06
-    zones_logsum_pop_high_income: 3.572086589626858e-06
-    zones_logsum_pop_low_income: 2.2444898354030367e-05
-    zones_logsum_pop_mid_income: -2.8016183695178535e-06
-    zones_population: -0.00011735420589058364
+    Intercept: -2.094965248888654
+    year_built: 0.0018166867266937625
+    sqft_per_unit: -0.0002092163241430939
+    land_area: 1.5101629285035375e-06
+    residential_sqft: -0.00015385324616028654
+    building_sqft: 0.00015487752790798416
+    jobs_within_30_min: -1.157001548519213e-05
+    parcel_sqft: 1.6825182154083873e-06
+    crime_ucr_rate: 0.0007453634710803019
+    crime_other_rate: -8.952267117290155e-05
+    parcels_pct_undev: -0.006240525768253867
+    parcels_parcel_size: -4.371881984964462e-06
+    parcels_total_sqft: 2.5579827559093803e-07
+    parcels_zones_jobs_within_30_min: 2.893984044997078e-06
+    zones_acres: 7.042483609083597e-05
+    zones_households: -2.2921255441510815e-05
+    zones_employment: 1.5620990235180606e-07
+    zones_retail_jobs: -0.0006283563109708441
+    zones_logsum_pop_high_income: 1.4416362291833177e-05
+    zones_logsum_pop_mid_income: -4.442346593973529e-06
+    zones_logsum_pop_low_income: 1.2230480571450879e-05
+    zones_logsum_job_high_income: -5.907368138845385e-06
+    zones_logsum_job_mid_income: -9.241902670878384e-06
+    zones_logsum_job_low_income: -1.3313991118871362e-05
+    zones_z_total_jobs: 4.764528543945839e-05
+    nodes_walk_population: 0.00024398833992731286
+    nodes_walk_young_hhs: -0.0012113893286648547
+    nodes_walk_senior_hhs: 0.0032274857761642587
+    nodes_walk_lowinc_hhs: -0.001538273944716623
+    nodes_walk_jobs: -5.323203240323247e-05
+    nodes_walk_sector3_jobs: -0.0002162718405695785
+    nodes_walk_sector4_jobs: -0.0007308577784329535
+    nodes_walk_sector6_jobs: -0.00047821410154577675
+    nodes_walk_sector8_jobs: 0.0020827561586089305
+    nodes_walk_sector10_jobs: -0.0005502362984013032
+    nodes_walk_sector11_jobs: -0.0004346826666552012
+    nodes_walk_sector13_jobs: 0.0003481977784247142
+    nodes_walk_sector14_jobs: 0.0008384323945966037
+    nodes_walk_sector15_jobs: -0.0004753279006872293
+    nodes_walk_sector16_jobs: 0.00048388738590451024
+    nodes_walk_sector17_jobs: -0.0007353494275130428
+    nodes_walk_sector18_jobs: 0.0008282740084006988
+    nodes_walk_node_r1500_sqft: 8.922332973669593e-09
+    nodes_walk_retail: -0.0021082393014441535
+    nodes_walk_office: -0.0008936360793652037
+    nodes_walk_medical: 0.0010317682198812443
+    nodes_walk_ave_unit_sqft: 0.0001506285941985847
+    nodes_walk_housing_cost: -4.436784583439108e-06
   Std. Error: {}
   T-Score: {}
-fit_rsquared: 0.6779738959757096
-fit_rsquared_adj: 0.6779738959757096
-fitted: true
+fit_rsquared: 0.8571768482995263
+fit_rsquared_adj: 0.8571768482995263
+sample_size: 491
 model_expression:
   left_side: np.log1p(sqft_price_res)
   right_side:
@@ -63,34 +74,43 @@ model_expression:
   - building_sqft
   - jobs_within_30_min
   - parcel_sqft
-  - school_district_achievement
+  - crime_ucr_rate
   - crime_other_rate
   - parcels_pct_undev
   - parcels_parcel_size
-  - parcels_ave_unit_size
-  - parcels_total_units
   - parcels_total_sqft
   - parcels_zones_jobs_within_30_min
   - zones_acres
   - zones_households
-  - zones_population
   - zones_employment
+  - zones_retail_jobs
   - zones_logsum_pop_high_income
   - zones_logsum_pop_mid_income
   - zones_logsum_pop_low_income
   - zones_logsum_job_high_income
   - zones_logsum_job_mid_income
   - zones_logsum_job_low_income
+  - zones_z_total_jobs
   - nodes_walk_population
+  - nodes_walk_young_hhs
+  - nodes_walk_senior_hhs
   - nodes_walk_lowinc_hhs
-  - nodes_walk_highinc_hhs
   - nodes_walk_jobs
-  - nodes_walk_retail_jobs
+  - nodes_walk_sector3_jobs
+  - nodes_walk_sector4_jobs
+  - nodes_walk_sector6_jobs
+  - nodes_walk_sector8_jobs
+  - nodes_walk_sector10_jobs
+  - nodes_walk_sector11_jobs
+  - nodes_walk_sector13_jobs
+  - nodes_walk_sector14_jobs
+  - nodes_walk_sector15_jobs
+  - nodes_walk_sector16_jobs
+  - nodes_walk_sector17_jobs
+  - nodes_walk_sector18_jobs
   - nodes_walk_node_r1500_sqft
-  - nodes_walk_ave_nonres_sqft_price
   - nodes_walk_retail
   - nodes_walk_office
-  - nodes_walk_industrial
   - nodes_walk_medical
+  - nodes_walk_ave_unit_sqft
   - nodes_walk_housing_cost
-sample_size: 477
