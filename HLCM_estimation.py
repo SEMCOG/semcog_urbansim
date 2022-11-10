@@ -172,7 +172,7 @@ def estimation(LARGE_AREA_ID):
     b_sample = b_sample.reset_index()
     b_sample = b_sample.fillna(0)
     # remove unnecessary col in HH
-    hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"]]]
+    hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"] or col in ['year_built']]]
     # remove unnecessary col in buildings
     b_sample = b_sample[[col for col in b_sample.columns if col not in b_filter_columns]]
 
@@ -243,35 +243,35 @@ def estimation(LARGE_AREA_ID):
 if __name__ == "__main__":
     la_estimation_configs = {
         3: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 40
         },
         5: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 40
         },
         93: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 50
         },
         99: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 40
         },
         115: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 50
         },
         125: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 40
         },
         147: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 40
         },
         161: {
-            'skip_estimation': True,
+            'skip_estimation': False,
             'number_of_var_to_use': 50
         },
     }
