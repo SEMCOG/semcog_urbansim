@@ -129,7 +129,10 @@ def verify():
     #     "~/semcog_urbansim/data/all_semcog_data_02-02-18-final-forecast_newbid.h5",
     #     mode="r",
     # )
-    data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
+
+    data_path = r"/home/da/share/urbansim/RDF2050/model_inputs/base_hdf"
+    if os.path.exists(data_path) == False:
+        data_path = "/home/da/share/U_RDF2050/model_inputs/base_hdf"
     hdf_list = [
         (data_path + "/" + f)
         for f in os.listdir(data_path)
