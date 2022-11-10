@@ -1329,6 +1329,7 @@ def add_extra_columns_nonres(df):
         "hu_filter",
         "event_id",
         "sp_filter",
+        "mcd_model_quota",
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
