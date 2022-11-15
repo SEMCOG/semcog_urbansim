@@ -207,7 +207,7 @@ def register_choice_model_step(model_name, agents_name):
         model.out_alternatives = 'alternatives'
         model.out_alt_filters = None # already filtered
 
-        model.run(chooser_batch_size=100)
+        model.run(chooser_batch_size=1000)
 
         # if not choices, return
         if not type(model.choices) == pd.Series:
