@@ -657,7 +657,11 @@ def jobs_scaling_model(jobs):
 def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
     gqpop = group_quarters.to_frame(group_quarters.local_columns + ["city_id"])
     target_gq = group_quarters_control_totals.to_frame()
-    target_gq = target_gq[target_gq.year == year].set_index("city_id")
+    target_gq = target_gq[target_gq.year == year]
+    # if no control found, skip this year
+    if target_gq.shape[0] == 0: 
+        print("Warning: No gq controls found for year %s, skipping..." % year)
+        return
 
     for city_id, local_gqpop in gqpop.groupby("city_id"):
         diff = target_gq.loc[city_id]["count"] - len(local_gqpop)
@@ -1527,7 +1531,7 @@ def run_developer(
 
 @orca.step("residential_developer")
 def residential_developer(
-    parcels, target_vacancies_mcd, mcd_total, debug_res_developer
+    households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
 ):
     # get current year
     year = orca.get_injectable("year")
@@ -1545,14 +1549,19 @@ def residential_developer(
         if mcdid not in mcd_total.index:
             continue
         target_vacancy = float(target_vacancies[mcdid])
-        num_agents = mcd_total.loc[mcdid]
+        # current hh from hh table
+        cur_agents = (households.semmcd == mcdid).sum()
+        # target hh from mcd_total table
+        target_agents = mcd_total.loc[mcdid]
+        # number of current total housing units
         num_units = mcd_orig_buildings.residential_units.sum()
 
-        print("Number of agents: {:,}".format(num_agents))
+        print("Number of current agents: {:,}".format(cur_agents))
+        print("Number of target agents: {:,}".format(target_agents))
         print("Number of agent spaces: {:,}".format(int(num_units)))
+        print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
         assert target_vacancy < 1.0
-        target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-        print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
+        target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
         print(
             "Target vacancy = {:.2f}, target of new units = {:,}".format(
                 target_vacancy, target_units
@@ -1589,8 +1598,8 @@ def residential_developer(
         )
         if units_added < target_units:
             print(
-                "Not enought housing units have been built by the developer model for mcd %s, target: %s, built: %s"
-                % (mcdid, target_units, units_added)
+                "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+                % (mcdid, target_units, int(units_added))
             )
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
