@@ -47,7 +47,8 @@ for name in [
     "target_vacancies_mcd",
     "demolition_rates",    
     "landmark_worksites",
-    "multi_parcel_buildings"
+    "multi_parcel_buildings",
+    "mcd_toal",
 ]:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])
@@ -59,13 +60,6 @@ for name in [
 #     "extreme_hu_controls",
 #     pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
 # )
-
-
-@orca.table("mcd_total")
-def mcd_total():
-    return pd.read_csv(path.join(table_dir, "mcd_2050_draft_noreview.csv")).set_index(
-        "semmcd"
-    )
 
 
 @orca.table("debug_res_developer")
