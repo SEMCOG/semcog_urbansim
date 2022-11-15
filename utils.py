@@ -118,8 +118,8 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     if price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum() > 0:
         print("Hedonic output %d nas or inf (out of %d) in column %s" % \
               (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname))
-    price_or_rent[price_or_rent > 700] = 700
-    price_or_rent[price_or_rent < 1] = 1
+    price_or_rent.loc[price_or_rent > 700] = 700
+    price_or_rent.loc[price_or_rent < 1] = 1
     tbl.update_col_from_series(out_fname, price_or_rent, cast=True)
 
 
