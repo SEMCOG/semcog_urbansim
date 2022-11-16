@@ -91,6 +91,7 @@ orca.run(
         "group_quarters",
         "group_quarters_control_totals",
         "annual_household_control_totals",
+        "remi_pop_total",
         "events_addition",
         "events_deletion",
         "refiner_events",
