@@ -187,15 +187,30 @@ columns:
   building_id: int32
   gq_code: int16
   race_id: int16
-  type: object
 ---
 name: group_quarters_control_totals
 indexs:
-- None
+- cityid
 columns:
-  city_id: int32
   count: int32
   year: int16
+---
+name: group_quarters_households
+indexs:
+- None
+columns:
+  age_of_head: int8
+  building_id: int32
+  cars: float64
+  children: float64
+  household_type: float64
+  income: int32
+  persons: int8
+  race_id: int8
+  serialno: object
+  ten: float64
+  valp: float64
+  workers: int8
 ---
 name: households
 indexs:
@@ -266,6 +281,42 @@ columns:
   alt_large_id: int16
   large_area_group_id: int16
   large_area_name: object
+---
+name: mcd_total
+indexs:
+- mcd
+columns:
+  '2020': int32
+  '2021': int32
+  '2022': int32
+  '2023': int32
+  '2024': int32
+  '2025': int32
+  '2026': int32
+  '2027': int32
+  '2028': int32
+  '2029': int32
+  '2030': int32
+  '2031': int32
+  '2032': int32
+  '2033': int32
+  '2034': int32
+  '2035': int32
+  '2036': int32
+  '2037': int32
+  '2038': int32
+  '2039': int32
+  '2040': int32
+  '2041': int32
+  '2042': int32
+  '2043': int32
+  '2044': int32
+  '2045': int32
+  '2046': int32
+  '2047': int32
+  '2048': int32
+  '2049': int32
+  '2050': int32
 ---
 name: multi_parcel_buildings
 indexs:
