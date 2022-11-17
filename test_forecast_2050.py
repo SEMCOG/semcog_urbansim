@@ -68,6 +68,7 @@ orca.run(
         "persons",
         "annual_relocation_rates_for_households",
         "buildings",
+        "pseudo_building_2020",
         "parcels",
         "zones",
         "semmcds",

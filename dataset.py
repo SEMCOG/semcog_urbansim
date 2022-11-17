@@ -16,6 +16,7 @@ for name in [
     "remi_pop_total",
     "persons",
     "parcels",
+    "pseudo_building_2020",
     "zones",
     "semmcds",
     "counties",
@@ -137,14 +138,17 @@ def buildings(store):
 
 
 @orca.table(cache=True)
-def households(store, buildings):
+def households(store, buildings, pseudo_building_2020):
     df = store["households"]
+    pseudo_buildings = pseudo_building_2020.to_frame()
     b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    # exclude those got placed in pseudo buildings
+    idx_invalid_building_id = idx_invalid_building_id & ~(df.building_id.isin(pseudo_buildings.index))
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
