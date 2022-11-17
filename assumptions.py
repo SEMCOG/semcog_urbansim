@@ -22,35 +22,6 @@ def year():
 
 orca.add_injectable("transcad_available", False)
 
-orca.add_injectable(
-    "emp_btypes",
-    [
-        1,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        10,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        31,
-        32,
-        33,
-        35,
-        38,
-        39,
-    ],
-)
-
 # maps building type ids to general building types; reduces dimensionality
 
 # keys: binging type
@@ -65,14 +36,14 @@ orca.add_injectable(
         23: "Office",
         31: "Industrial",
         32: "Industrial",
-        33: "TCU",
+        33: "Industrial",
         41: "TCU",
         42: "TCU",
         51: "Medical",
         52: "Medical",
         53: "Medical",
         61: "Entertainment",
-        63: "Hospitality",
+        63: "Entertainment",
         65: "Hospitality",
         71: "Others",
         81: "Residential",
@@ -82,7 +53,7 @@ orca.add_injectable(
         91: "Entertainment",
         92: "Institutional",
         93: "Institutional",
-        94: "Retail",
+        94: "othercommercial",
         95: "TCU",
     },
 )
@@ -108,12 +79,13 @@ orca.add_injectable(
     "form_to_btype",
     {
         "residential": [81, 82, 83],
-        "industrial": [31, 32],
-        "retail": [21, 22, 25, 26, 62],
-        "office": [23, 24],
+        "industrial": [31, 32, 33],
+        "retail": [21, 65],
+        "office": [23],
         "medical": [51, 52, 53],
-        "mixedresidential": [21, 22, 81, 83],
-        "mixedoffice": [21, 22, 81, 83],
+        "entertainment": [61, 63, 91],
+        "mixedresidential": [21, 81, 82, 83],
+        "mixedoffice": [23, 81, 82, 83],
     },
 )
 
