@@ -151,6 +151,8 @@ def estimation(LARGE_AREA_ID):
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
     hh = hh[hh.year_built > 2005]
+    # exclude hh in pseudo buildings
+    hh = hh[hh.building_id < 90000000]
     hh["mcd_model_quota"] += 1 # add 1 to all hh's mcd_model_quota for weights
     # if total number of hh is less than hh_sample_size
     hh_sample_size = min(hh_sample_size, hh.shape[0])

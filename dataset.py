@@ -152,7 +152,8 @@ def households(store, buildings, pseudo_building_2020):
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
-    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
+    df["large_area_id"] = misc.reindex(
+        pd.concat((b.large_area_id, pseudo_buildings.county), axis=0), df.building_id)
     # dtype optimization
     df["workers"] = df["workers"].fillna(0).astype(np.int8)
     df["children"] = df["children"].fillna(0).astype(np.int8)
