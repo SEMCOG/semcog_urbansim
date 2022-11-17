@@ -91,6 +91,8 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
     hh = hh[hh.year_built > 2005]
+    # exclude hh in pseudo buildings
+    hh = hh[hh.building_id < 90000000]
     hh = hh.fillna(0) # found 12 missing values in ln_income
     hh = hh[[col for col in hh.columns if col not in hh_filter_columns+["household_id"]]+['building_id']]
 
