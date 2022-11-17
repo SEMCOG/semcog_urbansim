@@ -40,9 +40,11 @@ uses:
 - industrial
 - office
 - medical
+- entertainment
 - residential
 
 residential_uses:
+- false
 - false
 - false
 - false
@@ -66,6 +68,8 @@ forms:
         residential: 1.0
     retail:
         retail: 1.0
+    entertainment:
+        entertainment: 1.0
 
 profit_factor: 1.0
 
@@ -81,6 +85,7 @@ parking_rates:
     office: 1.0
     residential: 1.0
     retail: 2.0
+    entertainment: 2.0
 
 sqft_per_rate: 1000.0
 
@@ -140,6 +145,17 @@ costs:
     - 999.0
     - 999.0
     - 999.0
+    entertainment:
+    - 120.0
+    - 145.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+    - 999.0
+
 
 heights_for_costs:
 - 12
@@ -194,6 +210,11 @@ construction_months:
     - 14.0
     - 18.0
     - 24.0
+    entertainment:
+    - 12.0
+    - 14.0
+    - 18.0
+    - 24.0
 
 loan_fees: 0.02
 
@@ -223,6 +244,7 @@ forms_to_test:
 - office
 - residential
 - retail
+- entertainment
 
 pass_through: []
 
