@@ -344,7 +344,7 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
-    for (a, b) in [(00, 0o4), (0o5, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
+    for (a, b) in [(00, 4), (00, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
                    (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf),
                    (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
         make_pop_age(a, b)
