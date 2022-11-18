@@ -659,7 +659,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
     target_gq = group_quarters_control_totals.to_frame()
     target_gq = target_gq[target_gq.year == year]
     # if no control found, skip this year
-    if target_gq.shape[0] == 0: 
+    if target_gq.shape[0] == 0:
         print("Warning: No gq controls found for year %s, skipping..." % year)
         return
 
@@ -1639,7 +1639,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         spaces_added, parcels_idx_to_update = run_developer(
             target_units,
             lid,
-            ["office", "retail", "industrial", "medical"],
+            ["office", "retail", "industrial", "medical", "entertainment"],
             orca.get_table("buildings"),
             "job_spaces",
             parcels.parcel_size,
