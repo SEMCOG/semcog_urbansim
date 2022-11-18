@@ -407,6 +407,17 @@ variable_definitions:
     radius: 6560
     varname: sqft_price_nonres
 
+  - aggregation: ave
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Entertainment"
+    name: entertainment
+    radius: 6560
+    varname: sqft_price_nonres
+
   - aggregation: count
     name: quarter_mile_to_transit
     dataframe: transit_stops
