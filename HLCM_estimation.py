@@ -236,7 +236,7 @@ def estimation(LARGE_AREA_ID):
     out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
     out_theta.index = newX_cols_name[used_val]
     out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
-    out_theta.to_csv('out_theta_%s_%s.txt' % (LARGE_AREA_ID, estimation_sample_size))
+    out_theta.to_csv('configs/hlcm_2050/thetas/out_theta_%s_%s.txt' % (LARGE_AREA_ID, estimation_sample_size))
 
     print("Warning: variables with 0 variation")
     print(newX_cols_name[unused_val])
