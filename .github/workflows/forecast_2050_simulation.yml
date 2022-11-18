@@ -18,12 +18,13 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "building_hdf"
-  building_hdf:
+  # This workflow contains a single job called "simulate"
+  simulate:
     # The type of runner that the job will run on
     runs-on: [self-hosted, urbansim3]
     env:
       WORKING_PATH: /home/da/semcog_urbansim
+      SUMMARY_PATH: /home/da/share/urbansim/RDF2050/model_runs
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -35,4 +36,12 @@ jobs:
         run: |
           zsh
           cd $WORKING_PATH
+          export RUNNUM=$(cat RUNNUM)
           /home/da/anaconda3/bin/python test_forecast_2050.py
+          cd runs
+          echo "Zipping run$RUNNUM.zip"
+          zip -r run$RUNNUM.zip run$RUNNUM
+          echo "Copying run$RUNNUM.zip to $SUMMARY_PATH"
+          cp run$RUNNUM.zip $SUMMARY_PATH
+          rm run$RUNNUM.zip
+          echo "Done"
