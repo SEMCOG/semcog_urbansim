@@ -344,8 +344,8 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
-    for (a, b) in [(00, 4), (00, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
-                   (00, 17), (25, 44), (45, 64), (65, 84), (85, pd.np.inf),
+    for (a, b) in [(00, 4), (5, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
+                   (00, 17), (25, 44), (25, 54), (45, 64), (55, 64), (65, 84), (85, pd.np.inf),
                    (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
         make_pop_age(a, b)
 
@@ -588,6 +588,7 @@ def main(run_name):
                   'pop_age_35_64', 'pop_age_65_inf', 'pop_age_18_64',
                   'pop_age_00_17', 'pop_age_25_44', 'pop_age_45_64', 'pop_age_65_84', 'pop_age_85_inf',
                   'pop_age_35_59', 'pop_age_60_64', 'pop_age_65_74', 'pop_age_75_inf',
+                  'pop_age_25_54', 'pop_age_55_64',
                   'hh_pop_age_median',
                   'pct_hh_pop_age_05_17', 'pct_hh_pop_age_65_inf',
                   'jobs_total', 'jobs_sec_01', 'jobs_sec_02', 'jobs_sec_03',
