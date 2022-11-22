@@ -1787,12 +1787,14 @@ def build_networks(parcels):
 
 
 @orca.step()
-def neighborhood_vars(jobs, households, buildings):
+def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
-    idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
+    pseudo_buildings = pseudo_building_2020.to_frame()
 
+    ## jobs
+    idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
         print(
             (
@@ -1806,7 +1808,11 @@ def neighborhood_vars(jobs, households, buildings):
         # TODO: keep LA the same
         j["large_area_id"] = misc.reindex(b.large_area_id, j.building_id)
         orca.add_table("jobs", j)
+
+    ## households
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
+    # ignore hh in pseudo_buildings
+    idx_invalid_building_id = idx_invalid_building_id & ~(h.building_id.isin(pseudo_buildings.index))
     if idx_invalid_building_id.sum() > 0:
         print(
             (
