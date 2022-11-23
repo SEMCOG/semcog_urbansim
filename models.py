@@ -646,11 +646,16 @@ def jobs_scaling_model(jobs):
                 .groupby(["building_id"])
                 .size()
             )
+            # !! filter out -1 from the building pool
+            counts_by_bid = counts_by_bid[counts_by_bid.index != -1]
             prop_by_bid = counts_by_bid / counts_by_bid.sum()
             choices = random_choice(
                 segment.index.values, prop_by_bid.index.values, prop_by_bid.values
             )
             wrap_jobs.update_col_from_series("building_id", choices, cast=True)
+    j_after_run = wrap_jobs.to_frame(wrap_jobs.local_columns)
+    print('done running job_scaling, remaining jobs in sectors',regional_sectors,'with -1 building_id: ',
+          ((j_after_run.building_id == -1) & (j_after_run.sector_id.isin(regional_sectors))).sum())
 
 
 @orca.step()
