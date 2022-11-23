@@ -125,6 +125,7 @@ usecache = True
 if usecache == False:
 	print("running hh_by_mcd_year")
 	hh_by_mcd_year = pd.DataFrame(index=mcd_total.index)
+	hu_by_mcd_year = pd.DataFrame(index=mcd_total.index)
 	for year in range(2020, 2051):
 		p = hdf["/%s/parcels" % year]
 		b = hdf["/%s/buildings" % year]
@@ -132,9 +133,15 @@ if usecache == False:
 		b = b.join(p.semmcd, on='parcel_id')
 		hh = hh.join(b.semmcd, on='building_id')
 		hh_vcount = hh.semmcd.fillna(-1).astype(int).value_counts()
+		hu_vcount = b[['semmcd', 'residential_units']].groupby('semmcd').sum()['residential_units']
+		# hu_vcount = b.semmcd.fillna(-1).astype(int).value_counts()
 		hh_by_mcd_year.loc[:, str(year)] = hh_vcount
+		hu_by_mcd_year.loc[:, str(year)] = hu_vcount
+		hh_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year.csv')
+		hu_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year.csv')
 else:
     hh_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year.csv', index_col='mcd')
+    hu_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year.csv', index_col='mcd')
 
 # hh_by_mcd_year['large_area_id'] = semmcds
 
@@ -152,7 +159,8 @@ app.layout = html.Div(children=[
 	]),
 	html.Div(
 		id="charts",
-		children=[dcc.Graph(id=str(mcd), figure=px.line(pd.DataFrame({"mcd_total": mcd_total.loc[mcd], "simulated":hh_by_mcd_year.loc[mcd]}), title=mcd)) for mcd, row in mcd_total.iloc[:].iterrows()]
+		# children=[dcc.Graph(id=str(mcd), figure=px.line(pd.DataFrame({"mcd_total": mcd_total.loc[mcd], "simulated":hh_by_mcd_year.loc[mcd]}), title=mcd)) for mcd, row in mcd_total.iloc[:].iterrows()]
+		children=[]
 	)
 
 ])
@@ -174,7 +182,7 @@ def global_store(value):
     # simulate expensive query
     print(f'Computing value with {value}')
     time.sleep(3)
-    return hh_by_mcd_year[hh_by_mcd_year.index.isin(semmcds[semmcds.large_area_id==value].index)]
+    return hh_by_mcd_year[hh_by_mcd_year.index.isin(semmcds[semmcds.large_area_id==value].index)], hu_by_mcd_year[hu_by_mcd_year.index.isin(semmcds[semmcds.large_area_id==value].index)]
 
 
 @app.callback(
@@ -183,12 +191,13 @@ def global_store(value):
 )
 def get_charts(la_id):
 	print('run get_charts')
-	simulated = global_store(la_id)
-	mt = mcd_total.loc[mcd_total.index.isin(simulated.index)]
+	simulated_hh, simulated_hu = global_store(la_id)
+	mt = mcd_total.loc[mcd_total.index.isin(simulated_hh.index)]
 	return [dcc.Graph(id=str(mcd), figure=px.line(
     pd.DataFrame({
         "mcd_total": mt.loc[mcd],
-        "simulated":simulated.loc[mcd]
+        "simulated_hh": simulated_hh.loc[mcd],
+        "simulated_hu": simulated_hu.loc[mcd],
     }), title=mcd)) for mcd, _ in mt.iloc[:].iterrows()]
 
 if __name__ == '__main__':
