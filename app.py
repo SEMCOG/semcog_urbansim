@@ -152,11 +152,11 @@ else:
 # fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
 
 app.layout = html.Div(children=[
-    html.H1(children='HH by mcd'),
+    html.H1(children='Households by mcd, '+run_num),
 	html.Div([
 		'Select large_area_id',
 		dcc.Dropdown( semmcds.large_area_id.unique(), '-', id='dropdown'),
-	]),
+	], style={"width": "400px"}),
 	html.Div(
 		id="charts",
 		# children=[dcc.Graph(id=str(mcd), figure=px.line(pd.DataFrame({"mcd_total": mcd_total.loc[mcd], "simulated":hh_by_mcd_year.loc[mcd]}), title=mcd)) for mcd, row in mcd_total.iloc[:].iterrows()]
@@ -198,7 +198,7 @@ def get_charts(la_id):
         "mcd_total": mt.loc[mcd],
         "simulated_hh": simulated_hh.loc[mcd],
         "simulated_hu": simulated_hu.loc[mcd],
-    }), title=mcd)) for mcd, _ in mt.iloc[:].iterrows()]
+    }), title=mcd, width=1100, height=450)) for mcd, _ in mt.iloc[:].iterrows()]
 
 if __name__ == '__main__':
     app.run(debug=True, host= '192.168.185.65', port = 8080)
