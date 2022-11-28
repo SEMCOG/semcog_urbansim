@@ -21,7 +21,7 @@ jobs:
   # This workflow contains a single job called "simulate"
   simulate:
     # The type of runner that the job will run on
-    runs-on: [self-hosted, urbansim3]
+    runs-on: [self-hosted, urbansim3-simulation]
     env:
       WORKING_PATH: /home/da/semcog_urbansim
       SUMMARY_PATH: /home/da/share/urbansim/RDF2050/model_runs
