@@ -178,29 +178,29 @@ def register_choice_model_step(model_name, agents_name):
         formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
         choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
-        choosers_df = choosers_df.query(chooser_pre_filter)
+        choosers_idx = choosers_df.query(chooser_pre_filter).index
         # std choosers columns
-        chooser_col_df = choosers_df[formula_chooser_col]
-        choosers_df.loc[:, formula_chooser_col] = (
+        chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
+        choosers_df.loc[choosers_idx, formula_chooser_col] = (
             chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
         # filter using chooser_filter
-        choosers_df = choosers_df.query(chooser_filter)
+        final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
 
         # alternatives
         alts = orca.get_table(model.alternatives)
         formula_alts_col = [col for col in formula_cols if col in alts.columns]
         alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
         # query using alts_pre_filter to match whats used in estimation
-        alts_df = alts_df.query(alts_pre_filter)
+        alts_idx = alts_df.query(alts_pre_filter).index
         # std alts columns
-        alts_col_df = alts_df[formula_alts_col]
-        alts_df.loc[:, formula_alts_col] = (
+        alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
+        alts_df.loc[alts_idx, formula_alts_col] = (
             alts_col_df-alts_col_df.mean())/alts_col_df.std()
         # filter using alt_filter
-        alts_df = alts_df.query(alt_filter)
+        final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        orca.add_table('choosers', choosers_df)
-        orca.add_table('alternatives', alts_df)
+        orca.add_table('choosers', final_choosers_df)
+        orca.add_table('alternatives', final_alts_df)
         
         model.out_choosers = 'choosers'
         model.out_chooser_filters = None # already filtered
