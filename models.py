@@ -1671,8 +1671,8 @@ def build_networks_2050(parcels):
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
     year = orca.get_injectable("year")
-    # change travel data to 2030, enable when travel data 2030 is inplace
-    if year == 2030:
+    # disable update travel_data_2030
+    if year == 2030 and False:
         orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
         orca.clear_columns("zones")
 

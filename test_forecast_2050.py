@@ -57,7 +57,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2020, 2051)),
+    iter_vars=list(range(2020, 2041)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
