@@ -113,7 +113,7 @@ def filter_table(table, filter_series, ignore=None):
 	return apply_filter_query(table, filters)
 
 run_folder = "/home/da/semcog_urbansim/runs"
-run_num = "run295"
+run_num = "run307"
 
 hdf = pd.HDFStore(os.path.join(run_folder, '%s.h5'%run_num), 'r')
 
@@ -127,6 +127,8 @@ if usecache == False:
 	hh_by_mcd_year = pd.DataFrame(index=mcd_total.index)
 	hu_by_mcd_year = pd.DataFrame(index=mcd_total.index)
 	for year in range(2020, 2051):
+		if "/%s/parcels" % year not in hdf.keys():
+			break
 		p = hdf["/%s/parcels" % year]
 		b = hdf["/%s/buildings" % year]
 		hh = hdf["/%s/households" % year]
@@ -137,11 +139,11 @@ if usecache == False:
 		# hu_vcount = b.semmcd.fillna(-1).astype(int).value_counts()
 		hh_by_mcd_year.loc[:, str(year)] = hh_vcount
 		hu_by_mcd_year.loc[:, str(year)] = hu_vcount
-		hh_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year.csv')
-		hu_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year.csv')
+		hh_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year_%s.csv' % run_num)
+		hu_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year_%s.csv' % run_num)
 else:
-    hh_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year.csv', index_col='mcd')
-    hu_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year.csv', index_col='mcd')
+    hh_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year_%s.csv' % run_num, index_col='mcd')
+    hu_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year_%s.csv' % run_num, index_col='mcd')
 
 # hh_by_mcd_year['large_area_id'] = semmcds
 
