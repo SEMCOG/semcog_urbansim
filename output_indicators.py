@@ -607,6 +607,13 @@ def main(run_name):
     geom = ['cities', 'semmcds', 'zones', 'large_areas', 'whatnots']
 
     start = time.time()
+
+    base_dict_ind = defaultdict(list)
+    print('processing ', 'base year')
+    orca_year_dataset(store_la, 'base')
+    for tab in geom:
+        base_dict_ind[tab].append(orca.get_table(tab).to_frame(indicators))
+
     dict_ind = defaultdict(list)
     for year in years:
         print('processing ', year)
@@ -639,9 +646,36 @@ def main(run_name):
     print(set(orca.get_table('semmcds').to_frame(indicators).hh_pop.index) ^ set(orca.get_table('semmcds').hh_pop.index))
 
     start = time.time()
+    whatnots_local = orca.get_table('whatnots').local.fillna(0)
+
+    base_whatnots_output = []
+    base_df = base_dict_ind['whatnots'][0].copy()
+    base_df.index.name = 'whatnot_id'
+    del base_df['res_vacancy_rate']
+    del base_df['nonres_vacancy_rate']
+    del base_df['household_size']
+    del base_df['hh_pop_age_median']
+    base_df = base_df[base_df.columns[~(base_df.columns.str.startswith('pct_'))]]
+
+    base_df[whatnots_local.columns] = whatnots_local
+
+    base_df.set_index(['large_area_id', 'city_id', 'zone_id', 'parcel_id'], inplace=True)
+
+    base_df = base_df.fillna(0)
+    base_df = base_df.sort_index().sort_index(1)
+
+    base_df.columns.name = 'indicator'
+    base_df = base_df.stack().to_frame()
+    base_df['year'] = 'yrbase'
+    base_df.set_index('year', append=True, inplace=True)
+    base_whatnots_output.append(base_df)
+    base_whatnots_output = pd.concat(base_whatnots_output).unstack(fill_value=0)
+    base_whatnots_output.index.rename('city_id', 1, True)
+    base_whatnots_output.index.rename('zone_id', 2, True)
+    base_whatnots_output.columns = ['yrbase']
+    base_whatnots_output.to_csv(os.path.join(all_years_dir, "base_whatnots_output.csv"))
 
     whatnots_output = []
-    whatnots_local = orca.get_table('whatnots').local.fillna(0)
     for i, y in enumerate(year_names):
         df = dict_ind['whatnots'][i].copy()
         df.index.name = 'whatnot_id'
