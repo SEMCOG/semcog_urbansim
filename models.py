@@ -1094,6 +1094,8 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["event_id"] = ebid  # add back event_id
+        # set sp_filter to -1 to nonres event to prevent future reloaction
+        sched_dev.loc[ sched_dev.nonres_sqft>0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -1662,6 +1664,26 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+@orca.step()
+def update_sp_filter(buildings):
+    # update sp_filter to -1 for selected building_types
+    selected_btypes = {
+        11: "Educational",
+        13: "Religious and Civic",
+        14: "Governmental",
+        52: "Hospital",
+        53: "Residential Care Facility",
+        92: "Library",
+        93: "Dormitory Quarters",
+        94: "Death Care Services",
+        95: "Parking Garage",
+    }
+    updated_buildings = buildings.to_frame(buildings.local_columns)
+    print("Updating %s buildings sp_filter to -1" %
+          (updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes)].shape[0]))
+    updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes), 'sp_filter'] = -1
+    orca.add_table("buildings", updated_buildings)
 
 
 @orca.step()
