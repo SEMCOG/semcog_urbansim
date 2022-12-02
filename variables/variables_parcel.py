@@ -213,7 +213,7 @@ def parcel_is_allowed_2050(form=None):
     pcl_refiner = pcl_index.isin(parcel_refin)
 
     # parcels with building improvement value > 10% of landvalue
-    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue / 10)
+    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue / 3)
 
     protected = (
         pcl_new_building
