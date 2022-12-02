@@ -1184,7 +1184,7 @@ def random_demolition_events(
     multi_parcel_buildings = multi_parcel_buildings.to_frame()
 
     b = buildings.copy()
-    allowed = variables.parcel_is_allowed()
+    allowed = variables.parcel_is_allowed_2050()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
     buildings_idx = []
 
@@ -1315,7 +1315,7 @@ def feasibility(parcels):
     parcel_utils.run_feasibility(
         parcels,
         parcel_average_price,
-        variables.parcel_is_allowed,
+        variables.parcel_is_allowed_2050,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
     )
