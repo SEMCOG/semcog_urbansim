@@ -1097,7 +1097,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
-
+        print("%s of buildings have been added in scheduled development events" % (all_buildings.shape[0] - b.shape[0]))
         orca.add_table("buildings", all_buildings)
 
         # Todo: maybe we need to impute some columns
@@ -1118,11 +1118,13 @@ def scheduled_demolition_events(
     multi_parcel_buildings = multi_parcel_buildings.to_frame()
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
+    buildings_columns = buildings.local_columns
     if len(sched_dev) > 0:
-        buildings = buildings.to_frame(buildings.local_columns)
+        buildings = buildings.to_frame(buildings_columns + ["city_id"] + ["b_total_jobs", "b_total_households"])
         drop_buildings = buildings[buildings.index.isin(sched_dev.building_id)].copy()
         buildings_idx = drop_buildings.index
         drop_buildings["year_demo"] = iter_var
+        drop_buildings['step'] = 'scheduled_demolition_events'
 
         if orca.is_table("dropped_buildings"):
             prev_drops = orca.get_table("dropped_buildings").to_frame()
@@ -1130,7 +1132,7 @@ def scheduled_demolition_events(
         else:
             orca.add_table("dropped_buildings", drop_buildings)
 
-        new_buildings_table = buildings.drop(buildings_idx)
+        new_buildings_table = buildings.drop(buildings_idx)[buildings_columns]
         orca.add_table("buildings", new_buildings_table)
 
         # unplace HH
@@ -1172,7 +1174,7 @@ def random_demolition_events(
     buildings, parcels, households, jobs, year, demolition_rates, multi_parcel_buildings
 ):
     demolition_rates = demolition_rates.to_frame()
-    demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2015)
+    demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2020)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(
         buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
@@ -1181,7 +1183,7 @@ def random_demolition_events(
 
     b = buildings.copy()
     allowed = variables.parcel_is_allowed()
-    b = b[b.parcel_id.isin(allowed[allowed].index)]
+    allowed_b = b.parcel_id.isin(allowed[allowed].index)
     buildings_idx = []
 
     def sample(targets, type_b, accounting, weights):
@@ -1197,30 +1199,32 @@ def random_demolition_events(
                 rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
                 buildings_idx.append(rel_b.copy())
 
-    b["wj"] = 1.0 / (1.0 + np.log1p(b.b_total_jobs))
+    b.loc[ allowed_b, "wj"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b, "b_total_jobs"]))
+    nonres_b = b.loc[allowed_b]
     sample(
         demolition_rates.typenonsqft,
-        b[b.non_residential_sqft > 0],
+        nonres_b[nonres_b.non_residential_sqft > 0],
         "non_residential_sqft",
         "wj",
     )
-    b = b[b.non_residential_sqft == 0]
-    b["wh"] = 1.0 / (1.0 + np.log1p(b.b_total_households))
+    nonres_b = b.non_residential_sqft == 0
+    b.loc[ allowed_b & nonres_b, "wh"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b & nonres_b, "b_total_households"]))
+    filter_b = b.loc[ allowed_b & nonres_b]
     sample(
         demolition_rates.type81units,
-        b[b.building_type_id == 81],
+        filter_b[filter_b.building_type_id == 81],
         "residential_units",
         "wh",
     )
     sample(
         demolition_rates.type82units,
-        b[b.building_type_id == 82],
+        filter_b[filter_b.building_type_id == 82],
         "residential_units",
         "wh",
     )
     sample(
         demolition_rates.type83units,
-        b[b.building_type_id == 83],
+        filter_b[filter_b.building_type_id == 83],
         "residential_units",
         "wh",
     )
@@ -1230,10 +1234,11 @@ def random_demolition_events(
     if not buildings_idx:
         return
 
-    drop_buildings = pd.concat(buildings_idx).copy()[buildings_columns]
+    drop_buildings = pd.concat(buildings_idx).copy()
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
     buildings_idx = drop_buildings.index
     drop_buildings["year_demo"] = year
+    drop_buildings['step'] = 'random_demolition_events'
 
     if orca.is_table("dropped_buildings"):
         prev_drops = orca.get_table("dropped_buildings").to_frame()
