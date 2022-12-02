@@ -39,7 +39,7 @@ jobs:
           zsh
           cd $WORKING_PATH
           export RUNNUM=$(cat RUNNUM)
-          /home/da/anaconda3/bin/python test_forecast_2050.py
+          /home/da/anaconda3/bin/python test_forecast_2050.py >> runs/run_stdout/$RUNNUM.txt 2>&1
           cd runs
           echo "Zipping run$RUNNUM.zip"
           zip -r run$RUNNUM.zip run$RUNNUM
