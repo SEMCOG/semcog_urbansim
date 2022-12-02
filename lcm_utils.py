@@ -167,7 +167,7 @@ def register_choice_model_step(model_name, agents_name):
             alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
             # filter for picking jobs with not building_id assigned
             chooser_filter = "(building_id==-1)"
-            alt_filter = "(non_residential_sqft>0)"
+            alt_filter = "(non_residential_sqft>0)&(sp_filter!=-1)"
             
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)

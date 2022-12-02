@@ -44,6 +44,7 @@ orca.run(
         "feasibility",
         "residential_developer",
         "non_residential_developer",
+        "update_sp_filter",
     ]
     + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
