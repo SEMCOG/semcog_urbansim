@@ -166,6 +166,7 @@ def parcel_is_allowed_2050(form=None):
     # TODO, will replace parcel_is_allowed
     pcl_index = orca.get_table("parcels").index
     form_to_btype = orca.get_injectable("form_to_btype")
+    parcels = orca.get_table("parcels")
     buildings = orca.get_table("buildings").to_frame(
         [
             "city_id",
@@ -192,7 +193,7 @@ def parcel_is_allowed_2050(form=None):
         ].parcel_id
     )
 
-    pcl_big_nonres = (orca.get_table("parcels").non_residential_sqft >= 50000) & (
+    pcl_big_nonres = (parcels.non_residential_sqft >= 50000) & (
         year <= 2020
     )
     pcl_big_nonres = pcl_big_nonres.reindex(pcl_index, fill_value=False)
@@ -211,6 +212,9 @@ def parcel_is_allowed_2050(form=None):
             parcel_refin |= s
     pcl_refiner = pcl_index.isin(parcel_refin)
 
+    # parcels with building improvement value > 10% of landvalue
+    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue / 10)
+
     protected = (
         pcl_new_building
         | pcl_addition
@@ -218,6 +222,7 @@ def parcel_is_allowed_2050(form=None):
         | pcl_big_nonres
         | pcl_refiner
         | pcl_gq
+        | pcl_highval_blds
     )
 
     if form:
