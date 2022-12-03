@@ -1095,7 +1095,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["city_id"] = city
         sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
-        sched_dev.loc[ sched_dev.nonres_sqft>0, "sp_filter"] = -1
+        sched_dev.loc[ sched_dev.non_residential_sqft>0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
