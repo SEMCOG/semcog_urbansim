@@ -113,37 +113,38 @@ def filter_table(table, filter_series, ignore=None):
 	return apply_filter_query(table, filters)
 
 run_folder = "/home/da/semcog_urbansim/runs"
-run_num = "run307"
+run_num = "run325"
 
 hdf = pd.HDFStore(os.path.join(run_folder, '%s.h5'%run_num), 'r')
 
+p_base = hdf["/base/parcels"]
 mcd_total = pd.read_csv('/home/da/share/urbansim/RDF2050/model_inputs/base_tables/mcd_totals_2020_2050_nov15.csv', index_col='mcd')
-semmcds = hdf['/base/semmcds']
-semmcds = semmcds.reset_index()[['semmcd_id', 'large_area_id']].set_index('semmcd_id')
+# semmcds = hdf['/base/semmcds']
+# semmcds = semmcds.reset_index()[['semmcd_id', 'large_area_id']].set_index('semmcd_id')
+semmcds = p_base[['city_id', 'large_area_id']].groupby(['city_id', 'large_area_id']).count().reset_index().set_index('city_id')
 
 usecache = True
 if usecache == False:
 	print("running hh_by_mcd_year")
-	hh_by_mcd_year = pd.DataFrame(index=mcd_total.index)
-	hu_by_mcd_year = pd.DataFrame(index=mcd_total.index)
+	hh_by_mcd_year = pd.DataFrame(index=p_base.city_id.unique()).sort_index()
+	hu_by_mcd_year = pd.DataFrame(index=p_base.city_id.unique()).sort_index()
 	for year in range(2020, 2051):
 		if "/%s/parcels" % year not in hdf.keys():
 			break
 		p = hdf["/%s/parcels" % year]
 		b = hdf["/%s/buildings" % year]
 		hh = hdf["/%s/households" % year]
-		b = b.join(p.semmcd, on='parcel_id')
-		hh = hh.join(b.semmcd, on='building_id')
-		hh_vcount = hh.semmcd.fillna(-1).astype(int).value_counts()
-		hu_vcount = b[['semmcd', 'residential_units']].groupby('semmcd').sum()['residential_units']
-		# hu_vcount = b.semmcd.fillna(-1).astype(int).value_counts()
+		b = b.join(p.city_id, on='parcel_id')
+		hh = hh.join(b.city_id, on='building_id')
+		hh_vcount = hh.city_id.fillna(-1).astype(int).value_counts()
+		hu_vcount = b[['city_id', 'residential_units']].groupby('city_id').sum()['residential_units']
 		hh_by_mcd_year.loc[:, str(year)] = hh_vcount
 		hu_by_mcd_year.loc[:, str(year)] = hu_vcount
-		hh_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year_%s.csv' % run_num)
-		hu_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year_%s.csv' % run_num)
+	hh_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hh_by_cityid_year_%s.csv' % run_num)
+	hu_by_mcd_year.to_csv('~/semcog_urbansim/data/cache/hu_by_cityid_year_%s.csv' % run_num)
 else:
-    hh_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hh_by_mcd_year_%s.csv' % run_num, index_col='mcd')
-    hu_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hu_by_mcd_year_%s.csv' % run_num, index_col='mcd')
+    hh_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hh_by_cityid_year_%s.csv' % run_num, index_col=0)
+    hu_by_mcd_year = pd.read_csv('~/semcog_urbansim/data/cache/hu_by_cityid_year_%s.csv' % run_num, index_col=0)
 
 # hh_by_mcd_year['large_area_id'] = semmcds
 
@@ -194,13 +195,14 @@ def global_store(value):
 def get_charts(la_id):
 	print('run get_charts')
 	simulated_hh, simulated_hu = global_store(la_id)
-	mt = mcd_total.loc[mcd_total.index.isin(simulated_hh.index)]	
+	mt = mcd_total.loc[mcd_total.index.isin(simulated_hh.index)]
+	# print(simulated_hh)
 	return [dcc.Graph(id=str(mcd), figure=px.line(
     pd.DataFrame({
-        "mcd_total": mt.loc[mcd], 
+        "mcd_total": mt.loc[mcd] if mcd in mt.index else pd.Series([],dtype=float),
         "simulated_hh": simulated_hh.loc[mcd],
         "simulated_hu": simulated_hu.loc[mcd],
-    }), title=mcd, width=1100, height=450)) for mcd, _ in mt.iloc[:].iterrows()]
+    }), title=mcd, width=1100, height=450)) for mcd, _ in semmcds.loc[semmcds.large_area_id==la_id].iterrows()]
 
 if __name__ == '__main__':
     app.run(debug=True, host= '192.168.185.65', port = 8080)
