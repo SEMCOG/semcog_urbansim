@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 import orca
 import time
@@ -263,10 +264,10 @@ def make_indicators(tab, geo_id):
 
     make_hh_size_age(1, 15, 34)
     make_hh_size_age(1, 35, 44)
-    make_hh_size_age(1, 65, pd.np.inf)
+    make_hh_size_age(1, 65, np.inf)
     make_hh_size_age(2, 15, 34, True)
     make_hh_size_age(2, 35, 44, True)
-    make_hh_size_age(2, 65, pd.np.inf, True)
+    make_hh_size_age(2, 65, np.inf, True)
 
     @orca.column(tab, cache=True, cache_scope='iteration')
     def hh_no_car_or_lt_workers(households):
@@ -344,9 +345,9 @@ def make_indicators(tab, geo_id):
             df = df.to_frame([hh_name, gq_name]).fillna(0)
             return df[hh_name] + df[gq_name]
 
-    for (a, b) in [(00, 4), (5, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, pd.np.inf),
-                   (00, 17), (25, 44), (25, 54), (45, 64), (55, 64), (65, 84), (85, pd.np.inf),
-                   (35, 59), (60, 64), (65, 74), (75, pd.np.inf)]:
+    for (a, b) in [(00, 4), (5, 17), (18, 24), (18, 64), (25, 34), (35, 64), (65, np.inf),
+                   (00, 17), (25, 44), (25, 54), (45, 64), (55, 64), (65, 84), (85, np.inf),
+                   (35, 59), (60, 64), (65, 74), (75, np.inf)]:
         make_pop_age(a, b)
 
     @orca.column(tab, cache=True, cache_scope='iteration')
@@ -630,7 +631,7 @@ def main(run_name):
             df[(year, tab)] = year_data.sum()
     df = df.T
     df.index = pd.MultiIndex.from_tuples(df.index)
-    df = df.sort_index().sort_index(1)
+    df = df.sort_index().sort_index(axis=1)
     del df['res_vacancy_rate']
     del df['nonres_vacancy_rate']
     del df['household_size']
@@ -662,7 +663,7 @@ def main(run_name):
     base_df.set_index(['large_area_id', 'city_id', 'zone_id', 'parcel_id'], inplace=True)
 
     base_df = base_df.fillna(0)
-    base_df = base_df.sort_index().sort_index(1)
+    base_df = base_df.sort_index().sort_index(axis=1)
 
     base_df.columns.name = 'indicator'
     base_df = base_df.stack().to_frame()
@@ -692,7 +693,7 @@ def main(run_name):
         df.set_index(['large_area_id', 'city_id', 'zone_id', 'parcel_id'], inplace=True)
 
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
 
         df.columns.name = 'indicator'
         df = df.stack().to_frame()
@@ -720,7 +721,7 @@ def main(run_name):
             for i, y in list(enumerate(year_names))[::5]:
                 df = dict_ind[tab][i]
                 df = df.fillna(0)
-                df = df.sort_index().sort_index(1)
+                df = df.sort_index().sort_index(axis=1)
                 df.to_excel(writer, y)
             writer.save()
 
@@ -728,7 +729,7 @@ def main(run_name):
         for i, y in enumerate(year_names):
             df = dict_ind[tab][i]
             df = df.fillna(0)
-            df = df.sort_index().sort_index(1)
+            df = df.sort_index().sort_index(axis=1)
             df.to_excel(writer, y)
         writer.save()
 
@@ -756,7 +757,7 @@ def main(run_name):
                 if len(df.columns) > 0:
                     print("saving:", ind)
                     df = df.fillna(0)
-                    df = df.sort_index().sort_index(1)
+                    df = df.sort_index().sort_index(axis=1)
                     df.to_excel(writer, ind)
                 else:
                     print("somtning is wrong with:", ind)
@@ -785,7 +786,7 @@ def main(run_name):
             if len(df.columns) > 0:
                 print("saving:", ind)
                 df = df.fillna(0)
-                df = df.sort_index().sort_index(1)
+                df = df.sort_index().sort_index(axis=1)
                 df.to_excel(writer, ind)
             else:
                 print("somtning is wrong with:", ind)
@@ -801,19 +802,19 @@ def main(run_name):
         df = buildings.to_frame(buildings.local_columns + ['city_id', 'large_area_id', 'x', 'y'])
         df = df[df.building_type_id != 99]
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
         df.to_csv(os.path.join(outdir, "buildings_yr" + str(year) + ".csv"))
 
         persons = orca.get_table('persons')
         df = persons.to_frame(persons.local_columns + ['city_id', 'large_area_id'])
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
         df.to_csv(os.path.join(outdir, "hh_persons_yr" + str(year) + ".csv"))
 
         households = orca.get_table('households')
         df = households.to_frame(households.local_columns + ['city_id', 'large_area_id'])
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
         df.to_csv(os.path.join(outdir, "households_yr" + str(year) + ".csv"))
     end = time.time()
     print("runtime:", end - start)
@@ -829,14 +830,14 @@ def main(run_name):
         df = buildings.to_frame(buildings.local_columns + ['city_id', 'large_area_id'])
         df = df[df.year_built == year]
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
         df.to_excel(writer, "const_" + year_name)
 
         demos = orca.get_table('dropped_buildings')
         df = demos.to_frame(demos.local_columns + ['city_id', 'large_area_id'])
         df = df[df.year_demo == year]
         df = df.fillna(0)
-        df = df.sort_index().sort_index(1)
+        df = df.sort_index().sort_index(axis=1)
         df.to_excel(writer, "demo_" + year_name)
 
     writer.save()
