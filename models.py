@@ -42,7 +42,10 @@ for model_category_name, model_category_attributes in model_configs.items():
 
 orca.add_injectable("location_choice_models", location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
-orca.add_injectable("elcm_step_names", sorted(elcm_step_names, reverse=True))
+# run elcm by specific job_sector sequence defined below
+elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
+elcm_sector_order = {sector: idx for idx,sector in enumerate(elcm_sector_order)}
+orca.add_injectable("elcm_step_names", sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]))
 
 for name, model in list(location_choice_models.items()):
     lcm_utils.register_choice_model_step(model.name, model.choosers)
