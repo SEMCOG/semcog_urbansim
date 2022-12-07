@@ -399,6 +399,17 @@ def make_indicators(tab, geo_id):
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]:
         make_job_sector_ind(i)
 
+def upload_whatnots_to_postgres(run_name, whatnots):
+    table_name = "whatnots_" + run_name
+    conn_str = "postgresql://gisad:forecast20@plannerprojection:5432/land"
+    whatnots = whatnots.reset_index()
+    whatnots['large_area_id'] = whatnots['large_area_id'].astype(int)
+    whatnots['city_id'] = whatnots['city_id'].astype(int)
+    whatnots['zone_id'] = whatnots['zone_id'].astype(int)
+    whatnots['parcel_id'] = whatnots['parcel_id'].astype(int)
+    print("Uploading whatnots table %s to postgres..." % table_name)
+    whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
+    return
 
 def main(run_name):
     outdir = run_name.replace('.h5', '')
@@ -671,8 +682,8 @@ def main(run_name):
     base_df.set_index('year', append=True, inplace=True)
     base_whatnots_output.append(base_df)
     base_whatnots_output = pd.concat(base_whatnots_output).unstack(fill_value=0)
-    base_whatnots_output.index.rename('city_id', 1, True)
-    base_whatnots_output.index.rename('zone_id', 2, True)
+    base_whatnots_output.index.rename('city_id', level=1, inplace=True)
+    base_whatnots_output.index.rename('zone_id', level=2, inplace=True)
     base_whatnots_output.columns = ['yrbase']
     base_whatnots_output.to_csv(os.path.join(all_years_dir, "base_whatnots_output.csv"))
 
@@ -702,12 +713,13 @@ def main(run_name):
         whatnots_output.append(df)
 
     whatnots_output = pd.concat(whatnots_output).unstack(fill_value=0)
-    whatnots_output.index.rename('city_id', 1, True)
-    whatnots_output.index.rename('zone_id', 2, True)
+    whatnots_output.index.rename('city_id', level=1, inplace=True)
+    whatnots_output.index.rename('zone_id', level=2, inplace=True)
     whatnots_output.columns = year_names
     if spacing == 1:
         whatnots_output[year_names[::5]].to_csv(os.path.join(outdir, "whatnots_output.csv"))
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
+    upload_whatnots_to_postgres(os.path.basename(outdir), whatnots_output)
     end = time.time()
     print("runtime whatnots:", end - start)
 
