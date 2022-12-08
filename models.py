@@ -645,7 +645,11 @@ def jobs_scaling_model(jobs):
             ["large_area_id", "sector_id"]
         ):
             counts_by_bid = (
-                jobs[(jobs.sector_id == sector) & (jobs.large_area_id == large_area_id)]
+                jobs[
+                    (jobs.sector_id == sector)
+                    & (jobs.large_area_id == large_area_id)
+                    & (jobs.building_id != -1)
+                ]
                 .groupby(["building_id"])
                 .size()
             )
