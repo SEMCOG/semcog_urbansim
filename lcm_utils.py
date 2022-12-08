@@ -194,8 +194,10 @@ def register_choice_model_step(model_name, agents_name):
         alts_idx = alts_df.query(alts_pre_filter).index
         # std alts columns
         alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
-        alts_df.loc[alts_idx, formula_alts_col] = (
-            alts_col_df-alts_col_df.mean())/alts_col_df.std()
+        # std could introduce NaN, fill them with 0 after that
+        alts_df.loc[alts_idx, formula_alts_col] = ((
+            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
+
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
