@@ -23,9 +23,15 @@ start_time = time.ctime()
 
 # orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
-    ["refiner", "build_networks_2050", "neighborhood_vars"]
-    + orca.get_injectable("repm_step_names")
-    + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
+    [
+        "scheduled_demolition_events",
+        "scheduled_development_events",
+        "refiner", 
+        # "build_networks_2050", 
+        # "neighborhood_vars",
+    ]
+    # + orca.get_injectable("repm_step_names")
+    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
 )  # increase feasibility based on projected income
 
 orca.run(
