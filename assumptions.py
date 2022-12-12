@@ -90,9 +90,13 @@ orca.add_injectable(
 )
 
 seed = 271828
+
+# seed = 79
 print("using seed", seed)
 random.seed(seed)
 np.random.seed(seed)
+
+orca.add_injectable("random_seed", seed)
 
 
 def verify():
@@ -111,6 +115,8 @@ def verify():
         if ("forecast_data_input" in f) & (f[-3:] == ".h5")
     ]
     hdf_last = max(hdf_list, key=os.path.getctime)
+    orca.add_injectable("HDF_data", hdf_last)
+
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
     print("HDF data: ", hdf_last)
@@ -123,3 +129,4 @@ def verify():
 
 
 orca.add_injectable("store", verify())
+
