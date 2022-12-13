@@ -21,7 +21,6 @@ if free < 10:
 
 start_time = time.time()
 
-orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
     [
         "scheduled_demolition_events",
@@ -66,7 +65,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2020, 2051)),
+    iter_vars=list(range(2021, 2051)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
