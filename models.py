@@ -44,8 +44,11 @@ orca.add_injectable("location_choice_models", location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
 # run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
-elcm_sector_order = {sector: idx for idx,sector in enumerate(elcm_sector_order)}
-orca.add_injectable("elcm_step_names", sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]))
+elcm_sector_order = {sector: idx for idx, sector in enumerate(elcm_sector_order)}
+orca.add_injectable(
+    "elcm_step_names",
+    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]),
+)
 
 for name, model in list(location_choice_models.items()):
     lcm_utils.register_choice_model_step(model.name, model.choosers)
@@ -661,8 +664,15 @@ def jobs_scaling_model(jobs):
             )
             wrap_jobs.update_col_from_series("building_id", choices, cast=True)
     j_after_run = wrap_jobs.to_frame(wrap_jobs.local_columns)
-    print('done running job_scaling, remaining jobs in sectors',regional_sectors,'with -1 building_id: ',
-          ((j_after_run.building_id == -1) & (j_after_run.sector_id.isin(regional_sectors))).sum())
+    print(
+        "done running job_scaling, remaining jobs in sectors",
+        regional_sectors,
+        "with -1 building_id: ",
+        (
+            (j_after_run.building_id == -1)
+            & (j_after_run.sector_id.isin(regional_sectors))
+        ).sum(),
+    )
 
 
 @orca.step()
@@ -1102,11 +1112,14 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["city_id"] = city
         sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
-        sched_dev.loc[ sched_dev.non_residential_sqft>0, "sp_filter"] = -1
+        sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
-        print("%s of buildings have been added in scheduled development events" % (all_buildings.shape[0] - b.shape[0]))
+        print(
+            "%s of buildings have been added in scheduled development events"
+            % (all_buildings.shape[0] - b.shape[0])
+        )
         orca.add_table("buildings", all_buildings)
 
         # Todo: maybe we need to impute some columns
@@ -1129,11 +1142,13 @@ def scheduled_demolition_events(
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     buildings_columns = buildings.local_columns
     if len(sched_dev) > 0:
-        buildings = buildings.to_frame(buildings_columns + ["city_id"] + ["b_total_jobs", "b_total_households"])
+        buildings = buildings.to_frame(
+            buildings_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
+        )
         drop_buildings = buildings[buildings.index.isin(sched_dev.building_id)].copy()
         buildings_idx = drop_buildings.index
         drop_buildings["year_demo"] = iter_var
-        drop_buildings['step'] = 'scheduled_demolition_events'
+        drop_buildings["step"] = "scheduled_demolition_events"
 
         if orca.is_table("dropped_buildings"):
             prev_drops = orca.get_table("dropped_buildings").to_frame()
@@ -1208,7 +1223,7 @@ def random_demolition_events(
                 rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
                 buildings_idx.append(rel_b.copy())
 
-    b.loc[ allowed_b, "wj"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b, "b_total_jobs"]))
+    b.loc[allowed_b, "wj"] = 1.0 / (1.0 + np.log1p(b.loc[allowed_b, "b_total_jobs"]))
     nonres_b = b.loc[allowed_b]
     sample(
         demolition_rates.typenonsqft,
@@ -1217,8 +1232,10 @@ def random_demolition_events(
         "wj",
     )
     nonres_b = b.non_residential_sqft == 0
-    b.loc[ allowed_b & nonres_b, "wh"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b & nonres_b, "b_total_households"]))
-    filter_b = b.loc[ allowed_b & nonres_b]
+    b.loc[allowed_b & nonres_b, "wh"] = 1.0 / (
+        1.0 + np.log1p(b.loc[allowed_b & nonres_b, "b_total_households"])
+    )
+    filter_b = b.loc[allowed_b & nonres_b]
     sample(
         demolition_rates.type81units,
         filter_b[filter_b.building_type_id == 81],
@@ -1247,7 +1264,7 @@ def random_demolition_events(
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
     buildings_idx = drop_buildings.index
     drop_buildings["year_demo"] = year
-    drop_buildings['step'] = 'random_demolition_events'
+    drop_buildings["step"] = "random_demolition_events"
 
     if orca.is_table("dropped_buildings"):
         prev_drops = orca.get_table("dropped_buildings").to_frame()
@@ -1672,6 +1689,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
+
 @orca.step()
 def update_sp_filter(buildings):
     # update sp_filter to -1 for selected building_types
@@ -1687,9 +1705,17 @@ def update_sp_filter(buildings):
         95: "Parking Garage",
     }
     updated_buildings = buildings.to_frame(buildings.local_columns)
-    print("Updating %s buildings sp_filter to -1" %
-          (updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes)].shape[0]))
-    updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes), 'sp_filter'] = -1
+    print(
+        "Updating %s buildings sp_filter to -1"
+        % (
+            updated_buildings.loc[
+                updated_buildings.building_type_id.isin(selected_btypes)
+            ].shape[0]
+        )
+    )
+    updated_buildings.loc[
+        updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
+    ] = -1
     orca.add_table("buildings", updated_buildings)
 
 
@@ -1742,7 +1768,7 @@ def build_networks_2050(parcels):
         ]
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
-    if year in [2015, 2019, 2020, 2030]:
+    if year in [2015, 2020, 2021, 2030]:
         st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
         pdna.network.reserve_num_graphs(2)
 
@@ -1851,7 +1877,9 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     ## households
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     # ignore hh in pseudo_buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(h.building_id.isin(pseudo_buildings.index))
+    idx_invalid_building_id = idx_invalid_building_id & ~(
+        h.building_id.isin(pseudo_buildings.index)
+    )
     if idx_invalid_building_id.sum() > 0:
         print(
             (
