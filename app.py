@@ -113,7 +113,7 @@ def filter_table(table, filter_series, ignore=None):
 	return apply_filter_query(table, filters)
 
 run_folder = "/home/da/semcog_urbansim/runs"
-run_num = "run325"
+run_num = "run336"
 
 hdf = pd.HDFStore(os.path.join(run_folder, '%s.h5'%run_num), 'r')
 
