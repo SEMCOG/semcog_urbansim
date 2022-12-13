@@ -438,7 +438,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(4)
+    pool = Pool(2)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
