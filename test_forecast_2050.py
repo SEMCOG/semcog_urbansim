@@ -26,12 +26,9 @@ orca.run(
         "scheduled_demolition_events",
         "scheduled_development_events",
         "refiner",
-        # "build_networks_2050",
-        # "neighborhood_vars",
-    ]
-    # + orca.get_injectable("repm_step_names")
-    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
-)  # increase feasibility based on projected income
+    ],
+    iter_vars=list(range(2020, 2021)) # run base year on 2020
+)  
 
 orca.run(
     [
