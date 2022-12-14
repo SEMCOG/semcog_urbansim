@@ -1086,7 +1086,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        if "stories" not in df.columns:
+        if "stories" not in sched_dev.columns:
             sched_dev["stories"] = 0
         zone = (
             # #35
@@ -1396,7 +1396,7 @@ def add_extra_columns_res(df):
     # github issue #31
     # generating default `mcd_model_quota` as the same as the `residential_units`
     df["mcd_model_quota"] = df["residential_units"]
-    return df
+    return df.fillna(0)
 
 
 def probable_type(row):
