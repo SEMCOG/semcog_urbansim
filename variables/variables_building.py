@@ -634,7 +634,7 @@ def city_id(buildings, parcels):
     return misc.reindex(parcels.city_id, buildings.parcel_id).fillna(0)
 
 
-@orca.column("buildings", cache=True)
+@orca.column("buildings", cache=True, cache_scope='forever')
 def hu_filter(buildings, households, parcels):
     """ move hu_filter code from dataset.py to here """
     buildings = buildings.local
@@ -644,14 +644,15 @@ def hu_filter(buildings, households, parcels):
     sample = buildings[buildings.residential_units > 0]
     sample = sample[~(sample.index.isin(households.building_id))]
     for c in city_id.unique():
-        frac = 0.9 if c in cites else 0.5
+        # sample 90% for cites list and 0 other cities
+        frac = 0.9 if c in cites else 0
         sampled_indexes = (
             sample[sample.index.isin(city_id[city_id == c].index)]
             .sample(frac=frac, replace=False)
             .index
         )
+        # assign 1 to HU to block them from hlcm
         series[series.index.isin(sampled_indexes)] = 1
-    # print('hu_filter', series)
     return series
 
 
