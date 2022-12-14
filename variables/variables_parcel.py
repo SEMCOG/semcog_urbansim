@@ -194,7 +194,7 @@ def parcel_is_allowed_2050(form=None):
     )
 
     pcl_big_nonres = (parcels.non_residential_sqft >= 50000) & (
-        year <= 2020
+        year <= 2050 # this rule only apply for year before 20**
     )
     pcl_big_nonres = pcl_big_nonres.reindex(pcl_index, fill_value=False)
 
