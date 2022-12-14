@@ -1367,7 +1367,7 @@ def add_extra_columns_nonres(df):
         "sqft_price_nonres",
         "sqft_price_res",
         "sqft_per_unit",
-        "hu_filter",
+        # "hu_filter",
         "event_id",
         "sp_filter",
         "mcd_model_quota",
