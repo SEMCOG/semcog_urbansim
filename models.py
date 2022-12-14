@@ -1086,7 +1086,8 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        sched_dev["stories"] = 0
+        if "stories" not in df.columns:
+            sched_dev["stories"] = 0
         zone = (
             # #35
             # sched_dev.b_zone_id
@@ -1102,7 +1103,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # #35
         # city = sched_dev.b_city_id
         city = sched_dev.city_id
-        ebid = sched_dev.building_id.copy()  # save event_id to be used later
+        # ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
         # #35
@@ -1110,7 +1111,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # sched_dev["b_city_id"] = city
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
-        sched_dev["event_id"] = ebid  # add back event_id
+        # sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
         sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
@@ -1386,6 +1387,8 @@ def add_extra_columns_res(df):
     df = add_extra_columns_nonres(df)
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
+    elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
+        df["sqft_per_unit"] = df["res_sqft"] / df["residential_units"]
     else:
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
