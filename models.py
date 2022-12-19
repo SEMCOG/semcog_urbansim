@@ -1103,7 +1103,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # #35
         # city = sched_dev.b_city_id
         city = sched_dev.city_id
-        # ebid = sched_dev.building_id.copy()  # save event_id to be used later
+        ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
         # #35
@@ -1112,7 +1112,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
-        # sched_dev["event_id"] = ebid  # add back event_id
+        sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
         sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
