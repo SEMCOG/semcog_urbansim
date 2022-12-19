@@ -1,16 +1,12 @@
 import orca
 import shutil
-
+import sys
 import os
 import models, utils
 from urbansim.utils import misc, networks
 import time
 import output_indicators
 
-data_out = utils.get_run_filename()
-print(data_out)
-
-import sys
 
 # check disk space, need at least 10GB
 total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
@@ -21,14 +17,13 @@ if free < 10:
 
 start_time = time.time()
 
+data_out = utils.get_run_filename()
+print(data_out)
+
 orca.run(
-    [
-        "scheduled_demolition_events",
-        "scheduled_development_events",
-        "refiner",
-    ],
-    iter_vars=list(range(2020, 2021)) # run base year on 2020
-)  
+    ["scheduled_demolition_events", "scheduled_development_events", "refiner",],
+    iter_vars=list(range(2020, 2021)),  # run base year on 2020
+)
 
 orca.run(
     [
@@ -49,7 +44,7 @@ orca.run(
         "update_sp_filter",
     ]
     + orca.get_injectable("repm_step_names")
-    + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
+    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
     + ["mcd_hu_sampling"]  # Hack to make more feasibility
     + orca.get_injectable(
         "hlcm_step_names"

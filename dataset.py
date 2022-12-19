@@ -46,7 +46,7 @@ for name in [
     "income_growth_rates",
     "target_vacancies",
     "target_vacancies_mcd",
-    "demolition_rates",    
+    "demolition_rates",
     "landmark_worksites",
     "multi_parcel_buildings",
     "mcd_total",
@@ -110,16 +110,28 @@ def buildings(store):
     df.loc[df.sqft_price_res < 0, "sqft_price_res"] = 0
     df.fillna(0, inplace=True)
 
-    # df['hu_filter'] = 0
     df["mcd_model_quota"] = 0
-    # cites = [551, 1155, 1100, 3130, 6020, 6040]
-    # sample = df[df.residential_units > 0]
-    # sample = sample[~(sample.index.isin(store['households'].building_id))]
-    # # #35
-    # for c in sample.b_city_id.unique():
-    #     frac = 0.9 if c in cites else 0.5
-    #     # #35
-    #     df.loc[sample[sample.b_city_id == c].sample(frac=frac, replace=False).index.values, 'hu_filter'] = 1
+
+    df = pd.merge(
+        df,
+        store["parcels"][["city_id"]],
+        left_on="parcel_id",
+        right_index=True,
+        how="left",
+    )
+    df["city_id"] = df["city_id"].fillna(0)
+    df["hu_filter"] = 0
+    cites = [551, 1155, 1100, 3130, 6020, 6040]
+    sample = df[df.residential_units > 0]
+    sample = sample[~(sample.index.isin(store["households"].building_id))]
+    # #35
+    for c in sample.city_id.unique():
+        frac = 0.9 if c in cites else 0.5
+        # #35
+        df.loc[
+            sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
+            "hu_filter",
+        ] = 1
 
     # TODO, this is placeholder. will update with special emp buildings lookup later
 
@@ -128,8 +140,8 @@ def buildings(store):
     ] = 0  # special filter: for event location/buildings, landmark buildings, etc
     landmark_worksites = store["landmark_worksites"]
     df.loc[
-        landmark_worksites[landmark_worksites.building_id.isin(
-            df.index)].building_id, "sp_filter"
+        landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
+        "sp_filter",
     ] = -1  # set landmark building_id as negative for blocking
 
     df["event_id"] = 0  # also add event_id for event reference
@@ -148,16 +160,22 @@ def households(store, buildings, pseudo_building_2020):
     )
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
     # exclude those got placed in pseudo buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(df.building_id.isin(pseudo_buildings.index))
+    idx_invalid_building_id = idx_invalid_building_id & ~(
+        df.building_id.isin(pseudo_buildings.index)
+    )
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
     # convert pseudo_buildings county code to large_area_id
-    pseudo_buildings.loc[:, 'large_area_id'] = pseudo_buildings.loc[:, 'county']
-    pseudo_buildings.loc[:, 'large_area_id'] = pseudo_buildings.loc[:, 'large_area_id'].replace({163: 3})
+    pseudo_buildings.loc[:, "large_area_id"] = pseudo_buildings.loc[:, "county"]
+    pseudo_buildings.loc[:, "large_area_id"] = pseudo_buildings.loc[
+        :, "large_area_id"
+    ].replace({163: 3})
 
     df["large_area_id"] = misc.reindex(
-        pd.concat((b.large_area_id, pseudo_buildings.large_area_id), axis=0), df.building_id)
+        pd.concat((b.large_area_id, pseudo_buildings.large_area_id), axis=0),
+        df.building_id,
+    )
     # dtype optimization
     df["workers"] = df["workers"].fillna(0).astype(np.int8)
     df["children"] = df["children"].fillna(0).astype(np.int8)
@@ -209,7 +227,7 @@ def parcels(store, zoning):
     # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
     # Parcel is developable, but contains underground storage tanks
     pct_undev[zoning.is_developable == 2] += 10
-    parcels_df["pct_undev"] = pct_undev.clip(0, 100).astype('int16')
+    parcels_df["pct_undev"] = pct_undev.clip(0, 100).astype("int16")
     return parcels_df
 
 
