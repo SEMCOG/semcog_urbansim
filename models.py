@@ -1111,6 +1111,7 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # sched_dev["b_city_id"] = city
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
+        sched_dev["hu_filter"] = 0
         # sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
         sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
@@ -1505,6 +1506,7 @@ def run_developer(
         pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id
     ]
 
+    new_buildings["hu_filter"] = 0
     parcel_utils.add_buildings(
         dev.feasibility,
         buildings,
@@ -1771,7 +1773,7 @@ def build_networks_2050(parcels):
         ]
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
-    if year in [2015, 2020, 2021, 2030]:
+    if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
         st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
         pdna.network.reserve_num_graphs(2)
 
