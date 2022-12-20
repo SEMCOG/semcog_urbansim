@@ -725,14 +725,14 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
     buildings = buildings.to_frame(
         buildings.local_columns + location_ids + ["gq_building"]
     )
-    dic_agent = {"jobs": jobs, "households": households, "gq": group_quarters}
+    dic_agent = {"jobs": jobs, "households": households, "group_quarters": group_quarters}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
     assert refinements.action.isin(
         {"clone", "subtract_pop", "subtract", "add_pop", "add", "target_pop", "target"}
     ).all(), "Unknown action"
-    assert refinements.agents.isin({"jobs", "households", "gq"}).all(), "Unknown agents"
+    assert refinements.agents.isin({"jobs", "households", "group_quarters"}).all(), "Unknown agents"
 
     def add_agents(
         agents, agents_pool, agent_expression, location_expression, number_of_agents
@@ -1033,8 +1033,8 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             "buildings", buildings[buildings_local_columns]
         )  # update buildings
 
-    if refinements.agents.isin({"gq"}).sum() > 0:
-        group_quarters = dic_agent["gq"]
+    if refinements.agents.isin({"group_quarters"}).sum() > 0:
+        group_quarters = dic_agent["group_quarters"]
         assert (
             group_quarters.index.duplicated().sum() == 0
         ), "duplicated index in group_quarters"
