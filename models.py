@@ -44,8 +44,11 @@ orca.add_injectable("location_choice_models", location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
 # run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
-elcm_sector_order = {sector: idx for idx,sector in enumerate(elcm_sector_order)}
-orca.add_injectable("elcm_step_names", sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]))
+elcm_sector_order = {sector: idx for idx, sector in enumerate(elcm_sector_order)}
+orca.add_injectable(
+    "elcm_step_names",
+    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]),
+)
 
 for name, model in list(location_choice_models.items()):
     lcm_utils.register_choice_model_step(model.name, model.choosers)
@@ -438,7 +441,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(4)
+    pool = Pool(1)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
@@ -661,8 +664,15 @@ def jobs_scaling_model(jobs):
             )
             wrap_jobs.update_col_from_series("building_id", choices, cast=True)
     j_after_run = wrap_jobs.to_frame(wrap_jobs.local_columns)
-    print('done running job_scaling, remaining jobs in sectors',regional_sectors,'with -1 building_id: ',
-          ((j_after_run.building_id == -1) & (j_after_run.sector_id.isin(regional_sectors))).sum())
+    print(
+        "done running job_scaling, remaining jobs in sectors",
+        regional_sectors,
+        "with -1 building_id: ",
+        (
+            (j_after_run.building_id == -1)
+            & (j_after_run.sector_id.isin(regional_sectors))
+        ).sum(),
+    )
 
 
 @orca.step()
@@ -715,14 +725,14 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
     buildings = buildings.to_frame(
         buildings.local_columns + location_ids + ["gq_building"]
     )
-    dic_agent = {"jobs": jobs, "households": households, "gq": group_quarters}
+    dic_agent = {"jobs": jobs, "households": households, "group_quarters": group_quarters}
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
     assert refinements.action.isin(
         {"clone", "subtract_pop", "subtract", "add_pop", "add", "target_pop", "target"}
     ).all(), "Unknown action"
-    assert refinements.agents.isin({"jobs", "households", "gq"}).all(), "Unknown agents"
+    assert refinements.agents.isin({"jobs", "households", "group_quarters"}).all(), "Unknown agents"
 
     def add_agents(
         agents, agents_pool, agent_expression, location_expression, number_of_agents
@@ -1023,8 +1033,8 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             "buildings", buildings[buildings_local_columns]
         )  # update buildings
 
-    if refinements.agents.isin({"gq"}).sum() > 0:
-        group_quarters = dic_agent["gq"]
+    if refinements.agents.isin({"group_quarters"}).sum() > 0:
+        group_quarters = dic_agent["group_quarters"]
         assert (
             group_quarters.index.duplicated().sum() == 0
         ), "duplicated index in group_quarters"
@@ -1076,7 +1086,8 @@ def scheduled_development_events(buildings, iter_var, events_addition):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
-        sched_dev["stories"] = 0
+        if "stories" not in sched_dev.columns:
+            sched_dev["stories"] = 0
         zone = (
             # #35
             # sched_dev.b_zone_id
@@ -1100,13 +1111,17 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         # sched_dev["b_city_id"] = city
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
+        sched_dev["hu_filter"] = 0
         sched_dev["event_id"] = ebid  # add back event_id
         # set sp_filter to -1 to nonres event to prevent future reloaction
-        sched_dev.loc[ sched_dev.non_residential_sqft>0, "sp_filter"] = -1
+        sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
-        print("%s of buildings have been added in scheduled development events" % (all_buildings.shape[0] - b.shape[0]))
+        print(
+            "%s of buildings have been added in scheduled development events"
+            % (all_buildings.shape[0] - b.shape[0])
+        )
         orca.add_table("buildings", all_buildings)
 
         # Todo: maybe we need to impute some columns
@@ -1129,11 +1144,13 @@ def scheduled_demolition_events(
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     buildings_columns = buildings.local_columns
     if len(sched_dev) > 0:
-        buildings = buildings.to_frame(buildings_columns + ["city_id"] + ["b_total_jobs", "b_total_households"])
+        buildings = buildings.to_frame(
+            buildings_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
+        )
         drop_buildings = buildings[buildings.index.isin(sched_dev.building_id)].copy()
         buildings_idx = drop_buildings.index
         drop_buildings["year_demo"] = iter_var
-        drop_buildings['step'] = 'scheduled_demolition_events'
+        drop_buildings["step"] = "scheduled_demolition_events"
 
         if orca.is_table("dropped_buildings"):
             prev_drops = orca.get_table("dropped_buildings").to_frame()
@@ -1208,7 +1225,7 @@ def random_demolition_events(
                 rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
                 buildings_idx.append(rel_b.copy())
 
-    b.loc[ allowed_b, "wj"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b, "b_total_jobs"]))
+    b.loc[allowed_b, "wj"] = 1.0 / (1.0 + np.log1p(b.loc[allowed_b, "b_total_jobs"]))
     nonres_b = b.loc[allowed_b]
     sample(
         demolition_rates.typenonsqft,
@@ -1217,8 +1234,10 @@ def random_demolition_events(
         "wj",
     )
     nonres_b = b.non_residential_sqft == 0
-    b.loc[ allowed_b & nonres_b, "wh"] = 1.0 / (1.0 + np.log1p(b.loc[ allowed_b & nonres_b, "b_total_households"]))
-    filter_b = b.loc[ allowed_b & nonres_b]
+    b.loc[allowed_b & nonres_b, "wh"] = 1.0 / (
+        1.0 + np.log1p(b.loc[allowed_b & nonres_b, "b_total_households"])
+    )
+    filter_b = b.loc[allowed_b & nonres_b]
     sample(
         demolition_rates.type81units,
         filter_b[filter_b.building_type_id == 81],
@@ -1247,7 +1266,7 @@ def random_demolition_events(
     drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
     buildings_idx = drop_buildings.index
     drop_buildings["year_demo"] = year
-    drop_buildings['step'] = 'random_demolition_events'
+    drop_buildings["step"] = "random_demolition_events"
 
     if orca.is_table("dropped_buildings"):
         prev_drops = orca.get_table("dropped_buildings").to_frame()
@@ -1349,7 +1368,7 @@ def add_extra_columns_nonres(df):
         "sqft_price_nonres",
         "sqft_price_res",
         "sqft_per_unit",
-        "hu_filter",
+        # "hu_filter",
         "event_id",
         "sp_filter",
         "mcd_model_quota",
@@ -1369,6 +1388,8 @@ def add_extra_columns_res(df):
     df = add_extra_columns_nonres(df)
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
+    elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
+        df["sqft_per_unit"] = df["res_sqft"] / df["residential_units"]
     else:
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
@@ -1376,7 +1397,7 @@ def add_extra_columns_res(df):
     # github issue #31
     # generating default `mcd_model_quota` as the same as the `residential_units`
     df["mcd_model_quota"] = df["residential_units"]
-    return df
+    return df.fillna(0)
 
 
 def probable_type(row):
@@ -1485,6 +1506,7 @@ def run_developer(
         pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id
     ]
 
+    new_buildings["hu_filter"] = 0
     parcel_utils.add_buildings(
         dev.feasibility,
         buildings,
@@ -1503,94 +1525,40 @@ def run_developer(
     )
 
 
-# @orca.step("residential_developer")
-# def residential_developer(households, parcels, target_vacancies):
-#     target_vacancies = target_vacancies.to_frame()
-#     target_vacancies = target_vacancies[
-#         target_vacancies.year == orca.get_injectable("year")
-#     ]
-#     orig_buildings = orca.get_table("buildings").to_frame(
-#         ["residential_units", "large_area_id", "building_type_id"]
-#     )
-#     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
-#         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
-#         target_vacancy = float(
-#             target_vacancies[
-#                 target_vacancies.large_area_id == lid
-#             ].res_target_vacancy_rate
-#         )
-#         num_agents = (households.large_area_id == lid).sum()
-#         num_units = la_orig_buildings.residential_units.sum()
-
-#         print("Number of agents: {:,}".format(num_agents))
-#         print("Number of agent spaces: {:,}".format(int(num_units)))
-#         assert target_vacancy < 1.0
-#         target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-#         print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
-#         print(
-#             "Target vacancy = {:.2f}, target of new units = {:,}".format(
-#                 target_vacancy, target_units
-#             )
-#         )
-
-#         register_btype_distributions(la_orig_buildings)
-#         run_developer(
-#             target_units,
-#             lid,
-#             "residential",
-#             orca.get_table("buildings"),
-#             "residential_units",
-#             parcels.parcel_size,
-#             parcels.ave_unit_size,
-#             parcels.total_units,
-#             "res_developer.yaml",
-#             add_more_columns_callback=add_extra_columns_res,
-#         )
-
-
 @orca.step("residential_developer")
-def residential_developer(
-    households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
-):
-    # get current year
-    year = orca.get_injectable("year")
-    target_vacancies = target_vacancies_mcd.to_frame()
-    target_vacancies = target_vacancies[str(year)]
+def residential_developer(households, parcels, target_vacancies):
+    target_vacancies = target_vacancies.to_frame()
+    target_vacancies = target_vacancies[
+        target_vacancies.year == orca.get_injectable("year")
+    ]
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "semmcd", "building_type_id"]
+        ["residential_units", "large_area_id", "building_type_id"]
     )
-    # the mcd_total for year and year-1
-    mcd_total = mcd_total.to_frame([str(year)])[str(year)]
-    debug_res_developer = debug_res_developer.to_frame()
-    for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
-        mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
-        # handle missing mcdid
-        if mcdid not in mcd_total.index:
-            continue
-        target_vacancy = float(target_vacancies[mcdid])
-        # current hh from hh table
-        cur_agents = (households.semmcd == mcdid).sum()
-        # target hh from mcd_total table
-        target_agents = mcd_total.loc[mcdid]
-        # number of current total housing units
-        num_units = mcd_orig_buildings.residential_units.sum()
+    for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
+        la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
+        target_vacancy = float(
+            target_vacancies[
+                target_vacancies.large_area_id == lid
+            ].res_target_vacancy_rate
+        )
+        num_agents = (households.large_area_id == lid).sum()
+        num_units = la_orig_buildings.residential_units.sum()
 
-        print("Number of current agents: {:,}".format(cur_agents))
-        print("Number of target agents: {:,}".format(target_agents))
+        print("Number of agents: {:,}".format(num_agents))
         print("Number of agent spaces: {:,}".format(int(num_units)))
-        print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
         assert target_vacancy < 1.0
-        target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+        target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+        print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
         print(
             "Target vacancy = {:.2f}, target of new units = {:,}".format(
                 target_vacancy, target_units
             )
         )
 
-        register_btype_distributions(mcd_orig_buildings)
-        units_added, parcels_idx_to_update = run_developer(
+        register_btype_distributions(la_orig_buildings)
+        run_developer(
             target_units,
-            mcdid,
+            lid,
             "residential",
             orca.get_table("buildings"),
             "residential_units",
@@ -1600,28 +1568,82 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
-        # update pct_undev to 100 if theres only one building in the parcel
-        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-        # update parcels table
-        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        # TODO: update parcels.pct_undev to 100 for units_added
-        debug_res_developer = debug_res_developer.append(
-            {
-                "year": year,
-                "mcd": mcdid,
-                "target_units": target_units,
-                "units_added": units_added,
-            },
-            ignore_index=True,
-        )
-        if units_added < target_units:
-            print(
-                "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
-                % (mcdid, target_units, int(units_added))
-            )
-    # log the target and result in this year's run
-    orca.add_table("debug_res_developer", debug_res_developer)
+
+# @orca.step("residential_developer")
+# def residential_developer(
+#     households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
+# ):
+#     # get current year
+#     year = orca.get_injectable("year")
+#     target_vacancies = target_vacancies_mcd.to_frame()
+#     target_vacancies = target_vacancies[str(year)]
+#     orig_buildings = orca.get_table("buildings").to_frame(
+#         ["residential_units", "semmcd", "building_type_id"]
+#     )
+#     # the mcd_total for year and year-1
+#     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+#     debug_res_developer = debug_res_developer.to_frame()
+#     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
+#         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
+#         # handle missing mcdid
+#         if mcdid not in mcd_total.index:
+#             continue
+#         target_vacancy = float(target_vacancies[mcdid])
+#         # current hh from hh table
+#         cur_agents = (households.semmcd == mcdid).sum()
+#         # target hh from mcd_total table
+#         target_agents = mcd_total.loc[mcdid]
+#         # number of current total housing units
+#         num_units = mcd_orig_buildings.residential_units.sum()
+
+#         print("Number of current agents: {:,}".format(cur_agents))
+#         print("Number of target agents: {:,}".format(target_agents))
+#         print("Number of agent spaces: {:,}".format(int(num_units)))
+#         print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
+#         assert target_vacancy < 1.0
+#         target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+#         print(
+#             "Target vacancy = {:.2f}, target of new units = {:,}".format(
+#                 target_vacancy, target_units
+#             )
+#         )
+
+#         register_btype_distributions(mcd_orig_buildings)
+#         units_added, parcels_idx_to_update = run_developer(
+#             target_units,
+#             mcdid,
+#             "residential",
+#             orca.get_table("buildings"),
+#             "residential_units",
+#             parcels.parcel_size,
+#             parcels.ave_unit_size,
+#             parcels.total_units,
+#             "res_developer.yaml",
+#             add_more_columns_callback=add_extra_columns_res,
+#         )
+#         # update pct_undev to 100 if theres only one building in the parcel
+#         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+#         # update parcels table
+#         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+#         # TODO: update parcels.pct_undev to 100 for units_added
+#         debug_res_developer = debug_res_developer.append(
+#             {
+#                 "year": year,
+#                 "mcd": mcdid,
+#                 "target_units": target_units,
+#                 "units_added": units_added,
+#             },
+#             ignore_index=True,
+#         )
+#         if units_added < target_units:
+#             print(
+#                 "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+#                 % (mcdid, target_units, int(units_added))
+#             )
+#     # log the target and result in this year's run
+#     orca.add_table("debug_res_developer", debug_res_developer)
 
 
 @orca.step()
@@ -1694,6 +1716,35 @@ def update_sp_filter(buildings):
 
 
 @orca.step()
+def update_sp_filter(buildings):
+    # update sp_filter to -1 for selected building_types
+    selected_btypes = {
+        11: "Educational",
+        13: "Religious and Civic",
+        14: "Governmental",
+        52: "Hospital",
+        53: "Residential Care Facility",
+        92: "Library",
+        93: "Dormitory Quarters",
+        94: "Death Care Services",
+        95: "Parking Garage",
+    }
+    updated_buildings = buildings.to_frame(buildings.local_columns)
+    print(
+        "Updating %s buildings sp_filter to -1"
+        % (
+            updated_buildings.loc[
+                updated_buildings.building_type_id.isin(selected_btypes)
+            ].shape[0]
+        )
+    )
+    updated_buildings.loc[
+        updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
+    ] = -1
+    orca.add_table("buildings", updated_buildings)
+
+
+@orca.step()
 ## for 2050 forecast, ready to replace the old one
 def build_networks_2050(parcels):
     import yaml
@@ -1742,7 +1793,7 @@ def build_networks_2050(parcels):
         ]
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
-    if year in [2015, 2019, 2020, 2030]:
+    if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
         st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
         pdna.network.reserve_num_graphs(2)
 
@@ -1851,7 +1902,9 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     ## households
     idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
     # ignore hh in pseudo_buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(h.building_id.isin(pseudo_buildings.index))
+    idx_invalid_building_id = idx_invalid_building_id & ~(
+        h.building_id.isin(pseudo_buildings.index)
+    )
     if idx_invalid_building_id.sum() > 0:
         print(
             (
