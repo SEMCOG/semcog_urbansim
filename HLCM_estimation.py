@@ -111,8 +111,8 @@ choice_column = "building_id"
 # hh_sample_size = 10000
 # estimation_sample_size = 50
 # LARGE_AREA_ID = 147
-hh_filter_columns = ["building_id", "large_area_id", "year_built", "residential_units"]
-b_filter_columns = ["large_area_id", "residential_units"]
+hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
+b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 # load variables
 RELOAD = False
 if RELOAD:
@@ -123,6 +123,9 @@ if RELOAD:
     orca.add_injectable('year', 2020)
     orca.run(["build_networks_2050"])
     orca.run(["neighborhood_vars"])
+    # set year to 2050 
+    orca.add_injectable('year', 2050)
+    orca.run(["mcd_hu_sampling"])
 # TODO: get vars from vars list from last forecast
     hh_columns, b_columns = columns_in_vars(vars_to_use)
 
@@ -143,16 +146,17 @@ def estimation(LARGE_AREA_ID):
     estimation_sample_size = 50
     # sampling hh
     # from the new move-ins, last 5-10 years
+    # weighted by mcd_quota
     hh = hh_region[hh_region.large_area_id == LARGE_AREA_ID]
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
     hh = hh[hh.year_built > 2005]
     # exclude hh in pseudo buildings
     hh = hh[hh.building_id < 90000000]
+    hh["mcd_model_quota"] += 1 # add 1 to all hh's mcd_model_quota for weights
     # if total number of hh is less than hh_sample_size
     hh_sample_size = min(hh_sample_size, hh.shape[0])
-    hh = hh.sample(hh_sample_size)
-    # hh = hh.sample(hh_sample_size)
+    hh = hh.sample(hh_sample_size, weights="mcd_model_quota")    # hh = hh.sample(hh_sample_size)
     hh = hh.reset_index()
     hh = hh.fillna(0)
     # sampling b
