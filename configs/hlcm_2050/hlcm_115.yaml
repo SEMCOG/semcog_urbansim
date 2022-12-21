@@ -7,61 +7,61 @@ saved_object:
     alternatives: b_hlcm
     choice_column: building_id
     chooser_filters: null
-    chooser_sample_size: 4937
+    chooser_sample_size: 4933
     chooser_size: null
     choosers: hh_hlcm
     constrained_choices: true
     fitted_parameters:
-    - -0.0909099320630734
-    - -2.9122389050746538
-    - 3.4992555471877287
-    - 0.19921530885381208
-    - 0.11948433594514377
-    - 0.05521182912651803
-    - -0.06477558443298831
-    - -0.46491319177552315
-    - -0.2875081095231113
-    - 0.02478889488493636
-    - -0.6611442867800106
-    - -0.02182632555465959
-    - -0.058150591127428305
-    - -0.13327639287699666
-    - -0.026050501603590372
-    - 0.4416328360959743
-    - 0.059252714545475975
-    - 1.0331115880462531
-    - 0.3299576403974687
-    - 0.14627968840649738
-    - 0.2542435926261602
-    - -0.02875238839120638
-    - 0.3073998352685304
-    - 0.007345524721595848
-    - 0.16329418788187178
-    - 0.022922756459155803
-    - -0.9945154865540637
-    - 0.09722888283445029
-    - 0.006120700640015194
-    - 0.267490459423732
-    - -0.37712631997648743
-    - -0.028808844040313093
-    - -0.010911716239251853
-    - 0.04748532243333308
-    - 0.07065551837174419
-    - -0.005623170912079646
-    - -0.4183629186070394
-    - 0.1587531899416975
-    - 0.24786178562406977
-    - -0.010296227233123158
-    - 0.08398563162185999
-    - 0.04404951935178148
-    - 0.1790576852022018
-    - 0.016523307663416358
-    - -0.012066328651788645
-    - -0.0036281028656509314
-    - -0.03188703082127178
-    - -0.8397003818086168
-    - -0.5114361051942494
-    - 0.01529330737193723
+    - -0.09985269469309267
+    - -2.3210993171895975
+    - 2.8487241498069524
+    - 0.11511896759736856
+    - 0.133989127793208
+    - 0.1496187670220528
+    - -0.056420647097352894
+    - -0.4361599601328714
+    - -0.28371689500640096
+    - 0.022700680164372804
+    - -0.00012909645804901407
+    - -0.03381408275274439
+    - -0.053973804669242446
+    - -0.11802059383584679
+    - -0.026939069190020187
+    - 0.45672636835421976
+    - 0.10023100205924884
+    - 1.0330506203439551
+    - 0.31602485773331745
+    - 0.13091665479681733
+    - 0.26231879700491556
+    - -0.030322657429445617
+    - 0.31808309073989055
+    - 0.009532328246912235
+    - 0.13775315184535797
+    - 0.007902456105744821
+    - -0.9873162742085952
+    - 0.08502100345510766
+    - 0.013869404375302938
+    - 0.2619634767727045
+    - -0.2946639902635551
+    - -0.02579346115605456
+    - -0.010921667673523844
+    - 0.057896894685370105
+    - 0.0966367891249536
+    - -0.0031144593575714434
+    - -0.42215227400867866
+    - 0.1464279368397236
+    - 0.2616827182562833
+    - -0.009592000655603297
+    - 0.09348697016547625
+    - 0.04759245893789415
+    - 0.19694780024000264
+    - 0.004258042564886606
+    - 0.0026165158990290845
+    - -0.0023381044051006554
+    - -0.028338141976922606
+    - -0.8714237753064493
+    - -0.5298960804572216
+    - 0.012431540763982687
     max_iter: null
     mct_intx_ops: null
     model_expression: 'no_car:walk_nearest_library + zones_logsum_pop_high_income
@@ -92,85 +92,79 @@ saved_object:
     out_column: null
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
-        Dep. Var.:                chosen   No. Observations:          4,937\nModel:\
-        \         Multinomial Logit   Df Residuals:              4,887\nMethod:  \
+        Dep. Var.:                chosen   No. Observations:          4,933\nModel:\
+        \         Multinomial Logit   Df Residuals:              4,883\nMethod:  \
         \     Maximum Likelihood   Df Model:                     50\nDate:       \
-        \          2022-11-09   Pseudo R-squ.:             0.267\nTime:          \
-        \            18:12   Pseudo R-bar-squ.:         0.264\nAIC:              \
-        \    28,427.581   Log-Likelihood:      -14,163.790\nBIC:                 \
-        \ 28,752.806   LL-Null:             -19,313.658\n=========================================================================================================\n\
-        \                                                      coef       std err\
-        \         z     P>|z|   Conf. Int.\n---------------------------------------------------------------------------------------------------------\n\
-        no_car:walk_nearest_library                        -0.0909         0.155 \
-        \   -0.585     0.559             \nzones_logsum_pop_high_income          \
-        \             -2.9122         0.445    -6.548     0.000             \nzones_logsum_job_high_income\
-        \                        3.4993         0.449     7.788     0.000        \
-        \     \nmid_income:zones_logsum_pop_mid_income              0.1992       \
-        \  0.363     0.549     0.583             \nno_car:bike_nearest_library   \
-        \                      0.1195         0.185     0.647     0.518          \
-        \   \nmid_income:zones_logsum_job_mid_income              0.0552         0.356\
-        \     0.155     0.877             \nbuilding_type_id_is_84               \
-        \              -0.0648         0.040    -1.630     0.103             \nbuilding_type_id_is_81\
-        \                             -0.4649         0.041   -11.318     0.000  \
-        \           \nno_car:walk_nearest_hospital                       -0.2875 \
-        \  165,105.758    -0.000     1.000             \nno_car:walk_nearest_grocery\
-        \                         0.0248         0.178     0.139     0.889       \
-        \      \nno_car:walk_nearest_healthcenter                   -0.6611    58,620.671\
-        \    -0.000     1.000             \nis_senior:walk_nearest_library       \
-        \              -0.0218         0.022    -0.994     0.320             \nno_car:bike_nearest_grocery\
-        \                        -0.0582         0.017    -3.389     0.001       \
-        \      \nbuilding_type_id_is_82                             -0.1333      \
-        \   0.020    -6.626     0.000             \nhas_workers:nodes_drv_log_sum_15min_jobs\
-        \           -0.0261         0.024    -1.064     0.287             \nnodes_walk_ave_lot_sqft\
-        \                             0.4416         0.017    26.010     0.000   \
-        \          \nlow_income:zones_logsum_pop_low_income              0.0593  \
-        \       0.204     0.291     0.771             \nnodes_walk_population    \
-        \                           1.0331         0.056    18.368     0.000     \
-        \        \nis_senior:nodes_walk_percent_senior_hhs             0.3300    \
-        \     0.018    18.162     0.000             \nmid_income:nodes_walk_percent_mid_income\
-        \            0.1463         0.024     6.091     0.000             \nhigh_income:nodes_walk_percent_high_income\
-        \          0.2542         0.017    14.866     0.000             \nno_car:walk_nearest_park\
-        \                           -0.0288         0.018    -1.621     0.105    \
-        \         \nlow_income:nodes_walk_percent_low_income            0.3074   \
-        \      0.016    19.372     0.000             \nln_income:improvement_value\
-        \                         0.0073         0.009     0.803     0.422       \
-        \      \nlow_income:zones_logsum_job_low_income              0.1633      \
-        \   0.199     0.822     0.411             \nnodes_walk_ave_unit_sqft     \
-        \                       0.0229         0.020     1.158     0.247         \
-        \    \nparcels_total_units                                -0.9945        \
-        \ 0.062   -16.171     0.000             \nis_race2:nodes_walk_percent_race2\
-        \                   0.0972         0.005    20.641     0.000             \n\
-        has_workers:nodes_drv_log_sum_45min_jobs            0.0061         0.040 \
-        \    0.154     0.877             \nhas_children:nodes_walk_percent_hh_with_children\
-        \    0.2675         0.017    15.480     0.000             \nzones_logsum_job_low_income\
-        \                        -0.3771         0.082    -4.606     0.000       \
-        \      \nhas_children:nodes_drv_elem_school_perf            -0.0288      \
-        \   0.015    -1.923     0.055             \nhas_workers:nodes_drv_log_sum_30min_jobs\
-        \           -0.0109         0.043    -0.257     0.798             \nln_income:sqft_price_res\
-        \                            0.0475         0.014     3.415     0.001    \
-        \         \nis_race4:nodes_walk_percent_race4                   0.0707   \
-        \      0.005    14.874     0.000             \nno_car:walk_nearest_urgentcare\
-        \                     -0.0056         0.009    -0.625     0.532          \
-        \   \ndrv_nearest_urgentcare                             -0.4184         0.028\
-        \   -15.160     0.000             \nis_large:nodes_walk_percent_large_hhs\
-        \               0.1588         0.009    16.985     0.000             \nis_young:nodes_walk_percent_young_hhs\
-        \               0.2479         0.013    18.934     0.000             \nln_income:sqft_per_unit\
-        \                            -0.0103         0.024    -0.429     0.668   \
-        \          \nhas_cars:drv_nearest_grocery                        0.0840  \
-        \       0.024     3.553     0.000             \nis_race3:nodes_walk_race_3_hhs\
-        \                      0.0440         0.009     5.149     0.000          \
-        \   \nhigh_income:zones_logsum_job_high_income            0.1791         0.048\
-        \     3.751     0.000             \nis_senior:walk_nearest_grocery       \
-        \               0.0165         0.165     0.100     0.920             \nis_senior:walk_nearest_hospital\
-        \                    -0.0121    22,075.102    -0.000     1.000           \
-        \  \nis_senior:walk_nearest_healthcenter                -0.0036     7,837.748\
-        \    -0.000     1.000             \ndrv_nearest_grocery                  \
-        \              -0.0319         0.026    -1.229     0.219             \nzones_transit_jobs_50min\
-        \                           -0.8397         0.048   -17.537     0.000    \
-        \         \nnodes_walk_log_sum_nonresidential_units            -0.5114   \
-        \      0.027   -18.834     0.000             \nln_income:nodes_walk_ave_unit_sqft\
-        \                  0.0153         0.026     0.579     0.562             \n\
-        ========================================================================================================="
+        \          2022-11-17   Pseudo R-squ.:             0.266\nTime:          \
+        \            18:02   Pseudo R-bar-squ.:         0.264\nAIC:              \
+        \    28,417.809   Log-Likelihood:      -14,158.904\nBIC:                 \
+        \ 28,742.994   LL-Null:             -19,298.009\n=====================================================================================================\n\
+        \                                                      coef   std err    \
+        \     z     P>|z|   Conf. Int.\n-----------------------------------------------------------------------------------------------------\n\
+        no_car:walk_nearest_library                        -0.0999     0.188    -0.531\
+        \     0.595             \nzones_logsum_pop_high_income                   \
+        \    -2.3211     0.445    -5.213     0.000             \nzones_logsum_job_high_income\
+        \                        2.8487     0.450     6.327     0.000            \
+        \ \nmid_income:zones_logsum_pop_mid_income              0.1151     0.364 \
+        \    0.316     0.752             \nno_car:bike_nearest_library           \
+        \              0.1340     0.197     0.680     0.497             \nmid_income:zones_logsum_job_mid_income\
+        \              0.1496     0.358     0.418     0.676             \nbuilding_type_id_is_84\
+        \                             -0.0564     0.040    -1.404     0.160      \
+        \       \nbuilding_type_id_is_81                             -0.4362     0.041\
+        \   -10.515     0.000             \nno_car:walk_nearest_hospital         \
+        \              -0.2837     5.834    -0.049     0.961             \nno_car:walk_nearest_grocery\
+        \                         0.0227     0.163     0.140     0.889           \
+        \  \nno_car:walk_nearest_healthcenter                   -0.0001     0.189\
+        \    -0.001     0.999             \nis_senior:walk_nearest_library       \
+        \              -0.0338     0.025    -1.375     0.169             \nno_car:bike_nearest_grocery\
+        \                        -0.0540     0.017    -3.158     0.002           \
+        \  \nbuilding_type_id_is_82                             -0.1180     0.020\
+        \    -5.854     0.000             \nhas_workers:nodes_drv_log_sum_15min_jobs\
+        \           -0.0269     0.024    -1.104     0.270             \nnodes_walk_ave_lot_sqft\
+        \                             0.4567     0.017    26.256     0.000       \
+        \      \nlow_income:zones_logsum_pop_low_income              0.1002     0.202\
+        \     0.496     0.620             \nnodes_walk_population                \
+        \               1.0331     0.056    18.306     0.000             \nis_senior:nodes_walk_percent_senior_hhs\
+        \             0.3160     0.018    17.457     0.000             \nmid_income:nodes_walk_percent_mid_income\
+        \            0.1309     0.024     5.486     0.000             \nhigh_income:nodes_walk_percent_high_income\
+        \          0.2623     0.017    15.365     0.000             \nno_car:walk_nearest_park\
+        \                           -0.0303     0.018    -1.684     0.092        \
+        \     \nlow_income:nodes_walk_percent_low_income            0.3181     0.016\
+        \    20.324     0.000             \nln_income:improvement_value          \
+        \               0.0095     0.009     1.061     0.289             \nlow_income:zones_logsum_job_low_income\
+        \              0.1378     0.197     0.700     0.484             \nnodes_walk_ave_unit_sqft\
+        \                            0.0079     0.020     0.392     0.695        \
+        \     \nparcels_total_units                                -0.9873     0.062\
+        \   -16.016     0.000             \nis_race2:nodes_walk_percent_race2    \
+        \               0.0850     0.004    20.411     0.000             \nhas_workers:nodes_drv_log_sum_45min_jobs\
+        \            0.0139     0.040     0.350     0.727             \nhas_children:nodes_walk_percent_hh_with_children\
+        \    0.2620     0.017    15.069     0.000             \nzones_logsum_job_low_income\
+        \                        -0.2947     0.082    -3.607     0.000           \
+        \  \nhas_children:nodes_drv_elem_school_perf            -0.0258     0.015\
+        \    -1.720     0.085             \nhas_workers:nodes_drv_log_sum_30min_jobs\
+        \           -0.0109     0.042    -0.257     0.797             \nln_income:sqft_price_res\
+        \                            0.0579     0.014     4.149     0.000        \
+        \     \nis_race4:nodes_walk_percent_race4                   0.0966     0.006\
+        \    17.187     0.000             \nno_car:walk_nearest_urgentcare       \
+        \              -0.0031     0.003    -0.976     0.329             \ndrv_nearest_urgentcare\
+        \                             -0.4222     0.028   -15.242     0.000      \
+        \       \nis_large:nodes_walk_percent_large_hhs               0.1464     0.009\
+        \    15.931     0.000             \nis_young:nodes_walk_percent_young_hhs\
+        \               0.2617     0.013    19.502     0.000             \nln_income:sqft_per_unit\
+        \                            -0.0096     0.024    -0.399     0.690       \
+        \      \nhas_cars:drv_nearest_grocery                        0.0935     0.024\
+        \     3.954     0.000             \nis_race3:nodes_walk_race_3_hhs       \
+        \               0.0476     0.009     5.493     0.000             \nhigh_income:zones_logsum_job_high_income\
+        \            0.1969     0.048     4.140     0.000             \nis_senior:walk_nearest_grocery\
+        \                      0.0043     0.152     0.028     0.978             \n\
+        is_senior:walk_nearest_hospital                     0.0026     5.103     0.001\
+        \     1.000             \nis_senior:walk_nearest_healthcenter            \
+        \    -0.0023     0.142    -0.016     0.987             \ndrv_nearest_grocery\
+        \                                -0.0283     0.026    -1.092     0.275   \
+        \          \nzones_transit_jobs_50min                           -0.8714  \
+        \   0.048   -18.182     0.000             \nnodes_walk_log_sum_nonresidential_units\
+        \            -0.5299     0.027   -19.617     0.000             \nln_income:nodes_walk_ave_unit_sqft\
+        \                  0.0124     0.026     0.473     0.636             \n====================================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9
