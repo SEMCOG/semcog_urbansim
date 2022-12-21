@@ -147,32 +147,31 @@ def make_indicators(tab, geo_id):
 
     for i in [
         11,
-        12,
         13,
         14,
         21,
-        22,
         23,
-        24,
-        25,
-        26,
         31,
         32,
         33,
         41,
         42,
-        43,
         51,
         52,
         53,
         61,
-        62,
+        63,
+        65,
         71,
         81,
         82,
         83,
         84,
-        99,
+        91,
+        92,
+        93,
+        94,
+        95,
     ]:
         make_building_sqft_type(i)
 
@@ -547,40 +546,53 @@ def upload_whatnots_to_postgres(run_name, whatnots):
     whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
     return
 
+
 def upload_whatnots_to_carto(run_name, whatnots):
     ### code snippet below is from /home/da/share/da/Staff/Finkleman/carto_whatnot_import_snippet.py
-    cred_path = 'carto_cred.json'
-    with open(cred_path, 'r') as f:
+    cred_path = "carto_cred.json"
+    with open(cred_path, "r") as f:
         cred = json.load(f)
-    api_key = cred['api_key']
+    api_key = cred["api_key"]
     # https://github.com/CartoDB/carto-python
     # pip install cartoframes
-    run_number = run_name[3:] #grab this from the the log file or somewhere else
-    tablename = 'whatnots_' + run_number
+    run_number = run_name[3:]  # grab this from the the log file or somewhere else
+    tablename = "whatnots_" + run_number
 
-    #upload to carto
+    # upload to carto
     set_default_credentials(cred_path)
-    to_carto(whatnots.reset_index(), tablename, if_exists='replace')
+    to_carto(whatnots.reset_index(), tablename, if_exists="replace")
 
-    #make get requests to the datasets page so that the privacy can update correctly
-    datasets_page = 'https://semcogmaps.carto.com/u/semcog/api/v1/viz//?exclude_shared=false&per_page=12&shared=no&locked=false&only_liked=false&deepInsights=false&types=table&page=1&order=favorited,updated_at&order_direction=desc,desc&with_dependent_visualizations=10&load_do_totals=true&api_key={0}'.format(api_key)
+    # make get requests to the datasets page so that the privacy can update correctly
+    datasets_page = "https://semcogmaps.carto.com/u/semcog/api/v1/viz//?exclude_shared=false&per_page=12&shared=no&locked=false&only_liked=false&deepInsights=false&types=table&page=1&order=favorited,updated_at&order_direction=desc,desc&with_dependent_visualizations=10&load_do_totals=true&api_key={0}".format(
+        api_key
+    )
     get1 = requests.get(datasets_page)
     get2 = requests.get(datasets_page)
     get3 = requests.get(datasets_page)
     sleep(10)
     print(get3.text)
-    update_privacy_table(tablename, 'link') #so that it can be view publicly
+    update_privacy_table(tablename, "link")  # so that it can be view publicly
 
-    #add three indexes using the sql api, will need to add more to this when we add in the school district data
-    index_query = '''CREATE INDEX IF NOT EXISTS w{0}_indicator_zone_id_idx ON semcog.{0} USING btree (indicator, zone_id); CREATE INDEX IF NOT EXISTS w{0}_indicator_city_id_idx ON semcog.{0} USING btree (indicator, city_id);CREATE INDEX IF NOT EXISTS w{0}_indicator_large_area_id_idx ON semcog.{0} USING btree (indicator, large_area_id);'''.format(tablename)
-    url = '''http://semcog.cartodb.com/api/v2/sql?q={0}&api_key={1}'''.format(index_query, api_key)
+    # add three indexes using the sql api, will need to add more to this when we add in the school district data
+    index_query = """CREATE INDEX IF NOT EXISTS w{0}_indicator_zone_id_idx ON semcog.{0} USING btree (indicator, zone_id); CREATE INDEX IF NOT EXISTS w{0}_indicator_city_id_idx ON semcog.{0} USING btree (indicator, city_id);CREATE INDEX IF NOT EXISTS w{0}_indicator_large_area_id_idx ON semcog.{0} USING btree (indicator, large_area_id);""".format(
+        tablename
+    )
+    url = """http://semcog.cartodb.com/api/v2/sql?q={0}&api_key={1}""".format(
+        index_query, api_key
+    )
     create_index = requests.post(url)
 
     # added tablename to tables_of_whatnot
-    add_tablename_sql = """INSERT INTO tables_of_whatnot (table_name) SELECT '%s' WHERE NOT EXISTS (SELECT table_name FROM tables_of_whatnot WHERE table_name = '%s');"""%(tablename, tablename)
-    url = '''http://semcog.cartodb.com/api/v2/sql?q={0}&api_key={1}'''.format(add_tablename_sql, api_key)
+    add_tablename_sql = (
+        """INSERT INTO tables_of_whatnot (table_name) SELECT '%s' WHERE NOT EXISTS (SELECT table_name FROM tables_of_whatnot WHERE table_name = '%s');"""
+        % (tablename, tablename)
+    )
+    url = """http://semcog.cartodb.com/api/v2/sql?q={0}&api_key={1}""".format(
+        add_tablename_sql, api_key
+    )
     add_tablename = requests.post(url)
     return
+
 
 def main(run_name):
     outdir = run_name.replace(".h5", "")
@@ -774,32 +786,31 @@ def main(run_name):
         "res_sqft",
         "nonres_sqft",
         "building_sqft_type_11",
-        "building_sqft_type_12",
         "building_sqft_type_13",
         "building_sqft_type_14",
         "building_sqft_type_21",
-        "building_sqft_type_22",
         "building_sqft_type_23",
-        "building_sqft_type_24",
-        "building_sqft_type_25",
-        "building_sqft_type_26",
         "building_sqft_type_31",
         "building_sqft_type_32",
         "building_sqft_type_33",
         "building_sqft_type_41",
         "building_sqft_type_42",
-        "building_sqft_type_43",
         "building_sqft_type_51",
         "building_sqft_type_52",
         "building_sqft_type_53",
         "building_sqft_type_61",
-        "building_sqft_type_62",
+        "building_sqft_type_63",
+        "building_sqft_type_65",
         "building_sqft_type_71",
         "building_sqft_type_81",
         "building_sqft_type_82",
         "building_sqft_type_83",
         "building_sqft_type_84",
-        "building_sqft_type_99",
+        "building_sqft_type_91",
+        "building_sqft_type_92",
+        "building_sqft_type_93",
+        "building_sqft_type_94",
+        "building_sqft_type_95",
         "res_vacancy_rate",
         "nonres_vacancy_rate",
         "incomes_1",
