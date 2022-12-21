@@ -1,38 +1,29 @@
 import orca
 import shutil
-
+import sys
 import os
 import models, utils
 from urbansim.utils import misc, networks
 import time
 import output_indicators
 
+
+# check disk space, need at least 10GB
+total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
+print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB")
+if free < 10:
+    print(f"Free space is too small. Only {free} GB available. Stop running")
+    sys.exit()
+
+start_time = time.time()
+
 data_out = utils.get_run_filename()
 print(data_out)
 
-import sys
-
-f = os.statvfs("/home")
-freespace = f.f_bavail * f.f_bsize / (1048576 * 1024.0)
-print("freespace:", freespace)
-if freespace < 10:
-    print(freespace, "GB available. Disk space is too small, stop running")
-    sys.exit()
-
-start_time = time.ctime()
-
-# orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
-    [
-        "scheduled_demolition_events",
-        "scheduled_development_events",
-        "refiner", 
-        # "build_networks_2050", 
-        # "neighborhood_vars",
-    ]
-    # + orca.get_injectable("repm_step_names")
-    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
-)  # increase feasibility based on projected income
+    ["scheduled_demolition_events", "scheduled_development_events", "refiner",],
+    iter_vars=list(range(2020, 2021)),  # run base year on 2020
+)
 
 orca.run(
     [
@@ -43,7 +34,7 @@ orca.run(
         "scheduled_development_events",
         "refiner",
         "households_transition",
-        "fix_lpr", # await data
+        "fix_lpr",  # await data
         "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
@@ -53,9 +44,11 @@ orca.run(
         "update_sp_filter",
     ]
     + orca.get_injectable("repm_step_names")
-    + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
+    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
     + ["mcd_hu_sampling"]  # Hack to make more feasibility
-    + orca.get_injectable("hlcm_step_names") # disable for now, wait until new estimation
+    + orca.get_injectable(
+        "hlcm_step_names"
+    )  # disable for now, wait until new estimation
     + orca.get_injectable("elcm_step_names")
     + [
         "elcm_home_based",
@@ -64,7 +57,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2020, 2051)),
+    iter_vars=list(range(2021, 2051)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -119,6 +112,22 @@ orca.run(
 )
 
 output_indicators.main(data_out)
+
+outdir = data_out.replace(".h5", "")
+if not (os.path.exists(outdir)):
+    os.makedirs(outdir)
+with open(os.path.join(outdir, "run_log.txt"), "a") as runtxt:
+    runtxt.write(
+        (
+            f"Run number: {outdir.split('/')[-1]}\n"
+            f"Data: {orca.get_injectable('HDF_data')}\n"
+            f"Seed: {orca.get_injectable('random_seed')}\n"
+            f"Start time: {time.ctime(start_time)}\n"
+            f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
+        )
+    )
+
+
 print("Simulation started at %s, finished at %s. " % (start_time, time.ctime()))
 
 # dir_out = data_out.replace('.h5', '')

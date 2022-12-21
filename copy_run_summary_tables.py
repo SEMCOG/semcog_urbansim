@@ -1,7 +1,7 @@
 import os
 import sys
 
-import shutil 
+import shutil
 from urbansim.utils import misc, networks
 
 SUMMARY_EXPORT_PATH = "/home/da/share/urbansim/RDF2050/model_runs"
@@ -18,7 +18,7 @@ for i in range(start_num, 1, -1):
 outdir = run_name.replace('.h5', '')
 folder_name = outdir.split('/')[-1]
 if not (os.path.exists(outdir)):
-	print("Summary tables folder not found, aborting..")	
+	print("Summary tables folder not found, aborting..")
 	sys.exit()
 
 # this line is running really slow, consider other options

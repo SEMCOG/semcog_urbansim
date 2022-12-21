@@ -113,7 +113,7 @@ def filter_table(table, filter_series, ignore=None):
 	return apply_filter_query(table, filters)
 
 run_folder = "/home/da/semcog_urbansim/runs"
-run_num = "run325"
+run_num = "run336"
 
 hdf = pd.HDFStore(os.path.join(run_folder, '%s.h5'%run_num), 'r')
 
@@ -165,7 +165,6 @@ app.layout = html.Div(children=[
 		# children=[dcc.Graph(id=str(mcd), figure=px.line(pd.DataFrame({"mcd_total": mcd_total.loc[mcd], "simulated":hh_by_mcd_year.loc[mcd]}), title=mcd)) for mcd, row in mcd_total.iloc[:].iterrows()]
 		children=[]
 	)
-    
 ])
 
 CACHE_CONFIG = {
@@ -186,7 +185,6 @@ def global_store(value):
     print(f'Computing value with {value}')
     time.sleep(3)
     return hh_by_mcd_year[hh_by_mcd_year.index.isin(semmcds[semmcds.large_area_id==value].index)], hu_by_mcd_year[hu_by_mcd_year.index.isin(semmcds[semmcds.large_area_id==value].index)]
-	
 
 @app.callback(
     Output(component_id='charts', component_property='children'),
