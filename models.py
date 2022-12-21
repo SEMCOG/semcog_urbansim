@@ -1525,94 +1525,40 @@ def run_developer(
     )
 
 
-@orca.step("residential_developer")
-def residential_developer(households, parcels, target_vacancies):
-    target_vacancies = target_vacancies.to_frame()
-    target_vacancies = target_vacancies[
-        target_vacancies.year == orca.get_injectable("year")
-    ]
-    orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "large_area_id", "building_type_id"]
-    )
-    for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
-        la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
-        target_vacancy = float(
-            target_vacancies[
-                target_vacancies.large_area_id == lid
-            ].res_target_vacancy_rate
-        )
-        num_agents = (households.large_area_id == lid).sum()
-        num_units = la_orig_buildings.residential_units.sum()
-
-        print("Number of agents: {:,}".format(num_agents))
-        print("Number of agent spaces: {:,}".format(int(num_units)))
-        assert target_vacancy < 1.0
-        target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-        print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
-        print(
-            "Target vacancy = {:.2f}, target of new units = {:,}".format(
-                target_vacancy, target_units
-            )
-        )
-
-        register_btype_distributions(la_orig_buildings)
-        run_developer(
-            target_units,
-            lid,
-            "residential",
-            orca.get_table("buildings"),
-            "residential_units",
-            parcels.parcel_size,
-            parcels.ave_unit_size,
-            parcels.total_units,
-            "res_developer.yaml",
-            add_more_columns_callback=add_extra_columns_res,
-        )
-
-
 # @orca.step("residential_developer")
-# def residential_developer(
-#     households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
-# ):
-#     # get current year
-#     year = orca.get_injectable("year")
-#     target_vacancies = target_vacancies_mcd.to_frame()
-#     target_vacancies = target_vacancies[str(year)]
+# def residential_developer(households, parcels, target_vacancies):
+#     target_vacancies = target_vacancies.to_frame()
+#     target_vacancies = target_vacancies[
+#         target_vacancies.year == orca.get_injectable("year")
+#     ]
 #     orig_buildings = orca.get_table("buildings").to_frame(
-#         ["residential_units", "semmcd", "building_type_id"]
+#         ["residential_units", "large_area_id", "building_type_id"]
 #     )
-#     # the mcd_total for year and year-1
-#     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
-#     debug_res_developer = debug_res_developer.to_frame()
-#     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
-#         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
-#         # handle missing mcdid
-#         if mcdid not in mcd_total.index:
-#             continue
-#         target_vacancy = float(target_vacancies[mcdid])
-#         # current hh from hh table
-#         cur_agents = (households.semmcd == mcdid).sum()
-#         # target hh from mcd_total table
-#         target_agents = mcd_total.loc[mcdid]
-#         # number of current total housing units
-#         num_units = mcd_orig_buildings.residential_units.sum()
+#     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
+#         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
+#         target_vacancy = float(
+#             target_vacancies[
+#                 target_vacancies.large_area_id == lid
+#             ].res_target_vacancy_rate
+#         )
+#         num_agents = (households.large_area_id == lid).sum()
+#         num_units = la_orig_buildings.residential_units.sum()
 
-#         print("Number of current agents: {:,}".format(cur_agents))
-#         print("Number of target agents: {:,}".format(target_agents))
+#         print("Number of agents: {:,}".format(num_agents))
 #         print("Number of agent spaces: {:,}".format(int(num_units)))
-#         print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
 #         assert target_vacancy < 1.0
-#         target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+#         target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+#         print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
 #         print(
 #             "Target vacancy = {:.2f}, target of new units = {:,}".format(
 #                 target_vacancy, target_units
 #             )
 #         )
 
-#         register_btype_distributions(mcd_orig_buildings)
-#         units_added, parcels_idx_to_update = run_developer(
+#         register_btype_distributions(la_orig_buildings)
+#         run_developer(
 #             target_units,
-#             mcdid,
+#             lid,
 #             "residential",
 #             orca.get_table("buildings"),
 #             "residential_units",
@@ -1622,28 +1568,82 @@ def residential_developer(households, parcels, target_vacancies):
 #             "res_developer.yaml",
 #             add_more_columns_callback=add_extra_columns_res,
 #         )
-#         # update pct_undev to 100 if theres only one building in the parcel
-#         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-#         # update parcels table
-#         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-#         # TODO: update parcels.pct_undev to 100 for units_added
-#         debug_res_developer = debug_res_developer.append(
-#             {
-#                 "year": year,
-#                 "mcd": mcdid,
-#                 "target_units": target_units,
-#                 "units_added": units_added,
-#             },
-#             ignore_index=True,
-#         )
-#         if units_added < target_units:
-#             print(
-#                 "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
-#                 % (mcdid, target_units, int(units_added))
-#             )
-#     # log the target and result in this year's run
-#     orca.add_table("debug_res_developer", debug_res_developer)
+
+@orca.step("residential_developer")
+def residential_developer(
+    households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
+):
+    # get current year
+    year = orca.get_injectable("year")
+    target_vacancies = target_vacancies_mcd.to_frame()
+    target_vacancies = target_vacancies[str(year)]
+    orig_buildings = orca.get_table("buildings").to_frame(
+        ["residential_units", "semmcd", "building_type_id"]
+    )
+    # the mcd_total for year and year-1
+    mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+    debug_res_developer = debug_res_developer.to_frame()
+    for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
+        mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
+        # handle missing mcdid
+        if mcdid not in mcd_total.index:
+            continue
+        target_vacancy = float(target_vacancies[mcdid])
+        # current hh from hh table
+        cur_agents = (households.semmcd == mcdid).sum()
+        # target hh from mcd_total table
+        target_agents = mcd_total.loc[mcdid]
+        # number of current total housing units
+        num_units = mcd_orig_buildings.residential_units.sum()
+
+        print("Number of current agents: {:,}".format(cur_agents))
+        print("Number of target agents: {:,}".format(target_agents))
+        print("Number of agent spaces: {:,}".format(int(num_units)))
+        print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
+        assert target_vacancy < 1.0
+        target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+        print(
+            "Target vacancy = {:.2f}, target of new units = {:,}".format(
+                target_vacancy, target_units
+            )
+        )
+
+        register_btype_distributions(mcd_orig_buildings)
+        units_added, parcels_idx_to_update = run_developer(
+            target_units,
+            mcdid,
+            "residential",
+            orca.get_table("buildings"),
+            "residential_units",
+            parcels.parcel_size,
+            parcels.ave_unit_size,
+            parcels.total_units,
+            "res_developer.yaml",
+            add_more_columns_callback=add_extra_columns_res,
+        )
+        # update pct_undev to 100 if theres only one building in the parcel
+        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+        # update parcels table
+        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+        # TODO: update parcels.pct_undev to 100 for units_added
+        debug_res_developer = debug_res_developer.append(
+            {
+                "year": year,
+                "mcd": mcdid,
+                "target_units": target_units,
+                "units_added": units_added,
+            },
+            ignore_index=True,
+        )
+        if units_added < target_units:
+            print(
+                "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+                % (mcdid, target_units, int(units_added))
+            )
+    # log the target and result in this year's run
+    orca.add_table("debug_res_developer", debug_res_developer)
 
 
 @orca.step()
