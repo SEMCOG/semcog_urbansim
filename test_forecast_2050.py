@@ -106,6 +106,7 @@ orca.run(
         "persons",
         "group_quarters",
         "dropped_buildings",
+        "hu_sampling_bg_summary",
     ],
     out_interval=1,
     compress=True,

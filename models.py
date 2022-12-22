@@ -156,7 +156,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             city_units[["geoid"]]
             .join(bg_trend_norm_by_bg, how="left", on="geoid")
             .bg_trend
-        )
+        ).fillna(0)
         # sum of normalized score
         normalized_score = (-building_age_norm) + bg_trend_norm
         # sorted by the score from high to low
@@ -177,6 +177,8 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         new_units = pd.concat([new_units, selected_units])
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
+    # !!important!! clean-up mcd_model_quota from last year before updating it
+    buildings.update_col_from_series("mcd_model_quota", pd.Series(0, index=blds.index), cast=True)
     mcd_model_quota = pd.Series(0, index=blds.index)
     mcd_model_quota.loc[quota.index] = quota.values
     buildings.update_col_from_series("mcd_model_quota", mcd_model_quota, cast=True)
