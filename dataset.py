@@ -126,7 +126,7 @@ def buildings(store):
     sample = sample[~(sample.index.isin(store["households"].building_id))]
     # #35
     for c in sample.city_id.unique():
-        frac = 0.9 if c in cites else 0
+        frac = 0.8 if c in cites else 0
         # #35
         df.loc[
             sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
