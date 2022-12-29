@@ -111,6 +111,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             "building_age",
             "geoid",
             "mcd_model_quota",
+            "hu_filter",
         ]
     )
     vacant_units = blds[vacant_variable]
@@ -147,7 +148,9 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
         # sorted by year built
-        city_units = housing_units[housing_units.semmcd == city]
+        city_units = housing_units[(housing_units.semmcd == city) & (
+            # only sampling hu_filter == 0
+            housing_units.hu_filter == 0)]
         # building_age normalized
         building_age = city_units.building_age
         building_age_norm = (building_age - building_age.mean()) / building_age.std()
