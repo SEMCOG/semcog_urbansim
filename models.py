@@ -1,4 +1,5 @@
 import os
+import time
 import yaml
 import operator
 from multiprocessing import Pool
@@ -148,9 +149,14 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
         # sorted by year built
-        city_units = housing_units[(housing_units.semmcd == city) & (
-            # only sampling hu_filter == 0
-            housing_units.hu_filter == 0)]
+        city_units = housing_units[
+            (housing_units.semmcd == city)
+            & (
+                # only sampling hu_filter == 0
+                housing_units.hu_filter
+                == 0
+            )
+        ]
         # building_age normalized
         building_age = city_units.building_age
         building_age_norm = (building_age - building_age.mean()) / building_age.std()
@@ -181,7 +187,9 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
     # !!important!! clean-up mcd_model_quota from last year before updating it
-    buildings.update_col_from_series("mcd_model_quota", pd.Series(0, index=blds.index), cast=True)
+    buildings.update_col_from_series(
+        "mcd_model_quota", pd.Series(0, index=blds.index), cast=True
+    )
     mcd_model_quota = pd.Series(0, index=blds.index)
     mcd_model_quota.loc[quota.index] = quota.values
     buildings.update_col_from_series("mcd_model_quota", mcd_model_quota, cast=True)
@@ -446,7 +454,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(1)
+    pool = Pool(2)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
@@ -730,14 +738,20 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
     buildings = buildings.to_frame(
         buildings.local_columns + location_ids + ["gq_building"]
     )
-    dic_agent = {"jobs": jobs, "households": households, "group_quarters": group_quarters}
+    dic_agent = {
+        "jobs": jobs,
+        "households": households,
+        "group_quarters": group_quarters,
+    }
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
     assert refinements.action.isin(
         {"clone", "subtract_pop", "subtract", "add_pop", "add", "target_pop", "target"}
     ).all(), "Unknown action"
-    assert refinements.agents.isin({"jobs", "households", "group_quarters"}).all(), "Unknown agents"
+    assert refinements.agents.isin(
+        {"jobs", "households", "group_quarters"}
+    ).all(), "Unknown agents"
 
     def add_agents(
         agents, agents_pool, agent_expression, location_expression, number_of_agents
@@ -1699,6 +1713,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
+
 @orca.step()
 def update_sp_filter(buildings):
     # update sp_filter to -1 for selected building_types
@@ -1714,9 +1729,17 @@ def update_sp_filter(buildings):
         95: "Parking Garage",
     }
     updated_buildings = buildings.to_frame(buildings.local_columns)
-    print("Updating %s buildings sp_filter to -1" %
-          (updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes)].shape[0]))
-    updated_buildings.loc[updated_buildings.building_type_id.isin(selected_btypes), 'sp_filter'] = -1
+    print(
+        "Updating %s buildings sp_filter to -1"
+        % (
+            updated_buildings.loc[
+                updated_buildings.building_type_id.isin(selected_btypes)
+            ].shape[0]
+        )
+    )
+    updated_buildings.loc[
+        updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
+    ] = -1
     orca.add_table("buildings", updated_buildings)
 
 
@@ -1761,6 +1784,8 @@ def build_networks_2050(parcels):
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
     year = orca.get_injectable("year")
+    utils.run_log(f"\tyear: {year} | {time.ctime()}")
+
     # change travel data to 2030, enable when travel data 2030 is inplace
     if year == 2030:
         orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
@@ -1952,3 +1977,4 @@ def _print_number_unplaced(df, fieldname="building_id"):
     """
     counts = (df[fieldname] == -1).sum()
     print("Total currently unplaced: %d" % counts)
+
