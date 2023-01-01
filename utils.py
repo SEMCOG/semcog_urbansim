@@ -4,11 +4,16 @@ import numpy as np
 import orca
 import pandas as pd
 from sklearn.metrics import accuracy_score
-from urbansim.models import RegressionModel, SegmentedRegressionModel, \
-    MNLDiscreteChoiceModel, SegmentedMNLDiscreteChoiceModel, \
-    GrowthRateTransition
+from urbansim.models import (
+    RegressionModel,
+    SegmentedRegressionModel,
+    MNLDiscreteChoiceModel,
+    SegmentedMNLDiscreteChoiceModel,
+    GrowthRateTransition,
+)
 from urbansim.utils import misc
 import numbers
+import logging
 
 
 def get_run_filename():
@@ -17,25 +22,22 @@ def get_run_filename():
 
 def change_store(store_name):
     orca.add_injectable(
-        "store",
-        pd.HDFStore(os.path.join(misc.data_dir(), store_name), mode="r"))
+        "store", pd.HDFStore(os.path.join(misc.data_dir(), store_name), mode="r")
+    )
 
 
 def change_scenario(scenario):
-    assert scenario in orca.get_injectable("scenario_inputs"), \
-        "Invalid scenario name"
+    assert scenario in orca.get_injectable("scenario_inputs"), "Invalid scenario name"
     print("Changing scenario to '%s'" % scenario)
     orca.add_injectable("scenario", scenario)
 
 
 def conditional_upzone(scenario, attr_name, upzone_name):
     scenario_inputs = orca.get_injectable("scenario_inputs")
-    zoning_baseline = orca.get_table(
-        scenario_inputs["baseline"]["zoning_table_name"])
+    zoning_baseline = orca.get_table(scenario_inputs["baseline"]["zoning_table_name"])
     attr = zoning_baseline[attr_name]
     if scenario != "baseline":
-        zoning_scenario = orca.get_table(
-            scenario_inputs[scenario]["zoning_table_name"])
+        zoning_scenario = orca.get_table(scenario_inputs[scenario]["zoning_table_name"])
         upzone = zoning_scenario[upzone_name].dropna()
         attr = pd.concat([attr, upzone], axis=1).max(skipna=True, axis=1)
     return attr
@@ -43,6 +45,7 @@ def conditional_upzone(scenario, attr_name, upzone_name):
 
 def enable_logging():
     from urbansim.utils import logutil
+
     logutil.set_log_level(logutil.logging.INFO)
     logutil.log_to_stream()
 
@@ -57,8 +60,10 @@ def deal_with_nas(df):
         s_cnt = df[col].count()
         if df_cnt != s_cnt:
             fail = True
-            print("Found %d nas or inf (out of %d) in column %s" % \
-                  (df_cnt-s_cnt, df_cnt, col))
+            print(
+                "Found %d nas or inf (out of %d) in column %s"
+                % (df_cnt - s_cnt, df_cnt, col)
+            )
 
     assert not fail, "NAs were found in dataframe, please fix"
     return df
@@ -80,8 +85,9 @@ def fill_nas_from_config(dfname, df):
             val = df[fname].dropna().quantile()
         else:
             assert 0, "Fill type not found!"
-        print("Filling column {} with value {} ({} values)".\
-            format(fname, val, fill_cnt))
+        print(
+            "Filling column {} with value {} ({} values)".format(fname, val, fill_cnt)
+        )
         df[fname] = df[fname].fillna(val).astype(dtyp)
     return df
 
@@ -91,8 +97,7 @@ def to_frame(tables, cfg, additional_columns=[]):
     tables = [t for t in tables if t is not None]
     columns = misc.column_list(tables, cfg.columns_used()) + additional_columns
     if len(tables) > 1:
-        df = orca.merge_tables(target=tables[0].name,
-                               tables=tables, columns=columns)
+        df = orca.merge_tables(target=tables[0].name, tables=tables, columns=columns)
     else:
         df = tables[0].to_frame(columns)
     df = deal_with_nas(df)
@@ -101,12 +106,13 @@ def to_frame(tables, cfg, additional_columns=[]):
 
 def yaml_to_class(cfg):
     import yaml
+
     model_type = yaml.load(open(cfg), Loader=yaml.FullLoader)["model_type"]
     return {
         "regression": RegressionModel,
         "segmented_regression": SegmentedRegressionModel,
         "discretechoice": MNLDiscreteChoiceModel,
-        "segmented_discretechoice": SegmentedMNLDiscreteChoiceModel
+        "segmented_discretechoice": SegmentedMNLDiscreteChoiceModel,
     }[model_type]
 
 
@@ -116,15 +122,22 @@ def hedonic_simulate(cfg, tbl, nodes, out_fname):
     price_or_rent, _ = yaml_to_class(cfg).predict_from_cfg(df, cfg)
 
     if price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum() > 0:
-        print("Hedonic output %d nas or inf (out of %d) in column %s" % \
-              (price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(), len(price_or_rent), out_fname))
+        print(
+            "Hedonic output %d nas or inf (out of %d) in column %s"
+            % (
+                price_or_rent.replace([np.inf, -np.inf], np.nan).isnull().sum(),
+                len(price_or_rent),
+                out_fname,
+            )
+        )
     price_or_rent.loc[price_or_rent > 700] = 700
     price_or_rent.loc[price_or_rent < 1] = 1
     tbl.update_col_from_series(out_fname, price_or_rent, cast=True)
 
 
-def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
-                 supply_fname, vacant_fname):
+def lcm_simulate(
+    cfg, choosers, buildings, nodes, out_fname, supply_fname, vacant_fname
+):
     """
     Simulate the location choices for the specified choosers
 
@@ -155,20 +168,21 @@ def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
     cfg = misc.config(cfg)
 
     choosers_df = to_frame([choosers], cfg, additional_columns=[out_fname])
-    locations_df = to_frame([buildings, nodes], cfg,
-                            [supply_fname, vacant_fname])
+    locations_df = to_frame([buildings, nodes], cfg, [supply_fname, vacant_fname])
 
     available_units = buildings[supply_fname]
     vacant_units = buildings[vacant_fname]
 
     print("There are %d total available units" % available_units.sum())
     print("    and %d total choosers" % len(choosers))
-    print("    but there are %d overfull buildings" % \
-          len(vacant_units[vacant_units < 0]))
+    print(
+        "    but there are %d overfull buildings" % len(vacant_units[vacant_units < 0])
+    )
 
     vacant_units = vacant_units[vacant_units > 0]
-    units = locations_df.loc[np.repeat(vacant_units.index.values,
-                             vacant_units.values.astype('int'))].reset_index()
+    units = locations_df.loc[
+        np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
+    ].reset_index()
 
     print("    for a total of %d temporarily empty units" % vacant_units.sum())
     print("    in %d buildings total in the region" % len(vacant_units))
@@ -187,8 +201,9 @@ def lcm_simulate(cfg, choosers, buildings, nodes, out_fname,
     new_units = new_units.dropna()
 
     # go from units back to buildings
-    new_buildings = pd.Series(units.loc[new_units.values][out_fname].values,
-                              index=new_units.index)
+    new_buildings = pd.Series(
+        units.loc[new_units.values][out_fname].values, index=new_units.index
+    )
 
     choosers.update_col_from_series(out_fname, new_buildings, cast=True)
     _print_number_unplaced(choosers, out_fname)
@@ -203,10 +218,10 @@ def simple_relocation(choosers, relocation_rate, fieldname):
     _print_number_unplaced(choosers, fieldname)
 
     print("Assinging for relocation...")
-    chooser_ids = np.random.choice(choosers.index, size=int(relocation_rate *
-                                   len(choosers)), replace=False)
-    choosers.update_col_from_series(fieldname,
-                                    pd.Series(-1, index=chooser_ids))
+    chooser_ids = np.random.choice(
+        choosers.index, size=int(relocation_rate * len(choosers)), replace=False
+    )
+    choosers.update_col_from_series(fieldname, pd.Series(-1, index=chooser_ids))
 
     _print_number_unplaced(choosers, fieldname)
 
@@ -224,8 +239,7 @@ def simple_transition(tbl, rate, location_fname):
 
 
 def _print_number_unplaced(df, fieldname):
-    print("Total currently unplaced: %d" % \
-          df[fieldname].value_counts().get(-1, 0))
+    print("Total currently unplaced: %d" % df[fieldname].value_counts().get(-1, 0))
 
 
 def random_choices(model, choosers, alternatives):
@@ -247,7 +261,8 @@ def random_choices(model, choosers, alternatives):
     """
     probabilities = model.calculate_probabilities(choosers, alternatives)
     choices = np.random.choice(
-        probabilities.index, size=len(choosers), replace=True, p=probabilities.values)
+        probabilities.index, size=len(choosers), replace=True, p=probabilities.values
+    )
     return pd.Series(choices, index=choosers.index)
 
 
@@ -270,20 +285,23 @@ def unit_choices(model, choosers, alternatives):
         Mapping of chooser ID to alternative ID.
     """
     supply_variable, vacant_variable = model.supply_variable, model.vacant_variable
-    
+
     available_units = alternatives[supply_variable]
     vacant_units = alternatives[vacant_variable]
-    vacant_units = vacant_units[vacant_units.index.values >= 0]  ## must have positive index 
+    vacant_units = vacant_units[
+        vacant_units.index.values >= 0
+    ]  ## must have positive index
 
     print("There are %d total available units" % available_units.sum())
     print("    and %d total choosers" % len(choosers))
-    print("    but there are %d overfull alternatives" % \
-          len(vacant_units[vacant_units < 0]))
+    print(
+        "    but there are %d overfull alternatives"
+        % len(vacant_units[vacant_units < 0])
+    )
 
     vacant_units = vacant_units[vacant_units > 0]
 
-    indexes = np.repeat(vacant_units.index.values,
-                        vacant_units.values.astype('int'))
+    indexes = np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
     isin = pd.Series(indexes).isin(alternatives.index)
     missing = len(isin[isin == False])
     indexes = indexes[isin.values]
@@ -293,26 +311,25 @@ def unit_choices(model, choosers, alternatives):
     print("    in %d alternatives total in the region" % len(vacant_units))
 
     if missing > 0:
-        print("WARNING: %d indexes aren't found in the locations df -" % \
-            missing)
+        print("WARNING: %d indexes aren't found in the locations df -" % missing)
         print("    this is usually because of a few records that don't join ")
         print("    correctly between the locations df and the aggregations tables")
 
     print("There are %d total movers for this LCM" % len(choosers))
-    
+
     if len(choosers) > vacant_units.sum():
         print("WARNING: Not enough locations for movers")
         print("    reducing locations to size of movers for performance gain")
         choosers = choosers.head(vacant_units.sum())
-        
+
     choices = model.predict(choosers, units, debug=True)
 
     def identify_duplicate_choices(choices):
         choice_counts = choices.value_counts()
         return choice_counts[choice_counts > 1].index.values
 
-    if model.choice_mode == 'individual':
-        print('Choice mode is individual, so utilizing lottery choices.')
+    if model.choice_mode == "individual":
+        print("Choice mode is individual, so utilizing lottery choices.")
 
         chosen_multiple_times = identify_duplicate_choices(choices)
 
@@ -322,8 +339,9 @@ def unit_choices(model, choosers, alternatives):
             # Identify the choosers who keep their choice, and those who must
             # choose again.
             keep_choice = duplicate_choices.drop_duplicates()
-            rechoose = duplicate_choices[~duplicate_choices.index.isin(
-                                                           keep_choice.index)]
+            rechoose = duplicate_choices[
+                ~duplicate_choices.index.isin(keep_choice.index)
+            ]
 
             # Subset choices, units, and choosers to account for occupied
             # units and choosers who need to choose again.
@@ -336,8 +354,9 @@ def unit_choices(model, choosers, alternatives):
             choices = pd.concat([choices, next_choices])
             chosen_multiple_times = identify_duplicate_choices(choices)
 
-    return pd.Series(units.loc[choices.values][model.choice_column].values,
-                     index=choices.index)
+    return pd.Series(
+        units.loc[choices.values][model.choice_column].values, index=choices.index
+    )
 
 
 class SimulationChoiceModel(MNLDiscreteChoiceModel):
@@ -347,8 +366,16 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
     then add simulation parameters with set_simulation_params().
 
     """
-    def set_simulation_params(self, name, supply_variable, vacant_variable,
-                              choosers, alternatives, summary_alts_xref=None):
+
+    def set_simulation_params(
+        self,
+        name,
+        supply_variable,
+        vacant_variable,
+        choosers,
+        alternatives,
+        summary_alts_xref=None,
+    ):
         """
         Add simulation parameters as additional attributes.
         Parameters
@@ -401,7 +428,7 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             for all the choosers.
         """
         choosers, alternatives = self.calculate_model_variables()
-        
+
         # By convention, choosers are denoted by a -1 value in the choice column
         choosers = choosers[choosers[self.choice_column] == -1]
         print("%s agents are making a choice." % len(choosers))
@@ -410,15 +437,21 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             choices = choice_function(self, choosers, alternatives, **kwargs)
         else:
             choices = self.predict(choosers, alternatives, debug=True)
-        
+
         if save_probabilities:
             if not self.sim_pdf:
-                probabilities = self.calculate_probabilities(self, choosers, alternatives)
+                probabilities = self.calculate_probabilities(
+                    self, choosers, alternatives
+                )
             else:
-                probabilities = self.sim_pdf.reset_index().set_index('alternative_id')[0]
-            orca.add_injectable('probabilities_%s_%s' % (self.name, orca.get_injectable('iter_var')),
-                                probabilities)
-        
+                probabilities = self.sim_pdf.reset_index().set_index("alternative_id")[
+                    0
+                ]
+            orca.add_injectable(
+                "probabilities_%s_%s" % (self.name, orca.get_injectable("iter_var")),
+                probabilities,
+            )
+
         return choices
 
     def calculate_probabilities(self, choosers, alternatives):
@@ -436,7 +469,9 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             Mapping of alternative ID to probabilities.
         """
         probabilities = self.probabilities(choosers, alternatives)
-        probabilities = probabilities.reset_index().set_index('alternative_id')[0] # remove chooser_id col from idx
+        probabilities = probabilities.reset_index().set_index("alternative_id")[
+            0
+        ]  # remove chooser_id col from idx
         return probabilities
 
     def calculate_model_variables(self):
@@ -452,13 +487,25 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         """
         columns_used = self.columns_used() + [self.choice_column]
         choosers = orca.get_table(self.choosers).to_frame(columns_used)
-        
-        supply_column_names = [col for col in [self.supply_variable, self.vacant_variable] if col is not None]
-        alternatives = orca.get_table(self.alternatives).to_frame(columns_used + supply_column_names)
+
+        supply_column_names = [
+            col
+            for col in [self.supply_variable, self.vacant_variable]
+            if col is not None
+        ]
+        alternatives = orca.get_table(self.alternatives).to_frame(
+            columns_used + supply_column_names
+        )
         return choosers, alternatives
 
-    def score(self, scoring_function=accuracy_score, choosers=None,
-              alternatives=None, aggregate=False, apply_filter=True):
+    def score(
+        self,
+        scoring_function=accuracy_score,
+        choosers=None,
+        alternatives=None,
+        aggregate=False,
+        apply_filter=True,
+    ):
         """
         Calculate score for model.  Defaults to accuracy score, but other
         scoring functions can be provided.  Computed on all choosers/
@@ -493,8 +540,11 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         if apply_filter:
             choosers = choosers.query(self.choosers_predict_filters)
 
-        choosers = choosers[(~choosers[self.choice_column].isnull()) | (choosers[self.choice_column] != -1)]
-        observed_choices = choosers[self.choice_column].astype('int')
+        choosers = choosers[
+            (~choosers[self.choice_column].isnull())
+            | (choosers[self.choice_column] != -1)
+        ]
+        observed_choices = choosers[self.choice_column].astype("int")
         predicted_choices = random_choices(self, choosers, alternatives)
 
         if self.summary_alts_xref is not None:
@@ -507,7 +557,10 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         try:
             return scoring_function(observed_choices, predicted_choices)
         except:
-            import pdb; pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
+
 
 def apply_filter_query(df, filters=None):
     """
@@ -532,10 +585,11 @@ def apply_filter_query(df, filters=None):
         if isinstance(filters, str):
             query = filters
         else:
-            query = ' and '.join(filters)
+            query = " and ".join(filters)
         return df.query(query)
     else:
         return df
+
 
 def _filterize(name, value):
     """
@@ -559,17 +613,18 @@ def _filterize(name, value):
     filter_exp : str
 
     """
-    if name.endswith('_min'):
+    if name.endswith("_min"):
         name = name[:-4]
-        comp = '>='
-    elif name.endswith('_max'):
+        comp = ">="
+    elif name.endswith("_max"):
         name = name[:-4]
-        comp = '<'
+        comp = "<"
     else:
-        comp = '=='
+        comp = "=="
 
-    result = '{} {} {!r}'.format(name, comp, value)
+    result = "{} {} {!r}".format(name, comp, value)
     return result
+
 
 def filter_table(table, filter_series, ignore=None):
     """
@@ -598,10 +653,53 @@ def filter_table(table, filter_series, ignore=None):
     """
     ignore = ignore if ignore else set()
 
-    filters = [_filterize(name, val)
-                for name, val in filter_series.iteritems()
-                if not (name in ignore or
-                        (isinstance(val, numbers.Number) and
-                        np.isnan(val)))]
+    filters = [
+        _filterize(name, val)
+        for name, val in filter_series.iteritems()
+        if not (name in ignore or (isinstance(val, numbers.Number) and np.isnan(val)))
+    ]
 
     return apply_filter_query(table, filters)
+
+
+def run_log(log_txt, file_path=None):
+    """
+    append run info to log file
+    file_path: log file folder, same as indicator folder
+    """
+    if file_path is not None:
+        data_out_dir = file_path
+    elif "data_out_dir" in orca.list_injectables():
+        data_out_dir = orca.get_injectable("data_out_dir")
+    else:
+        data_out_dir = "./"
+
+    if not (os.path.exists(data_out_dir)):
+        os.makedirs(data_out_dir)
+
+    with open(os.path.join(data_out_dir, "run_log.txt"), "a") as logf:
+        logf.write(log_txt + "\n")
+
+
+def debug_log(file_path=None):
+    """
+    write all logging DEBUG info to file
+    """
+    if file_path is not None:
+        data_out_dir = file_path
+    elif "data_out_dir" in orca.list_injectables():
+        data_out_dir = orca.get_injectable("data_out_dir")
+    else:
+        data_out_dir = "./"
+
+    if not (os.path.exists(data_out_dir)):
+        os.makedirs(data_out_dir)
+
+    logging.basicConfig(
+        filename=os.path.join(data_out_dir, "run_debug.txt"),
+        filemode="w",
+        format="%(message)s",
+        level=logging.DEBUG,
+        force=True,
+    )
+
