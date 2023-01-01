@@ -533,17 +533,19 @@ def make_indicators(tab, geo_id):
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]:
         make_job_sector_ind(i)
 
+
 def upload_whatnots_to_postgres(run_name, whatnots):
     table_name = "whatnots_" + run_name
     conn_str = "postgresql://gisad:forecast20@plannerprojection:5432/land"
     whatnots = whatnots.reset_index()
-    whatnots['large_area_id'] = whatnots['large_area_id'].astype(int)
-    whatnots['city_id'] = whatnots['city_id'].astype(int)
-    whatnots['zone_id'] = whatnots['zone_id'].astype(int)
-    whatnots['parcel_id'] = whatnots['parcel_id'].astype(int)
+    whatnots["large_area_id"] = whatnots["large_area_id"].astype(int)
+    whatnots["city_id"] = whatnots["city_id"].astype(int)
+    whatnots["zone_id"] = whatnots["zone_id"].astype(int)
+    whatnots["parcel_id"] = whatnots["parcel_id"].astype(int)
     print("Uploading whatnots table %s to postgres..." % table_name)
     whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
     return
+
 
 def upload_whatnots_to_postgres(run_name, whatnots):
     table_name = "whatnots_" + run_name
@@ -605,21 +607,21 @@ def upload_whatnots_to_carto(run_name, whatnots):
     return
 
 
-def main(run_name):
+def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
+
     outdir = run_name.replace(".h5", "")
-    if not (os.path.exists(outdir)):
-        os.makedirs(outdir)
-    with open(os.path.join(outdir, "run_log.txt"), "w") as runlog:
-        runlog.write(os.path.basename(os.path.normpath(outdir)) + "\n")
+    # if not (os.path.exists(outdir)):
+    #     os.makedirs(outdir)
+    # with open(os.path.join(outdir, "run_log.txt"), "a") as runlog:
+    #     runlog.write(os.path.basename(os.path.normpath(outdir)) + "\n")
 
     store_la = pd.HDFStore(run_name, mode="r")
     print(store_la)
 
-    base_year = 2020
-    target_year = 2050
-
-    spacing = 5
+    base_year = baseyear
+    target_year = finalyear
     # spacing = 30 // (len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year)))
+
     if spacing == 1:
         all_years_dir = os.path.join(outdir, "annual")
         if not (os.path.exists(all_years_dir)):
@@ -789,7 +791,7 @@ def main(run_name):
         "housing_units",
         "hu_filter",
         "parcel_is_allowed_residential",
-        "parcel_is_allowed_demolition",
+        # "parcel_is_allowed_demolition",
         "buildings",
         "household_size",
         "vacant_units",
@@ -1090,7 +1092,8 @@ def main(run_name):
         )
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
     # upload_whatnots_to_postgres(os.path.basename(outdir), whatnots_output)
-    upload_whatnots_to_carto(os.path.basename(outdir), whatnots_output)
+    if upload_to_carto is True:
+        upload_whatnots_to_carto(os.path.basename(outdir), whatnots_output)
     end = time.time()
     print("runtime whatnots:", end - start)
 
