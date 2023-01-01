@@ -2,27 +2,44 @@ import orca
 import shutil
 import sys
 import os
-import models, utils
+import utils
+
+# get run number and set up log file
+data_out = utils.get_run_filename()
+orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
+print(data_out)
+
+import models
 from urbansim.utils import misc, networks
 import time
 import output_indicators
+import logging
 
+base_year = 2020
+final_year = 2021
+indicator_spacing = 5
+upload_to_carto = True
+run_debug = True
 
-# check disk space, need at least 10GB
+# check disk space, need at least 16GB
 total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
 print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB")
-if free < 10:
+if free < 17:
     print(f"Free space is too small. Only {free} GB available. Stop running")
     sys.exit()
 
 start_time = time.time()
 
-data_out = utils.get_run_filename()
-print(data_out)
+run_info = f"data_out: {data_out}\nRun number: {os.path.basename(data_out.replace('.h5', ''))}\nStart time: {time.ctime(start_time)}"
+utils.run_log(run_info)
+
+if run_debug is True:
+    utils.debug_log()
+
 
 orca.run(
     ["scheduled_demolition_events", "scheduled_development_events", "refiner",],
-    iter_vars=list(range(2020, 2021)),  # run base year on 2020
+    iter_vars=list(range(base_year, base_year + 1)),  # run base year on 2020
 )
 
 orca.run(
@@ -57,7 +74,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(2021, 2051)),
+    iter_vars=list(range(base_year + 1, final_year + 1)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -112,22 +129,17 @@ orca.run(
     compress=True,
 )
 
-output_indicators.main(data_out)
+output_indicators.main(
+    data_out,
+    base_year,
+    final_year,
+    spacing=indicator_spacing,
+    upload_to_carto=upload_to_carto,
+)
 
-outdir = data_out.replace(".h5", "")
-if not (os.path.exists(outdir)):
-    os.makedirs(outdir)
-with open(os.path.join(outdir, "run_log.txt"), "a") as runtxt:
-    runtxt.write(
-        (
-            f"Run number: {outdir.split('/')[-1]}\n"
-            f"Data: {orca.get_injectable('HDF_data')}\n"
-            f"Seed: {orca.get_injectable('random_seed')}\n"
-            f"Start time: {time.ctime(start_time)}\n"
-            f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
-        )
-    )
-
+utils.run_log(
+    f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
+)
 
 print("Simulation started at %s, finished at %s. " % (start_time, time.ctime()))
 
