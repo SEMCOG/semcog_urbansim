@@ -114,40 +114,32 @@ choice_column = "building_id"
 hh_filter_columns = ["building_id", "large_area_id", "mcd_model_quota", "year_built", "residential_units"]
 b_filter_columns = ["large_area_id", "mcd_model_quota", "residential_units"]
 # load variables
-RELOAD = False
-if RELOAD:
-    # from notebooks.models_test import *
-    import models
-    buildings = orca.get_table("buildings")
-    households = orca.get_table("households")
-    orca.add_injectable('year', 2020)
-    orca.run(["build_networks_2050"])
-    orca.run(["neighborhood_vars"])
-    # set year to 2050 
-    orca.add_injectable('year', 2050)
-    orca.run(["mcd_hu_sampling"])
+# from notebooks.models_test import *
+import models
+buildings = orca.get_table("buildings")
+households = orca.get_table("households")
+orca.add_injectable('year', 2020)
+orca.run(["build_networks_2050"])
+orca.run(["neighborhood_vars"])
+# set year to 2050 
+orca.add_injectable('year', 2050)
+orca.run(["mcd_hu_sampling"])
 # TODO: get vars from vars list from last forecast
-    hh_columns, b_columns = columns_in_vars(vars_to_use)
+hh_columns, b_columns = columns_in_vars(vars_to_use)
 
+hh_var = hh_columns + hh_filter_columns
+b_var = b_columns + b_filter_columns
+hh_region, b_region = load_hlcm_df(hh_var, b_var)
+hh_region.to_csv('hh.csv')
+b_region.to_csv('b_hlcm.csv')
 
-    hh_var = hh_columns + hh_filter_columns
-    b_var = b_columns + b_filter_columns
-    hh_region, b_region = load_hlcm_df(hh_var, b_var)
-    hh_region.to_csv('hh.csv')
-    b_region.to_csv('b_hlcm.csv')
-else:
-    hh_region = pd.read_csv('hh.csv', index_col=0)
-    b_region = pd.read_csv('b_hlcm.csv', index_col=0)
-    orca.add_table('households', hh_region)
-    orca.add_table('buildings', b_region)
-
-def estimation(LARGE_AREA_ID):
+def estimation(LARGE_AREA_ID, hh_in, b_in):
     hh_sample_size = 10000
     estimation_sample_size = 50
     # sampling hh
     # from the new move-ins, last 5-10 years
     # weighted by mcd_quota
-    hh = hh_region[hh_region.large_area_id == LARGE_AREA_ID]
+    hh = hh_in[hh_in.large_area_id == LARGE_AREA_ID]
     hh = hh[hh.building_id > 1]
     hh = hh[hh.residential_units > 0]
     hh = hh[hh.year_built > 2005]
@@ -166,8 +158,8 @@ def estimation(LARGE_AREA_ID):
     for _ in range(estimation_sample_size-1):
         for j in hh.building_id:
             sampled_b_id.append(np.random.choice(uhh_id[uhh_id!=j]))
-    b_sample = b_region.loc[sampled_b_id]
-    b_sample = pd.concat([b_region.loc[hh.building_id], b_sample])
+    b_sample = b_in.loc[sampled_b_id]
+    b_sample = pd.concat([b_in.loc[hh.building_id], b_sample])
     b_sample = b_sample.reset_index()
     b_sample = b_sample.fillna(0)
     # remove unnecessary col in HH
@@ -197,8 +189,8 @@ def estimation(LARGE_AREA_ID):
     X = X_wiv
 
     # col index with 0 variation
-    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
-    unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val])
+    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0].astype(int)
+    unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val]).astype(int)
 
     # only keep variables with variation
     X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
@@ -243,38 +235,48 @@ if __name__ == "__main__":
     la_estimation_configs = {
         3: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 100
         },
-        5: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 40
-        },
-        93: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 50
-        },
+        # 5: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 40
+        # },
+        # 93: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 50
+        # },
         99: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 100
         },
-        115: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 50
-        },
-        125: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 40
-        },
-        147: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 40
-        },
-        161: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 50
-        },
+        # 115: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 50
+        # },
+        # 125: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 40
+        # },
+        # 147: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 40
+        # },
+        # 161: {
+        #     'skip_estimation': True,
+        #     'number_of_var_to_use': 50
+        # },
     }
     for la_id, la_config in la_estimation_configs.items():
+        if la_id in [3, 99]:
+            # load custom var list
+            with open('/home/da/share/urbansim/RDF2050/model_estimation/hlcm_vars_la%s.txt' % la_id, 'r') as f:
+                vars_to_use = np.array([line.rstrip() for line in f])
+            hh_columns, b_columns = columns_in_vars(vars_to_use)
+            hh_var = hh_columns + hh_filter_columns
+            b_var = b_columns + b_filter_columns
+            hh, b = load_hlcm_df(hh_var, b_var)
+        else:
+            hh, b = hh_region, b_region
         if not la_config['skip_estimation']:
-            estimation(la_id)
+            estimation(la_id, hh, b)
         run_large_MNL(hh_region, b_region, la_id, la_config['number_of_var_to_use'])
