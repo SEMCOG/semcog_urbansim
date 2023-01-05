@@ -100,11 +100,12 @@ def get_interaction_vars( df, varname):
         return df[varname].values.reshape(-1, 1)
 
 
-used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050_update3.xlsx", sheet_name=2)
-v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
-v2 = used_vars[~used_vars["new variables 2"].isna()]["new variables 2"].unique()
-vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
-# vars_to_use = used_vars[0].unique()
+# used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_hlcm_2050_update3.xlsx", sheet_name=2)
+# v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
+# v2 = used_vars[~used_vars["new variables 2"].isna()]["new variables 2"].unique()
+# vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
+with open('/home/da/share/urbansim/RDF2050/model_estimation/hlcm_vars.txt', 'r') as f:
+    vars_to_use = [line.rstrip() for line in f]
 
 # config
 choice_column = "building_id"
@@ -185,7 +186,7 @@ def estimation(LARGE_AREA_ID):
     # remove extra cols
     X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
     # create interaction variables
-    newX_cols_name = vars_to_use
+    newX_cols_name = np.array(vars_to_use)
     X_wiv = np.array([])
     for varname in newX_cols_name:
         if X_wiv.size > 0:
@@ -197,8 +198,8 @@ def estimation(LARGE_AREA_ID):
     X = X_wiv
 
     # col index with 0 variation
-    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0]
-    unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val])
+    used_val = np.arange(X.shape[1])[np.std(X, axis=0, dtype=np.float64) > 0].astype(int)
+    unused_val = np.array([x for x in range(X.shape[1]) if x not in used_val]).astype(int)
 
     # only keep variables with variation
     X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
@@ -243,35 +244,35 @@ if __name__ == "__main__":
     la_estimation_configs = {
         3: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 20
         },
         5: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 20
         },
         93: {
             'skip_estimation': False,
-            'number_of_var_to_use': 50
+            'number_of_var_to_use': 20
         },
         99: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 20
         },
         115: {
             'skip_estimation': False,
-            'number_of_var_to_use': 50
+            'number_of_var_to_use': 20
         },
         125: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 20
         },
         147: {
             'skip_estimation': False,
-            'number_of_var_to_use': 40
+            'number_of_var_to_use': 20
         },
         161: {
             'skip_estimation': False,
-            'number_of_var_to_use': 50
+            'number_of_var_to_use': 20
         },
     }
     for la_id, la_config in la_estimation_configs.items():
