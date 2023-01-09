@@ -245,10 +245,10 @@ if __name__ == "__main__":
         #     'skip_estimation': True,
         #     'number_of_var_to_use': 50
         # },
-        99: {
-            'skip_estimation': False,
-            'number_of_var_to_use': 100
-        },
+        # 99: {
+        #     'skip_estimation': False,
+        #     'number_of_var_to_use': 100
+        # },
         # 115: {
         #     'skip_estimation': True,
         #     'number_of_var_to_use': 50
@@ -279,4 +279,4 @@ if __name__ == "__main__":
             hh, b = hh_region, b_region
         if not la_config['skip_estimation']:
             estimation(la_id, hh, b)
-        run_large_MNL(hh_region, b_region, la_id, la_config['number_of_var_to_use'])
+        run_large_MNL(hh, b, la_id, la_config['number_of_var_to_use'])

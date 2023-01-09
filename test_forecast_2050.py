@@ -16,9 +16,9 @@ import output_indicators
 import logging
 
 base_year = 2020
-final_year = 2021
-indicator_spacing = 5
-upload_to_carto = True
+final_year = 2023
+indicator_spacing = 1
+upload_to_carto = False
 run_debug = True
 
 # check disk space, need at least 16GB

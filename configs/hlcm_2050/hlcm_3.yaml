@@ -12,73 +12,75 @@ saved_object:
     choosers: hh_hlcm
     constrained_choices: true
     fitted_parameters:
-    - 0.02018425347058379
-    - -0.24855092176381993
-    - 0.64565167296559
-    - 0.08379045589230572
-    - 0.14576868673570448
-    - -0.004244656423463751
-    - -0.006799259824439494
-    - 4.005232946174608
-    - 5.945906924631538
-    - 2.7141841353150946
-    - 3.0235623419835864
-    - 4.0733696654032245
-    - 2.506897918180384
-    - 5.31074392101261
-    - 3.745139375731678
-    - 4.92463325689316
-    - 3.3453536826445225
-    - 3.313730949590706
-    - 0.0009633755169986334
-    - 6.616034653968281
-    - 5.72148961196026
-    - 2.192094774388067
-    - 2.3159053154417433
-    - 2.2379779062452
-    - 2.2507242523945705
-    - 2.257759480914613
-    - -0.06764269292926739
-    - 1.5850849787851893
-    - 1.2531923249771915
-    - 1.3553657607337257
-    - 2.3329997003856064
-    - 2.924985007474888
-    - 3.5865124633862098
-    - 2.2346091163949477
-    - 5.016129063768067
-    - -0.007032341034497149
-    - 3.779738155376125
-    - 2.025282624378715
-    - 1.5017390012648113
-    - 3.2619583712828297
-    - 3.4793220932430615
-    - 1.1279511162381826
-    - 1.9920318752362351
-    - 1.811160179171464
-    - 3.6953312115594485
-    - 1.102071547774971
-    - 2.215620711659711
-    - 6.529340936866152
-    - 3.390578788780071
-    - 2.443161885326737
-    - 2.6689254792889514
+    - 0.4055407951497688
+    - 0.3863560124609215
+    - 0.48992035333553624
+    - 0.056091818594388734
+    - 0.757381979769163
+    - 0.4362004300444527
+    - -0.10092284596814614
+    - -0.04238756540629391
+    - -0.04951846682438639
+    - -0.04061088116896925
+    - -0.0400907782077371
+    - 0.011695571095729345
+    - -0.17410249950888174
+    - -0.01330026830076887
+    - -0.29328201723984276
+    - -0.08781870853844755
+    - -0.04376387076643316
+    - -0.08512368928062217
+    - -0.01121263648341868
+    - -0.01111416112135876
+    - 0.002444644913970308
+    - 0.005257032962536897
+    - -0.046354738078604796
+    - -0.04230879214910917
+    - -0.0175026788266537
+    - -0.01079227721560089
+    - -0.02762516505393425
+    - -0.023651127220853572
+    - 0.005884288777147334
+    - -0.003974258678973226
+    - -0.0052375943565930606
+    - -0.021001870973793572
+    - -0.0018256419870400769
+    - 0.0015778775169183656
+    - -0.02019770450211319
+    - -0.007852961672511462
+    - -0.008554000087190684
+    - -0.013349278521744782
+    - -0.014065134090569273
+    - -0.0026557172568513693
+    - -0.04923289210826462
+    - -0.011880016287131277
+    - -0.0030462908464294622
+    - -0.0044378150389908656
+    - -0.007974546781223757
+    - -0.03073672401900868
+    - -0.01077237783967883
+    - -0.06481996038525427
+    - -0.01300702253613759
     max_iter: null
     mct_intx_ops: null
-    model_expression: 'has_workers:nodes_drv_log_sum_30min_jobs + has_workers:nodes_drv_log_sum_15min_jobs
-        + nodes_walk_ave_lot_sqft + nodes_walk_ave_unit_sqft + has_workers:nodes_drv_log_sum_45min_jobs
-        + no_car:walk_nearest_hospital + no_car:walk_nearest_healthcenter + city_id_is_1015
-        + city_id_is_1025 + city_id_is_1085 + city_id_is_1105 + city_id_is_1115 +
-        city_id_is_1215 + city_id_is_1185 + city_id_is_1145 + city_id_is_1150 + city_id_is_1170
-        + city_id_is_1110 + no_car:walk_nearest_library + city_id_is_1120 + city_id_is_1210
-        + city_id_is_1070 + city_id_is_1180 + city_id_is_1040 + city_id_is_1125 +
-        city_id_is_1140 + ln_income:nodes_walk_ave_lot_sqft + city_id_is_1055 + city_id_is_1130
-        + city_id_is_1010 + city_id_is_1060 + city_id_is_1190 + city_id_is_1200 +
-        city_id_is_1045 + city_id_is_1030 + is_senior: walk_nearest_library + city_id_is_1135
-        + city_id_is_1160 + city_id_is_1065 + city_id_is_1005 + city_id_is_1220 +
-        city_id_is_1165 + city_id_is_1075 + city_id_is_1100 + city_id_is_1175 + city_id_is_1080
-        + city_id_is_1095 + city_id_is_1020 + city_id_is_1050 + city_id_is_1205 +
-        city_id_is_1090 - 1'
+    model_expression: 'low_income:nodes_walk_percent_low_income + parcels_total_units
+        + high_income:nodes_walk_percent_high_income + mid_income:nodes_walk_percent_mid_income
+        + is_large:nodes_walk_percent_large_hhs + has_children:nodes_walk_percent_hh_with_children
+        + is_large:city_id_is_1020 + is_large:city_id_is_1215 + is_large:city_id_is_1135
+        + is_large:city_id_is_1180 + is_large:city_id_is_1105 + is_large:city_id_is_1200
+        + is_large:city_id_is_1015 + is_large:city_id_is_1045 + is_large:city_id_is_1140
+        + is_large:city_id_is_1175 + is_large:city_id_is_1210 + is_large:city_id_is_1145
+        + is_large:city_id_is_1170 + is_large:city_id_is_1150 + is_senior: walk_nearest_hospital
+        + is_large:city_id_is_1040 + is_large:city_id_is_1120 + is_large:city_id_is_1110
+        + is_large:city_id_is_1060 + is_large:city_id_is_1025 + is_large:city_id_is_1090
+        + is_large:city_id_is_1115 + is_large:city_id_is_1125 + is_large:city_id_is_1010
+        + is_large:city_id_is_1220 + is_large:city_id_is_1055 + is_large:city_id_is_1130
+        + is_large:city_id_is_1100 + is_large:city_id_is_1075 + is_large:city_id_is_1190
+        + is_large:city_id_is_1165 + is_large:city_id_is_1085 + is_large:city_id_is_1095
+        + is_large:city_id_is_1160 + is_large:city_id_is_1030 + is_large:city_id_is_1080
+        + no_car:walk_nearest_hospital + is_large:city_id_is_1005 + is_large:city_id_is_1050
+        + is_large:city_id_is_1070 + is_large:city_id_is_1065 + is_large:city_id_is_1185
+        + is_large:city_id_is_1205 - 1'
     name: hlcm_3
     out_alt_filters: null
     out_alternatives: null
@@ -88,79 +90,79 @@ saved_object:
     summary_table: "                  CHOICEMODELS ESTIMATION RESULTS            \
         \      \n===================================================================\n\
         Dep. Var.:                chosen   No. Observations:         10,000\nModel:\
-        \         Multinomial Logit   Df Residuals:              9,949\nMethod:  \
-        \     Maximum Likelihood   Df Model:                     51\nDate:       \
-        \          2023-01-05   Pseudo R-squ.:             0.317\nTime:          \
-        \            15:52   Pseudo R-bar-squ.:         0.316\nAIC:              \
-        \    53,512.644   Log-Likelihood:      -26,705.322\nBIC:                 \
-        \ 53,880.371   LL-Null:             -39,120.230\n=============================================================================================\n\
-        \                                              coef   std err         z  \
-        \   P>|z|   Conf. Int.\n---------------------------------------------------------------------------------------------\n\
-        has_workers:nodes_drv_log_sum_30min_jobs    0.0202     0.043     0.467   \
-        \  0.640             \nhas_workers:nodes_drv_log_sum_15min_jobs   -0.2486\
-        \     0.025    -9.876     0.000             \nnodes_walk_ave_lot_sqft    \
-        \                 0.6457     0.005   121.922     0.000             \nnodes_walk_ave_unit_sqft\
-        \                    0.0838     0.009     8.854     0.000             \nhas_workers:nodes_drv_log_sum_45min_jobs\
-        \    0.1458     0.038     3.794     0.000             \nno_car:walk_nearest_hospital\
-        \               -0.0042     0.028    -0.151     0.880             \nno_car:walk_nearest_healthcenter\
-        \           -0.0068     0.006    -1.170     0.242             \ncity_id_is_1015\
-        \                             4.0052     0.707     5.663     0.000       \
-        \      \ncity_id_is_1025                             5.9459     1.156    \
-        \ 5.142     0.000             \ncity_id_is_1085                          \
-        \   2.7142     0.554     4.897     0.000             \ncity_id_is_1105   \
-        \                          3.0236     0.547     5.530     0.000          \
-        \   \ncity_id_is_1115                             4.0734     0.812     5.019\
-        \     0.000             \ncity_id_is_1215                             2.5069\
-        \     0.449     5.581     0.000             \ncity_id_is_1185            \
-        \                 5.3107     0.968     5.486     0.000             \ncity_id_is_1145\
-        \                             3.7451     0.693     5.405     0.000       \
-        \      \ncity_id_is_1150                             4.9246     0.946    \
-        \ 5.203     0.000             \ncity_id_is_1170                          \
-        \   3.3454     0.618     5.414     0.000             \ncity_id_is_1110   \
-        \                          3.3137     0.636     5.207     0.000          \
-        \   \nno_car:walk_nearest_library                 0.0010     0.108     0.009\
-        \     0.993             \ncity_id_is_1120                             6.6160\
-        \     1.259     5.254     0.000             \ncity_id_is_1210            \
-        \                 5.7215     1.097     5.216     0.000             \ncity_id_is_1070\
-        \                             2.1921     0.429     5.115     0.000       \
-        \      \ncity_id_is_1180                             2.3159     0.427    \
-        \ 5.429     0.000             \ncity_id_is_1040                          \
-        \   2.2380     0.400     5.591     0.000             \ncity_id_is_1125   \
-        \                          2.2507     0.420     5.357     0.000          \
-        \   \ncity_id_is_1140                             2.2578     0.406     5.558\
-        \     0.000             \nln_income:nodes_walk_ave_lot_sqft          -0.0676\
-        \     0.004   -16.322     0.000             \ncity_id_is_1055            \
-        \                 1.5851     0.297     5.334     0.000             \ncity_id_is_1130\
-        \                             1.2532     0.223     5.629     0.000       \
-        \      \ncity_id_is_1010                             1.3554     0.266    \
-        \ 5.091     0.000             \ncity_id_is_1060                          \
-        \   2.3330     0.451     5.168     0.000             \ncity_id_is_1190   \
-        \                          2.9250     0.579     5.055     0.000          \
-        \   \ncity_id_is_1200                             3.5865     0.667     5.381\
-        \     0.000             \ncity_id_is_1045                             2.2346\
-        \     0.403     5.551     0.000             \ncity_id_is_1030            \
-        \                 5.0161     0.998     5.027     0.000             \nis_senior:walk_nearest_library\
-        \             -0.0070     0.023    -0.308     0.758             \ncity_id_is_1135\
-        \                             3.7797     0.690     5.481     0.000       \
-        \      \ncity_id_is_1160                             2.0253     0.421    \
-        \ 4.810     0.000             \ncity_id_is_1065                          \
-        \   1.5017     0.323     4.654     0.000             \ncity_id_is_1005   \
-        \                          3.2620     0.768     4.245     0.000          \
-        \   \ncity_id_is_1220                             3.4793     0.675     5.156\
-        \     0.000             \ncity_id_is_1165                             1.1280\
-        \     0.227     4.965     0.000             \ncity_id_is_1075            \
-        \                 1.9920     0.440     4.523     0.000             \ncity_id_is_1100\
-        \                             1.8112     0.394     4.592     0.000       \
-        \      \ncity_id_is_1175                             3.6953     0.688    \
-        \ 5.370     0.000             \ncity_id_is_1080                          \
-        \   1.1021     0.224     4.911     0.000             \ncity_id_is_1095   \
-        \                          2.2156     0.586     3.784     0.000          \
-        \   \ncity_id_is_1020                             6.5293     1.160     5.627\
-        \     0.000             \ncity_id_is_1050                             3.3906\
-        \     0.714     4.749     0.000             \ncity_id_is_1205            \
-        \                 2.4432     0.511     4.778     0.000             \ncity_id_is_1090\
-        \                             2.6689     0.512     5.217     0.000       \
-        \      \n============================================================================================="
+        \         Multinomial Logit   Df Residuals:              9,951\nMethod:  \
+        \     Maximum Likelihood   Df Model:                     49\nDate:       \
+        \          2023-01-09   Pseudo R-squ.:             0.196\nTime:          \
+        \            13:48   Pseudo R-bar-squ.:         0.195\nAIC:              \
+        \    62,988.285   Log-Likelihood:      -31,445.143\nBIC:                 \
+        \ 63,341.592   LL-Null:             -39,120.230\n=====================================================================================================\n\
+        \                                                      coef   std err    \
+        \     z     P>|z|   Conf. Int.\n-----------------------------------------------------------------------------------------------------\n\
+        low_income:nodes_walk_percent_low_income            0.4055     0.009    43.771\
+        \     0.000             \nparcels_total_units                            \
+        \     0.3864     0.004    96.184     0.000             \nhigh_income:nodes_walk_percent_high_income\
+        \          0.4899     0.010    49.415     0.000             \nmid_income:nodes_walk_percent_mid_income\
+        \            0.0561     0.014     4.065     0.000             \nis_large:nodes_walk_percent_large_hhs\
+        \               0.1913     0.007    27.992     0.000             \nhas_children:nodes_walk_percent_hh_with_children\
+        \    0.4362     0.009    48.944     0.000             \nis_large:city_id_is_1020\
+        \                           -0.1009     0.141    -0.715     0.474        \
+        \     \nis_large:city_id_is_1215                           -0.0424     0.055\
+        \    -0.769     0.442             \nis_large:city_id_is_1135             \
+        \              -0.0495     0.084    -0.590     0.555             \nis_large:city_id_is_1180\
+        \                           -0.0406     0.053    -0.766     0.444        \
+        \     \nis_large:city_id_is_1105                           -0.0401     0.067\
+        \    -0.600     0.549             \nis_large:city_id_is_1200             \
+        \               0.0117     0.081     0.144     0.886             \nis_large:city_id_is_1015\
+        \                           -0.1741     0.086    -2.018     0.044        \
+        \     \nis_large:city_id_is_1045                           -0.0133     0.049\
+        \    -0.269     0.788             \nis_large:city_id_is_1140             \
+        \              -0.2933     0.051    -5.790     0.000             \nis_large:city_id_is_1175\
+        \                           -0.0878     0.086    -1.025     0.305        \
+        \     \nis_large:city_id_is_1210                           -0.0438     0.134\
+        \    -0.326     0.745             \nis_large:city_id_is_1145             \
+        \              -0.0851     0.085    -0.997     0.319             \nis_large:city_id_is_1170\
+        \                           -0.0112     0.075    -0.149     0.882        \
+        \     \nis_large:city_id_is_1150                           -0.0111     0.116\
+        \    -0.096     0.924             \nis_senior:walk_nearest_hospital      \
+        \               0.0024     0.026     0.093     0.926             \nis_large:city_id_is_1040\
+        \                            0.0053     0.049     0.107     0.915        \
+        \     \nis_large:city_id_is_1120                           -0.0464     0.154\
+        \    -0.302     0.763             \nis_large:city_id_is_1110             \
+        \              -0.0423     0.079    -0.536     0.592             \nis_large:city_id_is_1060\
+        \                           -0.0175     0.057    -0.309     0.757        \
+        \     \nis_large:city_id_is_1025                           -0.0798     0.141\
+        \    -0.567     0.571             \nis_large:city_id_is_1090             \
+        \              -0.0276     0.063    -0.441     0.659             \nis_large:city_id_is_1115\
+        \                           -0.0237     0.100    -0.236     0.814        \
+        \     \nis_large:city_id_is_1125                            0.0059     0.052\
+        \     0.113     0.910             \nis_large:city_id_is_1010             \
+        \              -0.0040     0.037    -0.108     0.914             \nis_large:city_id_is_1220\
+        \                           -0.0052     0.085    -0.062     0.951        \
+        \     \nis_large:city_id_is_1055                           -0.0210     0.041\
+        \    -0.516     0.606             \nis_large:city_id_is_1130             \
+        \              -0.0018     0.028    -0.066     0.947             \nis_large:city_id_is_1100\
+        \                            0.0016     0.053     0.030     0.976        \
+        \     \nis_large:city_id_is_1075                           -0.0202     0.062\
+        \    -0.326     0.744             \nis_large:city_id_is_1190             \
+        \              -0.0079     0.075    -0.105     0.916             \nis_large:city_id_is_1165\
+        \                           -0.0086     0.050    -0.171     0.864        \
+        \     \nis_large:city_id_is_1085                           -0.0133     0.075\
+        \    -0.177     0.859             \nis_large:city_id_is_1095             \
+        \              -0.0141     0.087    -0.162     0.871             \nis_large:city_id_is_1160\
+        \                           -0.0027     0.077    -0.035     0.972        \
+        \     \nis_large:city_id_is_1030                           -0.0492     0.122\
+        \    -0.403     0.687             \nis_large:city_id_is_1080             \
+        \              -0.0119     0.045    -0.265     0.791             \nno_car:walk_nearest_hospital\
+        \                       -0.0030     0.051    -0.059     0.953            \
+        \ \nis_large:city_id_is_1005                           -0.0044     0.104 \
+        \   -0.043     0.966             \nis_large:city_id_is_1050              \
+        \             -0.0080     0.089    -0.090     0.929             \nis_large:city_id_is_1070\
+        \                           -0.0307     0.053    -0.575     0.565        \
+        \     \nis_large:city_id_is_1065                           -0.0108     0.063\
+        \    -0.170     0.865             \nis_large:city_id_is_1185             \
+        \              -0.0648     0.118    -0.550     0.582             \nis_large:city_id_is_1205\
+        \                           -0.0130     0.065    -0.201     0.841        \
+        \     \n====================================================================================================="
     tags: []
     template: LargeMultinomialLogitStep
     template_version: 0.2.dev9
