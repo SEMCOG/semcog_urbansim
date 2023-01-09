@@ -62,7 +62,7 @@ def elcm_home_based(jobs, households):
     jobs = wrap_jobs.to_frame(["building_id", "home_based_status", "large_area_id"])
     jobs = jobs[(jobs.home_based_status >= 1) & (jobs.building_id == -1)]
     hh = households.to_frame(["building_id", "large_area_id"])
-    hh = hh[hh.building_id > 0]
+    hh = hh[(hh.building_id > 0) & (hh.sp_filter >= 0)]
 
     for la, la_job in jobs.groupby("large_area_id"):
         la_hh = hh[hh.large_area_id == la]
@@ -1977,4 +1977,14 @@ def _print_number_unplaced(df, fieldname="building_id"):
     """
     counts = (df[fieldname] == -1).sum()
     print("Total currently unplaced: %d" % counts)
+
+
+def remove_unplaced_agents():
+    """
+    unplaced jobs and households and jobs are removed 
+    """
+    for tbl in ["households", "jobs"]:
+        df = orca.get_table(tbl).local
+        df = df.loc[df.building_id != -1]
+        orca.add_table(tbl, df)
 

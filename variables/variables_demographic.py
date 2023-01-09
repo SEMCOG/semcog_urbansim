@@ -92,6 +92,11 @@ def zone_id(households, buildings):
 
 
 @orca.column("households", cache=True, cache_scope="iteration")
+def sp_filter(households, buildings):
+    return misc.reindex(buildings.sp_filter, households.building_id)
+
+
+@orca.column("households", cache=True, cache_scope="iteration")
 def city_id(households, buildings):
     return misc.reindex(buildings.city_id, households.building_id)
 
