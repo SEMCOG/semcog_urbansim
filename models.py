@@ -1951,11 +1951,11 @@ def drop_pseudo_buildings(households):
     # 1729 pseudo hh in 2050
     k = 90
     # drop k hh from pseudo buildings every iteration
-    hh = households.to_frame(households.local_columns)
-    if hh[hh.building_id > 90000000].shape[0] == 0:
+    hh = households.to_frame(households.local_columns + ["sp_filter"])
+    if hh[hh.sp_filter == -2].shape[0] == 0:
         # empty, return
         return
-    hh_to_drop = hh[hh.building_id > 90000000].sample(k)
+    hh_to_drop = hh[hh.sp_filter == -2].sample(k)
     # set sampled hh with building_id -1
     hh.loc[hh_to_drop.index, "building_id"] = -1
     print("Dropped %s hh from current pseudo buildings." % k)
