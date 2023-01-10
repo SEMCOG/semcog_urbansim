@@ -161,13 +161,13 @@ def register_choice_model_step(model_name, agents_name):
             alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
             # filter for picking hh with no building_id assigned
             chooser_filter = "(building_id==-1)"
-            alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0)"
+            alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
         elif 'elcm' in model_name:
             chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
             alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
             # filter for picking jobs with not building_id assigned
             chooser_filter = "(building_id==-1)"
-            alt_filter = "(non_residential_sqft>0)&(sp_filter!=-1)"
+            alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
             
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)
