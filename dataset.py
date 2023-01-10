@@ -95,6 +95,12 @@ def bg_hh_increase():
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
+    pseudo_buildings = store["pseudo_building_2020"]
+    pseudo_buildings = pseudo_buildings[[col for col in df.columns if col in pseudo_buildings]]
+    # !!important use building_id as parcel_id (parcel_id >90000000)
+    # pseudo_buildings.loc[:, "parcel_id"] = pseudo_buildings.index.tolist()
+    df = pd.concat([df, pseudo_buildings], axis=0)
+    df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.market_value < 0, "market_value"] = 0
     df["sqft_price_nonres"] = df.market_value * 1.0 / 0.7 / df.non_residential_sqft
@@ -143,6 +149,8 @@ def buildings(store):
         landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
         "sp_filter",
     ] = -1  # set landmark building_id as negative for blocking
+    # !!important set pseudo buildings to -2 sp_filter
+    df.loc[df.index > 90000000, "sp_filter"] = -2
 
     df["event_id"] = 0  # also add event_id for event reference
 
@@ -150,32 +158,23 @@ def buildings(store):
 
 
 @orca.table(cache=True)
-def households(store, buildings, pseudo_building_2020):
+def households(store, buildings):
     df = store["households"]
-    pseudo_buildings = pseudo_building_2020.to_frame()
     b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
-    # exclude those got placed in pseudo buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(
-        df.building_id.isin(pseudo_buildings.index)
-    )
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
-    # convert pseudo_buildings county code to large_area_id
-    pseudo_buildings.loc[:, "large_area_id"] = pseudo_buildings.loc[:, "county"]
-    pseudo_buildings.loc[:, "large_area_id"] = pseudo_buildings.loc[
-        :, "large_area_id"
-    ].replace({163: 3})
 
     df["large_area_id"] = misc.reindex(
-        pd.concat((b.large_area_id, pseudo_buildings.large_area_id), axis=0),
+        b.large_area_id,
         df.building_id,
     )
+
     # dtype optimization
     df["workers"] = df["workers"].fillna(0).astype(np.int8)
     df["children"] = df["children"].fillna(0).astype(np.int8)
@@ -220,6 +219,10 @@ def jobs(store, buildings):
 @orca.table(cache=True)
 def parcels(store, zoning):
     parcels_df = store["parcels"]
+    # Added parcels from pseudo buildings
+    pseudo_parcels = store["pseudo_parcel_2020"]
+    parcels_df = pd.concat([parcels_df, pseudo_parcels], axis=0)
+    # concat pseudo buildings parcels
     #  based on zoning.is_developable, adjust parcels pct_undev
     pct_undev = zoning.pct_undev.copy()
     # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
@@ -228,6 +231,7 @@ def parcels(store, zoning):
     # Parcel is developable, but contains underground storage tanks
     pct_undev[zoning.is_developable == 2] += 10
     parcels_df["pct_undev"] = pct_undev.clip(0, 100).astype("int16")
+    parcels_df["pct_undev"] = parcels_df["pct_undev"].fillna(0)
     return parcels_df
 
 

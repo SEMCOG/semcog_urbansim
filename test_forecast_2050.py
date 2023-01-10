@@ -55,6 +55,7 @@ orca.run(
         "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
+        "drop_pseudo_buildings",
         "feasibility",
         "residential_developer",
         "non_residential_developer",

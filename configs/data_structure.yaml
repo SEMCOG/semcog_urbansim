@@ -373,25 +373,37 @@ name: pseudo_building_2020
 indexs:
 - building_id
 columns:
-  bg: int8
-  block: int8
   building_type_id: int8
-  county: int32
-  improvement_value: float64
-  landvalue: int8
-  market_value: float64
+  improvement_value: int8
+  land_area: int8
+  market_value: int8
   mcd: int32
   non_residential_sqft: int8
-  owner_units: int8
   parcel_id: int32
-  parcel_sqft: int8
-  res_sqft: int8
   residential_units: int32
-  sev_value: float64
   sqft_per_unit: int8
   stories: int8
-  tract: int8
   year_built: int32
+---
+name: pseudo_parcel_2020
+indexs:
+- parcel_id
+columns:
+  bldgimprval: int8
+  census_bg_id: int8
+  centroid_x: int8
+  centroid_y: int8
+  city_id: int32
+  county_id: int32
+  land_use_type_id: int8
+  landvalue: int8
+  large_area_id: int32
+  parcel_sqft: int8
+  pptytax: int8
+  school_id: int8
+  semmcd: int32
+  sev_value: int8
+  zone_id: int8
 ---
 name: refiner_events
 indexs:

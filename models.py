@@ -113,6 +113,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             "geoid",
             "mcd_model_quota",
             "hu_filter",
+            "sp_filter",
         ]
     )
     vacant_units = blds[vacant_variable]
@@ -155,6 +156,10 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 # only sampling hu_filter == 0
                 housing_units.hu_filter
                 == 0
+            ) & (
+                # only sampling hu_filter == 0
+                housing_units.sp_filter
+                >= 0
             )
         ]
         # building_age normalized
@@ -1745,35 +1750,6 @@ def update_sp_filter(buildings):
 
 
 @orca.step()
-def update_sp_filter(buildings):
-    # update sp_filter to -1 for selected building_types
-    selected_btypes = {
-        11: "Educational",
-        13: "Religious and Civic",
-        14: "Governmental",
-        52: "Hospital",
-        53: "Residential Care Facility",
-        92: "Library",
-        93: "Dormitory Quarters",
-        94: "Death Care Services",
-        95: "Parking Garage",
-    }
-    updated_buildings = buildings.to_frame(buildings.local_columns)
-    print(
-        "Updating %s buildings sp_filter to -1"
-        % (
-            updated_buildings.loc[
-                updated_buildings.building_type_id.isin(selected_btypes)
-            ].shape[0]
-        )
-    )
-    updated_buildings.loc[
-        updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
-    ] = -1
-    orca.add_table("buildings", updated_buildings)
-
-
-@orca.step()
 ## for 2050 forecast, ready to replace the old one
 def build_networks_2050(parcels):
     import yaml
@@ -1970,6 +1946,20 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
 
+@orca.step()
+def drop_pseudo_buildings(households):
+    # 1729 pseudo hh in 2050
+    k = 90
+    # drop k hh from pseudo buildings every iteration
+    hh = households.to_frame(households.local_columns)
+    if hh[hh.building_id > 90000000].shape[0] == 0:
+        # empty, return
+        return
+    hh_to_drop = hh[hh.building_id > 90000000].sample(k)
+    # set sampled hh with building_id -1
+    hh.loc[hh_to_drop.index, "building_id"] = -1
+    print("Dropped %s hh from current pseudo buildings." % k)
+    orca.add_table("households", hh)
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
