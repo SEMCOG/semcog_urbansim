@@ -97,8 +97,6 @@ def buildings(store):
     df = store["buildings"]
     pseudo_buildings = store["pseudo_building_2020"]
     pseudo_buildings = pseudo_buildings[[col for col in df.columns if col in pseudo_buildings]]
-    # !!important use building_id as parcel_id (parcel_id >90000000)
-    # pseudo_buildings.loc[:, "parcel_id"] = pseudo_buildings.index.tolist()
     df = pd.concat([df, pseudo_buildings], axis=0)
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
