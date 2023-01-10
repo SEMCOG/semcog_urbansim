@@ -1234,7 +1234,6 @@ def random_demolition_events(
     b = buildings.copy()
     allowed = variables.parcel_is_allowed_2050()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
-    allowed_b = allowed_b.loc[allowed_b.sp_filter >= 0]
     buildings_idx = []
 
     def sample(targets, type_b, accounting, weights):
