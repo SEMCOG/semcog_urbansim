@@ -15,11 +15,12 @@ import time
 import output_indicators
 import logging
 
+# set up run
 base_year = 2020
-final_year = 2023
-indicator_spacing = 1
-upload_to_carto = False
-run_debug = True
+final_year = 2050
+indicator_spacing = 5
+upload_to_carto = True
+run_debug = False
 
 # check disk space, need at least 16GB
 total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
@@ -30,17 +31,13 @@ if free < 17:
 
 start_time = time.time()
 
-run_info = f"data_out: {data_out}\nRun number: {os.path.basename(data_out.replace('.h5', ''))}\nStart time: {time.ctime(start_time)}"
+run_info = f"""data_out: {data_out} \
+            \nRun number: {os.path.basename(data_out.replace('.h5', ''))} \
+            \nStart time: {time.ctime(start_time)}"""
 utils.run_log(run_info)
 
 if run_debug is True:
     utils.debug_log()
-
-
-orca.run(
-    ["scheduled_demolition_events", "scheduled_development_events", "refiner",],
-    iter_vars=list(range(base_year, base_year + 1)),  # run base year on 2020
-)
 
 orca.run(
     [
@@ -51,7 +48,7 @@ orca.run(
         "scheduled_development_events",
         "refiner",
         "households_transition",
-        "fix_lpr",  # await data
+        "fix_lpr",
         "households_relocation_2050",
         "jobs_transition",
         "jobs_relocation_2050",
@@ -62,11 +59,9 @@ orca.run(
         "update_sp_filter",
     ]
     + orca.get_injectable("repm_step_names")
-    # + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
-    + ["mcd_hu_sampling"]  # Hack to make more feasibility
-    + orca.get_injectable(
-        "hlcm_step_names"
-    )  # disable for now, wait until new estimation
+    # + ["increase_property_values"]  # on hold
+    + ["mcd_hu_sampling"]
+    + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
     + [
         "elcm_home_based",
@@ -101,7 +96,6 @@ orca.run(
         "large_areas",
         "building_types",
         "land_use_types",
-        # "workers_labor_participation_rates",
         "employed_workers_rate",
         "transit_stops",
         "crime_rates",
