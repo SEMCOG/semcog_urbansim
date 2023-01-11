@@ -9,15 +9,18 @@ from time import sleep
 from cartoframes import to_carto
 from cartoframes import update_privacy_table
 from cartoframes.auth import set_default_credentials
+from variables.indicators import *
 import requests
 import json
 
 
-def orca_year_dataset(hdf, year):
+def orca_year_dataset(hdf, year, base_year):
     orca.clear_cache()
-    if str(year) == "2020":
+    orca.add_injectable("year", year)
+    if str(year) == str(base_year):
         year = "base"
-    orca.add_injectable("year", int(year if str(year) != "base" else 2020))
+
+    # TODO: table ist as variable
     for tbl in [
         "parcels",
         "buildings",
@@ -32,15 +35,9 @@ def orca_year_dataset(hdf, year):
         if name in hdf:
             df = hdf[name]
         else:
-            stub_name = str(2021) + "/" + tbl
-            print(
-                "No table named "
-                + name
-                + ". Using the structuer from "
-                + stub_name
-                + "."
-            )
-            df = hdf[stub_name].iloc[0:0]
+            sub_name = str(base_year + 1) + "/" + tbl
+            print(f"No table named {name}. Using the structure from {sub_name}.")
+            df = hdf[sub_name].iloc[0:0]
 
         if tbl in {"households", "jobs"} and "large_area_id" not in df.columns:
             print("impute large_area_id")
@@ -49,502 +46,6 @@ def orca_year_dataset(hdf, year):
             )
 
         orca.add_table(tbl, df.fillna(0))
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def parcel_is_allowed_residential():
-    import variables
-
-    return variables.parcel_is_allowed("residential")
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def parcel_is_allowed_demolition():
-    import variables
-
-    return variables.parcel_is_allowed()
-
-
-@orca.column("households", cache=True, cache_scope="iteration")
-def seniors(persons):
-    persons = persons.to_frame(["household_id", "age"])
-    return persons[persons.age >= 65].groupby("household_id").size()
-
-
-def make_indicators(tab, geo_id):
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def hh(households):
-        households = households.to_frame([geo_id])
-        return households.groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def hh_pop(households):
-        households = households.to_frame([geo_id, "persons"])
-        return households.groupby(geo_id).persons.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def gq_pop(group_quarters):
-        group_quarters = group_quarters.to_frame([geo_id])
-        return group_quarters.groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pop():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh_pop", "gq_pop"]).fillna(0)
-        return df.hh_pop + df.gq_pop
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def housing_units(buildings):
-        buildings = buildings.to_frame([geo_id, "residential_units"])
-        return buildings.groupby(geo_id).residential_units.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def hu_filter(buildings):
-        buildings = buildings.to_frame([geo_id, "hu_filter"])
-        return buildings.groupby(geo_id).hu_filter.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def parcel_is_allowed_residential(parcels):
-        parcels = parcels.to_frame([geo_id, "parcel_is_allowed_residential"])
-        return parcels.groupby(geo_id).parcel_is_allowed_residential.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def parcel_is_allowed_demolition(parcels):
-        parcels = parcels.to_frame([geo_id, "parcel_is_allowed_demolition"])
-        return parcels.groupby(geo_id).parcel_is_allowed_demolition.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def job_spaces(buildings):
-        buildings = buildings.to_frame([geo_id, "job_spaces"])
-        return buildings.groupby(geo_id).job_spaces.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def nonres_sqft(buildings):
-        buildings = buildings.to_frame([geo_id, "non_residential_sqft"])
-        return buildings.groupby(geo_id).non_residential_sqft.sum()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def res_sqft(buildings):
-        buildings = buildings.to_frame([geo_id, "residential_sqft"])
-        return buildings.groupby(geo_id).residential_sqft.sum()
-
-    def make_building_sqft_type(i):
-        @orca.column(
-            tab,
-            "building_sqft_type_" + str(i).zfill(2),
-            cache=True,
-            cache_scope="iteration",
-        )
-        def res_sqft_type(buildings):
-            buildings = buildings.to_frame(
-                [geo_id, "building_type_id", "building_sqft"]
-            )
-            return (
-                buildings[buildings.building_type_id == i]
-                .groupby(geo_id)
-                .building_sqft.sum()
-            )
-
-    for i in [
-        11,
-        13,
-        14,
-        21,
-        23,
-        31,
-        32,
-        33,
-        41,
-        42,
-        51,
-        52,
-        53,
-        61,
-        63,
-        65,
-        71,
-        81,
-        82,
-        83,
-        84,
-        91,
-        92,
-        93,
-        94,
-        95,
-    ]:
-        make_building_sqft_type(i)
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def buildings(buildings):
-        buildings = buildings.to_frame([geo_id])
-        return buildings.groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def household_size():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh", "hh_pop"])
-        return df.hh_pop / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def vacant_units():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh", "housing_units"]).fillna(0)
-        return df.housing_units - df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def res_vacancy_rate():
-        df = orca.get_table(tab)
-        df = df.to_frame(["vacant_units", "housing_units"]).fillna(0)
-        return df.vacant_units / df.housing_units
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def nonres_vacancy_rate():
-        df = orca.get_table(tab)
-        df = df.to_frame(["jobs_total", "jobs_home_based", "job_spaces"]).fillna(0)
-        return 1.0 - (df.jobs_total - df.jobs_home_based) / df.job_spaces
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def incomes_1(households):
-        households = households.to_frame([geo_id, "income_quartile"])
-        return households[households.income_quartile == 1].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_incomes_1():
-        df = orca.get_table(tab)
-        df = df.to_frame(["incomes_1", "hh"])
-        return 1.0 * df.incomes_1 / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def incomes_2(households):
-        households = households.to_frame([geo_id, "income_quartile"])
-        return households[households.income_quartile == 2].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_incomes_2():
-        df = orca.get_table(tab)
-        df = df.to_frame(["incomes_2", "hh"])
-        return 1.0 * df.incomes_2 / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def incomes_3(households):
-        households = households.to_frame([geo_id, "income_quartile"])
-        return households[households.income_quartile == 3].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_incomes_3():
-        df = orca.get_table(tab)
-        df = df.to_frame(["incomes_3", "hh"])
-        return 1.0 * df.incomes_3 / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def incomes_4(households):
-        households = households.to_frame([geo_id, "income_quartile"])
-        return households[households.income_quartile == 4].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_incomes_4():
-        df = orca.get_table(tab)
-        df = df.to_frame(["incomes_4", "hh"])
-        return 1.0 * df.incomes_4 / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def with_children(households):
-        households = households.to_frame([geo_id, "children"])
-        return households[households.children > 0].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_with_children():
-        df = orca.get_table(tab)
-        df = df.to_frame(["with_children", "hh"])
-        return 1.0 * df.with_children / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def without_children(households):
-        households = households.to_frame([geo_id, "children"])
-        return households[households.children.fillna(0) == 0].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def with_seniors(households):
-        households = households.to_frame([geo_id, "seniors"])
-        return households[households.seniors > 0].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_with_seniors():
-        df = orca.get_table(tab)
-        df = df.to_frame(["with_seniors", "hh"])
-        return 1.0 * df.with_seniors / df.hh
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def without_seniors(households):
-        households = households.to_frame([geo_id, "seniors"])
-        return households[households.seniors.fillna(0) == 0].groupby(geo_id).size()
-
-    def make_hh_size(r, plus=False):
-        hh_name = "hh_size_" + str(r)
-        if plus:
-            hh_name += "p"
-
-        @orca.column(tab, hh_name, cache=True, cache_scope="iteration")
-        def hh_size(households):
-            households = households.to_frame([geo_id, "persons"])
-            return (
-                households[
-                    (households.persons == r) | (plus & (households.persons > r))
-                ]
-                .groupby(geo_id)
-                .size()
-            )
-
-        w_child = "with_children_" + hh_name
-
-        @orca.column(tab, w_child, cache=True, cache_scope="iteration")
-        def hh_size(households):
-            households = households.to_frame([geo_id, "persons", "children"])
-            return (
-                households[
-                    ((households.persons == r) | (plus & (households.persons > r)))
-                    & (households.children > 0)
-                ]
-                .groupby(geo_id)
-                .size()
-            )
-
-        wo_child = "without_children_" + hh_name
-
-        @orca.column(tab, wo_child, cache=True, cache_scope="iteration")
-        def hh_size(households):
-            households = households.to_frame([geo_id, "persons", "children"])
-            return (
-                households[
-                    ((households.persons == r) | (plus & (households.persons > r)))
-                    & (households.children.fillna(0) == 0)
-                ]
-                .groupby(geo_id)
-                .size()
-            )
-
-    make_hh_size(1)
-    make_hh_size(2)
-    make_hh_size(3)
-    make_hh_size(3, True)
-    make_hh_size(4, True)
-
-    def make_hh_size_age(r, a, b, plus=False):
-        hh_name = "hh_size_" + str(r)
-        if plus:
-            hh_name += "p"
-        hh_name += "_age_" + str(a).zfill(2) + "_" + str(b).zfill(2)
-
-        @orca.column(tab, hh_name, cache=True, cache_scope="iteration")
-        def hh_size(households):
-            households = households.to_frame([geo_id, "persons", "age_of_head"])
-            return (
-                households[
-                    ((households.persons == r) | (plus & (households.persons > r)))
-                    & ((households.age_of_head >= a) & (households.age_of_head <= b))
-                ]
-                .groupby(geo_id)
-                .size()
-            )
-
-    make_hh_size_age(1, 15, 34)
-    make_hh_size_age(1, 35, 44)
-    make_hh_size_age(1, 65, np.inf)
-    make_hh_size_age(2, 15, 34, True)
-    make_hh_size_age(2, 35, 44, True)
-    make_hh_size_age(2, 65, np.inf, True)
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def hh_no_car_or_lt_workers(households):
-        households = households.to_frame([geo_id, "cars", "workers"])
-        return (
-            households[(households.cars == 0) | (households.cars < households.workers)]
-            .groupby(geo_id)
-            .size()
-        )
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_hh_no_car_or_lt_workers():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh_no_car_or_lt_workers", "hh"])
-        return 1.0 * df.hh_no_car_or_lt_workers / df.hh
-
-    def make_pop_race(r):
-        hh_name = "hh_pop_race_" + str(r)
-
-        @orca.column(tab, hh_name, cache=True, cache_scope="iteration")
-        def hh_pop_race(persons):
-            persons = persons.to_frame([geo_id, "race_id"])
-            return persons[persons.race_id == r].groupby(geo_id).size()
-
-        @orca.column(tab, "pct_" + hh_name, cache=True, cache_scope="iteration")
-        def pct_hh_pop_race():
-            df = orca.get_table(tab)
-            df = df.to_frame([hh_name, "hh_pop"])
-            return 1.0 * df[hh_name] / df.hh_pop
-
-        gq_name = "gq_pop_race_" + str(r)
-
-        @orca.column(tab, gq_name, cache=True, cache_scope="iteration")
-        def gq_pop_race(group_quarters):
-            group_quarters = group_quarters.to_frame([geo_id, "race_id"])
-            return group_quarters[group_quarters.race_id == r].groupby(geo_id).size()
-
-        @orca.column(tab, "pct_" + gq_name, cache=True, cache_scope="iteration")
-        def pct_gq_pop_race():
-            df = orca.get_table(tab)
-            df = df.to_frame([gq_name, "gq_pop"])
-            return 1.0 * df[gq_name] / df.gq_pop
-
-        name = "pop_race_" + str(r)
-
-        @orca.column(tab, name, cache=True, cache_scope="iteration")
-        def pop_race():
-            df = orca.get_table(tab)
-            df = df.to_frame([gq_name, hh_name]).fillna(0)
-            return df[gq_name] + df[hh_name]
-
-        @orca.column(tab, "pct_" + name, cache=True, cache_scope="iteration")
-        def pct_pop_race():
-            df = orca.get_table(tab)
-            df = df.to_frame([name, "pop"])
-            return 1.0 * df[name] / df["pop"]
-
-    for r in [1, 2, 3, 4]:
-        make_pop_race(r)
-
-    def make_pop_age(a, b):
-        hh_name = "hh_pop_age_" + str(a).zfill(2) + "_" + str(b).zfill(2)
-
-        @orca.column(tab, hh_name, cache=True, cache_scope="iteration")
-        def hh_pop_age(persons):
-            persons = persons.to_frame([geo_id, "age"])
-            return (
-                persons[(persons.age >= a) & (persons.age <= b)].groupby(geo_id).size()
-            )
-
-        gq_name = "gq_pop_age_" + str(a).zfill(2) + "_" + str(b).zfill(2)
-
-        @orca.column(tab, gq_name, cache=True, cache_scope="iteration")
-        def gq_pop_age(group_quarters):
-            group_quarters = group_quarters.to_frame([geo_id, "age"])
-            return (
-                group_quarters[(group_quarters.age >= a) & (group_quarters.age <= b)]
-                .groupby(geo_id)
-                .size()
-            )
-
-        @orca.column(
-            tab,
-            "pop_age_" + str(a).zfill(2) + "_" + str(b).zfill(2),
-            cache=True,
-            cache_scope="iteration",
-        )
-        def pop_age():
-            df = orca.get_table(tab)
-            df = df.to_frame([hh_name, gq_name]).fillna(0)
-            return df[hh_name] + df[gq_name]
-
-    for (a, b) in [
-        (00, 4),
-        (5, 17),
-        (18, 24),
-        (18, 64),
-        (25, 34),
-        (35, 64),
-        (65, np.inf),
-        (00, 17),
-        (25, 44),
-        (25, 54),
-        (45, 64),
-        (55, 64),
-        (65, 84),
-        (85, np.inf),
-        (35, 59),
-        (60, 64),
-        (65, 74),
-        (75, np.inf),
-    ]:
-        make_pop_age(a, b)
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def hh_pop_age_median(persons):
-        persons = persons.to_frame([geo_id, "age"])
-        return persons.groupby(geo_id).median()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_hh_pop_age_05_17():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh_pop_age_05_17", "hh_pop"])
-        return 1.0 * df.hh_pop_age_05_17 / df.hh_pop
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def pct_hh_pop_age_65_inf():
-        df = orca.get_table(tab)
-        df = df.to_frame(["hh_pop_age_65_inf", "hh_pop"])
-        return 1.0 * df.hh_pop_age_65_inf / df.hh_pop
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def jobs_total(jobs):
-        jobs = jobs.to_frame([geo_id])
-        return jobs.groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def jobs_home_based(jobs):
-        jobs = jobs.to_frame([geo_id, "home_based_status"])
-        return jobs[jobs.home_based_status == 1].groupby(geo_id).size()
-
-    @orca.column(tab, cache=True, cache_scope="iteration")
-    def jobs_home_based_in_nonres(jobs, buildings):
-        jobs = jobs.to_frame(["building_id", "home_based_status"])
-        jobs_count = jobs[jobs.home_based_status == 1].groupby("building_id").size()
-        buildings = buildings.to_frame([geo_id, "residential_sqft"])
-        buildings["jobs_count"] = jobs_count
-        return (
-            buildings[buildings.residential_sqft.fillna(0) <= 0]
-            .groupby(geo_id)
-            .jobs_count.sum()
-            .fillna(0)
-        )
-
-    def make_job_sector_ind(i):
-        @orca.column(
-            tab, "jobs_sec_" + str(i).zfill(2), cache=True, cache_scope="iteration"
-        )
-        def jobs_sec_id(jobs):
-            jobs = jobs.to_frame([geo_id, "sector_id"])
-            return jobs[jobs.sector_id == i].groupby(geo_id).size()
-
-        @orca.column(
-            tab,
-            "jobs_sec_" + str(i).zfill(2) + "_home_based",
-            cache=True,
-            cache_scope="iteration",
-        )
-        def jobs_sec_id_home(jobs):
-            jobs = jobs.to_frame([geo_id, "sector_id", "home_based_status"])
-            return (
-                jobs[(jobs.sector_id == i) & (jobs.home_based_status == 1)]
-                .groupby(geo_id)
-                .size()
-            )
-
-    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]:
-        make_job_sector_ind(i)
-
-
-def upload_whatnots_to_postgres(run_name, whatnots):
-    table_name = "whatnots_" + run_name
-    conn_str = "postgresql://gisad:forecast20@plannerprojection:5432/land"
-    whatnots = whatnots.reset_index()
-    whatnots["large_area_id"] = whatnots["large_area_id"].astype(int)
-    whatnots["city_id"] = whatnots["city_id"].astype(int)
-    whatnots["zone_id"] = whatnots["zone_id"].astype(int)
-    whatnots["parcel_id"] = whatnots["parcel_id"].astype(int)
-    print("Uploading whatnots table %s to postgres..." % table_name)
-    whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
-    return
 
 
 def upload_whatnots_to_postgres(run_name, whatnots):
@@ -610,10 +111,6 @@ def upload_whatnots_to_carto(run_name, whatnots):
 def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
 
     outdir = run_name.replace(".h5", "")
-    # if not (os.path.exists(outdir)):
-    #     os.makedirs(outdir)
-    # with open(os.path.join(outdir, "run_log.txt"), "a") as runlog:
-    #     runlog.write(os.path.basename(os.path.normpath(outdir)) + "\n")
 
     store_la = pd.HDFStore(run_name, mode="r")
     print(store_la)
@@ -629,73 +126,61 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     else:
         all_years_dir = outdir
 
+    # prepare geograhic tables, mcd, zone, large area and city
     for tbl in ["semmcds", "zones", "large_areas"]:
         orca.add_table(tbl, store_la["base/" + tbl])
+    for tbl in ["parcels", "buildings"]:
+        orca.add_table(tbl, store_la[f"{target_year}/" + tbl])
+    import variables
 
-    @orca.column("semmcds", cache=True, cache_scope="iteration")
-    def large_area_id(parcels):
-        parcels = parcels.to_frame(["semmcd", "large_area_id"])
-        return parcels.drop_duplicates("semmcd").set_index("semmcd").large_area_id
+    # semmcds has large_area_id
+    # @orca.column("semmcds", cache=True, cache_scope="iteration")
+    # def large_area_id(parcels):
+    #     parcels = parcels.to_frame(["semmcd", "large_area_id"])
+    #     return parcels.drop_duplicates("semmcd").set_index("semmcd").large_area_id
 
+    # make cities table
     p = orca.get_table("parcels")
     p = p.to_frame(["large_area_id", "city_id", "zone_id"])
     cities = (
         p[["city_id", "large_area_id"]].drop_duplicates("city_id").set_index("city_id")
     )
-
     orca.add_table("cities", cities)
 
-    # TODO: add school_id back in at some point
-    # p = orca.get_table('parcels')
-    # #35
-    # p = p.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
-    #     columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
-    # p = p.to_frame(['large_area_id', 'city_id', 'zone_id'])
-
-    # p.index.name = 'parcel_id'
-    p = p.reset_index()
-    # #35
-    # whatnot = p.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
-    whatnot = p.drop_duplicates(["large_area_id", "city_id", "zone_id", "parcel_id"])
-
-    ## spatial case handling for 2045 forecast -- disabled
-    # fenton
-    # fenton = p.head(1)
-    # fenton.large_area_id = 93
-    # #35
-    # fenton.b_city_id = 7027
-    # fenton.b_zone_id = 72214
-    # fenton.city_id = 7027
-    # fenton.zone_id = 72214
-    # fenton.parcel_id = 0
-    # whatnot = whatnot.append(fenton, ignore_index=True)
-
-    # #35
-    # e = orca.get_table('events_addition').to_frame(['parcel_id', 'b_city_id', 'b_zone_id'])
-    e = orca.get_table("events_addition").to_frame(["parcel_id", "city_id", "zone_id"])
-    e["parcel_id"] = e.parcel_id.astype(p.index.dtype)
-    e["large_area_id"] = p.reindex(e.parcel_id).large_area_id.values
-    # #35
-    # e = e[['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']]
-    e = e[["large_area_id", "city_id", "zone_id", "parcel_id"]]
-    whatnot = whatnot.append(e, ignore_index=True)
-
-    # #35
-    # b = orca.get_table('buildings').to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
-    b = orca.get_table("buildings").to_frame(
+    # clean parcel to geo table
+    whatnot = p.reset_index().drop_duplicates(
         ["large_area_id", "city_id", "zone_id", "parcel_id"]
     )
-    whatnot = whatnot.append(b, ignore_index=True)
-    b = store_la["/%s/buildings" % target_year]
+
+    # # ? add events geos to whatnot, 2045 RDF special? not needed now
+    # e = store_la["base/events_addition"][["parcel_id", "city_id", "zone_id"]]
+    # e["parcel_id"] = e.parcel_id.astype(p.index.dtype)
+    # e["large_area_id"] = p.reindex(e.parcel_id).large_area_id.values
+    # # #35
+    # # e = e[['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']]
+    # e = e[["large_area_id", "city_id", "zone_id", "parcel_id"]]
+    # whatnot = whatnot.append(e, ignore_index=True)
+
+    # # get geos from buildings table, RDF 2045 unique since building broken connection to parcel
+    # b = orca.get_table("buildings").to_frame(
+    #     ["large_area_id", "city_id", "zone_id", "parcel_id"]
+    # )
+    # whatnot = whatnot.append(b, ignore_index=True)
+
+    # target year building
+    b = store_la[f"/{target_year}/buildings"]
+
+    # for 1-year analysis purpose, interesting_parcel_ids: parcels with new built or demolition and size > 2 acres
     if spacing == 1:
-        interesting_parcel_ids = set(b[b.year_built > 2020].parcel_id) | set(
-            store_la["/%s/dropped_buildings" % target_year].parcel_id
+        interesting_parcel_ids = set(b[b.year_built > base_year].parcel_id) | set(
+            store_la[f"/{target_year}/dropped_buildings"].parcel_id
         )
         acres = orca.get_table("parcels").acres
         interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
     else:
         interesting_parcel_ids = set()
     whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
+
     # #35
     # whatnot = whatnot.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index(drop=True)
     whatnot = whatnot.drop_duplicates(
@@ -732,17 +217,12 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     @orca.column("buildings", cache=True, cache_scope="iteration")
     def whatnot_id(buildings, whatnots):
         # TODO: add school_id back in at some point
-        # #35
-        # buildings = buildings.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
         buildings = buildings.to_frame(
             ["large_area_id", "city_id", "zone_id", "parcel_id"]
         ).reset_index()
         buildings.loc[
             ~buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"
         ] = 0
-        # #35
-        # whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
-        # m = pd.merge(buildings, whatnots, 'left', ['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
         whatnots = whatnots.to_frame(
             ["large_area_id", "city_id", "zone_id", "parcel_id"]
         ).reset_index()
@@ -770,6 +250,20 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     def whatnot_id(group_quarters, buildings):
         return misc.reindex(buildings.whatnot_id, group_quarters.building_id)
 
+    orca.add_injectable(
+        "form_to_btype",
+        {
+            "residential": [81, 82, 83],
+            "industrial": [31, 32, 33],
+            "retail": [21, 65],
+            "office": [23],
+            "medical": [51, 52, 53],
+            "entertainment": [61, 63, 91],
+            "mixedresidential": [21, 81, 82, 83],
+            "mixedoffice": [23, 81, 82, 83],
+        },
+    )
+
     for tab, geo_id in [
         ("cities", "city_id"),
         ("semmcds", "semmcd"),
@@ -791,7 +285,7 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
         "housing_units",
         "hu_filter",
         "parcel_is_allowed_residential",
-        # "parcel_is_allowed_demolition",
+        "parcel_is_allowed_demolition",
         "buildings",
         "household_size",
         "vacant_units",
@@ -1244,3 +738,7 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
 
     store_la.close()
 
+
+if __name__ == "__main__":
+    ## test script
+    main("./runs/run2001_indicators.h5", 2020, 2050, spacing=5, upload_to_carto=False)
