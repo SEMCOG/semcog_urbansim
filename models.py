@@ -61,7 +61,7 @@ def elcm_home_based(jobs, households):
     _print_number_unplaced(wrap_jobs, "building_id")
     jobs = wrap_jobs.to_frame(["building_id", "home_based_status", "large_area_id"])
     jobs = jobs[(jobs.home_based_status >= 1) & (jobs.building_id == -1)]
-    hh = households.to_frame(["building_id", "large_area_id"])
+    hh = households.to_frame(["building_id", "large_area_id", "sp_filter"])
     hh = hh[(hh.building_id > 0) & (hh.sp_filter >= 0)]
 
     for la, la_job in jobs.groupby("large_area_id"):
