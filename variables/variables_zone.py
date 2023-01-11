@@ -12,7 +12,7 @@ import pandas as pd
 def popden(parcels, households):
     return (
         households.persons.groupby(households.zone_id).sum()
-        / parcels.acres.groupby(parcels.zone_id).sum()
+        / parcels.acres.groupby(parcels.zone_id).sum().clip(lower=1)
     )
 
 

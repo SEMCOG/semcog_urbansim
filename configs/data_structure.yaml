@@ -253,6 +253,17 @@ columns:
   semcog_id: int32
   sqft: int16
 ---
+name: jobs_2019
+indexs:
+- job_id
+columns:
+  building_id: int32
+  home_based_status: int8
+  large_area_id: int32
+  sector_id: int8
+  semcog_id: int32
+  sqft: int32
+---
 name: land_use_types
 indexs:
 - land_use_type_id
