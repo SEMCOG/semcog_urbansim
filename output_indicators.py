@@ -1,41 +1,40 @@
 import pandas as pd
 import numpy as np
 import os
-import orca
 import time
+import warnings
+import requests
+import json
+import orca
 from collections import defaultdict
 from urbansim.utils import misc
 from time import sleep
 from cartoframes import to_carto
 from cartoframes import update_privacy_table
 from cartoframes.auth import set_default_credentials
-from variables.indicators import *
-import requests
-import json
+from indicators.model_outputs import *
+
+warnings.filterwarnings("ignore")
 
 
-def orca_year_dataset(hdf, year, base_year):
+def orca_year_dataset(hdf, tbls_to_load, year, is_base=False):
+    """
+    load orca tables with necessary geographies by specific year. Base year read from HDF base folder.
+    hdf: hdf storage object
+    tbls_to_load: list of tables
+    year: int
+    base: boolean, True means this year is base year
+    """
+
     orca.clear_cache()
     orca.add_injectable("year", year)
-    if str(year) == str(base_year):
-        year = "base"
-
-    # TODO: table ist as variable
-    for tbl in [
-        "parcels",
-        "buildings",
-        "jobs",
-        "households",
-        "persons",
-        "group_quarters",
-        "base_job_space",
-        "dropped_buildings",
-    ]:
-        name = str(year) + "/" + tbl
+    hdf_year = "base" if is_base else year
+    for tbl in tbls_to_load:
+        name = f"{hdf_year}/{tbl}"
         if name in hdf:
             df = hdf[name]
         else:
-            sub_name = str(base_year + 1) + "/" + tbl
+            sub_name = f"{year+1}/{tbl}"
             print(f"No table named {name}. Using the structure from {sub_name}.")
             df = hdf[sub_name].iloc[0:0]
 
@@ -44,7 +43,6 @@ def orca_year_dataset(hdf, year, base_year):
             df["large_area_id"] = misc.reindex(
                 orca.get_table("buildings").large_area_id, df.building_id
             )
-
         orca.add_table(tbl, df.fillna(0))
 
 
@@ -110,36 +108,43 @@ def upload_whatnots_to_carto(run_name, whatnots):
 
 def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
 
-    outdir = run_name.replace(".h5", "")
-
+    out_dir = run_name.replace(".h5", "")
     store_la = pd.HDFStore(run_name, mode="r")
     print(store_la)
 
     base_year = baseyear
     target_year = finalyear
     # spacing = 30 // (len(set(j[1: 5] for j in list(store_la.keys()) if j[1:5].isnumeric() and int(j[1:5]) > base_year)))
+    save_detailed_tables = False  # save hh, person, building records or not
 
     if spacing == 1:
-        all_years_dir = os.path.join(outdir, "annual")
-        if not (os.path.exists(all_years_dir)):
-            os.makedirs(all_years_dir)
+        all_years_dir = os.path.join(out_dir, "annual")
     else:
-        all_years_dir = outdir
+        all_years_dir = out_dir
+    if not (os.path.exists(all_years_dir)):
+        os.makedirs(all_years_dir)
 
-    # prepare geograhic tables, mcd, zone, large area and city
-    for tbl in ["semmcds", "zones", "large_areas"]:
+    # load essential tables for orca
+    for tbl in [
+        "semmcds",
+        "zones",
+        "large_areas",
+        "building_sqft_per_job",
+        "zoning",
+        "events_addition",
+        "events_deletion",
+        "refiner_events",
+        "employment_sectors",
+        "building_types",
+    ]:
         orca.add_table(tbl, store_la["base/" + tbl])
+    # add target year inputs
     for tbl in ["parcels", "buildings"]:
         orca.add_table(tbl, store_la[f"{target_year}/" + tbl])
+
     import variables
 
-    # semmcds has large_area_id
-    # @orca.column("semmcds", cache=True, cache_scope="iteration")
-    # def large_area_id(parcels):
-    #     parcels = parcels.to_frame(["semmcd", "large_area_id"])
-    #     return parcels.drop_duplicates("semmcd").set_index("semmcd").large_area_id
-
-    # make cities table
+    # make cities with large area table
     p = orca.get_table("parcels")
     p = p.to_frame(["large_area_id", "city_id", "zone_id"])
     cities = (
@@ -147,25 +152,10 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     )
     orca.add_table("cities", cities)
 
-    # clean parcel to geo table
+    # initialize whatnot
     whatnot = p.reset_index().drop_duplicates(
         ["large_area_id", "city_id", "zone_id", "parcel_id"]
     )
-
-    # # ? add events geos to whatnot, 2045 RDF special? not needed now
-    # e = store_la["base/events_addition"][["parcel_id", "city_id", "zone_id"]]
-    # e["parcel_id"] = e.parcel_id.astype(p.index.dtype)
-    # e["large_area_id"] = p.reindex(e.parcel_id).large_area_id.values
-    # # #35
-    # # e = e[['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']]
-    # e = e[["large_area_id", "city_id", "zone_id", "parcel_id"]]
-    # whatnot = whatnot.append(e, ignore_index=True)
-
-    # # get geos from buildings table, RDF 2045 unique since building broken connection to parcel
-    # b = orca.get_table("buildings").to_frame(
-    #     ["large_area_id", "city_id", "zone_id", "parcel_id"]
-    # )
-    # whatnot = whatnot.append(b, ignore_index=True)
 
     # target year building
     b = store_la[f"/{target_year}/buildings"]
@@ -179,90 +169,15 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
         interesting_parcel_ids = interesting_parcel_ids & set(acres[acres > 2].index)
     else:
         interesting_parcel_ids = set()
+    orca.add_injectable("interesting_parcel_ids", interesting_parcel_ids)
     whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
 
-    # #35
-    # whatnot = whatnot.drop_duplicates(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index(drop=True)
+    # clean up whatnot,
     whatnot = whatnot.drop_duplicates(
         ["large_area_id", "city_id", "zone_id", "parcel_id"]
     ).reset_index(drop=True)
     whatnot.index.name = "whatnot_id"
     orca.add_table("whatnots", whatnot)
-
-    @orca.column("parcels", cache=True, cache_scope="iteration")
-    def whatnot_id(parcels, whatnots):
-        # TODO: add school_id back in at some point
-        # #35
-        # parcels = parcels.to_frame(['large_area_id', 'city_id', 'zone_id']).rename(
-        #     columns={'zone_id': 'b_zone_id', 'city_id': 'b_city_id'})
-        parcels = parcels.to_frame(["large_area_id", "city_id", "zone_id"])
-        parcels["parcel_id"] = parcels.index
-        parcels.index.name = None
-        parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
-        # #35
-        # whatnots = whatnots.to_frame(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id']).reset_index()
-        whatnots = whatnots.to_frame(
-            ["large_area_id", "city_id", "zone_id", "parcel_id"]
-        ).reset_index()
-        # #35
-        # m = pd.merge(parcels, whatnots, 'left', ['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'])
-        m = pd.merge(
-            parcels,
-            whatnots,
-            "left",
-            ["large_area_id", "city_id", "zone_id", "parcel_id"],
-        )
-        return m.whatnot_id
-
-    @orca.column("buildings", cache=True, cache_scope="iteration")
-    def whatnot_id(buildings, whatnots):
-        # TODO: add school_id back in at some point
-        buildings = buildings.to_frame(
-            ["large_area_id", "city_id", "zone_id", "parcel_id"]
-        ).reset_index()
-        buildings.loc[
-            ~buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"
-        ] = 0
-        whatnots = whatnots.to_frame(
-            ["large_area_id", "city_id", "zone_id", "parcel_id"]
-        ).reset_index()
-        m = pd.merge(
-            buildings,
-            whatnots,
-            "left",
-            ["large_area_id", "city_id", "zone_id", "parcel_id"],
-        )
-        return m.set_index("building_id").whatnot_id
-
-    @orca.column("jobs", cache=True, cache_scope="iteration")
-    def whatnot_id(jobs, buildings):
-        return misc.reindex(buildings.whatnot_id, jobs.building_id)
-
-    @orca.column("households", cache=True, cache_scope="iteration")
-    def whatnot_id(households, buildings):
-        return misc.reindex(buildings.whatnot_id, households.building_id)
-
-    @orca.column("persons", cache=True, cache_scope="iteration")
-    def whatnot_id(households, persons):
-        return misc.reindex(households.whatnot_id, persons.household_id)
-
-    @orca.column("group_quarters", cache=True, cache_scope="iteration")
-    def whatnot_id(group_quarters, buildings):
-        return misc.reindex(buildings.whatnot_id, group_quarters.building_id)
-
-    orca.add_injectable(
-        "form_to_btype",
-        {
-            "residential": [81, 82, 83],
-            "industrial": [31, 32, 33],
-            "retail": [21, 65],
-            "office": [23],
-            "medical": [51, 52, 53],
-            "entertainment": [61, 63, 91],
-            "mixedresidential": [21, 81, 82, 83],
-            "mixedoffice": [23, 81, 82, 83],
-        },
-    )
 
     for tab, geo_id in [
         ("cities", "city_id"),
@@ -277,220 +192,27 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
 
     years = list(range(base_year, target_year + 1, spacing))
     year_names = ["yr" + str(i) for i in years]
-    indicators = [
-        "hh",
-        "hh_pop",
-        "gq_pop",
-        "pop",
-        "housing_units",
-        "hu_filter",
-        "parcel_is_allowed_residential",
-        "parcel_is_allowed_demolition",
-        "buildings",
-        "household_size",
-        "vacant_units",
-        "job_spaces",
-        "res_sqft",
-        "nonres_sqft",
-        "building_sqft_type_11",
-        "building_sqft_type_13",
-        "building_sqft_type_14",
-        "building_sqft_type_21",
-        "building_sqft_type_23",
-        "building_sqft_type_31",
-        "building_sqft_type_32",
-        "building_sqft_type_33",
-        "building_sqft_type_41",
-        "building_sqft_type_42",
-        "building_sqft_type_51",
-        "building_sqft_type_52",
-        "building_sqft_type_53",
-        "building_sqft_type_61",
-        "building_sqft_type_63",
-        "building_sqft_type_65",
-        "building_sqft_type_71",
-        "building_sqft_type_81",
-        "building_sqft_type_82",
-        "building_sqft_type_83",
-        "building_sqft_type_84",
-        "building_sqft_type_91",
-        "building_sqft_type_92",
-        "building_sqft_type_93",
-        "building_sqft_type_94",
-        "building_sqft_type_95",
-        "res_vacancy_rate",
-        "nonres_vacancy_rate",
-        "incomes_1",
-        "incomes_2",
-        "incomes_3",
-        "incomes_4",
-        "pct_incomes_1",
-        "pct_incomes_2",
-        "pct_incomes_3",
-        "pct_incomes_4",
-        "with_children",
-        "without_children",
-        "with_seniors",
-        "without_seniors",
-        "pct_with_children",
-        "pct_with_seniors",
-        "hh_size_1",
-        "hh_size_2",
-        "hh_size_3",
-        "hh_size_3p",
-        "hh_size_4p",
-        "with_children_hh_size_1",
-        "with_children_hh_size_2",
-        "with_children_hh_size_3",
-        "with_children_hh_size_3p",
-        "with_children_hh_size_4p",
-        "without_children_hh_size_1",
-        "without_children_hh_size_2",
-        "without_children_hh_size_3",
-        "without_children_hh_size_3p",
-        "without_children_hh_size_4p",
-        "hh_size_1_age_15_34",
-        "hh_size_1_age_35_44",
-        "hh_size_1_age_65_inf",
-        "hh_size_2p_age_15_34",
-        "hh_size_2p_age_35_44",
-        "hh_size_2p_age_65_inf",
-        "hh_pop_race_1",
-        "hh_pop_race_2",
-        "hh_pop_race_3",
-        "hh_pop_race_4",
-        "pct_hh_pop_race_1",
-        "pct_hh_pop_race_2",
-        "pct_hh_pop_race_3",
-        "pct_hh_pop_race_4",
-        "gq_pop_race_1",
-        "gq_pop_race_2",
-        "gq_pop_race_3",
-        "gq_pop_race_4",
-        "pct_gq_pop_race_1",
-        "pct_gq_pop_race_2",
-        "pct_gq_pop_race_3",
-        "pct_gq_pop_race_4",
-        "pop_race_1",
-        "pop_race_2",
-        "pop_race_3",
-        "pop_race_4",
-        "pct_pop_race_1",
-        "pct_pop_race_2",
-        "pct_pop_race_3",
-        "pct_pop_race_4",
-        "hh_no_car_or_lt_workers",
-        "pct_hh_no_car_or_lt_workers",
-        "hh_pop_age_00_04",
-        "hh_pop_age_05_17",
-        "hh_pop_age_18_24",
-        "hh_pop_age_25_34",
-        "hh_pop_age_35_64",
-        "hh_pop_age_65_inf",
-        "hh_pop_age_18_64",
-        "hh_pop_age_00_17",
-        "hh_pop_age_25_44",
-        "hh_pop_age_45_64",
-        "hh_pop_age_65_84",
-        "hh_pop_age_85_inf",
-        "hh_pop_age_35_59",
-        "hh_pop_age_60_64",
-        "hh_pop_age_65_74",
-        "hh_pop_age_75_inf",
-        "gq_pop_age_00_04",
-        "gq_pop_age_05_17",
-        "gq_pop_age_18_24",
-        "gq_pop_age_25_34",
-        "gq_pop_age_35_64",
-        "gq_pop_age_65_inf",
-        "gq_pop_age_18_64",
-        "gq_pop_age_00_17",
-        "gq_pop_age_25_44",
-        "gq_pop_age_45_64",
-        "gq_pop_age_65_84",
-        "gq_pop_age_85_inf",
-        "gq_pop_age_35_59",
-        "gq_pop_age_60_64",
-        "gq_pop_age_65_74",
-        "gq_pop_age_75_inf",
-        "pop_age_00_04",
-        "pop_age_05_17",
-        "pop_age_18_24",
-        "pop_age_25_34",
-        "pop_age_35_64",
-        "pop_age_65_inf",
-        "pop_age_18_64",
-        "pop_age_00_17",
-        "pop_age_25_44",
-        "pop_age_45_64",
-        "pop_age_65_84",
-        "pop_age_85_inf",
-        "pop_age_35_59",
-        "pop_age_60_64",
-        "pop_age_65_74",
-        "pop_age_75_inf",
-        "pop_age_25_54",
-        "pop_age_55_64",
-        "hh_pop_age_median",
-        "pct_hh_pop_age_05_17",
-        "pct_hh_pop_age_65_inf",
-        "jobs_total",
-        "jobs_sec_01",
-        "jobs_sec_02",
-        "jobs_sec_03",
-        "jobs_sec_04",
-        "jobs_sec_05",
-        "jobs_sec_06",
-        "jobs_sec_07",
-        "jobs_sec_08",
-        "jobs_sec_09",
-        "jobs_sec_10",
-        "jobs_sec_11",
-        "jobs_sec_12",
-        "jobs_sec_13",
-        "jobs_sec_14",
-        "jobs_sec_15",
-        "jobs_sec_16",
-        "jobs_sec_17",
-        "jobs_sec_18",
-        "jobs_home_based_in_nonres",
-        "jobs_home_based",
-        "jobs_sec_01_home_based",
-        "jobs_sec_02_home_based",
-        "jobs_sec_03_home_based",
-        "jobs_sec_04_home_based",
-        "jobs_sec_05_home_based",
-        "jobs_sec_06_home_based",
-        "jobs_sec_07_home_based",
-        "jobs_sec_08_home_based",
-        "jobs_sec_09_home_based",
-        "jobs_sec_10_home_based",
-        "jobs_sec_11_home_based",
-        "jobs_sec_12_home_based",
-        "jobs_sec_13_home_based",
-        "jobs_sec_14_home_based",
-        "jobs_sec_15_home_based",
-        "jobs_sec_16_home_based",
-        "jobs_sec_17_home_based",
-        "jobs_sec_18_home_based",
-    ]
-
     geom = ["cities", "semmcds", "zones", "large_areas", "whatnots"]
+    tbls_to_load = [
+        "parcels",
+        "buildings",
+        "jobs",
+        "households",
+        "persons",
+        "group_quarters",
+        "base_job_space",
+        "dropped_buildings",
+    ]
 
     start = time.time()
 
-    base_dict_ind = defaultdict(list)
-    print("processing ", "base year")
-    orca_year_dataset(store_la, "base")
-    for tab in geom:
-        base_dict_ind[tab].append(orca.get_table(tab).to_frame(indicators))
-
+    print("producing all indicators by year ...")
     dict_ind = defaultdict(list)
     for year in years:
         print("processing ", year)
-        orca_year_dataset(store_la, year)
+        orca_year_dataset(store_la, tbls_to_load, year, year == base_year)
         for tab in geom:
-            dict_ind[tab].append(orca.get_table(tab).to_frame(indicators))
+            dict_ind[tab].append(orca.get_table(tab).to_frame(list_indicators()))
     end = time.time()
     print("runtime:", end - start)
 
@@ -502,55 +224,32 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     df = df.T
     df.index = pd.MultiIndex.from_tuples(df.index)
     df = df.sort_index().sort_index(axis=1)
-    del df["res_vacancy_rate"]
-    del df["nonres_vacancy_rate"]
-    del df["household_size"]
-    del df["hh_pop_age_median"]
-    df = df[df.columns[~df.columns.str.startswith("pct_")]]
+
+    df.drop(
+        [
+            "res_vacancy_rate",
+            "nonres_vacancy_rate",
+            "household_size",
+            "hh_pop_age_median",
+        ],
+        axis=1,
+    )
+    df = df[
+        df.columns[~df.columns.str.startswith("pct_")]
+    ]  # remove pct columns for whatsnot
 
     sumstd = df.groupby(level=0).std().sum().sort_values()
     print(sumstd[sumstd > 0])
-
     print(df[sumstd[sumstd > 0].index])
-
     # Todo: add part of fenton to semmcd table
     print(
-        set(orca.get_table("semmcds").to_frame(indicators).hh_pop.index)
+        set(orca.get_table("semmcds").to_frame(list_indicators()).hh_pop.index)
         ^ set(orca.get_table("semmcds").hh_pop.index)
     )
 
+    # process and save whatnots_output table by year interval
     start = time.time()
     whatnots_local = orca.get_table("whatnots").local.fillna(0)
-
-    base_whatnots_output = []
-    base_df = base_dict_ind["whatnots"][0].copy()
-    base_df.index.name = "whatnot_id"
-    del base_df["res_vacancy_rate"]
-    del base_df["nonres_vacancy_rate"]
-    del base_df["household_size"]
-    del base_df["hh_pop_age_median"]
-    base_df = base_df[base_df.columns[~(base_df.columns.str.startswith("pct_"))]]
-
-    base_df[whatnots_local.columns] = whatnots_local
-
-    base_df.set_index(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"], inplace=True
-    )
-
-    base_df = base_df.fillna(0)
-    base_df = base_df.sort_index().sort_index(axis=1)
-
-    base_df.columns.name = "indicator"
-    base_df = base_df.stack().to_frame()
-    base_df["year"] = "yrbase"
-    base_df.set_index("year", append=True, inplace=True)
-    base_whatnots_output.append(base_df)
-    base_whatnots_output = pd.concat(base_whatnots_output).unstack(fill_value=0)
-    base_whatnots_output.index.rename("city_id", level=1, inplace=True)
-    base_whatnots_output.index.rename("zone_id", level=2, inplace=True)
-    base_whatnots_output.columns = ["yrbase"]
-    base_whatnots_output.to_csv(os.path.join(all_years_dir, "base_whatnots_output.csv"))
-
     whatnots_output = []
     for i, y in enumerate(year_names):
         df = dict_ind["whatnots"][i].copy()
@@ -559,14 +258,9 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
         del df["nonres_vacancy_rate"]
         del df["household_size"]
         del df["hh_pop_age_median"]
-        df = df[df.columns[~(df.columns.str.startswith("pct_"))]]
 
         df[whatnots_local.columns] = whatnots_local
-
-        # #35
-        # df.set_index(['large_area_id', 'b_city_id', 'b_zone_id', 'parcel_id'], inplace=True)
         df.set_index(["large_area_id", "city_id", "zone_id", "parcel_id"], inplace=True)
-
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
 
@@ -582,90 +276,58 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
     whatnots_output.columns = year_names
     if spacing == 1:
         whatnots_output[year_names[::5]].to_csv(
-            os.path.join(outdir, "whatnots_output.csv")
+            os.path.join(out_dir, "whatnots_output.csv")
         )
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
-    # upload_whatnots_to_postgres(os.path.basename(outdir), whatnots_output)
+
+    # upload_whatnots_to_postgres(os.path.basename(out_dir), whatnots_output)
     if upload_to_carto is True:
-        upload_whatnots_to_carto(os.path.basename(outdir), whatnots_output)
+        upload_whatnots_to_carto(os.path.basename(out_dir), whatnots_output)
     end = time.time()
     print("runtime whatnots:", end - start)
 
+    # save indicators to excel files
+    print("\n* Making indicators by year")
     start = time.time()
     geom = ["cities", "large_areas", "semmcds", "zones"]
+
     for tab in geom:
         print(tab)
+        # indicator for year, also save 5-year indicator files if spacing ==1
+        xls_name = tab + "_by_indicator_for_year.xlsx"
+        y5 = year_names[::5]
 
         if spacing == 1:
-            writer = pd.ExcelWriter(
-                os.path.join(outdir, tab + "_by_indicator_for_year.xlsx")
-            )
-            for i, y in list(enumerate(year_names))[::5]:
-                df = dict_ind[tab][i]
-                df = df.fillna(0)
-                df = df.sort_index().sort_index(axis=1)
-                df.to_excel(writer, y)
-            writer.save()
+            writer5 = pd.ExcelWriter(os.path.join(out_dir, xls_name))
 
-        writer = pd.ExcelWriter(
-            os.path.join(all_years_dir, tab + "_by_indicator_for_year.xlsx")
-        )
+        writer = pd.ExcelWriter(os.path.join(all_years_dir, xls_name))
         for i, y in enumerate(year_names):
             df = dict_ind[tab][i]
             df = df.fillna(0)
             df = df.sort_index().sort_index(axis=1)
             df.to_excel(writer, y)
+            if (spacing == 1) & (y in y5):  # 5-year indicator files
+                df.to_excel(writer5, y)
         writer.save()
-
         if spacing == 1:
-            writer = pd.ExcelWriter(
-                os.path.join(outdir, tab + "_by_year_for_indicator.xlsx")
-            )
-            if tab == "cities":
-                la_id = orca.get_table(tab).large_area_id
-            if tab == "semmcds":
-                la_id = orca.get_table(tab).large_area_id
-                # name = orca.get_table(tab).city_name
-            if tab == "large_areas":
-                name = orca.get_table(tab).large_area_name
-            for ind in indicators:
-                df = pd.concat([df[ind] for df in dict_ind[tab][::5]], axis=1)
-                df.columns = year_names[::5]
-                if tab == "cities":
-                    df["large_area_id"] = la_id
-                    df.set_index("large_area_id", append=True, inplace=True)
-                if tab == "semmcds":
-                    df["large_area_id"] = la_id
-                    df.set_index("large_area_id", append=True, inplace=True)
-                if tab == "large_areas":
-                    df["large_area_name"] = name
-                    df.set_index("large_area_name", append=True, inplace=True)
-                if len(df.columns) > 0:
-                    print("saving:", ind)
-                    df = df.fillna(0)
-                    df = df.sort_index().sort_index(axis=1)
-                    df.to_excel(writer, ind)
-                else:
-                    print("somtning is wrong with:", ind)
-            writer.save()
+            writer5.save()
 
-        writer = pd.ExcelWriter(
-            os.path.join(all_years_dir, tab + "_by_year_for_indicator.xlsx")
-        )
-        if tab == "cities":
-            la_id = orca.get_table(tab).large_area_id
-        if tab == "semmcds":
+        # year for indicator
+        print("\n* Making years by indicator")
+        xls_name = tab + "_by_year_for_indicator.xlsx"
+        if spacing == 1:
+            writer5 = pd.ExcelWriter(os.path.join(out_dir, xls_name))
+
+        writer = pd.ExcelWriter(os.path.join(all_years_dir, xls_name))
+        if tab == "cities" or tab == "semmcds":
             la_id = orca.get_table(tab).large_area_id
             # name = orca.get_table(tab).city_name
         if tab == "large_areas":
             name = orca.get_table(tab).large_area_name
-        for ind in indicators:
+        for ind in list_indicators():
             df = pd.concat([df[ind] for df in dict_ind[tab]], axis=1)
             df.columns = year_names
-            if tab == "cities":
-                df["large_area_id"] = la_id
-                df.set_index("large_area_id", append=True, inplace=True)
-            if tab == "semmcds":
+            if tab == "cities" or tab == "semmcds":
                 df["large_area_id"] = la_id
                 df.set_index("large_area_id", append=True, inplace=True)
             if tab == "large_areas":
@@ -676,48 +338,58 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(axis=1)
                 df.to_excel(writer, ind)
+                if spacing == 1:
+                    df[y5].to_excel(writer5, ind)
             else:
-                print("somtning is wrong with:", ind)
+                print("something is wrong with:", ind)
         writer.save()
+        if spacing == 1:
+            writer5.save()
+
     end = time.time()
     print("runtime geom:", end - start)
 
-    start = time.time()
-    for year in range(base_year, target_year + 1, 5):
-        print("buildings for", year)
-        orca_year_dataset(store_la, year)
-        buildings = orca.get_table("buildings")
-        df = buildings.to_frame(
-            buildings.local_columns + ["city_id", "large_area_id", "x", "y"]
-        )
-        df = df[df.building_type_id != 99]
-        df = df.fillna(0)
-        df = df.sort_index().sort_index(axis=1)
-        df.to_csv(os.path.join(outdir, "buildings_yr" + str(year) + ".csv"))
+    # save disaggregated tables: buildings, households, persons
+    if save_detailed_tables == True:
+        print("\nSaving detailed tables.....")
+        start = time.time()
+        for year in range(base_year, target_year + 1, 5):
+            print("buildings for", year)
+            orca_year_dataset(store_la, tbls_to_load, year, year == base_year)
+            buildings = orca.get_table("buildings")
+            df = buildings.to_frame(
+                buildings.local_columns + ["city_id", "large_area_id", "x", "y"]
+            )
+            df = df[df.building_type_id != 99]
+            df = df.fillna(0)
+            df = df.sort_index().sort_index(axis=1)
+            df.to_csv(os.path.join(out_dir, "buildings_yr" + str(year) + ".csv"))
 
-        persons = orca.get_table("persons")
-        df = persons.to_frame(persons.local_columns + ["city_id", "large_area_id"])
-        df = df.fillna(0)
-        df = df.sort_index().sort_index(axis=1)
-        df.to_csv(os.path.join(outdir, "hh_persons_yr" + str(year) + ".csv"))
+            persons = orca.get_table("persons")
+            df = persons.to_frame(persons.local_columns + ["city_id", "large_area_id"])
+            df = df.fillna(0)
+            df = df.sort_index().sort_index(axis=1)
+            df.to_csv(os.path.join(out_dir, "hh_persons_yr" + str(year) + ".csv"))
 
-        households = orca.get_table("households")
-        df = households.to_frame(
-            households.local_columns + ["city_id", "large_area_id"]
-        )
-        df = df.fillna(0)
-        df = df.sort_index().sort_index(axis=1)
-        df.to_csv(os.path.join(outdir, "households_yr" + str(year) + ".csv"))
-    end = time.time()
-    print("runtime:", end - start)
+            households = orca.get_table("households")
+            df = households.to_frame(
+                households.local_columns + ["city_id", "large_area_id"]
+            )
+            df = df.fillna(0)
+            df = df.sort_index().sort_index(axis=1)
+            df.to_csv(os.path.join(out_dir, "households_yr" + str(year) + ".csv"))
+        end = time.time()
+        print("runtime:", end - start)
 
+    # construction and demolition
+    print("\nSaving building differences (construction and demolition).....")
     start = time.time()
     years = years[1:]
     year_names = ["yr" + str(i) for i in years]
-    writer = pd.ExcelWriter(os.path.join(outdir, "buildings_dif_by_year.xlsx"))
+    writer = pd.ExcelWriter(os.path.join(out_dir, "buildings_dif_by_year.xlsx"))
     for year, year_name in zip(years, year_names):
         print("buildings for", year)
-        orca_year_dataset(store_la, year)
+        orca_year_dataset(store_la, tbls_to_load, year, year == base_year)
         buildings = orca.get_table("buildings")
         df = buildings.to_frame(buildings.local_columns + ["city_id", "large_area_id"])
         df = df[df.year_built == year]
@@ -741,4 +413,4 @@ def main(run_name, baseyear, finalyear, spacing=5, upload_to_carto=True):
 
 if __name__ == "__main__":
     ## test script
-    main("./runs/run2001_indicators.h5", 2020, 2050, spacing=5, upload_to_carto=False)
+    main("./runs/run2006_indicators.h5", 2020, 2025, spacing=1, upload_to_carto=False)
