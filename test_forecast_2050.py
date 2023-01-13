@@ -130,6 +130,7 @@ output_indicators.main(
     final_year,
     spacing=indicator_spacing,
     upload_to_carto=upload_to_carto,
+    add_2019=True,
 )
 
 utils.run_log(
