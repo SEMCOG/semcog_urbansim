@@ -38,6 +38,7 @@ for name in [
     "schools",
     "poi",
     "group_quarters",
+    "group_quarters_households",
     "group_quarters_control_totals",
     "annual_household_control_totals",
     "events_addition",
