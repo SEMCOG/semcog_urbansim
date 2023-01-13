@@ -694,8 +694,10 @@ def jobs_scaling_model(jobs):
 
 
 @orca.step()
-def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
+def gq_pop_scaling_model(group_quarters, group_quarters_households, group_quarters_control_totals, year):
     gqpop = group_quarters.to_frame(group_quarters.local_columns + ["city_id"])
+    print("%s gqpop before scaling" % gqpop.shape[0])
+    gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
     target_gq = group_quarters_control_totals.to_frame()
     target_gq = target_gq[target_gq.year == year]
     # if no control found, skip this year
@@ -723,8 +725,12 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, year):
             if diff > 0:
                 removegq = local_gqpop.sample()
                 gqpop.drop(removegq.index, inplace=True)
-
+    print("%s gqpop after scaling" % gqpop.shape[0])
+    # gq_pop and gq_hh using the same enumerated indexes
+    new_gqhh = gqhh.loc[gqhh.index.isin(gqpop.index)]
+    print("Dropping %s hh from gq_hh." % (gqhh.shape[0]-new_gqhh.shape[0]))
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
+    orca.add_table("group_quarters_households", new_gqhh[group_quarters_households.local_columns])
 
 
 @orca.step()
