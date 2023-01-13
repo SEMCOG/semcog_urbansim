@@ -556,11 +556,11 @@ def list_indicators():
         ## children
         "with_children",
         "without_children",
-        "pct_with_children"
+        "pct_with_children",
         ## senior
         "with_seniors",
         "without_seniors",
-        "pct_with_seniors"
+        "pct_with_seniors",
         ## chilren and size
         "with_children_hh_size_1",
         "with_children_hh_size_2",
@@ -696,5 +696,13 @@ def list_indicators():
     building_sqft = [f"building_sqft_type_{str(i).zfill(2)}" for i in btype_ids]
 
     return (
-        main + hh + hh_pop + pop + gq_pop + job + job_home_based + parcel_building + building_sqft
+        main
+        + hh
+        + hh_pop
+        + pop
+        + gq_pop
+        + job
+        + job_home_based
+        + parcel_building
+        + building_sqft
     )
