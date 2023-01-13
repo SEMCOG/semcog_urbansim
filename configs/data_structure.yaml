@@ -186,6 +186,7 @@ columns:
   age: int16
   building_id: int32
   gq_code: int16
+  hh_id: int32
   race_id: int16
 ---
 name: group_quarters_control_totals
@@ -203,6 +204,7 @@ columns:
   building_id: int32
   cars: float64
   children: float64
+  hh_id: int32
   household_type: float64
   income: int32
   persons: int8
