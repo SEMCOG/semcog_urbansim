@@ -74,6 +74,7 @@ orca.run(
     data_out=data_out,
     out_base_tables=[
         "jobs",
+        "jobs_2019",
         "base_job_space",
         "employment_sectors",
         "annual_relocation_rates_for_jobs",
