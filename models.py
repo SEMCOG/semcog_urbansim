@@ -30,16 +30,20 @@ for model_category_name, model_category_attributes in model_configs.items():
         model_config_files = model_category_attributes["config_filenames"]
 
         for model_config in model_config_files:
-            model = lcm_utils.create_lcm_from_config(
-                model_config, model_category_attributes
-            )
-            location_choice_models[model.name] = model
 
             if model_category_name == "hlcm":
+                model = lcm_utils.create_lcm_from_config(
+                    model_config, model_category_attributes, use_matching_model=True
+                )
                 hlcm_step_names.append(model.name)
 
             if model_category_name == "elcm":
+                model = lcm_utils.create_lcm_from_config(
+                    model_config, model_category_attributes, use_matching_model=False
+                )
                 elcm_step_names.append(model.name)
+
+            location_choice_models[model.name] = model
 
 orca.add_injectable("location_choice_models", location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
@@ -52,7 +56,11 @@ orca.add_injectable(
 )
 
 for name, model in list(location_choice_models.items()):
-    lcm_utils.register_choice_model_step(model.name, model.choosers)
+    if name in hlcm_step_names:
+        lcm_utils.register_hlcm_choice_model_step(model.name, model.choosers)
+    else:
+        lcm_utils.register_elcm_choice_model_step(model.name, model.choosers)
+
 
 
 @orca.step()

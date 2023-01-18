@@ -17,6 +17,7 @@ from urbansim_templates.models import LargeMultinomialLogitStep
 from urbansim.models.util import (apply_filter_query, columns_in_filters, 
         columns_in_formula)
 
+from matching_lcm import MatchingLocationChoiceModel
 
 
 def random_choices(model, choosers, alternatives):
@@ -152,22 +153,83 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_choice_model_step(model_name, agents_name):
+def register_hlcm_choice_model_step(model_name, agents_name):
 
     @orca.step(model_name)
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
-        if 'hlcm' in model_name:
-            alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
-            # filter for picking hh with no building_id assigned
-            chooser_filter = "(building_id==-1)"
-            alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
-        elif 'elcm' in model_name:
-            chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
-            alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
-            # filter for picking jobs with not building_id assigned
-            chooser_filter = "(building_id==-1)"
-            alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
+        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
+        # filter for picking hh with no building_id assigned
+        chooser_filter = "(building_id==-1)"
+        alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
+
+        # initialize simulation choosers and alts table
+        # formula_cols = columns_in_formula(model.model_expression)
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+        # choosers
+        choosers = orca.get_table(model.choosers)
+        formula_chooser_col = ["high_income", "is_large", "is_senior"]
+        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
+        # query using chooser_pre_filter to match whats used in estimation
+        choosers_idx = choosers_df.query(chooser_pre_filter).index
+        # std choosers columns
+        chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
+        choosers_df.loc[choosers_idx, formula_chooser_col] = (
+            chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
+        # filter using chooser_filter
+        final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
+
+        # alternatives
+        alts = orca.get_table(model.alternatives)
+        formula_alts_col = ["zones_logsum_pop_high_income", "nodes_walk_large_hhs", "nodes_walk_senior_hhs"]
+        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
+        # query using alts_pre_filter to match whats used in estimation
+        alts_idx = alts_df.query(alts_pre_filter).index
+        # std alts columns
+        alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
+        # std could introduce NaN, fill them with 0 after that
+        alts_df.loc[alts_idx, formula_alts_col] = ((
+            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
+
+        # filter using alt_filter
+        final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
+        final_alts_df = final_alts_df[formula_alts_col+[model.alt_capacity]]
+
+        orca.add_table('choosers', final_choosers_df)
+        orca.add_table('alternatives', final_alts_df)
+
+        model.out_choosers = 'choosers'
+        model.out_chooser_filters = None # already filtered
+        model.out_alternatives = 'alternatives'
+        model.out_alt_filters = None # already filtered
+
+        model.run(chooser_batch_size=1000)
+
+        # if not choices, return
+        if not type(model.choices) == pd.Series:
+            print('There are 0 unplaced agents.')
+            return
+
+        print('There are {} unplaced agents.'
+              .format(model.choices.isnull().sum()))
+
+        orca.get_table(agents_name).update_col_from_series(
+            model.choice_column, model.choices, cast=True)
+
+    return choice_model_simulate
+
+
+def register_elcm_choice_model_step(model_name, agents_name):
+
+    @orca.step(model_name)
+    def choice_model_simulate(location_choice_models):
+        model = location_choice_models[model_name]
+        chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
+        alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
+        # filter for picking jobs with not building_id assigned
+        chooser_filter = "(building_id==-1)"
+        alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
             
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)
@@ -541,7 +603,7 @@ def get_model_category_configs():
     return model_category_configs
 
 
-def create_lcm_from_config(config_filename, model_attributes):
+def create_lcm_from_config(config_filename, model_attributes, use_matching_model=False):
     """
     For a given model config filename and dictionary of model category
     attributes, instantiate a LargeMultinomialLogitStep object.
@@ -552,7 +614,10 @@ def create_lcm_from_config(config_filename, model_attributes):
     with open(misc.config(config_filename), "r") as f:
         config_obj = yaml.load(f, Loader=yaml.FullLoader)
 
-    model = LargeMultinomialLogitStep.from_dict(config_obj['saved_object'])
+    if use_matching_model:
+        model = MatchingLocationChoiceModel.from_dict(config_obj['saved_object'])
+    else:
+        model = LargeMultinomialLogitStep.from_dict(config_obj['saved_object'])
     model.choosers = model_attributes['agents_name']
     model.alternatives = model_attributes['alternatives_name']
     model.choice_column = model_attributes['alternatives_id_name']
