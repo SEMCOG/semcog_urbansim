@@ -36,6 +36,7 @@ for name in [
     "transit_stops",
     "crime_rates",
     "schools",
+    "jobs_2019",
     "poi",
     "group_quarters",
     "group_quarters_households",
@@ -97,7 +98,9 @@ def bg_hh_increase():
 def buildings(store):
     df = store["buildings"]
     pseudo_buildings = store["pseudo_building_2020"]
-    pseudo_buildings = pseudo_buildings[[col for col in df.columns if col in pseudo_buildings]]
+    pseudo_buildings = pseudo_buildings[
+        [col for col in df.columns if col in pseudo_buildings]
+    ]
     df = pd.concat([df, pseudo_buildings], axis=0)
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
@@ -169,10 +172,7 @@ def households(store, buildings):
         b.index.values, idx_invalid_building_id.sum()
     )
 
-    df["large_area_id"] = misc.reindex(
-        b.large_area_id,
-        df.building_id,
-    )
+    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id,)
 
     # dtype optimization
     df["workers"] = df["workers"].fillna(0).astype(np.int8)
