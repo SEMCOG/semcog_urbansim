@@ -453,7 +453,7 @@ class MatchingLocationChoiceModel(TemplateStep):
         self.__mct_intx_ops = value
         self.send_to_listeners('mct_intx_ops', value)
 
-    def run(self, chooser_batch_size=None, interaction_terms=None):
+    def run(self):
         """
         Run the model step: simulate choices and use them to update an Orca column.
 
@@ -490,18 +490,6 @@ class MatchingLocationChoiceModel(TemplateStep):
         self.probabilities = None
         self.choices = None
 
-        if interaction_terms is not None:
-            uniq_intx_idx_names = set([
-                idx for intx in interaction_terms for idx in intx.index.names])
-            obs_extra_cols = to_list(self.chooser_size) + \
-                list(uniq_intx_idx_names)
-            alts_extra_cols = to_list(
-                self.alt_capacity) + list(uniq_intx_idx_names)
-
-        else:
-            obs_extra_cols = to_list(self.chooser_size)
-            alts_extra_cols = to_list(self.alt_capacity)
-
         observations = orca.get_table(self.out_choosers).to_frame()
         agents = observations.values
         agent_idx = observations.index.values
@@ -528,79 +516,51 @@ class MatchingLocationChoiceModel(TemplateStep):
         m = alts.shape[0]
 
         # initialized HU index for the geo
-        hu_index = np.arange(m)
-        out_index = geo_slice.index
+        alts_index = np.arange(m)
+        # out_index = geo_slice.index
         # initialize start index for HH
         start_ind = 0
+        # initial choice -1
+        choices = -np.ones(n)
         # debug
         # init_assigned_hh = (out.loc[geo_slice.index, 'matched_household_id'] != -1).sum()
-        while hu_index.shape[0] > 0:
+        while alts_index.shape[0] > 0 and start_ind < n:
             # if #of hh exceed max size, create chunk with size min(n, max_matrix_size)
-            num_hu = min(m, max_matrix_size)
-            num_hh = min(n, max_matrix_size)
+            num_alts = min(m, max_matrix_size)
+            num_agents = min(n, max_matrix_size)
             # if index exceed range, use n
-            end_ind = min(start_ind + num_hh, n)
-            hh_sample_ind = np.arange(start_ind, end_ind, dtype=np.int64)
+            end_ind = min(start_ind + num_agents, n)
             # get the HH split by index
-            hh_split_i = observations[start_ind:end_ind, :]
-            # get group by bg
-            hu_bg_unique, hu_bg_unique_count = np.unique(alternatives[hu_index][:, [1, 3, 4]], axis=0, return_counts=True)
-            if len(hu_bg_unique_count) > 1:
-                # if more than one bg in this geo
-                # generate importance score based on syn HH summary table by BG
-                bg = np.array([syn_bg_count[np.all(np.isin(syn_bg_count[:, :3], ar), axis=1)][0]
-                            # if the bg is found in the synthesis count
-                        if np.all(np.isin(syn_bg_count[:, :3], ar), axis=1).sum()!=0
-                            # if not found, use count 1
-                        else np.append(ar, 1)
-                        for ar in hu_bg_unique])
-                # bg = syn_bg_count[np.all(np.isin(syn_bg_count[:, :3], hu_bg_unique), axis=1)]
-                bg_count = np.repeat(bg[:, -1], hu_bg_unique_count) if len(bg) > 0 else np.array([])
-                p = np.divide(bg_count, np.sum(bg_count)) if len(bg_count) > 0 else None
-            else:
-                # if only one bg in this geo, skip this step
-                p = None
-
+            agents_bulk = agents[start_ind:end_ind, :]
+            p = None
             # get sampled HU split by random sampling
-            hu_sample_ind = np.random.choice(m, num_hu, replace=False, p=p)
+            hu_sample_ind = np.random.choice(m, num_alts, replace=False, p=p)
 
-            # not including the last col(matched_hh_id)
-            hu_split_i = alternatives[hu_index][hu_sample_ind, :-1]
+            alts_bulk = alts[alts_index][hu_sample_ind, :]
 
             # run placement algo on the set of Building and HH
             # building_result list: ind=building_id value=hh_id
 
-            match_result, match_building_ind = matching(hu_split_i, hh_split_i)
-            # update buildings with match hh_id
+            match_agent_idx, match_alt_idx = matching(alts_bulk, agents_bulk)
+
+            # update choices
             # TODO: updating matching result
-            hu_ind_to_update = out_index[hu_index[match_building_ind]]
-            # out.loc[hu_ind_to_update, 'matched_household_id'] = [
-            #     observations[hh_sample_ind[hh_ind], 0] for hh_ind in match_result]
+            # assign alts_id to agents choice
+            choices[match_agent_idx] = [alt_idx[idx] for idx in match_alt_idx]
 
             ## important
             # remove assigned hu from the pool
-            hu_index = np.delete(hu_index, match_building_ind)
+            alts_index = np.delete(alts_index, match_alt_idx)
 
-            # current_geo_slice = alternatives[[hu_index], :]
-            m = hu_index.shape[0]
+            # current_geo_slice = alternatives[[alts_index], :]
+            m = alts_index.shape[0]
 
             # update start_ind
-            start_ind += num_hh
+            start_ind += num_agents
             # if next start ind > hh length, stop while loop
-            if start_ind >= n:
-                # debug
-                break
 
         # Save choices to class object for diagnostics
-        self.choices = choices
-
-        # TODO: Update this
-        # Update Orca
-        # update_column(table=self.out_choosers,
-        #               fallback_table=self.choosers,
-        #               column=self.out_column,
-        #               fallback_column=self.choice_column,
-        #               data=choices)
+        self.choices = pd.Series(choices, index=agent_idx).astype(int)
 
 #credits goes to Geekforgeek
 @numba.jit(nopython=True)
@@ -653,14 +613,11 @@ def row_rank( match_matrix, row):
     return:
     prefer_ranking  np.array
     '''
-    weight = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000], dtype=np.int64)
+    weight = np.array([1000, 1000, 1000], dtype=np.int64)
     # bool match geo
-    scores_mat = np.zeros((match_matrix.shape[0], 8), dtype=np.int64)
-    scores_mat[:, 0]    = ((match_matrix[:, 1:5] != row[1:5])       * weight[0:4]).sum(axis=1)
-    # bool tanure, building_type
-    scores_mat[:, 1: 3] = (match_matrix[:, 5:7] != row[5:7])         * weight[4:6]
+    scores_mat = np.zeros((match_matrix.shape[0], 3), dtype=np.int64)
     # numeric num_of_unit, property_values/rent, year_built, and income/biv
-    scores_mat[:, 3:8]  = np.abs(match_matrix[:, 7:12] - row[7:12]) * weight[6:11]
+    scores_mat[:]  = np.abs(match_matrix - row) * weight
     return scores_mat.sum(axis=1).argsort()
 
 def matching(alts, agents):
@@ -714,21 +671,21 @@ def matching(alts, agents):
     l = min(n, m)
     if n > m:
         # if more agents presented, take the first m record, all alts have been assigned
-        matched_alt_id = [i for i in range(m)]
-        result_wo_dum = np.array(result[0: l], dtype=np.int64)
+        match_alt_idx = [i for i in range(m)]
+        match_agent_idx = np.array(result[0: l], dtype=np.int64)
     else:
         # if more or equal alts, take the first n record, all agents have been assigned
         # get the alts which have valid agents assigned
         # init the list with dtype int
-        matched_alt_id = [1]
+        match_alt_idx = [1]
         # remove 1 from list
-        matched_alt_id.pop()
+        match_alt_idx.pop()
         for i, hh_ind in enumerate(result):
             if hh_ind in range(n):
-                matched_alt_id.append(i)
-        result_wo_dum = np.array([result[i]
-                                  for i in matched_alt_id], dtype=np.int64)
+                match_alt_idx.append(i)
+        match_agent_idx = np.array([result[i]
+                                  for i in match_alt_idx], dtype=np.int64)
     return (
-        result_wo_dum,
-        np.array(matched_alt_id, dtype=np.int64)
+        match_agent_idx,
+        np.array(match_alt_idx, dtype=np.int64)
     )
