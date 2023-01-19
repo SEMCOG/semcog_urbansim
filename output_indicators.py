@@ -318,7 +318,7 @@ def main(
     start = time.time()
     geom = ["cities", "large_areas", "semmcds", "zones"]
     not_jobs = [x for x in list_indicators() if "jobs" not in x]
-    if year_names[0] == "yr2019":
+    if add_2019:
         y5 = year_names[1::5]
         for tab in dict_ind:
             dict_ind[tab][0][not_jobs] = np.nan
@@ -453,11 +453,6 @@ def main(
 if __name__ == "__main__":
     ## test script
     main(
-        "./runs/run2006_indicators.h5",
-        2020,
-        2025,
-        add_2019=True,
-        spacing=5,
-        upload_to_carto=False,
+        "./runs/run2008.h5", 2020, 2050, add_2019=True, spacing=5, upload_to_carto=True,
     )
 
