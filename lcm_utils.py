@@ -179,6 +179,7 @@ def register_hlcm_choice_model_step(model_name, agents_name):
             chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
         # filter using chooser_filter
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
+        final_choosers_df = final_choosers_df[formula_chooser_col]
 
         # alternatives
         alts = orca.get_table(model.alternatives)
@@ -204,7 +205,7 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         model.out_alternatives = 'alternatives'
         model.out_alt_filters = None # already filtered
 
-        model.run(chooser_batch_size=1000)
+        model.run()
 
         # if not choices, return
         if not type(model.choices) == pd.Series:
@@ -212,7 +213,7 @@ def register_hlcm_choice_model_step(model_name, agents_name):
             return
 
         print('There are {} unplaced agents.'
-              .format(model.choices.isnull().sum()))
+              .format((model.choices == -1).sum()))
 
         orca.get_table(agents_name).update_col_from_series(
             model.choice_column, model.choices, cast=True)
