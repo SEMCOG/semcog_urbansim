@@ -514,6 +514,7 @@ class MatchingLocationChoiceModel(TemplateStep):
         max_matrix_size = 1000
         n = agents.shape[0]
         m = alts.shape[0]
+        print("Matching %s agents with %s alternatives" % (n, m))
 
         # initialized HU index for the geo
         alts_index = np.arange(m)
@@ -559,6 +560,8 @@ class MatchingLocationChoiceModel(TemplateStep):
             start_ind += num_agents
             # if next start ind > hh length, stop while loop
 
+        print("Finished matching agents with %s out of %s agents matched, with %s alts left" %
+              ((choices != -1).sum(), n, m))
         # Save choices to class object for diagnostics
         self.choices = pd.Series(choices, index=agent_idx).astype(int)
 
@@ -613,7 +616,7 @@ def row_rank( match_matrix, row):
     return:
     prefer_ranking  np.array
     '''
-    weight = np.array([1000, 1000, 1000], dtype=np.int64)
+    weight = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
     # bool match geo
     scores_mat = np.zeros((match_matrix.shape[0], 3), dtype=np.int64)
     # numeric num_of_unit, property_values/rent, year_built, and income/biv

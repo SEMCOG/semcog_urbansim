@@ -169,7 +169,7 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
         # choosers
         choosers = orca.get_table(model.choosers)
-        formula_chooser_col = ["high_income", "is_large", "is_senior"]
+        formula_chooser_col = ["high_income", "is_large", "is_senior", "has_children"]
         choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
         choosers_idx = choosers_df.query(chooser_pre_filter).index
@@ -180,10 +180,12 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         # filter using chooser_filter
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
         final_choosers_df = final_choosers_df[formula_chooser_col]
+        # sort by formula_chooser_col, decreasing order
+        final_choosers_df = final_choosers_df.sort_values(by=formula_chooser_col, ascending=False)
 
         # alternatives
         alts = orca.get_table(model.alternatives)
-        formula_alts_col = ["zones_logsum_pop_high_income", "nodes_walk_large_hhs", "nodes_walk_senior_hhs"]
+        formula_alts_col = ["zones_logsum_pop_high_income", "nodes_walk_large_hhs", "nodes_walk_senior_hhs", "nodes_walk_hhs_with_children"]
         alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
