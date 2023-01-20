@@ -180,6 +180,8 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         # filter using chooser_filter
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
         final_choosers_df = final_choosers_df[formula_chooser_col]
+        # sort by formula_chooser_col, decreasing order
+        final_choosers_df = final_choosers_df.sort_values(by=formula_chooser_col, ascending=False)
 
         # sort by formula_chooser_col, decreasing order
         # final_choosers_df = final_choosers_df.sort_values(by=formula_chooser_col, ascending=False)
