@@ -531,7 +531,9 @@ class MatchingLocationChoiceModel(TemplateStep):
             num_agents = min(n, max_matrix_size)
             # if index exceed range, use n
             end_ind = min(start_ind + num_agents, n)
-            # get the HH split by index
+            # agents global index for local chunk
+            agent_global_idx = np.arange(start_ind, end_ind, dtype=np.int64)
+            # get the local agents chunk by index
             agents_bulk = agents[start_ind:end_ind, :]
             p = None
             # get sampled HU split by random sampling
@@ -547,7 +549,7 @@ class MatchingLocationChoiceModel(TemplateStep):
             # update choices
             # TODO: updating matching result
             # assign alts_id to agents choice
-            choices[match_agent_idx] = [alt_idx[idx] for idx in match_alt_idx]
+            choices[agent_global_idx[match_agent_idx]] = [alt_idx[idx] for idx in match_alt_idx]
 
             ## important
             # remove assigned hu from the pool
