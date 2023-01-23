@@ -198,6 +198,8 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
         final_alts_df = final_alts_df[formula_alts_col+[model.alt_capacity]]
+        final_alts_df = final_alts_df.fillna(0)
+        final_alts_df[model.alt_capacity] = final_alts_df[model.alt_capacity].astype(int)
 
         orca.add_table('choosers', final_choosers_df)
         orca.add_table('alternatives', final_alts_df)

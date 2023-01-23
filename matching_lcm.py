@@ -618,7 +618,7 @@ def row_rank( match_matrix, row):
     '''
     weight = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
     # bool match geo
-    scores_mat = np.zeros((match_matrix.shape[0], 3), dtype=np.int64)
+    scores_mat = np.zeros((match_matrix.shape[0], 4), dtype=np.int64)
     # numeric num_of_unit, property_values/rent, year_built, and income/biv
     scores_mat[:]  = np.abs(match_matrix - row) * weight
     return scores_mat.sum(axis=1).argsort()
