@@ -181,13 +181,19 @@ columns:
 ---
 name: group_quarters
 indexs:
-- personid
+- person_id
 columns:
   age: int16
   building_id: int32
   gq_code: int16
   hh_id: int32
+  household_id: int32
+  industry: int8
+  member_id: int8
   race_id: int16
+  relate: int8
+  sex: int8
+  worker: int8
 ---
 name: group_quarters_control_totals
 indexs:
@@ -198,20 +204,19 @@ columns:
 ---
 name: group_quarters_households
 indexs:
-- None
+- household_id
 columns:
   age_of_head: int8
   building_id: int32
-  cars: float64
-  children: float64
+  cars: int8
+  children: int8
   hh_id: int32
-  household_type: float64
+  hht: int8
   income: int32
   persons: int8
   race_id: int8
-  serialno: object
-  ten: float64
-  valp: float64
+  seed_id: object
+  ten: int8
   workers: int8
 ---
 name: households
@@ -223,12 +228,12 @@ columns:
   building_id: int32
   cars: int8
   children: int8
-  household_type: int8
+  hht: int8
   income: float64
   persons: int8
   race_id: int8
+  seed_id: int32
   ten: int8
-  valp: int32
   workers: int8
 ---
 name: income_growth_rates
@@ -367,10 +372,8 @@ columns:
   household_id: int32
   industry: int8
   member_id: int8
-  naicsp: object
   race_id: int8
   relate: int8
-  school_grade: int8
   sex: int8
   worker: int8
 ---
