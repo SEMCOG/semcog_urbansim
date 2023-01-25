@@ -173,12 +173,16 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         ).fillna(0)
         # sum of normalized score
         normalized_score = (-building_age_norm) + bg_trend_norm
+        # set name to score
+        normalized_score.name = "score"
+        # use absolute index for sorting
+        normalized_score = normalized_score.reset_index()
         # sorted by the score from high to low
         normalized_score = normalized_score.sort_values(
-            ascending=False, ignore_index=False
+            by="score",ascending=False, ignore_index=False
         )
         # apply sorted index back to city_units
-        city_units = city_units.loc[normalized_score.index]
+        city_units = city_units.iloc[normalized_score.index]
         # .sort_values(by='building_age', ascending=True)
         # pick the top k units
         growth = mcd_growth.loc[city]
