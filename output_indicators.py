@@ -370,8 +370,8 @@ def main(
                 df.set_index("large_area_name", append=True, inplace=True)
             if len(df.columns) > 0:
                 print("saving:", ind)
-                # df = df.dropna(axis=1, how="all")
-                # if add_2019:
+                if add_2019:
+                    df = df.dropna(axis=1, how="all")
                 #     df = df.drop('yr2019', axis=1)
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(axis=1)
