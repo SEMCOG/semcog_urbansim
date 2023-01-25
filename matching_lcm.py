@@ -537,9 +537,10 @@ class MatchingLocationChoiceModel(TemplateStep):
             agents_bulk = agents[start_ind:end_ind, :]
             p = None
             # get sampled HU split by random sampling
-            hu_sample_ind = np.random.choice(m, num_alts, replace=False, p=p)
+            alts_sample_idx = np.random.choice(m, num_alts, replace=False, p=p)
 
-            alts_bulk = alts[alts_index][hu_sample_ind, :]
+            alts_bulk = alts[alts_index][alts_sample_idx, :]
+            alts_bulk_idx = alt_idx[alts_index][alts_sample_idx]
 
             # run placement algo on the set of Building and HH
             # building_result list: ind=building_id value=hh_id
@@ -549,7 +550,7 @@ class MatchingLocationChoiceModel(TemplateStep):
             # update choices
             # TODO: updating matching result
             # assign alts_id to agents choice
-            choices[agent_global_idx[match_agent_idx]] = [alt_idx[idx] for idx in match_alt_idx]
+            choices[agent_global_idx[match_agent_idx]] = [alts_bulk_idx[idx] for idx in match_alt_idx]
 
             ## important
             # remove assigned hu from the pool
