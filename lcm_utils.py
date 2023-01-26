@@ -167,9 +167,15 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         # formula_cols = columns_in_formula(model.model_expression)
         choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+
+        # define variable pairs and weights
+        formula_chooser_col = ["income", "persons", "age_of_head", "children"]
+        formula_alts_col = ["nodes_walk_ave_income", "nodes_walk_large_hhs",
+                            "nodes_walk_senior_hhs", "nodes_walk_hhs_with_children"]
+        variable_pairs_weights = [1000, 1000, 1000, 1000]
+
         # choosers
         choosers = orca.get_table(model.choosers)
-        formula_chooser_col = ["income", "persons", "age_of_head", "children"]
         choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
         choosers_idx = choosers_df.query(chooser_pre_filter).index
@@ -216,7 +222,7 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         model.out_alternatives = 'alternatives'
         model.out_alt_filters = None # already filtered
 
-        model.run()
+        model.run(weights=variable_pairs_weights)
 
         # if not choices, return
         if not type(model.choices) == pd.Series:

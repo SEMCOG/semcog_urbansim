@@ -453,7 +453,7 @@ class MatchingLocationChoiceModel(TemplateStep):
         self.__mct_intx_ops = value
         self.send_to_listeners('mct_intx_ops', value)
 
-    def run(self):
+    def run(self, weights):
         """
         Run the model step: simulate choices and use them to update an Orca column.
 
@@ -545,7 +545,7 @@ class MatchingLocationChoiceModel(TemplateStep):
             # run placement algo on the set of Building and HH
             # building_result list: ind=building_id value=hh_id
 
-            match_agent_idx, match_alt_idx = matching(alts_bulk, agents_bulk)
+            match_agent_idx, match_alt_idx = matching(alts_bulk, agents_bulk, weights)
 
             # update choices
             # TODO: updating matching result
@@ -608,31 +608,33 @@ def stable_matching(man_prefer, wmn_prefer):
             i += 1
     return wPartner
 
-def row_rank( match_matrix, row):
+def row_rank( match_matrix, row, weights):
     '''
     Row ranking
 
     args:
     match_matrix:   np.ndarray matrix to ranking against
     row:            np.array row
+    weights:        [int], variable weights
 
     return:
     prefer_ranking  np.array
     '''
-    weight = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
+    weight = np.array(weights, dtype=np.int64)
     # bool match geo
     scores_mat = np.zeros((match_matrix.shape[0], 4), dtype=np.int64)
     # numeric num_of_unit, property_values/rent, year_built, and income/biv
     scores_mat[:]  = np.abs(match_matrix - row) * weight
     return scores_mat.sum(axis=1).argsort()
 
-def matching(alts, agents):
+def matching(alts, agents, weights):
     '''
 	Transformed from forecast_data_input/placement.py:357 placement
     solving the stable matching program given encoded buildings and hh
     Input:
         - Alts record matrix: np.ndarray
         - Agents record matrix: np.ndarray
+        - weights: [int]
     Return:
         - matching result
     '''
@@ -644,12 +646,12 @@ def matching(alts, agents):
     agent_prefer_rank = np.zeros((n, m))
     i = 0
     for hh in agents:
-        agent_prefer_rank[i, :] = row_rank( alts, hh)
+        agent_prefer_rank[i, :] = row_rank(alts, hh, weights)
         i += 1
     alt_prefer_rank = np.zeros((m, n))
     i = 0
     for b in  alts:
-        alt_prefer_rank[i, :] = row_rank(agents, b)
+        alt_prefer_rank[i, :] = row_rank(agents, b, weights)
         i += 1
     if n < m:
         # Adding alts dummies
