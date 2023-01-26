@@ -38,7 +38,7 @@ def orca_year_dataset(hdf, tbls_to_load, year, is_base):
         if name in hdf:
             df = hdf[name]
         else:
-            sub_name = f"{year+2}/{tbl}"
+            sub_name = [n for n in hdf.keys() if tbl in n][0]
             print(f"No table named {name}. Using the structure from {sub_name}.")
             df = hdf[sub_name].iloc[0:0]
 
@@ -453,6 +453,11 @@ def main(
 if __name__ == "__main__":
     ## test script
     main(
-        "./runs/run2008.h5", 2020, 2050, add_2019=True, spacing=5, upload_to_carto=True,
+        "./runs/run2008.h5",
+        2020,
+        2021,
+        add_2019=True,
+        spacing=5,
+        upload_to_carto=False,
     )
 
