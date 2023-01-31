@@ -72,8 +72,10 @@ def make_indicators(tab, geo_id):
         return buildings.groupby(geo_id).job_spaces.sum()
 
     @orca.column(tab, cache=True, cache_scope="iteration")
-    def nonres_sqft(buildings):
-        buildings = buildings.to_frame([geo_id, "non_residential_sqft"])
+    def nonres_sqft(buildings, form_to_btype):
+        buildings = buildings.to_frame([geo_id, "non_residential_sqft", "building_type_id"])
+        # exclude all residential building_type
+        buildings = buildings[~buildings.building_type_id.isin(form_to_btype["residential"])]
         return buildings.groupby(geo_id).non_residential_sqft.sum()
 
     @orca.column(tab, cache=True, cache_scope="iteration")
