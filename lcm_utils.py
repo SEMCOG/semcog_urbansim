@@ -197,7 +197,6 @@ def register_hlcm_choice_model_step(model_name, agents_name):
 
         # alternatives
         alts = orca.get_table(model.alternatives)
-        formula_alts_col = ["nodes_walk_ave_income", "nodes_walk_large_hhs", "nodes_walk_senior_hhs", "nodes_walk_hhs_with_children"]
         # nodes_walk_ave_income
         alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
         # query using alts_pre_filter to match whats used in estimation
