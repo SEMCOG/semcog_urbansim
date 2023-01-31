@@ -35,8 +35,8 @@ pf_dict["forms"] = {
     "residential": {"residential": 1.0},
     "medical": {"medical": 1.0},
     "entertainment": {"entertainment": 1.0},
-    "mixedresidential": {"retail": 0.1, "residential": 0.9},
-    "mixedoffice": {"office": 0.7, "residential": 0.3},
+    # "mixedresidential": {"retail": 0.1, "residential": 0.9},
+    # "mixedoffice": {"office": 0.7, "residential": 0.3},
 }
 pf_dict["parking_rates"] = {
     "retail": 2.0,
@@ -71,4 +71,4 @@ pf.to_yaml("configs/proforma.yaml")
 
 # Test that pro forma can be loaded
 npf = SqFtProForma.from_yaml(str_or_buffer="configs/proforma.yaml")
-print((npf.get_debug_info("mixedoffice", "deck")))
+# print((npf.get_debug_info("mixedoffice", "deck")))
