@@ -21,13 +21,14 @@ final_year = 2050
 indicator_spacing = 5
 upload_to_carto = True
 run_debug = False
+add_2019 = True
 
 # check disk space, need at least 16GB
-total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
-print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB")
-if free < 17:
-    print(f"Free space is too small. Only {free} GB available. Stop running")
-    sys.exit()
+# total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
+# print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB")
+# if free < 17:
+#     print(f"Free space is too small. Only {free} GB available. Stop running")
+#     sys.exit()
 
 start_time = time.time()
 
@@ -131,7 +132,7 @@ output_indicators.main(
     final_year,
     spacing=indicator_spacing,
     upload_to_carto=upload_to_carto,
-    add_2019=True,
+    add_2019=add_2019,
 )
 
 utils.run_log(
