@@ -527,8 +527,8 @@ orca.add_injectable(
         "office": [23],
         "medical": [51, 52, 53],
         "entertainment": [61, 63, 91],
-        "mixedresidential": [21, 81, 82, 83],
-        "mixedoffice": [23, 81, 82, 83],
+        # "mixedresidential": [21, 81, 82, 83],
+        # "mixedoffice": [23, 81, 82, 83],
     },
 )
 
