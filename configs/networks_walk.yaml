@@ -80,6 +80,13 @@ variable_definitions:
     radius: 2500
     aggregation: count
 
+  - name: ave_hh_age
+    dataframe: households
+    varname: age_of_head
+    radius: 3280
+    aggregation: ave
+    decay: flat
+
   - name: midinc_hhs
     dataframe: households
     filters:
@@ -157,12 +164,19 @@ variable_definitions:
     aggregation: ave
     decay: flat
 
+  - name: ave_hhsize
+    dataframe: households
+    varname: persons
+    radius: 3280
+    aggregation: ave
+    decay: flat
+
   - name: ave_income
     dataframe: households
     varname: income
     filters:
     - income >= 0
-    radius: 2500
+    radius: 3280
     aggregation: ave
     decay: flat
     apply: np.log1p
