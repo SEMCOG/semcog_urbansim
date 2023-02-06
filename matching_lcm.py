@@ -7,17 +7,27 @@ import orca
 from choicemodels.tools import MergedChoiceTable
 from urbansim_templates import modelmanager
 from urbansim_templates.models import TemplateStep
-from urbansim_templates.utils import get_data, update_column, to_list, version_greater_or_equal
+from urbansim_templates.utils import (
+    get_data,
+    update_column,
+    to_list,
+    version_greater_or_equal,
+)
 from urbansim.models.util import columns_in_formula, apply_filter_query
+
 
 def check_choicemodels_version():
     try:
         import choicemodels
-        assert version_greater_or_equal(choicemodels.__version__, '0.2.dev4')
+
+        assert version_greater_or_equal(choicemodels.__version__, "0.2.dev4")
     except:
-        raise ImportError("LargeMultinomialLogitStep requires choicemodels 0.2.dev4 or "
-                          "later. For installation instructions, see "
-                          "https://github.com/udst/choicemodels.")
+        raise ImportError(
+            "LargeMultinomialLogitStep requires choicemodels 0.2.dev4 or "
+            "later. For installation instructions, see "
+            "https://github.com/udst/choicemodels."
+        )
+
 
 @modelmanager.template
 class MatchingLocationChoiceModel(TemplateStep):
@@ -160,19 +170,45 @@ class MatchingLocationChoiceModel(TemplateStep):
 
     """
 
-    def __init__(self, choosers=None, alternatives=None, model_expression=None,
-                 choice_column=None, chooser_filters=None, chooser_sample_size=None,
-                 alt_filters=None, alt_sample_size=None, out_choosers=None,
-                 out_alternatives=None, out_column=None, out_chooser_filters=None,
-                 out_alt_filters=None, constrained_choices=False, alt_capacity=None,
-                 chooser_size=None, max_iter=None, mct_intx_ops=None, name=None, tags=[]):
+    def __init__(
+        self,
+        choosers=None,
+        alternatives=None,
+        model_expression=None,
+        choice_column=None,
+        chooser_filters=None,
+        chooser_sample_size=None,
+        alt_filters=None,
+        alt_sample_size=None,
+        out_choosers=None,
+        out_alternatives=None,
+        out_column=None,
+        out_chooser_filters=None,
+        out_alt_filters=None,
+        constrained_choices=False,
+        alt_capacity=None,
+        chooser_size=None,
+        max_iter=None,
+        mct_intx_ops=None,
+        name=None,
+        tags=[],
+    ):
 
         self._listeners = []
 
         # Parent class can initialize the standard parameters
-        TemplateStep.__init__(self, tables=None, model_expression=model_expression,
-                              filters=None, out_tables=None, out_column=out_column, out_transform=None,
-                              out_filters=None, name=name, tags=tags)
+        TemplateStep.__init__(
+            self,
+            tables=None,
+            model_expression=model_expression,
+            filters=None,
+            out_tables=None,
+            out_column=out_column,
+            out_transform=None,
+            out_filters=None,
+            name=name,
+            tags=tags,
+        )
 
         # Custom parameters not in parent class
         self.choosers = choosers
@@ -202,8 +238,6 @@ class MatchingLocationChoiceModel(TemplateStep):
         self.probabilities = None
         self.choices = None
 
-
-
     def bind_to(self, callback):
         self._listeners.append(callback)
 
@@ -229,26 +263,38 @@ class MatchingLocationChoiceModel(TemplateStep):
         from choicemodels import MultinomialLogitResults
 
         # Pass values from the dictionary to the __init__() method
-        obj = cls(choosers=d['choosers'], alternatives=d['alternatives'],
-                  model_expression=d['model_expression'], choice_column=d['choice_column'],
-                  chooser_filters=d['chooser_filters'],
-                  chooser_sample_size=d['chooser_sample_size'],
-                  alt_filters=d['alt_filters'], alt_sample_size=d['alt_sample_size'],
-                  out_choosers=d['out_choosers'], out_alternatives=d['out_alternatives'],
-                  out_column=d['out_column'], out_chooser_filters=d['out_chooser_filters'],
-                  out_alt_filters=d['out_alt_filters'],
-                  constrained_choices=d['constrained_choices'], alt_capacity=d['alt_capacity'],
-                  chooser_size=d['chooser_size'], max_iter=d['max_iter'],
-                  mct_intx_ops=d.get('mct_intx_ops', None), name=d['name'],
-                  tags=d['tags'])
+        obj = cls(
+            choosers=d["choosers"],
+            alternatives=d["alternatives"],
+            model_expression=d["model_expression"],
+            choice_column=d["choice_column"],
+            chooser_filters=d["chooser_filters"],
+            chooser_sample_size=d["chooser_sample_size"],
+            alt_filters=d["alt_filters"],
+            alt_sample_size=d["alt_sample_size"],
+            out_choosers=d["out_choosers"],
+            out_alternatives=d["out_alternatives"],
+            out_column=d["out_column"],
+            out_chooser_filters=d["out_chooser_filters"],
+            out_alt_filters=d["out_alt_filters"],
+            constrained_choices=d["constrained_choices"],
+            alt_capacity=d["alt_capacity"],
+            chooser_size=d["chooser_size"],
+            max_iter=d["max_iter"],
+            mct_intx_ops=d.get("mct_intx_ops", None),
+            name=d["name"],
+            tags=d["tags"],
+        )
 
         # Load model fit data
-        obj.summary_table = d['summary_table']
-        obj.fitted_parameters = d['fitted_parameters']
+        obj.summary_table = d["summary_table"]
+        obj.fitted_parameters = d["fitted_parameters"]
 
         if obj.fitted_parameters is not None:
-            obj.model = MultinomialLogitResults(model_expression=obj.model_expression,
-                                                fitted_parameters=obj.fitted_parameters)
+            obj.model = MultinomialLogitResults(
+                model_expression=obj.model_expression,
+                fitted_parameters=obj.fitted_parameters,
+            )
 
         return obj
 
@@ -262,30 +308,30 @@ class MatchingLocationChoiceModel(TemplateStep):
 
         """
         d = {
-            'template': self.template,
-            'template_version': self.template_version,
-            'name': self.name,
-            'tags': self.tags,
-            'choosers': self.choosers,
-            'alternatives': self.alternatives,
-            'model_expression': self.model_expression,
-            'choice_column': self.choice_column,
-            'chooser_filters': self.chooser_filters,
-            'chooser_sample_size': self.chooser_sample_size,
-            'alt_filters': self.alt_filters,
-            'alt_sample_size': self.alt_sample_size,
-            'out_choosers': self.out_choosers,
-            'out_alternatives': self.out_alternatives,
-            'out_column': self.out_column,
-            'out_chooser_filters': self.out_chooser_filters,
-            'out_alt_filters': self.out_alt_filters,
-            'constrained_choices': self.constrained_choices,
-            'alt_capacity': self.alt_capacity,
-            'chooser_size': self.chooser_size,
-            'max_iter': self.max_iter,
-            'mct_intx_ops': self.mct_intx_ops,
-            'summary_table': self.summary_table,
-            'fitted_parameters': self.fitted_parameters,
+            "template": self.template,
+            "template_version": self.template_version,
+            "name": self.name,
+            "tags": self.tags,
+            "choosers": self.choosers,
+            "alternatives": self.alternatives,
+            "model_expression": self.model_expression,
+            "choice_column": self.choice_column,
+            "chooser_filters": self.chooser_filters,
+            "chooser_sample_size": self.chooser_sample_size,
+            "alt_filters": self.alt_filters,
+            "alt_sample_size": self.alt_sample_size,
+            "out_choosers": self.out_choosers,
+            "out_alternatives": self.out_alternatives,
+            "out_column": self.out_column,
+            "out_chooser_filters": self.out_chooser_filters,
+            "out_alt_filters": self.out_alt_filters,
+            "constrained_choices": self.constrained_choices,
+            "alt_capacity": self.alt_capacity,
+            "chooser_size": self.chooser_size,
+            "max_iter": self.max_iter,
+            "mct_intx_ops": self.mct_intx_ops,
+            "summary_table": self.summary_table,
+            "fitted_parameters": self.fitted_parameters,
         }
         return d
 
@@ -298,7 +344,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @choosers.setter
     def choosers(self, value):
         self.__choosers = self._normalize_table_param(value)
-        self.send_to_listeners('choosers', value)
+        self.send_to_listeners("choosers", value)
 
     @property
     def alternatives(self):
@@ -307,7 +353,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @alternatives.setter
     def alternatives(self, value):
         self.__alternatives = self._normalize_table_param(value)
-        self.send_to_listeners('alternatives', value)
+        self.send_to_listeners("alternatives", value)
 
     @property
     def model_expression(self):
@@ -316,7 +362,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @model_expression.setter
     def model_expression(self, value):
         self.__model_expression = value
-        self.send_to_listeners('model_expression', value)
+        self.send_to_listeners("model_expression", value)
 
     @property
     def choice_column(self):
@@ -325,7 +371,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @choice_column.setter
     def choice_column(self, value):
         self.__choice_column = value
-        self.send_to_listeners('choice_column', value)
+        self.send_to_listeners("choice_column", value)
 
     @property
     def chooser_filters(self):
@@ -334,7 +380,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @chooser_filters.setter
     def chooser_filters(self, value):
         self.__chooser_filters = value
-        self.send_to_listeners('chooser_filters', value)
+        self.send_to_listeners("chooser_filters", value)
 
     @property
     def chooser_sample_size(self):
@@ -343,7 +389,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @chooser_sample_size.setter
     def chooser_sample_size(self, value):
         self.__chooser_sample_size = value
-        self.send_to_listeners('chooser_sample_size', value)
+        self.send_to_listeners("chooser_sample_size", value)
 
     @property
     def alt_filters(self):
@@ -352,7 +398,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @alt_filters.setter
     def alt_filters(self, value):
         self.__alt_filters = value
-        self.send_to_listeners('alt_filters', value)
+        self.send_to_listeners("alt_filters", value)
 
     @property
     def alt_sample_size(self):
@@ -361,7 +407,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @alt_sample_size.setter
     def alt_sample_size(self, value):
         self.__alt_sample_size = value
-        self.send_to_listeners('alt_sample_size', value)
+        self.send_to_listeners("alt_sample_size", value)
 
     @property
     def out_choosers(self):
@@ -370,7 +416,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @out_choosers.setter
     def out_choosers(self, value):
         self.__out_choosers = self._normalize_table_param(value)
-        self.send_to_listeners('out_choosers', value)
+        self.send_to_listeners("out_choosers", value)
 
     @property
     def out_alternatives(self):
@@ -379,7 +425,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @out_alternatives.setter
     def out_alternatives(self, value):
         self.__out_alternatives = self._normalize_table_param(value)
-        self.send_to_listeners('out_alternatives', value)
+        self.send_to_listeners("out_alternatives", value)
 
     @property
     def out_column(self):
@@ -388,7 +434,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @out_column.setter
     def out_column(self, value):
         self.__out_column = value
-        self.send_to_listeners('out_column', value)
+        self.send_to_listeners("out_column", value)
 
     @property
     def out_chooser_filters(self):
@@ -397,7 +443,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @out_chooser_filters.setter
     def out_chooser_filters(self, value):
         self.__out_chooser_filters = value
-        self.send_to_listeners('out_chooser_filters', value)
+        self.send_to_listeners("out_chooser_filters", value)
 
     @property
     def out_alt_filters(self):
@@ -406,7 +452,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @out_alt_filters.setter
     def out_alt_filters(self, value):
         self.__out_alt_filters = value
-        self.send_to_listeners('out_alt_filters', value)
+        self.send_to_listeners("out_alt_filters", value)
 
     @property
     def constrained_choices(self):
@@ -415,7 +461,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @constrained_choices.setter
     def constrained_choices(self, value):
         self.__constrained_choices = value
-        self.send_to_listeners('constrained_choices', value)
+        self.send_to_listeners("constrained_choices", value)
 
     @property
     def alt_capacity(self):
@@ -424,7 +470,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @alt_capacity.setter
     def alt_capacity(self, value):
         self.__alt_capacity = value
-        self.send_to_listeners('alt_capacity', value)
+        self.send_to_listeners("alt_capacity", value)
 
     @property
     def chooser_size(self):
@@ -433,7 +479,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @chooser_size.setter
     def chooser_size(self, value):
         self.__chooser_size = value
-        self.send_to_listeners('chooser_size', value)
+        self.send_to_listeners("chooser_size", value)
 
     @property
     def max_iter(self):
@@ -442,7 +488,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @max_iter.setter
     def max_iter(self, value):
         self.__max_iter = value
-        self.send_to_listeners('max_iter', value)
+        self.send_to_listeners("max_iter", value)
 
     @property
     def mct_intx_ops(self):
@@ -451,7 +497,7 @@ class MatchingLocationChoiceModel(TemplateStep):
     @mct_intx_ops.setter
     def mct_intx_ops(self, value):
         self.__mct_intx_ops = value
-        self.send_to_listeners('mct_intx_ops', value)
+        self.send_to_listeners("mct_intx_ops", value)
 
     def run(self, weights):
         """
@@ -501,12 +547,20 @@ class MatchingLocationChoiceModel(TemplateStep):
         if len(alternatives) == 0:
             print("No valid alternatives")
             return
-        alts_col = [col for col in alternatives.columns if col not in [self.alt_capacity]]
-        alts = np.repeat(alternatives[alts_col].values, alternatives[self.alt_capacity].values, axis=0)
-        alt_idx = np.repeat(alternatives.index.values, alternatives[self.alt_capacity].values, axis=0)
+        alts_col = [
+            col for col in alternatives.columns if col not in [self.alt_capacity]
+        ]
+        alts = np.repeat(
+            alternatives[alts_col].values,
+            alternatives[self.alt_capacity].values,
+            axis=0,
+        )
+        alt_idx = np.repeat(
+            alternatives.index.values, alternatives[self.alt_capacity].values, axis=0
+        )
 
-		# given observations, alternatives
-		# produce choice
+        # given observations, alternatives
+        # produce choice
         # agents: agents     index: agent_idx
         # alternatives: alts index: alt_idx
         ##
@@ -550,7 +604,9 @@ class MatchingLocationChoiceModel(TemplateStep):
             # update choices
             # TODO: updating matching result
             # assign alts_id to agents choice
-            choices[agent_global_idx[match_agent_idx]] = [alts_bulk_idx[idx] for idx in match_alt_idx]
+            choices[agent_global_idx[match_agent_idx]] = [
+                alts_bulk_idx[idx] for idx in match_alt_idx
+            ]
 
             ## important
             # remove assigned hu from the pool
@@ -563,19 +619,23 @@ class MatchingLocationChoiceModel(TemplateStep):
             start_ind += num_agents
             # if next start ind > hh length, stop while loop
 
-        print("Finished matching agents with %s out of %s agents matched, with %s alts left" %
-              ((choices != -1).sum(), n, m))
+        print(
+            "Finished matching agents with %s out of %s agents matched, with %s alts left"
+            % ((choices != -1).sum(), n, m)
+        )
         # Save choices to class object for diagnostics
         self.choices = pd.Series(choices, index=agent_idx).astype(int)
 
-#credits goes to Geekforgeek
+
+# credits goes to Geekforgeek
 @numba.jit(nopython=True)
 def wPrefersM1OverM(prefer, w, m, m1, N):
     for i in range(N):
-        if (prefer[w][i] == m1):
+        if prefer[w][i] == m1:
             return True
-        if (prefer[w][i] == m):
+        if prefer[w][i] == m:
             return False
+
 
 @numba.jit(nopython=True)
 def stable_matching(man_prefer, wmn_prefer):
@@ -585,10 +645,10 @@ def stable_matching(man_prefer, wmn_prefer):
     mFree = [False for i in range(N)]
 
     freeCount = N
-    while (freeCount > 0):
+    while freeCount > 0:
         m = 0
-        while (m < N):
-            if (mFree[m] == False):
+        while m < N:
+            if mFree[m] == False:
                 break
             m += 1
 
@@ -601,15 +661,16 @@ def stable_matching(man_prefer, wmn_prefer):
                 freeCount -= 1
             else:
                 m1 = wPartner[w]
-                if (wPrefersM1OverM(wmn_prefer, w, m, m1, N) == False):
+                if wPrefersM1OverM(wmn_prefer, w, m, m1, N) == False:
                     wPartner[w] = m
                     mFree[m] = True
                     mFree[m1] = False
             i += 1
     return wPartner
 
-def row_rank( match_matrix, row, weights):
-    '''
+
+def row_rank(match_matrix, row, weights):
+    """
     Row ranking
 
     args:
@@ -619,16 +680,17 @@ def row_rank( match_matrix, row, weights):
 
     return:
     prefer_ranking  np.array
-    '''
+    """
     weight = np.array(weights, dtype=np.int64)
     # bool match geo
-    scores_mat = np.zeros((match_matrix.shape[0], 4), dtype=np.int64)
+    scores_mat = np.zeros((match_matrix.shape[0], len(weights)), dtype=np.int64)
     # numeric num_of_unit, property_values/rent, year_built, and income/biv
-    scores_mat[:]  = np.abs(match_matrix - row) * weight
+    scores_mat[:] = np.abs(match_matrix - row) * weight
     return scores_mat.sum(axis=1).argsort()
 
+
 def matching(alts, agents, weights):
-    '''
+    """
 	Transformed from forecast_data_input/placement.py:357 placement
     solving the stable matching program given encoded buildings and hh
     Input:
@@ -637,11 +699,11 @@ def matching(alts, agents, weights):
         - weights: [int]
     Return:
         - matching result
-    '''
+    """
     # # of agents rows
     n = agents.shape[0]
     # # of alts rows
-    m =  alts.shape[0]
+    m = alts.shape[0]
     # calculate alts prefer matrix and agents prefer matrix
     agent_prefer_rank = np.zeros((n, m))
     i = 0
@@ -650,37 +712,43 @@ def matching(alts, agents, weights):
         i += 1
     alt_prefer_rank = np.zeros((m, n))
     i = 0
-    for b in  alts:
+    for b in alts:
         alt_prefer_rank[i, :] = row_rank(agents, b, weights)
         i += 1
     if n < m:
         # Adding alts dummies
-        dummies_for_alts = np.repeat(np.arange(n, m), np.array([m])).reshape(
-            (m-n, m)).transpose()
+        dummies_for_alts = (
+            np.repeat(np.arange(n, m), np.array([m])).reshape((m - n, m)).transpose()
+        )
         # append dummies
         alt_prefer_rank = np.hstack((alt_prefer_rank, dummies_for_alts))
-        dummies_for_agents = np.repeat(
-            np.arange(m), np.array([m-n])).reshape((m, m-n)).transpose()
+        dummies_for_agents = (
+            np.repeat(np.arange(m), np.array([m - n])).reshape((m, m - n)).transpose()
+        )
         # append dummies
         agent_prefer_rank = np.vstack((agent_prefer_rank, dummies_for_agents))
     elif n > m:
         # Adding agents dummies
-        dummies_for_agents = np.repeat(np.arange(m, n), np.array([n])).reshape(
-            (n-m, n)).transpose()
+        dummies_for_agents = (
+            np.repeat(np.arange(m, n), np.array([n])).reshape((n - m, n)).transpose()
+        )
         # append dummies
         agent_prefer_rank = np.hstack((agent_prefer_rank, dummies_for_agents))
-        dummies_for_alts = np.repeat(
-            np.arange(n), np.array([n-m])).reshape((n, n-m)).transpose()
+        dummies_for_alts = (
+            np.repeat(np.arange(n), np.array([n - m])).reshape((n, n - m)).transpose()
+        )
         # append dummies
         alt_prefer_rank = np.vstack((alt_prefer_rank, dummies_for_alts))
     # take min(n, m) count as final result
-    result = stable_matching(agent_prefer_rank.astype(np.int64), alt_prefer_rank.astype(np.int64))
+    result = stable_matching(
+        agent_prefer_rank.astype(np.int64), alt_prefer_rank.astype(np.int64)
+    )
     # only keep l result excluding dummies
     l = min(n, m)
     if n > m:
         # if more agents presented, take the first m record, all alts have been assigned
         match_alt_idx = [i for i in range(m)]
-        match_agent_idx = np.array(result[0: l], dtype=np.int64)
+        match_agent_idx = np.array(result[0:l], dtype=np.int64)
     else:
         # if more or equal alts, take the first n record, all agents have been assigned
         # get the alts which have valid agents assigned
@@ -691,9 +759,5 @@ def matching(alts, agents, weights):
         for i, hh_ind in enumerate(result):
             if hh_ind in range(n):
                 match_alt_idx.append(i)
-        match_agent_idx = np.array([result[i]
-                                  for i in match_alt_idx], dtype=np.int64)
-    return (
-        match_agent_idx,
-        np.array(match_alt_idx, dtype=np.int64)
-    )
+        match_agent_idx = np.array([result[i] for i in match_alt_idx], dtype=np.int64)
+    return (match_agent_idx, np.array(match_alt_idx, dtype=np.int64))
