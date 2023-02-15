@@ -604,13 +604,11 @@ class MatchingLocationChoiceModel(TemplateStep):
             # update choices
             # TODO: updating matching result
             # assign alts_id to agents choice
-            choices[agent_global_idx[match_agent_idx]] = [
-                alts_bulk_idx[idx] for idx in match_alt_idx
-            ]
+            choices[agent_global_idx[match_agent_idx]] = alts_bulk_idx[match_alt_idx]
 
             ## important
             # remove assigned hu from the pool
-            alts_index = np.delete(alts_index, match_alt_idx)
+            alts_index = np.delete(alts_index, alts_sample_idx[match_alt_idx])
 
             # current_geo_slice = alternatives[[alts_index], :]
             m = alts_index.shape[0]
