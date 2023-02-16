@@ -14,6 +14,7 @@ from urbansim_parcels import utils as parcel_utils
 
 import utils
 import lcm_utils
+from zonal_redist import target_year_data, make_hh_la, get_czone_weights, assign_hh_to_hu, get_hh_refine_difference, match_hh_targets
 
 import dataset
 import variables
@@ -2065,6 +2066,65 @@ def refine_housing_units(households, buildings, mcd_total):
     buildings.update_col_from_series(
         "residential_units", b["residential_units"], cast=True
     )
+
+@orca.step()
+def baseyear_zonal_distribution(households, buildings):
+    households = households.to_frame(households.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns)
+    hbase = make_hh_la(households, buildings)
+    hbase_zone = hbase.groupby(['inc_qt', 'hhsize', 'large_area_id', 'b_city_id', 'city_zone']).size()
+    hbase_zone.name = 'weights'
+    hbase_zone = hbase_zone * 1.00
+    hbase_zone += 0.001
+    hbase_zone = hbase_zone.reset_index().set_index(['large_area_id', 'inc_qt', 'hhsize'])
+    orca.add_table('baseyear_households_by_zone', hbase_zone)
+
+@orca.step()
+def zonal_distribution(year, households, buildings, parcels, baseyear_households_by_zone):
+    print('year', year)
+    households = households.to_frame(households.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns)
+    parcels = parcels.to_frame(parcels.local_columns)
+    baseyear_households_by_zone = baseyear_households_by_zone.to_frame()
+
+    #prepare target year hhs, hhs grpby inc and size, b2(building id repeat by res units)
+    hyear, hyear_g, b2 = target_year_data(households, buildings, parcels, year)
+
+    #adjust weights and get city-zone sample distribution
+    hbase_zone = baseyear_households_by_zone.copy()
+    czone, czoneg, weightsg, hbase_zone = get_czone_weights(
+        hbase_zone, hyear, hyear_g)
+
+    czone = czone.reset_index()
+    czone['building_id'] = -1
+    #iter city-zone, assign HH to HUs by min(HH, HU), keep remaining HH and HU, do full random assginment at the end
+    czone, b2 = assign_hh_to_hu(czone, b2)
+
+    czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
+    hyear_new = hyear.copy()
+    #give new bid and c-z to households
+    for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize']):
+        hyear_new.loc[v.index,
+                      'building_id'] = czone.loc[ind].building_id.values
+        hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
+
+    hyear_new['new_city_id'] = (hyear_new.city_zone/10000.0).astype(int)
+
+    #get difference table between new and target
+    hyear_newg = get_hh_refine_difference(hyear_new, hyear)
+    print('dif table summary', hyear_newg.sum())
+    hyear_newg = hyear_newg.reset_index()
+
+    #refine by hh targets
+    hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
+
+    hyear_new['b_city_id'] = hyear_new['new_city_id']
+    hyear_new['b_zone_id'] = (hyear_new['city_zone'] % 10000).astype(int)
+    hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'new_city_id',
+                   'b_city_id', 'b_zone_id'], axis=1, inplace=True)
+    # update households table
+    # st[year + '/households_v5'] = st[year + '/households']
+    # st[year + '/households'] = hyear_new
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
