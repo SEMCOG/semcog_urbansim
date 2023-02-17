@@ -167,6 +167,14 @@ variable_definitions:
 
   - name: hhsize
     dataframe: households
+    varname: has_children
+    add_fields:
+    - has_children
+    radius: 3280
+    aggregation: mean
+
+  - name: hhsize
+    dataframe: households
     varname: persons
     radius: 1500
     aggregation: ave
