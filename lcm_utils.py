@@ -1,5 +1,3 @@
-
-
 import os
 import copy
 import yaml
@@ -14,8 +12,11 @@ from urbansim.models import util
 from urbansim.urbanchoice import interaction
 from urbansim.models import MNLDiscreteChoiceModel
 from urbansim_templates.models import LargeMultinomialLogitStep
-from urbansim.models.util import (apply_filter_query, columns_in_filters, 
-        columns_in_formula)
+from urbansim.models.util import (
+    apply_filter_query,
+    columns_in_filters,
+    columns_in_formula,
+)
 
 from matching_lcm import MatchingLocationChoiceModel
 
@@ -39,8 +40,8 @@ def random_choices(model, choosers, alternatives):
     """
     probabilities = model.calculate_probabilities(choosers, alternatives)
     choices = np.random.choice(
-        probabilities.index, size=len(choosers),
-        replace=True, p=probabilities.values)
+        probabilities.index, size=len(choosers), replace=True, p=probabilities.values
+    )
     return pd.Series(choices, index=choosers.index)
 
 
@@ -62,48 +63,49 @@ def unit_choices(model, choosers, alternatives):
     choices : pandas.Series
         Mapping of chooser ID to alternative ID.
     """
-    supply_variable, vacant_variable = (model.supply_variable,
-                                        model.vacant_variable)
+    supply_variable, vacant_variable = (model.supply_variable, model.vacant_variable)
 
     available_units = alternatives[supply_variable]
     vacant_units = alternatives[vacant_variable]
     # must have positive index
     vacant_units = vacant_units[vacant_units.index.values >= 0]
 
-    print("There are {} total available units"
-          .format(available_units.sum()),
-          "    and {} total choosers"
-          .format(len(choosers)),
-          "    but there are {} overfull alternatives"
-          .format(len(vacant_units[vacant_units < 0])))
+    print(
+        "There are {} total available units".format(available_units.sum()),
+        "    and {} total choosers".format(len(choosers)),
+        "    but there are {} overfull alternatives".format(
+            len(vacant_units[vacant_units < 0])
+        ),
+    )
 
     vacant_units = vacant_units[vacant_units > 0]
 
-    indexes = np.repeat(vacant_units.index.values,
-                        vacant_units.values.astype('int'))
+    indexes = np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
     isin = pd.Series(indexes).isin(alternatives.index)
     missing = len(isin[isin == False])  # noqa
     indexes = indexes[isin.values]
     units = alternatives.loc[indexes].reset_index()
 
-    print("    for a total of {} temporarily empty units"
-          .format(vacant_units.sum()),
-          "    in {} alternatives total in the region"
-          .format(len(vacant_units)))
+    print(
+        "    for a total of {} temporarily empty units".format(vacant_units.sum()),
+        "    in {} alternatives total in the region".format(len(vacant_units)),
+    )
 
     if missing > 0:
         print(
-            "WARNING: {} indexes aren't found in the locations df -"
-            .format(missing),
+            "WARNING: {} indexes aren't found in the locations df -".format(missing),
             "    this is usually because of a few records that don't join ",
             "    correctly between the locations df and the aggregations",
-            "tables")
+            "tables",
+        )
 
     print("There are {} total movers for this LCM".format(len(choosers)))
 
     if len(choosers) > vacant_units.sum():
-        print("WARNING: Not enough locations for movers",
-              "reducing locations to size of movers for performance gain")
+        print(
+            "WARNING: Not enough locations for movers",
+            "reducing locations to size of movers for performance gain",
+        )
         choosers = choosers.head(int(vacant_units.sum()))
 
     choices = model.predict(choosers, units, debug=True)
@@ -112,8 +114,8 @@ def unit_choices(model, choosers, alternatives):
         choice_counts = choices.value_counts()
         return choice_counts[choice_counts > 1].index.values
 
-    if model.choice_mode == 'individual':
-        print('Choice mode is individual, so utilizing lottery choices.')
+    if model.choice_mode == "individual":
+        print("Choice mode is individual, so utilizing lottery choices.")
 
         chosen_multiple_times = identify_duplicate_choices(choices)
 
@@ -123,71 +125,87 @@ def unit_choices(model, choosers, alternatives):
             # Identify the choosers who keep their choice, and those who must
             # choose again.
             keep_choice = duplicate_choices.drop_duplicates()
-            rechoose = duplicate_choices[~duplicate_choices.index.isin(
-                                                           keep_choice.index)]
+            rechoose = duplicate_choices[
+                ~duplicate_choices.index.isin(keep_choice.index)
+            ]
 
             # Subset choices, units, and choosers to account for occupied
             # units and choosers who need to choose again.
             choices = choices.drop(rechoose.index)
             units_remaining = units.drop(choices.values)
-            choosers = choosers.drop(choices.index, errors='ignore')
+            choosers = choosers.drop(choices.index, errors="ignore")
 
             # Agents choose again.
             next_choices = model.predict(choosers, units_remaining)
             choices = pd.concat([choices, next_choices])
             chosen_multiple_times = identify_duplicate_choices(choices)
 
-    return pd.Series(units.loc[choices.values][model.choice_column].values,
-                     index=choices.index)
+    return pd.Series(
+        units.loc[choices.values][model.choice_column].values, index=choices.index
+    )
 
 
 def register_config_injectable_from_yaml(injectable_name, yaml_file):
     """
     Create orca function for YAML-based config injectables.
     """
+
     @orca.injectable(injectable_name, cache=True)
     def func():
         with open(os.path.join(misc.configs_dir(), yaml_file)) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
             return config
+
     return func
 
 
 def register_hlcm_choice_model_step(model_name, agents_name):
-
     @orca.step(model_name)
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
-        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
+        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (
+            model_name.split("_")[1]
+        )
         # filter for picking hh with no building_id assigned
         chooser_filter = "(building_id==-1)"
         alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
 
         # initialize simulation choosers and alts table
         # formula_cols = columns_in_formula(model.model_expression)
-        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
-        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(
+            chooser_pre_filter
+        )
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(
+            alts_pre_filter
+        )
 
         # define variable pairs and weights
-        formula_chooser_col = ["income", "persons", "age_of_head", "children"]
-        formula_alts_col = ["nodes_walk_ave_income", "nodes_walk_large_hhs",
-                            "nodes_walk_senior_hhs", "nodes_walk_hhs_with_children"]
-        variable_pairs_weights = [1000, 1000, 1000, 1000]
+        formula_chooser_col = ["income", "persons", "age_of_head", "has_children"]
+        formula_alts_col = [
+            "nodes_walk_ave_income",
+            "nodes_walk_ave_hhsize",
+            "nodes_walk_ave_hh_age",
+            "nodes_walk_ave_has_children",
+        ]
+        variable_pairs_weights = [1500, 1200, 1000, 1000]
 
         # choosers
         choosers = orca.get_table(model.choosers)
-        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
+        choosers_df = choosers.to_frame(formula_chooser_col + choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
         choosers_idx = choosers_df.query(chooser_pre_filter).index
         # std choosers columns
         chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
         choosers_df.loc[choosers_idx, formula_chooser_col] = (
-            chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
+            chooser_col_df - chooser_col_df.mean()
+        ) / chooser_col_df.std()
         # filter using chooser_filter
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
         final_choosers_df = final_choosers_df[formula_chooser_col]
         # sort by formula_chooser_col, decreasing order
-        final_choosers_df = final_choosers_df.sort_values(by=formula_chooser_col, ascending=False)
+        final_choosers_df = final_choosers_df.sort_values(
+            by=formula_chooser_col, ascending=False
+        )
 
         # sort by formula_chooser_col, decreasing order
         # final_choosers_df = final_choosers_df.sort_values(by=formula_chooser_col, ascending=False)
@@ -198,108 +216,122 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         # alternatives
         alts = orca.get_table(model.alternatives)
         # nodes_walk_ave_income
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
+        alts_df = alts.to_frame(
+            formula_alts_col + alts_filter_cols + [model.alt_capacity]
+        )
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
         # std alts columns
         alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
         # std could introduce NaN, fill them with 0 after that
-        alts_df.loc[alts_idx, formula_alts_col] = ((
-            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
+        alts_df.loc[alts_idx, formula_alts_col] = (
+            (alts_col_df - alts_col_df.mean()) / alts_col_df.std()
+        ).fillna(0)
 
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
-        final_alts_df = final_alts_df[formula_alts_col+[model.alt_capacity]]
+        final_alts_df = final_alts_df[formula_alts_col + [model.alt_capacity]]
         final_alts_df = final_alts_df.fillna(0)
-        final_alts_df[model.alt_capacity] = final_alts_df[model.alt_capacity].astype(int)
+        final_alts_df[model.alt_capacity] = final_alts_df[model.alt_capacity].astype(
+            int
+        )
 
-        orca.add_table('choosers', final_choosers_df)
-        orca.add_table('alternatives', final_alts_df)
+        orca.add_table("choosers", final_choosers_df)
+        orca.add_table("alternatives", final_alts_df)
 
-        model.out_choosers = 'choosers'
-        model.out_chooser_filters = None # already filtered
-        model.out_alternatives = 'alternatives'
-        model.out_alt_filters = None # already filtered
+        model.out_choosers = "choosers"
+        model.out_chooser_filters = None  # already filtered
+        model.out_alternatives = "alternatives"
+        model.out_alt_filters = None  # already filtered
 
         model.run(weights=variable_pairs_weights)
 
         # if not choices, return
         if not type(model.choices) == pd.Series:
-            print('There are 0 unplaced agents.')
+            print("There are 0 unplaced agents.")
             return
 
-        print('There are {} unplaced agents.'
-              .format((model.choices == -1).sum()))
+        print("There are {} unplaced agents.".format((model.choices == -1).sum()))
 
         orca.get_table(agents_name).update_col_from_series(
-            model.choice_column, model.choices, cast=True)
+            model.choice_column, model.choices, cast=True
+        )
 
     return choice_model_simulate
 
 
 def register_elcm_choice_model_step(model_name, agents_name):
-
     @orca.step(model_name)
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
-        chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
-        alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
+        chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (
+            model_name.split("_")[1]
+        )
+        alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split("_")[1]) % 1000)
         # filter for picking jobs with not building_id assigned
         chooser_filter = "(building_id==-1)"
         alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
-            
+
         # initialize simulation choosers and alts table
         formula_cols = columns_in_formula(model.model_expression)
-        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
-        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(
+            chooser_pre_filter
+        )
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(
+            alts_pre_filter
+        )
         # choosers
         choosers = orca.get_table(model.choosers)
         formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
-        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
+        choosers_df = choosers.to_frame(formula_chooser_col + choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
         choosers_idx = choosers_df.query(chooser_pre_filter).index
         # std choosers columns
         chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
         choosers_df.loc[choosers_idx, formula_chooser_col] = (
-            chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
+            chooser_col_df - chooser_col_df.mean()
+        ) / chooser_col_df.std()
         # filter using chooser_filter
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
 
         # alternatives
         alts = orca.get_table(model.alternatives)
         formula_alts_col = [col for col in formula_cols if col in alts.columns]
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
+        alts_df = alts.to_frame(
+            formula_alts_col + alts_filter_cols + [model.alt_capacity]
+        )
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
         # std alts columns
         alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
         # std could introduce NaN, fill them with 0 after that
-        alts_df.loc[alts_idx, formula_alts_col] = ((
-            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
+        alts_df.loc[alts_idx, formula_alts_col] = (
+            (alts_col_df - alts_col_df.mean()) / alts_col_df.std()
+        ).fillna(0)
 
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        orca.add_table('choosers', final_choosers_df)
-        orca.add_table('alternatives', final_alts_df)
-        
-        model.out_choosers = 'choosers'
-        model.out_chooser_filters = None # already filtered
-        model.out_alternatives = 'alternatives'
-        model.out_alt_filters = None # already filtered
+        orca.add_table("choosers", final_choosers_df)
+        orca.add_table("alternatives", final_alts_df)
+
+        model.out_choosers = "choosers"
+        model.out_chooser_filters = None  # already filtered
+        model.out_alternatives = "alternatives"
+        model.out_alt_filters = None  # already filtered
 
         model.run(chooser_batch_size=1000)
 
         # if not choices, return
         if not type(model.choices) == pd.Series:
-            print('There are 0 unplaced agents.')
+            print("There are 0 unplaced agents.")
             return
 
-        print('There are {} unplaced agents.'
-              .format(model.choices.isnull().sum()))
+        print("There are {} unplaced agents.".format(model.choices.isnull().sum()))
 
         orca.get_table(agents_name).update_col_from_series(
-            model.choice_column, model.choices, cast=True)
+            model.choice_column, model.choices, cast=True
+        )
 
     return choice_model_simulate
 
@@ -311,10 +343,19 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
     then add simulation parameters with set_simulation_params().
 
     """
-    def set_simulation_params(self, name, supply_variable, vacant_variable,
-                              choosers, alternatives, choice_column=None,
-                              summary_alts_xref=None, merge_tables=None,
-                              agent_units=None):
+
+    def set_simulation_params(
+        self,
+        name,
+        supply_variable,
+        vacant_variable,
+        choosers,
+        alternatives,
+        choice_column=None,
+        summary_alts_xref=None,
+        merge_tables=None,
+        agent_units=None,
+    ):
         """
         Add simulation parameters as additional attributes.
         Parameters
@@ -353,11 +394,11 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         self.summary_alts_xref = summary_alts_xref
         self.merge_tables = merge_tables
         self.agent_units = agent_units
-        self.choice_column = choice_column if choice_column is not None \
-            else self.choice_column
+        self.choice_column = (
+            choice_column if choice_column is not None else self.choice_column
+        )
 
-    def simulate(self, choice_function=None, save_probabilities=False,
-                 **kwargs):
+    def simulate(self, choice_function=None, save_probabilities=False, **kwargs):
         """
         Computing choices, with arbitrary function for handling simulation
         strategy.
@@ -381,8 +422,7 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         """
         choosers, alternatives = self.calculate_model_variables()
 
-        choosers, alternatives = self.apply_predict_filters(
-                                 choosers, alternatives)
+        choosers, alternatives = self.apply_predict_filters(choosers, alternatives)
 
         # By convention, choosers are denoted by a -1 value
         # in the choice column
@@ -396,14 +436,17 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
 
         if save_probabilities:
             if not self.sim_pdf:
-                probabilities = self.calculate_probabilities(choosers,
-                                                             alternatives)
+                probabilities = self.calculate_probabilities(choosers, alternatives)
             else:
-                probabilities = self.sim_pdf.reset_index().set_index(
-                    'alternative_id')[0]
-            orca.add_injectable('probabilities_{}_{}'.format(
-                self.name, orca.get_injectable('iter_var')),
-                probabilities)
+                probabilities = self.sim_pdf.reset_index().set_index("alternative_id")[
+                    0
+                ]
+            orca.add_injectable(
+                "probabilities_{}_{}".format(
+                    self.name, orca.get_injectable("iter_var")
+                ),
+                probabilities,
+            )
 
         return choices
 
@@ -433,8 +476,9 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             Mapping of alternative ID to probabilities.
         """
         probabilities = self.probabilities(choosers, alternatives)
-        probabilities = probabilities.reset_index().set_index(
-            'alternative_id')[0]  # remove chooser_id col from idx
+        probabilities = probabilities.reset_index().set_index("alternative_id")[
+            0
+        ]  # remove chooser_id col from idx
         return probabilities
 
     def calculate_model_variables(self):
@@ -449,12 +493,16 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             DataFrame of alternatives.
         """
         columns_used = self.columns_used() + [self.choice_column]
-        columns_used = columns_used + [self.agent_units] if self.agent_units else columns_used
+        columns_used = (
+            columns_used + [self.agent_units] if self.agent_units else columns_used
+        )
         choosers = orca.get_table(self.choosers).to_frame(columns_used)
 
-        supply_column_names = [col for col in
-                               [self.supply_variable, self.vacant_variable]
-                               if col is not None]
+        supply_column_names = [
+            col
+            for col in [self.supply_variable, self.vacant_variable]
+            if col is not None
+        ]
 
         columns_used.extend(supply_column_names)
 
@@ -465,16 +513,24 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             for table in mt:
                 all_cols.extend(orca.get_table(table).columns)
             all_cols = [col for col in all_cols if col in columns_used]
-            alternatives = orca.merge_tables(target=self.alternatives,
-                                             tables=mt, columns=all_cols)
+            alternatives = orca.merge_tables(
+                target=self.alternatives, tables=mt, columns=all_cols
+            )
         else:
             alternatives = orca.get_table(self.alternatives).to_frame(
-                columns_used + supply_column_names)
+                columns_used + supply_column_names
+            )
         return choosers, alternatives
 
-    def score(self, scoring_function=accuracy_score, choosers=None,
-              alternatives=None, aggregate=False, apply_filter=True,
-              choice_function=random_choices):
+    def score(
+        self,
+        scoring_function=accuracy_score,
+        choosers=None,
+        alternatives=None,
+        aggregate=False,
+        apply_filter=True,
+        choice_function=random_choices,
+    ):
         """
         Calculate score for model.  Defaults to accuracy score, but other
         scoring functions can be provided.  Computed on all choosers/
@@ -525,8 +581,9 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
             observed_choices = observed_choices.value_counts()
             predicted_choices = predicted_choices.value_counts()
 
-            combined_index = list(set(list(predicted_choices.index) +
-                                      list(observed_choices.index)))
+            combined_index = list(
+                set(list(predicted_choices.index) + list(observed_choices.index))
+            )
             predicted_choices = predicted_choices.reindex(combined_index).fillna(0)
             observed_choices = observed_choices.reindex(combined_index).fillna(0)
 
@@ -545,12 +602,12 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         if self.choosers_predict_filters:
             choosers = choosers.query(self.choosers_predict_filters)
 
-        choosers['summary_id'] = choosers[self.choice_column]
+        choosers["summary_id"] = choosers[self.choice_column]
         choosers.summary_id = choosers.summary_id.map(self.summary_alts_xref)
         probs = self.calculate_probabilities(choosers, alternatives)
-        probs = probs.reset_index().rename(columns={0: 'proba'})
-        probs['summary_id'] = probs.alternative_id.map(self.summary_alts_xref)
-        return probs.groupby('summary_id').proba.sum()
+        probs = probs.reset_index().rename(columns={0: "proba"})
+        probs["summary_id"] = probs.alternative_id.map(self.summary_alts_xref)
+        return probs.groupby("summary_id").proba.sum()
 
     def observed_distribution(self, choosers=None):
         """
@@ -566,16 +623,20 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         if self.choosers_predict_filters:
             choosers = choosers.query(self.choosers_predict_filters)
 
-        if 'summary_id' not in choosers.columns:
+        if "summary_id" not in choosers.columns:
             summ_id = choosers[self.choice_column].map(self.summary_alts_xref)
-            choosers['summary_id'] = summ_id
+            choosers["summary_id"] = summ_id
 
-        observed_distrib = choosers.groupby('summary_id').size()
+        observed_distrib = choosers.groupby("summary_id").size()
         return observed_distrib / observed_distrib.sum()
 
-    def summed_probability_score(self, scoring_function=r2_score,
-                                 choosers=None, alternatives=None,
-                                 validation_data=None):
+    def summed_probability_score(
+        self,
+        scoring_function=r2_score,
+        choosers=None,
+        alternatives=None,
+        validation_data=None,
+    ):
         if choosers is None or alternatives is None:
             choosers, alternatives = self.calculate_model_variables()
 
@@ -590,8 +651,9 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         if validation_data is None:
             validation_data = self.observed_distribution(choosers)
 
-        combined_index = list(set(list(summed_probas.index) +
-                                  list(validation_data.index)))
+        combined_index = list(
+            set(list(summed_probas.index) + list(validation_data.index))
+        )
         summed_probas = summed_probas.reindex(combined_index).fillna(0)
         validation_data = validation_data.reindex(combined_index).fillna(0)
 
@@ -608,14 +670,14 @@ def get_model_category_configs():
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs_2050.yaml')) as f:
+    with open(os.path.join(misc.configs_dir(), "yaml_configs_2050.yaml")) as f:
         yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
-    with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
-        model_category_configs = yaml.load(f, Loader=yaml.FullLoader)['models']
+    with open(os.path.join(misc.configs_dir(), "model_structure.yaml")) as f:
+        model_category_configs = yaml.load(f, Loader=yaml.FullLoader)["models"]
 
     for model_category, category_attributes in list(model_category_configs.items()):
-        category_attributes['config_filenames'] = yaml_configs[model_category]
+        category_attributes["config_filenames"] = yaml_configs[model_category]
 
     return model_category_configs
 
@@ -632,12 +694,12 @@ def create_lcm_from_config(config_filename, model_attributes, use_matching_model
         config_obj = yaml.load(f, Loader=yaml.FullLoader)
 
     if use_matching_model:
-        model = MatchingLocationChoiceModel.from_dict(config_obj['saved_object'])
+        model = MatchingLocationChoiceModel.from_dict(config_obj["saved_object"])
     else:
-        model = LargeMultinomialLogitStep.from_dict(config_obj['saved_object'])
-    model.choosers = model_attributes['agents_name']
-    model.alternatives = model_attributes['alternatives_name']
-    model.choice_column = model_attributes['alternatives_id_name']
+        model = LargeMultinomialLogitStep.from_dict(config_obj["saved_object"])
+    model.choosers = model_attributes["agents_name"]
+    model.alternatives = model_attributes["alternatives_name"]
+    model.choice_column = model_attributes["alternatives_id_name"]
     # is it alt_capacity in largeMNL equals vacant_variable in 2045?
-    model.alt_capacity = model_attributes['vacant_variable']
+    model.alt_capacity = model_attributes["vacant_variable"]
     return model
