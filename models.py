@@ -2070,17 +2070,34 @@ def refine_housing_units(households, buildings, mcd_total):
 @orca.step()
 def baseyear_zonal_distribution(households, buildings):
     households = households.to_frame(households.local_columns)
-    buildings = buildings.to_frame(buildings.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
     hbase = make_hh_la(households, buildings)
-    hbase_zone = hbase.groupby(['inc_qt', 'hhsize', 'large_area_id', 'b_city_id', 'city_zone']).size()
+    # concat all groupby columsn as string to reduce runtime
+    hbase['concat'] = hbase.inc_qt.astype(int).map(str) + '-' + hbase.hhsize.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.large_area_id.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.city_id.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.city_zone.map(str)
+
+    hbase_zone = hbase.groupby('concat').size()
     hbase_zone.name = 'weights'
     hbase_zone = hbase_zone * 1.00
     hbase_zone += 0.001
-    hbase_zone = hbase_zone.reset_index().set_index(['large_area_id', 'inc_qt', 'hhsize'])
+
+    # restore all columns from concat string
+    hbase_zone = hbase_zone.reset_index()
+    hbase_zone['inc_qt'] = hbase_zone['concat'].str.split('-').str[0]
+    hbase_zone['hhsize'] = hbase_zone['concat'].str.split('-').str[1]
+    hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[2]
+    hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[3]
+    hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[4]
+    hbase_zone = hbase_zone.drop(columns='concat')
+
+    hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
     orca.add_table('baseyear_households_by_zone', hbase_zone)
 
 @orca.step()
 def zonal_distribution(year, households, buildings, parcels, baseyear_households_by_zone):
+    # TODO: Add condition to run this step every 5 years
     print('year', year)
     households = households.to_frame(households.local_columns)
     buildings = buildings.to_frame(buildings.local_columns)
@@ -2102,13 +2119,12 @@ def zonal_distribution(year, households, buildings, parcels, baseyear_households
 
     czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
     hyear_new = hyear.copy()
-    #give new bid and c-z to households
+    # give new bid and city_zone to households
     for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize']):
-        hyear_new.loc[v.index,
-                      'building_id'] = czone.loc[ind].building_id.values
+        hyear_new.loc[v.index, 'building_id'] = czone.loc[ind].building_id.values
         hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
 
-    hyear_new['new_city_id'] = (hyear_new.city_zone/10000.0).astype(int)
+    hyear_new['new_city_id'] = hyear_new.city_zone // 10000
 
     #get difference table between new and target
     hyear_newg = get_hh_refine_difference(hyear_new, hyear)
@@ -2118,13 +2134,15 @@ def zonal_distribution(year, households, buildings, parcels, baseyear_households
     #refine by hh targets
     hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
 
-    hyear_new['b_city_id'] = hyear_new['new_city_id']
-    hyear_new['b_zone_id'] = (hyear_new['city_zone'] % 10000).astype(int)
+    hyear_new['city_id'] = hyear_new['new_city_id']
+    hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
     hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'new_city_id',
-                   'b_city_id', 'b_zone_id'], axis=1, inplace=True)
+                   'city_id', 'zone_id'], axis=1, inplace=True)
     # update households table
     # st[year + '/households_v5'] = st[year + '/households']
     # st[year + '/households'] = hyear_new
+    orca.add_table("households_after_zd", hyear_new)
+    print("Finished zonal_distribution.")
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
