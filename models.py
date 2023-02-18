@@ -156,7 +156,8 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 # only sampling hu_filter == 0
                 housing_units.hu_filter
                 == 0
-            ) & (
+            )
+            & (
                 # only sampling hu_filter == 0
                 housing_units.sp_filter
                 >= 0
@@ -179,7 +180,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         normalized_score = normalized_score.reset_index()
         # sorted by the score from high to low
         normalized_score = normalized_score.sort_values(
-            by="score",ascending=False, ignore_index=False
+            by="score", ascending=False, ignore_index=False
         )
         # apply sorted index back to city_units
         city_units = city_units.iloc[normalized_score.index]
@@ -698,7 +699,9 @@ def jobs_scaling_model(jobs):
 
 
 @orca.step()
-def gq_pop_scaling_model(group_quarters, group_quarters_households, group_quarters_control_totals, year):
+def gq_pop_scaling_model(
+    group_quarters, group_quarters_households, group_quarters_control_totals, year
+):
     gqpop = group_quarters.to_frame(group_quarters.local_columns + ["city_id"])
     print("%s gqpop before scaling" % gqpop.shape[0])
     gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
@@ -732,9 +735,11 @@ def gq_pop_scaling_model(group_quarters, group_quarters_households, group_quarte
     print("%s gqpop after scaling" % gqpop.shape[0])
     # gq_pop and gq_hh using the same enumerated indexes
     new_gqhh = gqhh.loc[gqhh.index.isin(gqpop.index)]
-    print("Dropping %s hh from gq_hh." % (gqhh.shape[0]-new_gqhh.shape[0]))
+    print("Dropping %s hh from gq_hh." % (gqhh.shape[0] - new_gqhh.shape[0]))
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
-    orca.add_table("group_quarters_households", new_gqhh[group_quarters_households.local_columns])
+    orca.add_table(
+        "group_quarters_households", new_gqhh[group_quarters_households.local_columns]
+    )
 
 
 @orca.step()
@@ -1619,6 +1624,7 @@ def residential_developer(
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     debug_res_developer = debug_res_developer.to_frame()
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
+        print(f"developing residential units for {mcdid}")
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
         # handle missing mcdid
         if mcdid not in mcd_total.index:
@@ -1638,7 +1644,7 @@ def residential_developer(
         assert target_vacancy < 1.0
         target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
         print(
-            "Target vacancy = {:.2f}, target of new units = {:,}".format(
+            "Target vacancy = {:.2f}, target of new units = {:,}\n".format(
                 target_vacancy, target_units
             )
         )
@@ -1673,7 +1679,7 @@ def residential_developer(
         )
         if units_added < target_units:
             print(
-                "Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+                " ***  Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
                 % (mcdid, target_units, int(units_added))
             )
     # log the target and result in this year's run
@@ -1955,8 +1961,9 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
 
+
 @orca.step()
-def drop_pseudo_buildings(households):
+def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     # 1729 pseudo hh in 2050
     k = 90
     # drop k hh from pseudo buildings every iteration
@@ -1971,8 +1978,19 @@ def drop_pseudo_buildings(households):
     hh_to_drop = hh[hh.sp_filter == -2].sample(k)
     # set sampled hh with building_id -1
     hh.loc[hh_to_drop.index, "building_id"] = -1
+    # set resiential units to hh counts, avoid vacant units in pseudo buildings
+    hhs_by_pseudo_b = (
+        hh[(hh.sp_filter == -2) & (hh.building_id > -1)].groupby("building_id").size()
+    )
+    pb = pseudo_building_2020.local
+    bb = buildings.local
+    bb.loc[pb.index, "residential_units"] = 0
+    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b
+
     print("Dropped %s hh from current pseudo buildings." % k)
     orca.add_table("households", hh)
+    orca.add_table("buildings", bb)
+
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
