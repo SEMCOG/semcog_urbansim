@@ -14,17 +14,21 @@ def make_hh_la(households, buildings):
 
 
 def get_czone_weights(hbase_year, hyear, hyear_g):
-    for i in range(10):
+    for i in range(10): # why this?
+        # for each la, inc_qt, and hhsize
+        # sample all current hh by baseyear distribution among city and city_zone(as weight)
         addses = []
         for ind, x in hyear_g.iteritems():
             slic = hbase_year.loc[[ind]]
             print(ind, x, slic.weights.sum(), (1.0 * x / slic.weights.sum()))
             new_city_zone = slic.sample(x, replace=True, weights=slic.weights)
+            # update weight after sample
             hbase_year.loc[[ind], 'weights'] *= (1.0 * x / slic.weights.sum())
             addses.append(new_city_zone[['city_id', 'city_zone']])
-
+        # merge all hh together
         czone = pd.concat(addses, axis=0)
 
+        # city_zone distribution insider city
         czoneg = czone.groupby('city_id').count()
         czoneg['hh'] = hyear.groupby('city_id').size()
         czoneg['dif'] = czoneg['city_zone'] - czoneg['hh']
@@ -44,7 +48,7 @@ def get_czone_weights(hbase_year, hyear, hyear_g):
 
 
 def target_year_data(households, buildings, parcels, year):
-    hyear = make_hh_la(households, buildings, year)
+    hyear = make_hh_la(households, buildings)
     hyear_g = hyear.groupby(['large_area_id', 'inc_qt', 'hhsize']).size()
     print(len(hyear))
     print(hyear_g.head())
@@ -71,10 +75,8 @@ def assign_hh_to_hu(czone, b2):
         c_ind = c.sample(v).index
         b_ind = b.sample(v).index
         # assign b2 building_id and city_zone to czone
-        czone.loc[c_ind, 'building_id'] = b.loc[b_ind,
-                                                    'building_id'].values
-        czone.loc[c_ind, 'city_zone'] = b.loc[b_ind,
-                                                    'city_zone'].values
+        czone.loc[c_ind, 'building_id'] = b.loc[b_ind, 'building_id'].values
+        czone.loc[c_ind, 'city_zone'] = b.loc[b_ind, 'city_zone'].values
         # reset b2 building_id to 0
         b2.loc[b_ind, 'building_id'] = 0
 
@@ -105,7 +107,7 @@ def assign_hh_to_hu(czone, b2):
         # LA hh remains
         la_remain = czone.loc[(czone.large_area_id == la)
                               & (czone.building_id == -1)]
-        la_b_ind_sample = b2.loc[(b2.large_area_id == la) & (b2.building_id != 0)].sample(len(la_remain)).index
+        la_b_ind_sample = b2.loc[(b2.large_area_id == la) & (b2.building_id != 0)].sample(len(la_remain))
         minv = min(len(la_remain), len(la_b_ind_sample))
         place_hh_to_hu(la_remain, la_b_ind_sample, minv)
 
@@ -113,28 +115,28 @@ def assign_hh_to_hu(czone, b2):
 
 
 def match_hh_targets(hyear_new, hyear_newg, b2):
+    # This function didn't work, mover and reserve didn't match
+    # one way to fix it to only move min(mover, reserve) units
 	#adjust households to match existing/target
     for la, df in hyear_newg.groupby('large_area_id'):
         df_pos = df.loc[df.dif > 0].set_index('new_city_id')
         movers = []
         for city, row in df_pos.iterrows():
-            idx = hyear_new[(hyear_new.new_city_id == city)
-                            ].sample(int(row.dif)).index.values
+            idx = hyear_new[(hyear_new.new_city_id == city)].sample(int(row.dif)).index.values
             movers.append(idx)
         movers = np.concatenate(movers)
 
+        # city with negative difference
         df_neg = df.loc[df.dif < 0].set_index('new_city_id')
         resevers = []
         for city, row in df_neg.iterrows():
-            idx = b2[(b2.city_id == city) & (b2.building_id > 0)
-                     ].sample(int(-row.dif)).index.values
+            idx = b2[(b2.city_id == city) & (b2.building_id > 0)].sample(int(-row.dif)).index.values
             resevers.append(idx)
         resevers = np.concatenate(resevers)
 
         print(la, movers.shape, resevers.shape, movers.shape == resevers.shape)
 
-        hyear_new.loc[movers,
-                      'building_id'] = b2.loc[resevers].building_id.values
+        hyear_new.loc[movers, 'building_id'] = b2.loc[resevers].building_id.values
         hyear_new.loc[movers, 'city_zone'] = b2.loc[resevers].city_zone.values
         hyear_new['new_city_id'] = (hyear_new.city_zone/10000.0).astype(int)
         hyear_new['zone_id'] = (hyear_new['city_zone'] % 10000).astype(int)
@@ -143,18 +145,17 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
     return [hyear_new, b2]
 
 
-def get_hh_refine_difference(hyear_new, hyear, year):
+def get_hh_refine_difference(hyear_new, hyear):
     ind1 = hyear_new.groupby(['large_area_id', 'new_city_id']).size().index
     ind2 = hyear.groupby(['large_area_id', 'city_id']).size().index
     hyear_newg = pd.DataFrame([], index=ind1.union(ind2))
     hyear_newg.index.names = ['large_area_id', 'new_city_id']
 
-    hyear_newg[year +
-               '_hh'] = hyear.groupby(['large_area_id', 'city_id']).size()
+    hyear_newg['hh'] = hyear.groupby(['large_area_id', 'city_id']).size()
     hyear_newg['newhh'] = hyear_new.groupby(
         ['large_area_id', 'new_city_id']).size()
     hyear_newg.fillna(0, inplace=True)
-    hyear_newg['dif'] = hyear_newg['newhh'] - hyear_newg[year + '_hh']
+    hyear_newg['dif'] = hyear_newg['newhh'] - hyear_newg['hh']
 
     print(hyear_newg.sum())
     return hyear_newg

@@ -2085,11 +2085,11 @@ def baseyear_zonal_distribution(households, buildings):
 
     # restore all columns from concat string
     hbase_zone = hbase_zone.reset_index()
-    hbase_zone['inc_qt'] = hbase_zone['concat'].str.split('-').str[0]
-    hbase_zone['hhsize'] = hbase_zone['concat'].str.split('-').str[1]
-    hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[2]
-    hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[3]
-    hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[4]
+    hbase_zone['inc_qt'] = hbase_zone['concat'].str.split('-').str[0].astype(int)
+    hbase_zone['hhsize'] = hbase_zone['concat'].str.split('-').str[1].astype(int)
+    hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[2].astype(int)
+    hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[3].astype(int)
+    hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[4].astype(int)
     hbase_zone = hbase_zone.drop(columns='concat')
 
     hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
@@ -2100,7 +2100,7 @@ def zonal_distribution(year, households, buildings, parcels, baseyear_households
     # TODO: Add condition to run this step every 5 years
     print('year', year)
     households = households.to_frame(households.local_columns)
-    buildings = buildings.to_frame(buildings.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
     parcels = parcels.to_frame(parcels.local_columns)
     baseyear_households_by_zone = baseyear_households_by_zone.to_frame()
 
@@ -2132,7 +2132,8 @@ def zonal_distribution(year, households, buildings, parcels, baseyear_households
     hyear_newg = hyear_newg.reset_index()
 
     #refine by hh targets
-    hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
+    # this step didn't work
+    # hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
 
     hyear_new['city_id'] = hyear_new['new_city_id']
     hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
