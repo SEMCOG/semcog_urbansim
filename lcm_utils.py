@@ -180,14 +180,35 @@ def register_hlcm_choice_model_step(model_name, agents_name):
         )
 
         # define variable pairs and weights
-        formula_chooser_col = ["income", "persons", "age_of_head", "has_children"]
+        formula_chooser_col = [
+            "income_quartile",
+            "income",
+            "hh_size",
+            "persons",
+            "age_group",
+            "age_of_head",
+            "has_children",
+        ]
         formula_alts_col = [
+            "nodes_walk_ave_income_quartile",
             "nodes_walk_ave_income",
-            "nodes_walk_ave_hhsize",
+            "nodes_walk_ave_hh_size",
+            "nodes_walk_hhsize",
+            "nodes_walk_ave_age_group",
             "nodes_walk_ave_hh_age",
             "nodes_walk_ave_has_children",
         ]
-        variable_pairs_weights = [1500, 1200, 1000, 1000]
+        variable_pairs_weights = [1500, 1200, 1500, 1200, 1000, 1000, 800]
+
+        # # define variable pairs and weights
+        # formula_chooser_col = ["income", "persons", "age_of_head", "has_children"]
+        # formula_alts_col = [
+        #     "nodes_walk_ave_income",
+        #     "nodes_walk_ave_hhsize",
+        #     "nodes_walk_ave_hh_age",
+        #     "nodes_walk_ave_has_children",
+        # ]
+        # variable_pairs_weights = [1500, 1200, 1000, 1000]
 
         # choosers
         choosers = orca.get_table(model.choosers)
