@@ -2133,7 +2133,11 @@ def zonal_distribution(year, households, buildings, parcels, baseyear_households
 
     #refine by hh targets
     # this step didn't work
-    # hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
+    # issue: mcd 2065
+    # b2 bid==0: 5354
+    # hyear_new city_id==2295: 5254
+    # fixed: pseudo-buildings have -1 zone_id
+    hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
 
     hyear_new['city_id'] = hyear_new['new_city_id']
     hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
