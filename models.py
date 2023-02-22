@@ -2097,12 +2097,18 @@ def baseyear_zonal_distribution(households, buildings):
 
 @orca.step()
 def zonal_distribution(year, households, buildings, parcels, baseyear_households_by_zone):
+    baseyear = 2020
     # TODO: Add condition to run this step every 5 years
     print('year', year)
     households = households.to_frame(households.local_columns)
     buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
     parcels = parcels.to_frame(parcels.local_columns)
     baseyear_households_by_zone = baseyear_households_by_zone.to_frame()
+    # run this step every 2 years
+    if (year - baseyear) % 2 != 0:
+        print('skipping zonal distribution this year')
+        orca.add_table("households_after_zd", households)
+        return
 
     #prepare target year hhs, hhs grpby inc and size, b2(building id repeat by res units)
     hyear, hyear_g, b2 = target_year_data(households, buildings, parcels, year)
