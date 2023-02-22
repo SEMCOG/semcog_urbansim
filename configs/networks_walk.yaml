@@ -168,14 +168,7 @@ variable_definitions:
   - name: hhsize
     dataframe: households
     varname: persons
-    radius: 2500
-    aggregation: ave
-    decay: flat
-
-  - name: ave_hhsize
-    dataframe: households
-    varname: persons
-    radius: 3280
+    radius: 1500
     aggregation: ave
     decay: flat
 
@@ -184,10 +177,40 @@ variable_definitions:
     varname: income
     filters:
     - income >= 0
-    radius: 3280
+    radius: 1500
     aggregation: ave
     decay: flat
     apply: np.log1p
+
+  - name: ave_income_quartile
+    dataframe: households
+    add_fields:
+    - income_quartile
+    varname: income_quartile
+    radius: 5000
+    aggregation: ave
+
+  - name: ave_hh_size
+    dataframe: households
+    add_fields:
+    - hh_size
+    varname: hh_size
+    radius: 5000
+    aggregation: ave
+
+  - name: ave_hh_age
+    dataframe: households
+    varname: age_of_head
+    radius: 1500
+    aggregation: ave
+
+  - name: ave_age_group
+    dataframe: households
+    add_fields:
+    - age_group
+    varname: age_group
+    radius: 5000
+    aggregation: ave
 
   - name: max_industrial_far
     dataframe: parcels
