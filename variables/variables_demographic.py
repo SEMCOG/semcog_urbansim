@@ -32,6 +32,44 @@ def income_quartile(households):
 
 
 orca.add_injectable(
+    "household_age_group_map",
+    {
+        1: "age_of_head < 25",
+        2: "age_of_head >= 25 & age_of_head < 35",
+        3: "age_of_head >= 35 & age_of_head < 65",
+        4: "age_of_head >= 65",
+    },
+)
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def age_group(households, household_age_group_map):
+    df = households.to_frame(["age_of_head"])
+    df["age_group"] = 0
+    for i, q in household_age_group_map.items():
+        idx = df.query(q).index.values
+        df.loc[idx, "age_group"] = i
+    return df.age_group.fillna(0)
+
+
+orca.add_injectable(
+    "household_hh_size_map",
+    {
+        1: "persons <=2",
+        2: "persons > 2 & persons <= 4",
+        3: "persons > 4",
+    },
+)
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def hh_size(households, household_hh_size_map):
+    df = households.to_frame(["persons"])
+    df["hh_size"] = 0
+    for i, q in household_hh_size_map.items():
+        idx = df.query(q).index.values
+        df.loc[idx, "hh_size"] = i
+    return df.hh_size.fillna(0)
+
+orca.add_injectable(
     "household_type_map",
     {
         1: "income_quartile ==1 & persons <=2 & age_of_head >= 65",
