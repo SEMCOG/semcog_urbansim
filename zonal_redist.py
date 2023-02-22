@@ -6,6 +6,10 @@ def make_hh_la(households, buildings):
     h = pd.merge(households, buildings[['city_id', 'zone_id']],
                  left_on='building_id', right_index=True, how='left')
     #h = h.loc[h.large_area_id == large_area_id]
+
+    # if zone_id == -1, replace them with 0
+    h['zone_id'] = h['zone_id'].clip(0)
+
     h['city_zone'] = h.city_id * 10000 + h.zone_id
     h['hhsize'] = h.persons
     h.loc[h.persons > 7, 'hhsize'] = 7
@@ -55,6 +59,9 @@ def target_year_data(households, buildings, parcels, year):
 
     b = pd.merge(buildings, parcels[['large_area_id']], left_on='parcel_id', right_index=True, how='left')
     b = b.reset_index()
+
+    # if zone_id == -1, replace them with 0
+    b['zone_id'] = b['zone_id'].clip(0)
     b['city_zone'] = b.city_id * 10000 + b.zone_id
 
     b1 = b[['building_id', 'residential_units', 'city_zone',
@@ -75,8 +82,8 @@ def assign_hh_to_hu(czone, b2):
         c_ind = c.sample(v).index
         b_ind = b.sample(v).index
         # assign b2 building_id and city_zone to czone
-        czone.loc[c_ind, 'building_id'] = b.loc[b_ind, 'building_id'].values
-        czone.loc[c_ind, 'city_zone'] = b.loc[b_ind, 'city_zone'].values
+        czone.loc[c_ind, 'building_id'] = b2.loc[b_ind, 'building_id'].values
+        czone.loc[c_ind, 'city_zone'] = b2.loc[b_ind, 'city_zone'].values
         # reset b2 building_id to 0
         b2.loc[b_ind, 'building_id'] = 0
 
@@ -84,14 +91,14 @@ def assign_hh_to_hu(czone, b2):
         cities = czone.loc[czone.large_area_id == la, 'city_id'].unique()
         for city in cities:
             print('city', city,)
-            czone_city = czone.loc[czone.city_id == city]
-            b2_city = b2.loc[b2.city_id == city]
+            czone_city = czone.loc[czone.large_area_id == la].loc[czone.city_id == city]
+            b2_city = b2.loc[b2.large_area_id == la].loc[b2.city_id == city]
             cz_unique = set(list(czone_city.city_zone) +
                             list(b2_city.city_zone))
 
             for cz in cz_unique:
-                czone_city_zone = czone_city.loc[czone_city.city_zone == cz]
-                b2_city_zone = b2_city.loc[b2_city.city_zone == cz]
+                czone_city_zone = czone_city[czone_city.city_zone == cz][czone_city.building_id == -1]
+                b2_city_zone = b2_city[b2_city.city_zone == cz][b2_city.building_id != 0]
 
                 # sample 97%
                 minv = int(min(len(czone_city_zone), len(b2_city_zone)) * 0.97)
@@ -138,7 +145,7 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
 
         hyear_new.loc[movers, 'building_id'] = b2.loc[resevers].building_id.values
         hyear_new.loc[movers, 'city_zone'] = b2.loc[resevers].city_zone.values
-        hyear_new['new_city_id'] = (hyear_new.city_zone/10000.0).astype(int)
+        hyear_new['new_city_id'] = (hyear_new.city_zone // 10000.0)
         hyear_new['zone_id'] = (hyear_new['city_zone'] % 10000).astype(int)
         b2.loc[resevers, 'building_id'] = 0
 
