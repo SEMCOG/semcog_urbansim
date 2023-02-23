@@ -126,11 +126,13 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
     # one way to fix it to only move min(mover, reserve) units
 	#adjust households to match existing/target
     for la, df in hyear_newg.groupby('large_area_id'):
+        cross_mcd = [2065, 2095]
         # *drop 2065 rows
-        df = df[df.new_city_id != 2065]
+        df = df[df.new_city_id.isin(cross_mcd)]
         if la == 125:
             # add them if in 125
             df = df.append(hyear_newg.query('new_city_id == 2065'))
+            df = df.append(hyear_newg[hyear_new.new_city_id.isin(cross_mcd)])
         df_pos = df.loc[df.dif > 0].set_index('new_city_id')
         movers = []
         for city, row in df_pos.iterrows():
