@@ -105,9 +105,9 @@ def assign_hh_to_hu(czone, b2):
                 place_hh_to_hu(czone_city_zone, b2_city_zone, minv)
 
             # remaining hh with -1 building_id
-            c_remain = czone.loc[(czone.city_id == city)
+            c_remain = czone.loc[(czone.city_zone // 1000 == city)
                                  & (czone.building_id == -1)]
-            b_remain = b2.loc[(b2.city_id == city) & (b2.building_id != 0)]
+            b_remain = b2.loc[(b2.city_zone // 1000 == city) & (b2.building_id != 0)]
             minv = min(len(c_remain), len(b_remain))
             place_hh_to_hu(c_remain, b_remain, minv)
 
@@ -126,6 +126,11 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
     # one way to fix it to only move min(mover, reserve) units
 	#adjust households to match existing/target
     for la, df in hyear_newg.groupby('large_area_id'):
+        # *drop 2065 rows
+        df = df[df.new_city_id != 2065]
+        if la == 125:
+            # add them if in 125
+            df = df.append(hyear_newg.query('new_city_id == 2065'))
         df_pos = df.loc[df.dif > 0].set_index('new_city_id')
         movers = []
         for city, row in df_pos.iterrows():
@@ -137,15 +142,23 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
         df_neg = df.loc[df.dif < 0].set_index('new_city_id')
         resevers = []
         for city, row in df_neg.iterrows():
-            idx = b2[(b2.city_id == city) & (b2.building_id > 0)].sample(int(-row.dif)).index.values
-            resevers.append(idx)
+            if int(-row.dif) > b2[(b2.city_id == city) & (b2.building_id > 0)].shape[0]:
+                print("not enough hu to reserve for city ", city)
+            try:
+                idx = b2[(b2.city_id == city) & (b2.building_id > 0)].sample(int(-row.dif)).index.values
+                resevers.append(idx)
+            except:
+                print("city has error", city)
         resevers = np.concatenate(resevers)
 
         print(la, movers.shape, resevers.shape, movers.shape == resevers.shape)
 
+        if movers.shape[0] > resevers.shape[0]:
+            # if not enough reserve because of 2065, trim it
+            movers = movers[:resevers.shape[0]]
         hyear_new.loc[movers, 'building_id'] = b2.loc[resevers].building_id.values
         hyear_new.loc[movers, 'city_zone'] = b2.loc[resevers].city_zone.values
-        hyear_new['new_city_id'] = (hyear_new.city_zone // 10000.0)
+        hyear_new['new_city_id'] = (hyear_new.city_zone // 10000)
         hyear_new['zone_id'] = (hyear_new['city_zone'] % 10000).astype(int)
         b2.loc[resevers, 'building_id'] = 0
 
