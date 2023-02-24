@@ -2069,6 +2069,12 @@ def refine_housing_units(households, buildings, mcd_total):
 
 @orca.step()
 def baseyear_zonal_distribution(households, buildings):
+    """ Generated base year city_zone level household size and income distribution patterns
+
+    Args:
+        households (DataFrameWrapper): base households
+        buildings (DataFrameWrapper): base buildings
+    """
     households = households.to_frame(households.local_columns)
     buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
     hbase = make_hh_la(households, buildings)
@@ -2097,6 +2103,18 @@ def baseyear_zonal_distribution(households, buildings):
 
 @orca.step()
 def zonal_distribution(year, households, buildings, parcels, baseyear_households_by_zone):
+    """
+    - Allocate forecast households by household size and income groups with base year spatial patterns at city-zone level
+    - City zone is an individual geo unit defined by either TAZ or any intersection part between 'city' and TAZs
+    - Households within a city_zone are first assigned to vacant units with an 3% vacancy. Then all extra households will be allocated to vacant housing units within city
+
+    Args:
+        year (int): year
+        households (DataFrameWrapper): households
+        buildings (DataFrameWrapper): buildings
+        parcels (DataFrameWrapper): parcels
+        baseyear_households_by_zone (DataFrameWrapper): baseyear_households_by_zone generated from baseyear_zonal_distribution
+    """
     baseyear = 2020
     # TODO: Add condition to run this step every 5 years
     print('year', year)
