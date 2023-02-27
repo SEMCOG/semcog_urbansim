@@ -128,16 +128,17 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
     for la, df in hyear_newg.groupby('large_area_id'):
         cross_mcd = [2065, 2095]
         # *drop 2065 rows
-        df = df[df.new_city_id.isin(cross_mcd)]
+        df = df[~df.new_city_id.isin(cross_mcd)]
         if la == 125:
-            # add them if in 125
-            df = df.append(hyear_newg.query('new_city_id == 2065'))
+            # add them to 125 if in cross_mcd
             df = df.append(hyear_newg[hyear_new.new_city_id.isin(cross_mcd)])
         df_pos = df.loc[df.dif > 0].set_index('new_city_id')
         movers = []
         for city, row in df_pos.iterrows():
             idx = hyear_new[(hyear_new.new_city_id == city)].sample(int(row.dif)).index.values
             movers.append(idx)
+        if len(movers) == 0:
+            continue
         movers = np.concatenate(movers)
 
         # city with negative difference
@@ -151,12 +152,14 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
                 resevers.append(idx)
             except:
                 print("city has error", city)
+        if len(resevers) == 0:
+            continue
         resevers = np.concatenate(resevers)
 
         print(la, movers.shape, resevers.shape, movers.shape == resevers.shape)
 
         if movers.shape[0] > resevers.shape[0]:
-            # if not enough reserve because of 2065, trim it
+            # if not enough reserve because of cross_mcd, trim it
             movers = movers[:resevers.shape[0]]
         hyear_new.loc[movers, 'building_id'] = b2.loc[resevers].building_id.values
         hyear_new.loc[movers, 'city_zone'] = b2.loc[resevers].city_zone.values
