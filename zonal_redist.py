@@ -129,9 +129,10 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
         cross_mcd = [2065, 2095]
         # *drop 2065 rows
         df = df[~df.new_city_id.isin(cross_mcd)]
+        # ** special cases handling
         if la == 125:
             # add them to 125 if in cross_mcd
-            df = df.append(hyear_newg[hyear_new.new_city_id.isin(cross_mcd)])
+            df = df.append(hyear_newg[hyear_newg.new_city_id.isin(cross_mcd)])
         df_pos = df.loc[df.dif > 0].set_index('new_city_id')
         movers = []
         for city, row in df_pos.iterrows():
@@ -161,6 +162,9 @@ def match_hh_targets(hyear_new, hyear_newg, b2):
         if movers.shape[0] > resevers.shape[0]:
             # if not enough reserve because of cross_mcd, trim it
             movers = movers[:resevers.shape[0]]
+        if movers.shape[0] < resevers.shape[0]:
+            # if not enough movers because of cross_mcd, trim it
+            resevers = resevers[:movers.shape[0]]
         hyear_new.loc[movers, 'building_id'] = b2.loc[resevers].building_id.values
         hyear_new.loc[movers, 'city_zone'] = b2.loc[resevers].city_zone.values
         hyear_new['new_city_id'] = (hyear_new.city_zone // 10000)
