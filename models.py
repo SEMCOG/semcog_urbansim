@@ -2018,6 +2018,54 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     orca.add_table("buildings", bb)
 
 
+@orca.step()
+def refine_housing_units(households, buildings, mcd_total):
+    """ Refine housing units before mcd_hu_sampling to allow it matching mcd_total
+
+    Args:
+        households (DataFrame Wrapper): households
+        buildings (DataFrame Wrapper): buildings
+        mcd_total (DataFrame Wrapper): mcd_total
+    """
+    year = orca.get_injectable("year")
+    b = buildings.to_frame(buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"])
+    mcd_total = mcd_total.to_frame([str(year)])
+
+    # get units
+    bunits = b["residential_units"]
+    bunits = bunits[bunits.index.values >= 0]
+    bunits = bunits[bunits > 0]
+    # generate housing units from units
+    indexes = np.repeat(bunits.index.values, bunits.values.astype("int"))
+    housing_units = b.loc[indexes]
+    hu_by_mcd = housing_units.groupby("semmcd").size()
+
+    mcd_target = mcd_total[str(year)]
+
+    hu_mcd_diff = pd.DataFrame([], index=hu_by_mcd.index.union(mcd_target.index))
+    hu_mcd_diff.index.name = "semmcd"
+    hu_mcd_diff["hu"] = hu_by_mcd
+    hu_mcd_diff["target"] = mcd_target
+    hu_mcd_diff = hu_mcd_diff.fillna(0)
+    hu_mcd_diff["diff"] = (hu_mcd_diff["target"] - hu_mcd_diff["hu"]).astype(int)
+    hu_mcd_diff_gt_0 = hu_mcd_diff[hu_mcd_diff["diff"] > 0]
+
+    for city, row in hu_mcd_diff_gt_0.iterrows():
+        add_hu = int(row["diff"])
+        local_units = housing_units.loc[(housing_units.building_type_id.isin(
+            [81, 82, 83])) & (housing_units.city_id == city)]
+        # filter out hu_filter and sp_filter
+        local_units = local_units[local_units["hu_filter"] == 0]
+        local_units = local_units[local_units["sp_filter"] >= 0]
+        new_units = local_units.sample(add_hu, replace=False, random_state=1).index.value_counts()
+        b.loc[new_units.index, "residential_units"] += new_units
+        print("Adding %s units to city %s, actually added %s" % (add_hu, city, new_units.sum()))
+
+    # update res_units in building table
+    buildings.update_col_from_series(
+        "residential_units", b["residential_units"], cast=True
+    )
+
 def _print_number_unplaced(df, fieldname="building_id"):
     """
     Just an internal function to use to compute and print info on the number
