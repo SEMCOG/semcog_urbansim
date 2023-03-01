@@ -699,47 +699,73 @@ def jobs_scaling_model(jobs):
 
 
 @orca.step()
-def gq_pop_scaling_model(
-    group_quarters, group_quarters_households, group_quarters_control_totals, year
-):
-    gqpop = group_quarters.to_frame(group_quarters.local_columns + ["city_id"])
-    print("%s gqpop before scaling" % gqpop.shape[0])
-    gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
-    target_gq = group_quarters_control_totals.to_frame()
-    target_gq = target_gq[target_gq.year == year]
-    # if no control found, skip this year
-    if target_gq.shape[0] == 0:
-        print("Warning: No gq controls found for year %s, skipping..." % year)
-        return
-
-    for city_id, local_gqpop in gqpop.groupby("city_id"):
-        diff = target_gq.loc[city_id]["count"] - len(local_gqpop)
+def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels, year):
+    def filter_local_gq(local_gqpop):
         protected = (
             ((local_gqpop.gq_code > 100) & (local_gqpop.gq_code < 200))
             | ((local_gqpop.gq_code > 500) & (local_gqpop.gq_code < 600))
             | (local_gqpop.gq_code == 701)
         )
-        local_gqpop = local_gqpop[~protected]
-        if diff > 0:
-            diff = int(min(len(local_gqpop), abs(diff)))
+        return local_gqpop[~protected]
+
+    parcels = parcels.to_frame(parcels.local_columns)
+    city_large_area = (
+        parcels[["city_id", "large_area_id"]].drop_duplicates().set_index("city_id")
+    )
+
+    gqpop = group_quarters.to_frame(
+        group_quarters.local_columns + ["city_id", "large_area_id"]
+    )
+
+    print("%s gqpop before scaling" % gqpop.shape[0])
+    # gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
+    target_gq = group_quarters_control_totals.to_frame()
+    target_gq = target_gq[target_gq.year == year]
+    # add gq target to city table to iterate
+    city_large_area["gq_target"] = target_gq["count"]
+    city_large_area = city_large_area.fillna(0).sort_index()
+
+    # if no control found, skip this year
+    if target_gq.shape[0] == 0:
+        print("Warning: No gq controls found for year %s, skipping..." % year)
+        return
+
+    for city_id, row in city_large_area.iterrows():
+        local_gqpop = gqpop.loc[gqpop.city_id == city_id]
+        diff = int(row.gq_target - len(local_gqpop))
+        # diff = target_gq.loc[city_id]["count"] - len(local_gqpop)
+        # keep certain GQ pop unchanged
+        filtered_gqpop = filter_local_gq(local_gqpop)
+
+        if len(local_gqpop) > 0:
+            if len(filtered_gqpop) == 0:
+                filtered_gqpop = local_gqpop
+
             if diff > 0:
-                newgq = local_gqpop.sample(diff, replace=True)
+                # diff = int(min(len(filtered_gqpop), abs(diff)))
+                # if no existing GQ except protected, use large area sample
+
+                # local_gqpop = gqpop.loc[gqpop.large_area_id == row.large_area_id]
+                # filtered_gqpop = filter_local_gq(local_gqpop)
+
+                newgq = filtered_gqpop.sample(diff, replace=True)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
+                newgq["city_id"] = city_id
                 gqpop = gqpop.append(newgq)
 
-        elif diff < 0:
-            diff = min(len(local_gqpop), abs(diff))
-            if diff > 0:
-                removegq = local_gqpop.sample()
+            elif diff < 0:
+                diff = min(len(filtered_gqpop), abs(diff))
+                removegq = filtered_gqpop.sample(diff, replace=False)
                 gqpop.drop(removegq.index, inplace=True)
+
     print("%s gqpop after scaling" % gqpop.shape[0])
-    # gq_pop and gq_hh using the same enumerated indexes
-    new_gqhh = gqhh.loc[gqhh.index.isin(gqpop.index)]
-    print("Dropping %s hh from gq_hh." % (gqhh.shape[0] - new_gqhh.shape[0]))
-    orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
-    orca.add_table(
-        "group_quarters_households", new_gqhh[group_quarters_households.local_columns]
+    print(
+        "\tgq result - target",
+        (gqpop.groupby("city_id").size().fillna(0) - city_large_area.gq_target).sum(),
     )
+
+    gqpop.to_csv("gqpop_" + str(year) + ".csv")
+    orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
 
 
 @orca.step()
@@ -2009,4 +2035,3 @@ def remove_unplaced_agents():
         df = orca.get_table(tbl).local
         df = df.loc[df.building_id != -1]
         orca.add_table(tbl, df)
-
