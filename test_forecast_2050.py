@@ -104,6 +104,7 @@ orca.run(
         "schools",
         "poi",
         "group_quarters",
+        "group_quarters_households",
         "group_quarters_control_totals",
         "annual_household_control_totals",
         "remi_pop_total",
