@@ -61,6 +61,7 @@ orca.run(
     ]
     + orca.get_injectable("repm_step_names")
     # + ["increase_property_values"]  # on hold
+    + ["refine_housing_units"]
     + ["mcd_hu_sampling"]
     + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
