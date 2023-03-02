@@ -155,11 +155,11 @@ name: events_addition
 indexs:
 - objectid
 columns:
-  building_id: int32
+  building_id: float32
   building_type_id: int8
   city_id: int32
   dev_type: object
-  event_id: int32
+  event_id: float32
   gqcap: int32
   median_hgt: int32
   non_residential_sqft: int32
@@ -230,6 +230,7 @@ columns:
   children: int8
   hht: int8
   income: float64
+  noc: int8
   persons: int8
   race_id: int8
   seed_id: int32
@@ -269,7 +270,7 @@ columns:
   large_area_id: int32
   sector_id: int8
   semcog_id: int32
-  sqft: int32
+  sq_ft_per_job: int32
 ---
 name: land_use_types
 indexs:
@@ -336,6 +337,7 @@ columns:
   '2048': int32
   '2049': int32
   '2050': int32
+  large_area_id: int32
 ---
 name: multi_parcel_buildings
 indexs:

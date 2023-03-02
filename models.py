@@ -2038,6 +2038,9 @@ def refine_housing_units(households, buildings, mcd_total):
     # generate housing units from units
     indexes = np.repeat(bunits.index.values, bunits.values.astype("int"))
     housing_units = b.loc[indexes]
+    # filter out unplaceable HU
+    housing_units = housing_units[housing_units["hu_filter"] == 0]
+    housing_units = housing_units[housing_units["sp_filter"] >= 0]
     hu_by_mcd = housing_units.groupby("semmcd").size()
 
     mcd_target = mcd_total[str(year)]
