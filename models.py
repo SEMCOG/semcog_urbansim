@@ -107,7 +107,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     blds = buildings.to_frame(
         [
             "building_id",
-            "semmcd",
+            "city_id",
             vacant_variable,
             "building_age",
             "geoid",
@@ -125,9 +125,9 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
 
     # the mcd_total for year and year-1
     mcd_total = mcd_total.to_frame([str(year)])
-    hh = households.to_frame(["semmcd", "building_id"])
+    hh = households.to_frame(["city_id", "building_id"])
     hh = hh[hh.building_id != -1]
-    hh_by_city = hh.groupby("semmcd").count().building_id
+    hh_by_city = hh.groupby("city_id").count().building_id
     # 4 mcds missing in the mcd_total table [2073, 2172, 6142, 2252]
     # get the growth by subtract the previous year
     # growth = target_year_hh - current_hh
@@ -151,7 +151,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         # for each city, make n_units = n_choosers
         # sorted by year built
         city_units = housing_units[
-            (housing_units.semmcd == city)
+            (housing_units.city_id == city)
             & (
                 # only sampling hu_filter == 0
                 housing_units.hu_filter
@@ -190,7 +190,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         selected_units = city_units.iloc[:growth]
         if selected_units.shape[0] != growth:
             print(
-                "MCD %s have %s housing unit but expected growth is %s"
+                "City %s have %s housing unit but expected growth is %s"
                 % (city, selected_units.shape[0], growth)
             )
         new_units = pd.concat([new_units, selected_units])
@@ -207,7 +207,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     debug = True
     if debug:
         blds = buildings.to_frame(
-            ["building_id", "semmcd", "residential_units", "building_age", "geoid"]
+            ["building_id", "city_id", "residential_units", "building_age", "geoid"]
         )
         res_units = blds["residential_units"]
         res_units = res_units[res_units.index.values >= 0]
@@ -215,9 +215,9 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         # generate housing units from vacant units
         indexes = np.repeat(res_units.index.values, res_units.values.astype("int"))
         hus = blds.loc[indexes]
-        new_hus = hus[hus.building_age < 8].groupby("geoid").count().semmcd
+        new_hus = hus[hus.building_age < 8].groupby("geoid").count().city_id
         new_hus.name = "hu_under_8"
-        old_hus = hus[hus.building_age >= 8].groupby("geoid").count().semmcd
+        old_hus = hus[hus.building_age >= 8].groupby("geoid").count().city_id
         old_hus.name = "hu_over_8"
         sampled = (
             buildings.to_frame(["geoid", "mcd_model_quota"]).groupby("geoid").sum()
@@ -1411,10 +1411,10 @@ def feasibility(parcels):
         modify_costs=cost_shifter_callback,
     )
     feasibility = orca.get_table("feasibility").to_frame()
-    # MCD feasibility
-    for mcdid, df in parcels.semmcd.to_frame().groupby("semmcd"):
+    # city feasibility
+    for cityid, df in parcels.city_id.to_frame().groupby("city_id"):
         orca.add_table(
-            "feasibility_" + str(mcdid), feasibility[feasibility.index.isin(df.index)]
+            "feasibility_" + str(cityid), feasibility[feasibility.index.isin(df.index)]
         )
     # large_area feasibility
     for lid, df in parcels.large_area_id.to_frame().groupby("large_area_id"):
@@ -1644,22 +1644,22 @@ def residential_developer(
     target_vacancies = target_vacancies_mcd.to_frame()
     target_vacancies = target_vacancies[str(year)]
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "semmcd", "building_type_id"]
+        ["residential_units", "city_id", "building_type_id"]
     )
     # the mcd_total for year and year-1
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
     debug_res_developer = debug_res_developer.to_frame()
-    for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
-        print(f"developing residential units for {mcdid}")
-        mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
-        # handle missing mcdid
-        if mcdid not in mcd_total.index:
+    for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
+        print(f"developing residential units for {cityid}")
+        mcd_orig_buildings = orig_buildings[orig_buildings.city_id == cityid]
+        # handle missing cityid
+        if cityid not in mcd_total.index:
             continue
-        target_vacancy = float(target_vacancies[mcdid])
+        target_vacancy = float(target_vacancies[cityid])
         # current hh from hh table
-        cur_agents = (households.semmcd == mcdid).sum()
+        cur_agents = (households.city_id == cityid).sum()
         # target hh from mcd_total table
-        target_agents = mcd_total.loc[mcdid]
+        target_agents = mcd_total.loc[cityid]
         # number of current total housing units
         num_units = mcd_orig_buildings.residential_units.sum()
 
@@ -1678,7 +1678,7 @@ def residential_developer(
         register_btype_distributions(mcd_orig_buildings)
         units_added, parcels_idx_to_update = run_developer(
             target_units,
-            mcdid,
+            cityid,
             "residential",
             orca.get_table("buildings"),
             "residential_units",
@@ -1697,7 +1697,7 @@ def residential_developer(
         debug_res_developer = debug_res_developer.append(
             {
                 "year": year,
-                "mcd": mcdid,
+                "mcd": cityid,
                 "target_units": target_units,
                 "units_added": units_added,
             },
@@ -1705,8 +1705,8 @@ def residential_developer(
         )
         if units_added < target_units:
             print(
-                " ***  Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
-                % (mcdid, target_units, int(units_added))
+                " ***  Not enough housing units have been built by the developer model for city %s, target: %s, built: %s"
+                % (cityid, target_units, int(units_added))
             )
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
@@ -2028,7 +2028,7 @@ def refine_housing_units(households, buildings, mcd_total):
         mcd_total (DataFrame Wrapper): mcd_total
     """
     year = orca.get_injectable("year")
-    b = buildings.to_frame(buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"])
+    b = buildings.to_frame(buildings.local_columns + ["hu_filter", "sp_filter", "city_id"])
     mcd_total = mcd_total.to_frame([str(year)])
 
     # get units
@@ -2041,12 +2041,12 @@ def refine_housing_units(households, buildings, mcd_total):
     # filter out unplaceable HU
     housing_units = housing_units[housing_units["hu_filter"] == 0]
     housing_units = housing_units[housing_units["sp_filter"] >= 0]
-    hu_by_mcd = housing_units.groupby("semmcd").size()
+    hu_by_mcd = housing_units.groupby("city_id").size()
 
     mcd_target = mcd_total[str(year)]
 
     hu_mcd_diff = pd.DataFrame([], index=hu_by_mcd.index.union(mcd_target.index))
-    hu_mcd_diff.index.name = "semmcd"
+    hu_mcd_diff.index.name = "city_id"
     hu_mcd_diff["hu"] = hu_by_mcd
     hu_mcd_diff["target"] = mcd_target
     hu_mcd_diff = hu_mcd_diff.fillna(0)
