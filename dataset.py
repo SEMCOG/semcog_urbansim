@@ -162,15 +162,23 @@ def buildings(store):
 @orca.table(cache=True)
 def households(store, buildings):
     df = store["households"]
-    b = buildings.to_frame(["large_area_id"])
+    b = buildings.to_frame(["large_area_id", "residential_units"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
+
+    bid_to_la = {
+        1: 3, 2: 125, 3:99, 4: 161, 5: 115, 6: 147, 7: 93, 8: 5
+    }
     idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
-    df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
-        b.index.values, idx_invalid_building_id.sum()
-    )
+    hh_to_assign = df.loc[idx_invalid_building_id, "building_id"]
+    for bid, laid in bid_to_la.items():
+        local_hh = hh_to_assign[hh_to_assign//1000000 == bid]
+        # sample la hu
+        df.loc[local_hh.index, 'building_id'] = np.random.choice(
+            b[(b.large_area_id==laid)&(b.residential_units>0)].index.values, local_hh.size
+        )
 
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id,)
 
