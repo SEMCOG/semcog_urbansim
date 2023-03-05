@@ -1461,7 +1461,9 @@ def add_extra_columns_res(df):
         )
     # github issue #31
     # generating default `mcd_model_quota` as the same as the `residential_units`
-    df["mcd_model_quota"] = df["residential_units"]
+    # df["mcd_model_quota"] = df["residential_units"]
+    # set default mcd quota to 0
+    df["mcd_model_quota"] = 0
     return df.fillna(0)
 
 

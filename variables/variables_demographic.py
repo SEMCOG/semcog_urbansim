@@ -107,7 +107,7 @@ def city_id(households, buildings):
 #     return misc.reindex(buildings.b_city_id, households.building_id)
 
 
-@orca.column("households", cache=True, cache_scope="iteration")
+@orca.column("households", cache=False, cache_scope="iteration")
 def semmcd(households, buildings):
     return misc.reindex(buildings.semmcd, households.building_id)
 
