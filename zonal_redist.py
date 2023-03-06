@@ -23,6 +23,8 @@ def get_czone_weights(hbase_year, hyear, hyear_g):
         # sample all current hh by baseyear distribution among city and city_zone(as weight)
         addses = []
         for ind, x in hyear_g.iteritems():
+            # skip if x == 0
+            if x == 0: continue
             slic = hbase_year.loc[[ind]]
             print(ind, x, slic.weights.sum(), (1.0 * x / slic.weights.sum()))
             new_city_zone = slic.sample(x, replace=True, weights=slic.weights)
