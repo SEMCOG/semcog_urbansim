@@ -2,7 +2,8 @@ import pandas as pd
 from zonal_redist import target_year_data, make_hh_la, get_czone_weights, assign_hh_to_hu, get_hh_refine_difference, match_hh_targets
 
 def main():
-	hdf = pd.HDFStore('', 'r')
+	hdf= pd.HDFStore('/mnt/hgfs/RDF2050/run2087_zonal.h5', 'r')
+	new_hdf = pd.HDFStore('~/semcog_urbansim/data/run2087_new.h5', 'w')
 
 	# get base year distribution
 	hh = hdf['/base/households']
@@ -34,50 +35,52 @@ def main():
 	hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
 	# orca.add_table('baseyear_households_by_zone', hbase_zone)
 
-	year = 2050
-	# Run year 2050 zonal distribution
-	households = hdf['/%s/households'%year]
-	buildings = hdf['/%s/buildings'%year]
-	parcels = hdf['/%s/parcels'%year]
-	buildings = b.join(p[['zone_id']], on='parcel_id')
+	for year in range(2025, 2051, 5):
+		# Run year zonal distribution
+		households = hdf[ '/%s/households'%year]
+		buildings = hdf[ '/%s/buildings'%year]
+		parcels = hdf[ '/%s/parcels'%year]
+		buildings = buildings.join(parcels[['zone_id']], on='parcel_id')
 
-	#prepare target year hhs, hhs grpby inc and size, b2(building id repeat by res units)
-	hyear, hyear_g, b2 = target_year_data(households, buildings, parcels, 2050)
+		#prepare target year hhs, hhs grpby inc and size, b2(building id repeat by res units)
+		hyear, hyear_g, b2 = target_year_data(households, buildings, parcels, year)
 
-	#adjust weights and get city-zone sample distribution
-	czone, czoneg, weightsg, hbase_zone = get_czone_weights(
-		hbase_zone, hyear, hyear_g)
+		#adjust weights and get city-zone sample distribution
+		czone, czoneg, weightsg, hbase_zone = get_czone_weights(
+			hbase_zone, hyear, hyear_g)
 
-	czone = czone.reset_index()
-	czone['building_id'] = -1
-	#iter city-zone, assign HH to HUs by min(HH, HU), keep remaining HH and HU, do full random assginment at the end
-	czone, b2 = assign_hh_to_hu(czone, b2)
+		czone = czone.reset_index()
+		czone['building_id'] = -1
+		#iter city-zone, assign HH to HUs by min(HH, HU), keep remaining HH and HU, do full random assginment at the end
+		czone, b2 = assign_hh_to_hu(czone, b2)
 
-	czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
-	hyear_new = hyear.copy()
-	# give new bid and city_zone to households
-	for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize']):
-		hyear_new.loc[v.index, 'building_id'] = czone.loc[ind].building_id.values
-		hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
+		czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
+		hyear_new = hyear.copy()
+		# give new bid and city_zone to households
+		for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize']):
+			hyear_new.loc[v.index, 'building_id'] = czone.loc[ind].building_id.values
+			hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
 
-	hyear_new['new_city_id'] = hyear_new.city_zone // 10000
+		hyear_new['new_city_id'] = hyear_new.city_zone // 10000
 
-	#get difference table between new and target
-	hyear_newg = get_hh_refine_difference(hyear_new, hyear)
-	print('dif table summary', hyear_newg.sum())
-	hyear_newg = hyear_newg.reset_index()
+		#get difference table between new and target
+		hyear_newg = get_hh_refine_difference(hyear_new, hyear)
+		print('dif table summary', hyear_newg.sum())
+		hyear_newg = hyear_newg.reset_index()
 
-	hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
+		hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
 
-	hyear_new['city_id'] = hyear_new['new_city_id']
-	hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
-	hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'new_city_id',
-					'city_id', 'zone_id'], axis=1, inplace=True)
-	# update households table
-	hdf['/2050/households_after_zd'] = hyear_new
-	print("Finished zonal_distribution and /2050/households_after_zd was added")
+		hyear_new['city_id'] = hyear_new['new_city_id']
+		hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
+		hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'new_city_id',
+						'city_id', 'zone_id'], axis=1, inplace=True)
+		# update households table
+		# hyear_new.to_csv("/home/da/share/urbansim/RDF2050/model_runs/run2087/households_after_zd.csv", index=True)
+		new_hdf["/%s/households" % year] = hyear_new
+		print("Finished zonal_distribution and ", "/%s/households" % year, " was added")
 	# clean up
 	hdf.close()
+	new_hdf.close()
 
 if __name__ == "__main__":
 	main()
