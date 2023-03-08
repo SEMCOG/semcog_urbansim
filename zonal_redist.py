@@ -14,6 +14,9 @@ def make_hh_la(households, buildings):
     h['hhsize'] = h.persons
     h.loc[h.persons > 7, 'hhsize'] = 7
     h['inc_qt'] = pd.qcut(h.income, 4, labels=[1, 2, 3, 4])
+    # Add hh_head age
+    # 0-24, 25-65, 65+
+    h['aoh'] = np.digitize(h.age_of_head, [0, 25, 66])
     return h
 
 
@@ -25,6 +28,13 @@ def get_czone_weights(hbase_year, hyear, hyear_g):
         for ind, x in hyear_g.iteritems():
             # skip if x == 0
             if x == 0: continue
+            # skip if ind not in base year
+            if ind not in hbase_year.index: 
+                # append current city and zone info
+                local_hyear_zone = hyear.set_index(
+                    ['large_area_id', 'inc_qt', 'hhsize', 'aoh']).loc[ind, ['city_id', 'city_zone']]
+                addses.append(local_hyear_zone)
+                continue
             slic = hbase_year.loc[[ind]]
             print(ind, x, slic.weights.sum(), (1.0 * x / slic.weights.sum()))
             new_city_zone = slic.sample(x, replace=True, weights=slic.weights)
@@ -55,7 +65,7 @@ def get_czone_weights(hbase_year, hyear, hyear_g):
 
 def target_year_data(households, buildings, parcels, year):
     hyear = make_hh_la(households, buildings)
-    hyear_g = hyear.groupby(['large_area_id', 'inc_qt', 'hhsize']).size()
+    hyear_g = hyear.groupby(['large_area_id', 'inc_qt', 'hhsize', 'aoh']).size()
     print(len(hyear))
     print(hyear_g.head())
 
