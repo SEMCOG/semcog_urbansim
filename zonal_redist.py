@@ -2,6 +2,89 @@ import pandas as pd
 import numpy as np
 
 
+def get_baseyear_dist(households, buildings):
+    """ Generated base year city_zone level household size and income distribution patterns
+
+    Args:
+        households (DataFrameWrapper): base households
+        buildings (DataFrameWrapper): base buildings
+    returns:
+        hbase_zone (DataFrame): base year distribution
+    """
+    hbase = make_hh_la(households, buildings)
+    # concat all groupby columsn as string to reduce runtime
+    hbase['concat'] = hbase.inc_qt.astype(int).map(str) + '-' + hbase.hhsize.map(str) + '-' + hbase.aoh.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.large_area_id.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.city_id.map(str)
+    hbase['concat'] = hbase['concat'] + '-' + hbase.city_zone.map(str)
+
+    hbase_zone = hbase.groupby('concat').size()
+    hbase_zone.name = 'weights'
+    hbase_zone = hbase_zone * 1.00
+    hbase_zone += 0.001
+
+    # restore all columns from concat string
+    hbase_zone = hbase_zone.reset_index()
+    hbase_zone['inc_qt'] = hbase_zone['concat'].str.split('-').str[0].astype(int)
+    hbase_zone['hhsize'] = hbase_zone['concat'].str.split('-').str[1].astype(int)
+    hbase_zone['aoh'] = hbase_zone['concat'].str.split('-').str[2].astype(int)
+    hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[3].astype(int)
+    hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[4].astype(int)
+    hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[5].astype(int)
+    hbase_zone = hbase_zone.drop(columns='concat')
+
+    hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize', 'aoh'])
+    return hbase_zone
+
+def target_year_zonal_distribution(households, buildings, parcels, hbase_zone):
+    """
+    - Allocate forecast households by household size and income groups with base year spatial patterns at city-zone level
+    - City zone is an individual geo unit defined by either TAZ or any intersection part between 'city' and TAZs
+    - Households within a city_zone are first assigned to vacant units with an 3% vacancy. Then all extra households will be allocated to vacant housing units within city
+
+    Args:
+        households (DataFrameWrapper): households
+        buildings (DataFrameWrapper): buildings
+        parcels (DataFrameWrapper): parcels
+        baseyear_households_by_zone (DataFrameWrapper): baseyear_households_by_zone generated from baseyear_zonal_distribution
+
+    return 
+        hyear_new (DataFrame): new households table
+    """
+    #prepare target year hhs, hhs grpby inc and size, b2(building id repeat by res units)
+    hyear, hyear_g, b2 = target_year_data(households, buildings, parcels)
+
+    #adjust weights and get city-zone sample distribution
+    czone, czoneg, weightsg, hbase_zone = get_czone_weights(
+        hbase_zone, hyear, hyear_g)
+
+    czone = czone.reset_index()
+    czone['building_id'] = -1
+    #iter city-zone, assign HH to HUs by min(HH, HU), keep remaining HH and HU, do full random assginment at the end
+    czone, b2 = assign_hh_to_hu(czone, b2)
+
+    czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize', 'aoh'])
+    hyear_new = hyear.copy()
+    # give new bid and city_zone to households
+    for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize', 'aoh']):
+        hyear_new.loc[v.index, 'building_id'] = czone.loc[ind].building_id.values
+        hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
+
+    hyear_new['new_city_id'] = hyear_new.city_zone // 10000
+
+    #get difference table between new and target
+    hyear_newg = get_hh_refine_difference(hyear_new, hyear)
+    print('dif table summary', hyear_newg.sum())
+    hyear_newg = hyear_newg.reset_index()
+
+    hyear_new, hyear_newg = match_hh_targets(hyear_new, hyear_newg, b2)
+
+    hyear_new['city_id'] = hyear_new['new_city_id']
+    hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
+    hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'aoh', 'new_city_id',
+                    'city_id', 'zone_id'], axis=1, inplace=True)
+    return hyear_new
+
 def make_hh_la(households, buildings):
     h = pd.merge(households, buildings[['city_id', 'zone_id']],
                  left_on='building_id', right_index=True, how='left')
@@ -63,7 +146,7 @@ def get_czone_weights(hbase_year, hyear, hyear_g):
         return [czone, czoneg, weightsg, hbase_year]
 
 
-def target_year_data(households, buildings, parcels, year):
+def target_year_data(households, buildings, parcels):
     hyear = make_hh_la(households, buildings)
     hyear_g = hyear.groupby(['large_area_id', 'inc_qt', 'hhsize', 'aoh']).size()
     print(len(hyear))
