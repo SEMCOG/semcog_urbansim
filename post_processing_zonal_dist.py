@@ -3,7 +3,7 @@ from zonal_redist import target_year_data, make_hh_la, get_czone_weights, assign
 
 def main():
 	hdf= pd.HDFStore('/mnt/hgfs/RDF2050/run2087_zonal.h5', 'r')
-	new_hdf = pd.HDFStore('~/semcog_urbansim/data/run2087_new.h5', 'w')
+	new_hdf = pd.HDFStore('~/semcog_urbansim/data/run2087_with_age.h5', 'w')
 
 	# get base year distribution
 	hh = hdf['/base/households']
@@ -13,7 +13,7 @@ def main():
 
 	hbase = make_hh_la(hh, b)
 	# concat all groupby columsn as string to reduce runtime
-	hbase['concat'] = hbase.inc_qt.astype(int).map(str) + '-' + hbase.hhsize.map(str)
+	hbase['concat'] = hbase.inc_qt.astype(int).map(str) + '-' + hbase.hhsize.map(str) + '-' + hbase.aoh.map(str)
 	hbase['concat'] = hbase['concat'] + '-' + hbase.large_area_id.map(str)
 	hbase['concat'] = hbase['concat'] + '-' + hbase.city_id.map(str)
 	hbase['concat'] = hbase['concat'] + '-' + hbase.city_zone.map(str)
@@ -27,12 +27,13 @@ def main():
 	hbase_zone = hbase_zone.reset_index()
 	hbase_zone['inc_qt'] = hbase_zone['concat'].str.split('-').str[0].astype(int)
 	hbase_zone['hhsize'] = hbase_zone['concat'].str.split('-').str[1].astype(int)
-	hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[2].astype(int)
-	hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[3].astype(int)
-	hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[4].astype(int)
+	hbase_zone['aoh'] = hbase_zone['concat'].str.split('-').str[2].astype(int)
+	hbase_zone['large_area_id'] = hbase_zone['concat'].str.split('-').str[3].astype(int)
+	hbase_zone['city_id'] = hbase_zone['concat'].str.split('-').str[4].astype(int)
+	hbase_zone['city_zone'] = hbase_zone['concat'].str.split('-').str[5].astype(int)
 	hbase_zone = hbase_zone.drop(columns='concat')
 
-	hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
+	hbase_zone = hbase_zone.set_index(['large_area_id', 'inc_qt', 'hhsize', 'aoh'])
 	# orca.add_table('baseyear_households_by_zone', hbase_zone)
 
 	for year in range(2025, 2051, 5):
@@ -54,10 +55,10 @@ def main():
 		#iter city-zone, assign HH to HUs by min(HH, HU), keep remaining HH and HU, do full random assginment at the end
 		czone, b2 = assign_hh_to_hu(czone, b2)
 
-		czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize'])
+		czone = czone.set_index(['large_area_id', 'inc_qt', 'hhsize', 'aoh'])
 		hyear_new = hyear.copy()
 		# give new bid and city_zone to households
-		for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize']):
+		for ind, v in hyear_new.groupby(['large_area_id', 'inc_qt', 'hhsize', 'aoh']):
 			hyear_new.loc[v.index, 'building_id'] = czone.loc[ind].building_id.values
 			hyear_new.loc[v.index, 'city_zone'] = czone.loc[ind].city_zone.values
 
@@ -72,7 +73,7 @@ def main():
 
 		hyear_new['city_id'] = hyear_new['new_city_id']
 		hyear_new['zone_id'] = hyear_new['city_zone'] % 10000
-		hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'new_city_id',
+		hyear_new.drop(['city_zone', 'hhsize', 'inc_qt', 'aoh', 'new_city_id',
 						'city_id', 'zone_id'], axis=1, inplace=True)
 		# update households table
 		# hyear_new.to_csv("/home/da/share/urbansim/RDF2050/model_runs/run2087/households_after_zd.csv", index=True)
