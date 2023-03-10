@@ -445,7 +445,7 @@ def households_transition(
 ):
     region_ct = annual_household_control_totals.to_frame()
     max_cols = region_ct.columns[
-        region_ct.columns.str.endswith("_max") & (region_ct == -1).any(axis=0)
+        region_ct.columns.str.endswith("_max")
     ]
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
