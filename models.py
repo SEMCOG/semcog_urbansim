@@ -2102,7 +2102,7 @@ def refine_housing_units(households, buildings, mcd_total):
     hu_mcd_diff_gt_0 = hu_mcd_diff[hu_mcd_diff["diff"] > 0]
 
     for city, row in hu_mcd_diff_gt_0.iterrows():
-        add_hu = int(row["diff"])
+        add_hu = int(row["diff"] * 1.1)
         local_units = housing_units.loc[
             (housing_units.building_type_id.isin([81, 82, 83]))
             & (housing_units.city_id == city)
