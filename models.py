@@ -444,15 +444,29 @@ def households_transition(
     households, persons, annual_household_control_totals, remi_pop_total, iter_var
 ):
     region_ct = annual_household_control_totals.to_frame()
-    max_cols = region_ct.columns[
-        region_ct.columns.str.endswith("_max")
-    ]
+    max_cols = region_ct.columns[region_ct.columns.str.endswith("_max")]
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
-    region_hh.index = region_hh.index.astype(int)
+
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+
+    if "change_hhs" in orca.list_tables():
+        ## add changed hhs and persons from previous year back (ensure transition sample availability )
+        changed_hhs = orca.get_table("changed_hhs")
+        changed_hhs.index += region_hh.index.max()
+
+        changed_ps = orca.get_table("changed_ps")
+        changed_ps.index += region_p.index.max()
+        changed_ps["household_id"] = changed_ps["household_id"] + region_hh.index.max()
+
+        region_hh = pd.concat([region_hh, changed_hhs])
+        region_p = pd.concat([region_p, changed_ps])
+
+    region_hh.index = region_hh.index.astype(int)
+    region_p.index = region_p.index.astype(int)
+
     region_target = remi_pop_total.to_frame()
 
     def cut_to_la(xxx_todo_changeme):
@@ -555,6 +569,7 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
+    p0 = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
@@ -612,6 +627,35 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
     changed = hh.workers != hh.old_workers
+    print(f"changed number of HHs from LPR is {len(changed)})")
+
+    # save changed HHs and persons as valid samples for future transition model
+    if len(changed) > 0:
+        changed_hhs = hh.loc[changed.index]
+        changed_hhs["old_hhid"] = changed_hhs.index
+        changed_hhs.index = range(1, 1 + len(changed_hhs))
+        changed_hhs.index.name = "household_id"
+        changed_hhs = changed_hhs.reset_index().set_index("old_hhid")
+
+        changed_ps = p0.loc[p0.household_id.isin(changed.index)]
+        changed_ps = changed_ps.rename(columns={"household_id": "old_hhid"})
+        changed_ps = changed_ps.merge(
+            changed_hhs[["household_id"]],
+            left_on="old_hhid",
+            right_index=True,
+            how="left",
+        )
+        changed_ps.index = range(1, 1 + len(changed_ps))
+        changed_ps = changed_ps.drop("old_hhid", axis=1)
+
+        changed_hhs = changed_hhs.set_index("household_id")
+
+        print(f"saved {len(changed_hhs)} households for future samples")
+    else:
+        changed_hhs = hh.iloc[0:0]
+        changed_ps = p0.iloc[0:0]
+    orca.add_table("changed_hhs", changed_hhs)
+    orca.add_table("changed_ps", changed_ps)
 
     for match_colls, chh in hh[changed].groupby(colls):
         try:
@@ -2030,7 +2074,9 @@ def refine_housing_units(households, buildings, mcd_total):
         mcd_total (DataFrame Wrapper): mcd_total
     """
     year = orca.get_injectable("year")
-    b = buildings.to_frame(buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"])
+    b = buildings.to_frame(
+        buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"]
+    )
     mcd_total = mcd_total.to_frame([str(year)])
 
     # get units
@@ -2057,19 +2103,27 @@ def refine_housing_units(households, buildings, mcd_total):
 
     for city, row in hu_mcd_diff_gt_0.iterrows():
         add_hu = int(row["diff"])
-        local_units = housing_units.loc[(housing_units.building_type_id.isin(
-            [81, 82, 83])) & (housing_units.city_id == city)]
+        local_units = housing_units.loc[
+            (housing_units.building_type_id.isin([81, 82, 83]))
+            & (housing_units.city_id == city)
+        ]
         # filter out hu_filter and sp_filter
         local_units = local_units[local_units["hu_filter"] == 0]
         local_units = local_units[local_units["sp_filter"] >= 0]
-        new_units = local_units.sample(add_hu, replace=False, random_state=1).index.value_counts()
+        new_units = local_units.sample(
+            add_hu, replace=False, random_state=1
+        ).index.value_counts()
         b.loc[new_units.index, "residential_units"] += new_units
-        print("Adding %s units to city %s, actually added %s" % (add_hu, city, new_units.sum()))
+        print(
+            "Adding %s units to city %s, actually added %s"
+            % (add_hu, city, new_units.sum())
+        )
 
     # update res_units in building table
     buildings.update_col_from_series(
         "residential_units", b["residential_units"], cast=True
     )
+
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
