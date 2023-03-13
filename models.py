@@ -452,12 +452,12 @@ def households_transition(
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
 
-    if "change_hhs" in orca.list_tables():
+    if "changed_hhs" in orca.list_tables():
         ## add changed hhs and persons from previous year back (ensure transition sample availability )
-        changed_hhs = orca.get_table("changed_hhs")
+        changed_hhs = orca.get_table("changed_hhs").local
         changed_hhs.index += region_hh.index.max()
 
-        changed_ps = orca.get_table("changed_ps")
+        changed_ps = orca.get_table("changed_ps").local
         changed_ps.index += region_p.index.max()
         changed_ps["household_id"] = changed_ps["household_id"] + region_hh.index.max()
 
@@ -567,9 +567,10 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
+    changed_hhs = hh.copy()
     hh["target_workers"] = 0
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
-    p0 = p.copy()
+    changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
     employed = p.worker == True
     p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
@@ -630,14 +631,17 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     print(f"changed number of HHs from LPR is {len(changed)})")
 
     # save changed HHs and persons as valid samples for future transition model
-    if len(changed) > 0:
-        changed_hhs = hh.loc[changed.index]
+
+    if len(changed[changed == True]) > 0:
+        changed_hhs = changed_hhs[changed]
         changed_hhs["old_hhid"] = changed_hhs.index
         changed_hhs.index = range(1, 1 + len(changed_hhs))
         changed_hhs.index.name = "household_id"
         changed_hhs = changed_hhs.reset_index().set_index("old_hhid")
 
-        changed_ps = p0.loc[p0.household_id.isin(changed.index)]
+        changed_ps = changed_ps.loc[
+            changed_ps.household_id.isin(changed_hhs[changed].index)
+        ]
         changed_ps = changed_ps.rename(columns={"household_id": "old_hhid"})
         changed_ps = changed_ps.merge(
             changed_hhs[["household_id"]],
@@ -649,13 +653,14 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
         changed_ps = changed_ps.drop("old_hhid", axis=1)
 
         changed_hhs = changed_hhs.set_index("household_id")
+        changed_hhs["building_id"] = -1
 
         print(f"saved {len(changed_hhs)} households for future samples")
     else:
         changed_hhs = hh.iloc[0:0]
-        changed_ps = p0.iloc[0:0]
-    orca.add_table("changed_hhs", changed_hhs)
-    orca.add_table("changed_ps", changed_ps)
+        changed_ps = changed_ps.iloc[0:0]
+    orca.add_table("changed_hhs", changed_hhs[households.local_columns])
+    orca.add_table("changed_ps", changed_ps[persons.local_columns])
 
     for match_colls, chh in hh[changed].groupby(colls):
         try:
