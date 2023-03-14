@@ -14,6 +14,7 @@ from urbansim_parcels import utils as parcel_utils
 
 import utils
 import lcm_utils
+from zonal_redist import get_baseyear_dist, target_year_zonal_distribution, target_year_data, make_hh_la, get_czone_weights, assign_hh_to_hu, get_hh_refine_difference, match_hh_targets
 
 import dataset
 import variables
@@ -2129,6 +2130,51 @@ def refine_housing_units(households, buildings, mcd_total):
         "residential_units", b["residential_units"], cast=True
     )
 
+@orca.step()
+def baseyear_zonal_distribution(households, buildings):
+    """ Generated base year city_zone level household size and income distribution patterns
+
+    Args:
+        households (DataFrameWrapper): base households
+        buildings (DataFrameWrapper): base buildings
+    """
+    households = households.to_frame(households.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
+    hbase_zone = get_baseyear_dist(households, buildings)
+    orca.add_table('baseyear_households_by_zone', hbase_zone)
+
+@orca.step()
+def zonal_distribution(year, households, buildings, parcels, baseyear_households_by_zone):
+    """
+    - Allocate forecast households by household size and income groups with base year spatial patterns at city-zone level
+    - City zone is an individual geo unit defined by either TAZ or any intersection part between 'city' and TAZs
+    - Households within a city_zone are first assigned to vacant units with an 3% vacancy. Then all extra households will be allocated to vacant housing units within city
+
+    Args:
+        year (int): year
+        households (DataFrameWrapper): households
+        buildings (DataFrameWrapper): buildings
+        parcels (DataFrameWrapper): parcels
+        baseyear_households_by_zone (DataFrameWrapper): baseyear_households_by_zone generated from baseyear_zonal_distribution
+    """
+    baseyear = 2020
+    # TODO: Add condition to run this step every 5 years
+    print('year', year)
+    households = households.to_frame(households.local_columns)
+    buildings = buildings.to_frame(buildings.local_columns + ["zone_id"])
+    parcels = parcels.to_frame(parcels.local_columns)
+    baseyear_households_by_zone = baseyear_households_by_zone.to_frame()
+    # save orig households
+    orca.add_table("households_before_zd", households)
+    # run this step every 5 years
+    if (year - baseyear) % 5 != 0:
+        print('skipping zonal distribution this year')
+        return
+    # get households table after zonal distribution
+    hyear_new = target_year_zonal_distribution(households, buildings, parcels, baseyear_households_by_zone)
+    # update households table
+    orca.add_table("households", hyear_new)
+    print("Finished zonal_distribution.")
 
 def _print_number_unplaced(df, fieldname="building_id"):
     """
