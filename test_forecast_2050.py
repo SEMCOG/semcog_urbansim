@@ -40,6 +40,10 @@ utils.run_log(run_info)
 if run_debug is True:
     utils.debug_log()
 
+# orca.run([
+#     "baseyear_zonal_distribution"
+# ], iter_vars=[base_year])
+
 orca.run(
     [
         "build_networks_2050",
@@ -71,6 +75,8 @@ orca.run(
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
+        # redistribute hh every 5 years
+        # "zonal_distribution",
     ],
     iter_vars=list(range(base_year + 1, final_year + 1)),
     data_out=data_out,
@@ -119,6 +125,7 @@ orca.run(
         "base_job_space",
         "parcels",
         "households",
+        # "households_before_zd",
         "persons",
         "group_quarters",
         "dropped_buildings",
