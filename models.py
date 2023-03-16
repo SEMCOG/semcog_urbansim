@@ -14,7 +14,6 @@ from urbansim_parcels import utils as parcel_utils
 
 import utils
 import lcm_utils
-from zonal_redist import get_baseyear_dist, target_year_zonal_distribution, target_year_data, make_hh_la, get_czone_weights, assign_hh_to_hu, get_hh_refine_difference, match_hh_targets
 
 import dataset
 import variables
