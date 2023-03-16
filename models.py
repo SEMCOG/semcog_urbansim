@@ -78,6 +78,7 @@ def elcm_home_based(jobs, households):
 
 @orca.injectable("mcd_hu_sampling_config")
 def mcd_hu_sampling_config():
+    # load mcd_hu_sampling step config file
     with open(os.path.join(misc.configs_dir(), "mcd_hu_sampling.yaml")) as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
         return cfg
@@ -119,6 +120,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
+
     # generate housing units from vacant units
     indexes = np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
     housing_units = blds.loc[indexes]
@@ -128,15 +130,18 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     hh = households.to_frame(["semmcd", "building_id"])
     hh = hh[hh.building_id != -1]
     hh_by_city = hh.groupby("semmcd").count().building_id
-    # 4 mcds missing in the mcd_total table [2073, 2172, 6142, 2252]
-    # get the growth by subtract the previous year
+
+    # get the expected growth
     # growth = target_year_hh - current_hh
     mcd_growth = mcd_total[str(year)] - hh_by_city
+
     # temp set NaN to 0
     if mcd_growth.isna().sum() > 0:
         print("Warning: NaN exists in mcd_growth, replaced them with 0")
     mcd_growth = mcd_growth.fillna(0).astype(int)
-    ####
+
+    # Calculate using Blockgroup HH count trend data
+    # from func update_bg_hh_increase
     bg_hh_increase = bg_hh_increase.to_frame()
     # use occupied, 3 year window trend = y_i - y_i-3
     bg_trend = bg_hh_increase.occupied - bg_hh_increase.previous_occupied
@@ -149,7 +154,9 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     mcd_growth = mcd_growth[mcd_growth > 0]
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
-        # sorted by year built
+        # sorted by year built and bg growth trend
+
+        # get valid city housing units for sampling
         city_units = housing_units[
             (housing_units.semmcd == city)
             & (
@@ -158,7 +165,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 == 0
             )
             & (
-                # only sampling hu_filter == 0
+                # only sampling sp_filter >= 0
                 housing_units.sp_filter
                 >= 0
             )
@@ -189,63 +196,52 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
         growth = mcd_growth.loc[city]
         selected_units = city_units.iloc[:growth]
         if selected_units.shape[0] != growth:
+            # mcd didn't match target due to lack of HU
             print(
                 "MCD %s have %s housing unit but expected growth is %s"
                 % (city, selected_units.shape[0], growth)
             )
         new_units = pd.concat([new_units, selected_units])
+
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
     # !!important!! clean-up mcd_model_quota from last year before updating it
     buildings.update_col_from_series(
         "mcd_model_quota", pd.Series(0, index=blds.index), cast=True
     )
+    # init new mcd_model_quota
     mcd_model_quota = pd.Series(0, index=blds.index)
     mcd_model_quota.loc[quota.index] = quota.values
+    # update mcd_model_quota in buildings table
     buildings.update_col_from_series("mcd_model_quota", mcd_model_quota, cast=True)
-    ### generating debug table
-    debug = True
-    if debug:
-        blds = buildings.to_frame(
-            ["building_id", "semmcd", "residential_units", "building_age", "geoid"]
-        )
-        res_units = blds["residential_units"]
-        res_units = res_units[res_units.index.values >= 0]
-        res_units = res_units[res_units > 0]
-        # generate housing units from vacant units
-        indexes = np.repeat(res_units.index.values, res_units.values.astype("int"))
-        hus = blds.loc[indexes]
-        new_hus = hus[hus.building_age < 8].groupby("geoid").count().semmcd
-        new_hus.name = "hu_under_8"
-        old_hus = hus[hus.building_age >= 8].groupby("geoid").count().semmcd
-        old_hus.name = "hu_over_8"
-        sampled = (
-            buildings.to_frame(["geoid", "mcd_model_quota"]).groupby("geoid").sum()
-        )
-        combined = pd.concat([new_hus, old_hus, sampled], axis=1).fillna(0)
-        orca.add_table("hu_sampling_bg_summary", combined)
 
 
 @orca.step()
 def update_bg_hh_increase(bg_hh_increase, households):
+    """Update blockgroup hh growth trend table used in mcd_sampling process
+
+    Args:
+        bg_hh_increase (DataFrameWrapper): blockgroup hh growth
+        households (DataFrameWrapper): households
+    """
     # baseyear 2020
     base_year = 2020
     year = orca.get_injectable("year")
     year_diff = year - base_year
     hh = households.to_frame(["geoid"]).reset_index()
     hh_by_bg = hh.groupby("geoid").count().household_id
-    # hh_by_bg.index = hh_by_bg.index.astype(int)
     bg_hh = bg_hh_increase.to_frame()
+    # move occupied hh count year down 1 year
+    # 2->3, 1->2, 0->1
     bg_hh["occupied_year_minus_3"] = bg_hh["occupied_year_minus_2"]
     bg_hh["occupied_year_minus_2"] = bg_hh["occupied_year_minus_1"]
-    # some bg missing in initial bg_hh_increase table
-    # TODO: email to Sirisha and add them to a copy of the table
-    # Added all 0s to the missing bg 261158335004
     bg_hh["occupied_year_minus_1"] = hh_by_bg.fillna(0).astype("int")
+    # if the first few years, save the bg summary and use 2014 and 2019 data
     if year_diff > 4:
-        # if the first few years, save the bg summary and use 2014 and 2019 data
+        # update columns used for trend analysis
         bg_hh["occupied"] = hh_by_bg
         bg_hh["previous_occupied"] = bg_hh["occupied_year_minus_3"]
+    # update bg_hh_increase table
     orca.add_table("bg_hh_increase", bg_hh)
 
 
@@ -2041,10 +2037,19 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
 
 @orca.step()
 def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
-    # 1729 pseudo hh in 2050
+    """Unplace households from them
+        - 1729 pseudo hh in 2050 forecast
+
+    Args:
+        households (DataFrameWrapper): households
+        buildings (DataFrameWrapper): buildings
+        pseudo_building_2020 (DataFrameWrapper): pseudo_building_2020
+    """
+    # define k: number of pseudo hh to drop each year
     k = 90
-    # drop k hh from pseudo buildings every iteration
+    # drop k hh from pseudo buildings every year
     hh = households.to_frame(households.local_columns + ["sp_filter"])
+    # N number of existing pseudo households
     N = hh[hh.sp_filter == -2].shape[0]
     if N == 0:
         # empty, return
@@ -2053,7 +2058,7 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
         # if less than k, replace k
         k = N
     hh_to_drop = hh[hh.sp_filter == -2].sample(k)
-    # set sampled hh with building_id -1
+    # unplace households and set sampled hh with building_id -1
     hh.loc[hh_to_drop.index, "building_id"] = -1
     # set resiential units to hh counts, avoid vacant units in pseudo buildings
     hhs_by_pseudo_b = (
