@@ -2099,7 +2099,7 @@ def refine_housing_units(households, buildings, mcd_total):
     # filter out unplaceable HU
     housing_units = housing_units[housing_units["hu_filter"] == 0]
     housing_units = housing_units[housing_units["sp_filter"] >= 0]
-    hu_by_mcd = housing_units.groupby("semmcd").size()
+    hu_by_mcd = b.groupby(['semmcd']).sum().residential_units.astype(int) 
 
     mcd_target = mcd_total[str(year)]
 
