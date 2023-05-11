@@ -48,7 +48,7 @@ orca.run(
         "random_demolition_events",
         "scheduled_development_events",
         "refiner",
-        "households_transition",
+        # "households_transition",
         "fix_lpr",
         "households_relocation_2050",
         "jobs_transition",
