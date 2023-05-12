@@ -563,7 +563,7 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
     # get hh swapping mapping
     # 2hr runtime
     # recommend using cached result
-    seeds = hh.seed_id.unique()
+    seeds = np.sort(hh.seed_id.unique())
     # get adding new worker seed_id mapping
     add_worker_dict = defaultdict(dict) 
     drop_worker_dict = defaultdict(dict) 
@@ -571,44 +571,45 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
         print('seed: ', seed)
         # for each seed, find a counter seed which has 1 more worker and similar other attributes
         seed_hh = hh_seeds[hh_seeds.seed_id== seed].iloc[0]
+        seed_p = p_seeds[p_seeds.seed_id == seed]
         hh_pool = hh_seeds
         hh_pool = hh_pool[hh_pool.persons == seed_hh.persons]
         hh_pool = hh_pool[hh_pool.race_id == seed_hh.race_id]
         hh_pool = hh_pool[hh_pool.aoh_bin == seed_hh.aoh_bin]
         hh_pool = hh_pool[hh_pool.children == seed_hh.children]
 
-        seed_age_dist = np.sort(p_seeds[p_seeds.seed_id == seed].age_bin.values)
+        seed_age_dist = np.sort(seed_p.age_bin.values)
 
         if seed_hh.workers + seed_hh.children < seed_hh.persons:
             hh_pool_add_worker = hh_pool[hh_pool.workers == seed_hh.workers + 1]
             # add worker with more hh income
             hh_pool_add_worker = hh_pool_add_worker[hh_pool_add_worker.inc_qt >= seed_hh.inc_qt]
             N = hh_pool_add_worker.shape[0]
-            if N > 0:
-                for i in range(N):
-                    local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_add_worker['seed_id'].iloc[i]]
-                    if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
-                        new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
-                        prev_age_bins = p_seeds[p_seeds.seed_id == seed].query('worker==1').age_bin.value_counts()
-                        # new_age_bins - prev_age_bins
-                        diff = new_age_bins - prev_age_bins
-                        add_age_bin = diff[diff>0].index[0]
-                        add_worker_dict[add_age_bin][seed] = hh_pool_add_worker.iloc[i].seed_id
-                        break
+            for i in range(N):
+                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_add_worker['seed_id'].iloc[i]]
+                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
+                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
+                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
+                    for k, v in new_age_bins.items():
+                        if k in prev_age_bins and v <= prev_age_bins[k]:
+                            continue
+                        add_age_bin = k
+                    add_worker_dict[add_age_bin][seed] = hh_pool_add_worker.iloc[i].seed_id
+                    break
         if seed_hh.workers > 0:
             hh_pool_drop_worker = hh_pool[hh_pool.workers == seed_hh.workers - 1]
             N = hh_pool_drop_worker.shape[0]
-            if N > 0:
-                for i in range(N):
-                    local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_drop_worker['seed_id'].iloc[i]]
-                    if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
-                        new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
-                        prev_age_bins = p_seeds[p_seeds.seed_id == seed].query('worker==1').age_bin.value_counts()
-                        # prev_age_bins - new_age_bins
-                        diff = prev_age_bins - new_age_bins
-                        drop_age_bin = diff[diff>0].index[0]
-                        drop_worker_dict[drop_age_bin][seed] = hh_pool_drop_worker.iloc[0].seed_id
-                        break
+            for i in range(N):
+                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_drop_worker['seed_id'].iloc[i]]
+                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
+                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
+                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
+                    for k, v in prev_age_bins.items():
+                        if k in new_age_bins and v <= new_age_bins[k]:
+                            continue
+                        drop_age_bin = k
+                    drop_worker_dict[drop_age_bin][seed] = hh_pool_drop_worker.iloc[i].seed_id
+                    break
     return add_worker_dict, drop_worker_dict
 
 # TODO:
@@ -629,10 +630,10 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
     p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
+    p['age_bin'] = p['age_bin'].fillna(0).astype(int)
     p = p.join(hh.seed_id, on='household_id')
     changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
-    employed = p.worker == True
     # p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
     colls = [
@@ -673,10 +674,11 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh_seeds = hh_seeds.set_index('seed_id')
     p_seeds = p_seeds.set_index('seed_id')
 
-    p = p.reset_index().set_index('household_id')
+    # p = p.reset_index().set_index('household_id')
+    pg = p.groupby('household_id')
 
     hh_cols_to_swap = [col for col in hh.columns if col not in ['blkgrp', 'building_id', 'large_area_id']]
-    p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'large_area_id', 'weight']]
+    p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'household_id', 'large_area_id', 'weight']]
 
     for large_area_id, row in lpr.iterrows():
         select = (
@@ -686,8 +688,7 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
         )
         emp_wokers_rate = row[str(iter_var)]
         lpr_workers = int(select.sum() * emp_wokers_rate)
-        # lpr_workers = int(lpr_segment)
-        num_workers = (select & employed).sum()
+        num_workers = (select & (p.worker == 1)).sum()
 
         add_swappable = add_worker_dict[row.age_min]
         drop_swappable = drop_worker_dict[row.age_min]
@@ -695,38 +696,66 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
         if lpr_workers > num_workers:
             # employ some persons
             num_new_employ = int(lpr_workers - num_workers)
-            # new_employ.append(
-            #     choice(p[select & (~employed)].index, num_new_employ, False)
-            # )
-            hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(add_swappable))]
-            # sample num_new_employ
-            hh_to_swap = hh_swap_pool.sample(num_new_employ, replace=False)
-            # target seed_ids
-            target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
-            # overwrite old attributes except building_id, large_area_id, blkgrp
-            hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
-            # hh persons overwrite
-            p.loc[hh_to_swap.index, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+            while num_new_employ > 0:
+                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(add_swappable))]
+                if hh_swap_pool.shape[0] == 0:
+                    break
+                to_add = min(hh_swap_pool.shape[0], num_new_employ)
+                # sample num_new_employ
+                hh_to_swap = hh_swap_pool.sample(to_add, replace=False)
+                # target seed_ids
+                target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
+                # overwrite old attributes except building_id, large_area_id, blkgrp
+                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                # hh persons overwrite
+                p_idx_to_update = np.array([], dtype=int)
+                for hh_id in hh_to_swap.index:
+                    hh_members = pg.get_group(hh_id)
+                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
+                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                # update added_employ
+                num_new_employ = int(lpr_workers - (
+                    (p.large_area_id == large_area_id)
+                    & (p.age >= row.age_min)
+                    & (p.age <= row.age_max)
+                    & (p.worker == 1)
+                ).sum())
 
         else:
             # unemploy some persons
-            # prob = p[select & employed].weight
-            # prob /= prob.sum()
             num_drop_employ = int(num_workers - lpr_workers)
-            hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(drop_swappable))]
-            # sample num_new_employ
-            hh_to_swap = hh_swap_pool.sample(num_drop_employ, replace=False)
-            # target seed_ids
-            target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
-            # overwrite old attributes except building_id, large_area_id, blkgrp
-            hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
-            # hh persons overwrite
-            p.loc[hh_to_swap.index, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+            while num_drop_employ > 0:
+                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(drop_swappable))]
+                if hh_swap_pool.shape[0] == 0:
+                    break
+                to_drop = min(hh_swap_pool.shape[0], num_drop_employ)
+                # sample num_new_employ
+                hh_to_swap = hh_swap_pool.sample(to_drop, replace=False)
+                # target seed_ids
+                target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
+                # overwrite old attributes except building_id, large_area_id, blkgrp
+                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                # hh persons overwrite
+                p_idx_to_update = np.array([], dtype=int)
+                for hh_id in hh_to_swap.index:
+                    hh_members = pg.get_group(hh_id)
+                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
+                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                # update num_drop_employ
+                num_drop_employ = int((
+                    (p.large_area_id == large_area_id)
+                    & (p.age >= row.age_min)
+                    & (p.age <= row.age_max)
+                    & (p.worker == 1)
+                ).sum() - lpr_workers)
 
-        # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
-
-    # reset persons table index
-    p = p.reset_index().set_index('person_id')
+        after_selected = (
+            (p.large_area_id == large_area_id)
+            & (p.age >= row.age_min)
+            & (p.age <= row.age_max)
+            & (p.worker == True)
+        )
+        print(large_area_id, row.age_min, row.age_max, num_workers, lpr_workers, after_selected.sum())
 
     # if len(new_employ) > 0:
     #     p.loc[np.concatenate(new_employ), "worker"] = 1
