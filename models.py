@@ -610,6 +610,26 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
                         drop_age_bin = k
                     drop_worker_dict[drop_age_bin][seed] = hh_pool_drop_worker.iloc[i].seed_id
                     break
+    # clean up some key with more than 1 worker added/removed in a single hh
+    add_list = defaultdict(list)
+    for age, add_swappable in add_worker_dict.items():
+        for orig, target in add_swappable.items():
+            q = '(worker == 1)&(age_bin==%s)'%age
+            if p_seeds.loc[[orig]].query(q).shape[0]+1 != p_seeds.loc[[target]].query(q).shape[0]:
+                add_list[age].append(orig)
+    for age, ll in add_list.items():
+        for dk in ll:
+            del add_worker_dict[age][dk]
+    drop_list = defaultdict(list)
+    for age, drop_swappable in drop_worker_dict.items():
+        for orig, target in drop_swappable.items():
+            q = '(worker == 1)&(age_bin==%s)'%age
+            if p_seeds.loc[[orig]].query(q).shape[0] != p_seeds.loc[[target]].query(q).shape[0]+1:
+                drop_list[age].append(orig)
+    for age, ll in drop_list.items():
+        for dk in ll:
+            del drop_worker_dict[age][dk]
+
     return add_worker_dict, drop_worker_dict
 
 # TODO:
@@ -626,15 +646,16 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
     hh['aoh_bin'] = pd.cut(hh.age_of_head, [5, 18, 25, 35, 65, 200], labels=[1, 2, 3, 4, 5])
+    # generate age bins
     age_bin = [0, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
     age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
     p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
     p['age_bin'] = p['age_bin'].fillna(0).astype(int)
+
     p = p.join(hh.seed_id, on='household_id')
     changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
-    # p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
     colls = [
         "persons",
