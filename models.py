@@ -632,22 +632,48 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
 
     return add_worker_dict, drop_worker_dict
 
+@orca.step()
+def cache_hh_seeds(households, persons, iter_var):
+    if iter_var != 2021:
+        print('skipping cache_hh_seeds for forecast year')
+        return
+    # caching hh and persons seeds at the start of the model run
+    hh = households.to_frame(households.local_columns + ["large_area_id"])
+    hh["target_workers"] = 0
+    hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
+    hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
+    # generate age bins
+    age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
+    age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
+    p = persons.to_frame(persons.local_columns + ["large_area_id"])
+    p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
+    p['age_bin'] = p['age_bin'].fillna(0).astype(int)
+    p = p.join(hh.seed_id, on='household_id')
+    
+    hh_seeds = hh.groupby('seed_id').first()
+    p_seeds = p.groupby(['seed_id', 'member_id']).first()
+    print('running cache_hh_seeds for base year')
+    orca.add_table('hh_seeds', hh_seeds)
+    orca.add_table('p_seeds', p_seeds)
+
 # TODO:
 # - Add worker by swapping hh with 1 worker more hh
 # - try to limit the impact to other variables
 # - same persons, children, income within range(?), car(?), race with worker + 1
 # - update persons table(optional) and households table
 @orca.step()
-def fix_lpr(households, persons, iter_var, employed_workers_rate):
+def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
+    hh_seeds = hh_seeds.to_frame()
+    p_seeds = p_seeds.to_frame()
     changed_hhs = hh.copy()
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
-    hh['aoh_bin'] = pd.cut(hh.age_of_head, [5, 18, 25, 35, 65, 200], labels=[1, 2, 3, 4, 5])
+    hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
     # generate age bins
-    age_bin = [0, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
+    age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
     age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
     p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
@@ -666,8 +692,9 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     ]  # , 'age_of_head'
     same = {tuple(idx): df[["income", "cars"]] for idx, df in hh.groupby(colls)}
 
-    hh_seeds = hh.groupby('seed_id').first().reset_index()
-    p_seeds = p.groupby(['seed_id', 'member_id']).first().reset_index()
+    # reset seeds index for generating mappings
+    hh_seeds = hh_seeds.reset_index()
+    p_seeds = p_seeds.reset_index()
 
     USE_SWAPPING_SEED_MAPPING = True
     aw_path = 'data/add_worker_dict.pkl'
@@ -788,6 +815,12 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     hh.workers = hh.workers.fillna(0)
     changed = hh.workers != hh.old_workers
     print(f"changed number of HHs from LPR is {len(changed)})")
+
+    # TODO: using hh controls to test out each segment number
+    # compare to hh before running fix_lpr
+    # - fixed one issue on age bin before seed id mapping
+    # - check car control on segment
+    # - why some hh not showing in segment
 
     # save changed HHs and persons as valid samples for future transition model
 
