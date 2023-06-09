@@ -246,6 +246,12 @@ def parcels(store, zoning):
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
 
+@orca.table(cache=True)
+def building_to_zone_baseyear():
+    # baseyear building_id to zone_id mapping
+    # fix the issue where one parcel could have multiple TAZ zone
+    return pd.read_csv('data/building_to_zone_baseyear_2020_shrink.csv').set_index('building_id')
+
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:

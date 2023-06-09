@@ -94,11 +94,6 @@ def y(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def zone_id(buildings, parcels):
-    return misc.reindex(parcels.zone_id, buildings.parcel_id)
-
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
 def large_hh_city(buildings, parcels):
     large_hh_city = buildings.parcel_id * 0
     p = parcels.to_frame(parcels.local_columns)
@@ -625,8 +620,15 @@ def census_bg_id(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def zone_id(buildings, parcels):
-    return misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
+def zone_id(buildings, parcels, building_to_zone_baseyear):
+    # use zone_id from parcel as default
+    zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
+    # only apply building to zone mapping to selected buildings
+    applied_buildings = zid.index.isin(building_to_zone_baseyear.index)
+    # update their zone_id
+    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id)
+    return zid
+    
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
