@@ -176,12 +176,20 @@ def main(
     else:
         interesting_parcel_ids = set()
     orca.add_injectable("interesting_parcel_ids", interesting_parcel_ids)
+
+    # add missing zones from buildings
+    orca_b = orca.get_table('buildings')
+    b_whatnot = orca_b.to_frame(['large_area_id', 'city_id', 'zone_id', 'parcel_id'])
+    b_whatnot = b_whatnot.drop_duplicates().reset_index(drop=True)
+    whatnot = pd.concat([whatnot, b_whatnot], axis=0, ignore_index=True)
+
     whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
 
     # clean up whatnot index,
     whatnot = whatnot.drop_duplicates(
         ["large_area_id", "city_id", "zone_id", "parcel_id"]
     ).reset_index(drop=True)
+
     whatnot.index.name = "whatnot_id"
     orca.add_table("whatnots", whatnot)
 
