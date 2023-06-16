@@ -706,19 +706,17 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
         USE_SWAPPING_SEED_MAPPING = False
         print(dw_path, ' not found. running get_lpr_hh_seed_id_mapping')
     if USE_SWAPPING_SEED_MAPPING:
-        with open(aw_path, 'rb') as handle:
-            add_worker_dict = pickle.load(handle)
-        with open(dw_path, 'rb') as handle:
-            drop_worker_dict = pickle.load(handle)
+        add_worker_df = pd.read_csv('data/add_worker_dict.csv', index_col=0)
+        add_worker_df.columns = add_worker_df.columns.astype(int)
+        drop_worker_df = pd.read_csv('data/drop_worker_dict.csv', index_col=0)
+        drop_worker_df.columns = drop_worker_df.columns.astype(int)
     else:
         add_worker_dict, drop_worker_dict = get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds)
-        with open(aw_path, 'wb') as fp:
-            pickle.dump(add_worker_dict, fp)
-        with open(dw_path, 'wb') as fp:
-            pickle.dump(drop_worker_dict, fp)
+        add_worker_df = pd.DataFrame(add_worker_dict)
+        add_worker_df.to_csv(aw_path, index=True)
+        drop_worker_df = pd.DataFrame(drop_worker_dict)
+        drop_worker_df.to_csv(aw_path, index=True)
 
-    new_employ = []
-    new_unemploy = []
     hh_seeds = hh_seeds.set_index('seed_id')
     p_seeds = p_seeds.set_index('seed_id')
 
@@ -738,8 +736,11 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
         lpr_workers = int(select.sum() * emp_wokers_rate)
         num_workers = (select & (p.worker == 1)).sum()
 
-        add_swappable = add_worker_dict[row.age_min]
-        drop_swappable = drop_worker_dict[row.age_min]
+        # get dict for seeds mapping
+        add_swappable = add_worker_df[row.age_min]
+        add_swappable = add_swappable[add_swappable.notna()].astype(int).to_dict()
+        drop_swappable = drop_worker_df[row.age_min]
+        drop_swappable = drop_swappable[drop_swappable.notna()].astype(int).to_dict()
 
         if lpr_workers > num_workers:
             # employ some persons
@@ -805,11 +806,6 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
         )
         print(large_area_id, row.age_min, row.age_max, num_workers, lpr_workers, after_selected.sum())
 
-    # if len(new_employ) > 0:
-    #     p.loc[np.concatenate(new_employ), "worker"] = 1
-    # if len(new_unemploy):
-    #     p.loc[np.concatenate(new_unemploy), "worker"] = 0
-
     hh["old_workers"] = hh.workers
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
@@ -817,10 +813,6 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     print(f"changed number of HHs from LPR is {len(changed)})")
 
     # TODO: using hh controls to test out each segment number
-    # compare to hh before running fix_lpr
-    # - fixed one issue on age bin before seed id mapping
-    # - check car control on segment
-    # - why some hh not showing in segment
 
     # save changed HHs and persons as valid samples for future transition model
 
