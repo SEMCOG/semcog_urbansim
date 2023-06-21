@@ -1,4 +1,5 @@
 import os
+import shutil
 import random
 import pandas as pd
 import numpy as np
@@ -98,14 +99,9 @@ random.seed(seed)
 np.random.seed(seed)
 utils.run_log(f"Seed: {seed}")
 
+working_store = '/home/da/semcog_urbansim/data/checkpoint_store.h5'
 
-def verify():
-    # hdf_store = pd.HDFStore(os.path.join(misc.data_dir(), "run4032_school_v2_baseyear_py2.h5"), mode="r")
-    # hdf_store = pd.HDFStore(
-    #     "~/semcog_urbansim/data/all_semcog_data_02-02-18-final-forecast_newbid.h5",
-    #     mode="r",
-    # )
-
+def load_latest_input_hdf():
     data_path = r"/home/da/share/urbansim/RDF2050/model_inputs/base_hdf"
     if os.path.exists(data_path) == False:
         data_path = "/home/da/share/U_RDF2050/model_inputs/base_hdf"
@@ -117,10 +113,61 @@ def verify():
     hdf_last = max(hdf_list, key=os.path.getctime)
     utils.run_log(f"Data: {hdf_last}")
 
+    return hdf_last
+
+def load_last_checkpoint(runnum):
+    # example runnum run1001.h5
+    run_path = "/home/da/semcog_urbansim/runs"
+    hdf_path = os.path.join(run_path, runnum)
+    utils.run_log(f"Loading checkpoint data: {hdf_path}")
+    saved_run = pd.HDFStore(hdf_path, "r")
+    return saved_run
+
+def update_store_from_checkpoint(store, checkpoint, year):
+    tbs_to_update = [
+        "buildings",
+        "jobs",
+        "parcels",
+        "households",
+        "persons",
+        "group_quarters",
+        "dropped_buildings",
+        "bg_hh_increase",
+    ]
+    for k in checkpoint.keys():
+        if "/%s/" % year not in k:
+            continue
+        tb = k.split('/')[-1]
+        if tb not in tbs_to_update:
+            continue
+        print("Loading table %s from checkpoint year %s..." % (tb, year))
+        if tb in store:
+            cols = store[tb].columns
+            dtypes = store[tb].dtypes
+            store[tb] = checkpoint[k][cols].astype(dtypes)
+        else:
+            store[tb] = checkpoint[k]
+    return store
+
+def verify():
+    # load latest input hdf
+    hdf_last = load_latest_input_hdf()
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
     print("HDF data: ", hdf_last)
 
+    if orca.get_injectable('use_checkpoint'):
+        # copy input hdf
+        shutil.copy(hdf_last, working_store)
+        hdf_store.close()
+        hdf_store = pd.HDFStore(working_store, 'a')
+        # load from the last check point
+        saved_runnum = orca.get_injectable('runnum_to_resume')
+        saved_run = load_last_checkpoint(saved_runnum)
+        start_year = orca.get_injectable('base_year')
+        hdf_store = update_store_from_checkpoint(hdf_store, saved_run, start_year)
+
+    # verifying data structure and save data structure config
     new = verify_data_structure.yaml_from_store(hdf_store)
     with open("/home/da/semcog_urbansim/configs/data_structure.yaml", "w") as out:
         out.write(new)
