@@ -52,6 +52,8 @@ for name in [
     "landmark_worksites",
     "multi_parcel_buildings",
     "mcd_total",
+    "dropped_buildings",
+    # "bg_hh_increase",
 ]:
     store = orca.get_injectable("store")
     orca.add_table(name, store[name])

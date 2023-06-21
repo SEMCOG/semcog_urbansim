@@ -9,19 +9,26 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
+# set up run
+base_year = 2021
+final_year = 2050
+indicator_spacing = 5
+upload_to_carto = True
+run_debug = False
+add_2019 = True
+
+orca.add_injectable('base_year', base_year)
+orca.add_injectable('final_year', final_year)
+# run starting from last checkpoint year
+orca.add_injectable('use_checkpoint', True)
+orca.add_injectable('runnum_to_resume', 'run1136.h5')
+
 import models
 from urbansim.utils import misc, networks
 import time
 import output_indicators
 import logging
 
-# set up run
-base_year = 2020
-final_year = 2050
-indicator_spacing = 5
-upload_to_carto = True
-run_debug = False
-add_2019 = True
 
 # check disk space, need at least 16GB
 # total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
@@ -122,6 +129,7 @@ orca.run(
         "persons",
         "group_quarters",
         "dropped_buildings",
+        "bg_hh_increase",
     ],
     out_interval=1,
     compress=True,
