@@ -10,8 +10,8 @@ orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
 # set up run
-base_year = 2021
-final_year = 2050
+base_year = 2023
+final_year = 2025
 indicator_spacing = 5
 upload_to_carto = True
 run_debug = False
@@ -21,7 +21,7 @@ orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', True)
-orca.add_injectable('runnum_to_resume', 'run1136.h5')
+orca.add_injectable('runnum_to_resume', 'run1206.h5')
 
 import models
 from urbansim.utils import misc, networks
@@ -135,14 +135,15 @@ orca.run(
     compress=True,
 )
 
-output_indicators.main(
-    data_out,
-    base_year,
-    final_year,
-    spacing=indicator_spacing,
-    upload_to_carto=upload_to_carto,
-    add_2019=add_2019,
-)
+if not orca.get_injectable('use_checkpoint'):
+    output_indicators.main(
+        data_out,
+        base_year,
+        final_year,
+        spacing=indicator_spacing,
+        upload_to_carto=upload_to_carto,
+        add_2019=add_2019,
+    )
 
 utils.run_log(
     f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
