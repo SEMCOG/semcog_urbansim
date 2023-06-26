@@ -123,7 +123,7 @@ def load_last_checkpoint(runnum):
     saved_run = pd.HDFStore(hdf_path, "r")
     return saved_run
 
-def update_store_from_checkpoint(store, checkpoint, year):
+def update_store_from_checkpoint(store, checkpoint):
     tbs_to_update = [
         "buildings",
         "jobs",
@@ -134,6 +134,9 @@ def update_store_from_checkpoint(store, checkpoint, year):
         "dropped_buildings",
         "bg_hh_increase",
     ]
+    # get the last year finished
+    year = max([int(k.split('/')[1]) for k in checkpoint.keys() if k.split('/')[1]!='base'])
+    orca.add_injectable('checkpoint_year', year)
     for k in checkpoint.keys():
         if "/%s/" % year not in k:
             continue
@@ -165,8 +168,7 @@ def verify():
         # load from the last check point
         saved_runnum = orca.get_injectable('runnum_to_resume')
         saved_run = load_last_checkpoint(saved_runnum)
-        start_year = orca.get_injectable('base_year')
-        hdf_store = update_store_from_checkpoint(hdf_store, saved_run, start_year)
+        hdf_store = update_store_from_checkpoint(hdf_store, saved_run)
 
     # verifying data structure and save data structure config
     new = verify_data_structure.yaml_from_store(hdf_store)
