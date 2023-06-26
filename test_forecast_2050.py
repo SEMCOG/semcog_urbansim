@@ -2,6 +2,7 @@ import orca
 import shutil
 import sys
 import os
+import pandas as pd
 import utils
 
 # get run number and set up log file
@@ -10,8 +11,8 @@ orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
 # set up run
-base_year = 2023
-final_year = 2025
+base_year = 2020
+final_year = 2050
 indicator_spacing = 5
 upload_to_carto = True
 run_debug = False
@@ -47,6 +48,8 @@ utils.run_log(run_info)
 if run_debug is True:
     utils.debug_log()
 
+run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get_injectable('checkpoint_year')
+
 orca.run(
     [
         "build_networks_2050",
@@ -79,7 +82,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(base_year + 1, final_year + 1)),
+    iter_vars=list(range(run_start + 1, final_year + 1)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -135,15 +138,27 @@ orca.run(
     compress=True,
 )
 
+# if use checkpoint to resume run, add result from previous year back
 if not orca.get_injectable('use_checkpoint'):
-    output_indicators.main(
-        data_out,
-        base_year,
-        final_year,
-        spacing=indicator_spacing,
-        upload_to_carto=upload_to_carto,
-        add_2019=add_2019,
-    )
+    store_la = pd.HDFStore(data_out, mode="r")
+    run_path = "/home/da/semcog_urbansim/runs"
+    hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
+    old_result = pd.HDFStore(hdf_path, "r")
+    for k in old_result:
+        if '/base/' in k:
+            continue
+        print('adding %s to output hdf from checkpoint...' % k)
+        store_la[k] = old_result[k]
+    old_result.close()
+
+output_indicators.main(
+    data_out,
+    base_year,
+    final_year,
+    spacing=indicator_spacing,
+    upload_to_carto=upload_to_carto,
+    add_2019=add_2019,
+)
 
 utils.run_log(
     f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
