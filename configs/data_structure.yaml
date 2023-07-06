@@ -43,18 +43,6 @@ indexs:
 columns:
   job_relocation_probability: float64
 ---
-name: bg_hh_increase
-indexs:
-- GEOID
-columns:
-  OccupiedHU14: int64
-  OccupiedHU19: int64
-  occupied: int64
-  occupied_year_minus_1: float64
-  occupied_year_minus_2: float64
-  occupied_year_minus_3: float64
-  previous_occupied: int64
----
 name: building_sqft_per_job
 indexs:
 - building_type_id
@@ -110,34 +98,6 @@ columns:
   type82units: int32
   type83units: int32
   typenonsqft: int32
----
-name: dropped_buildings
-indexs:
-- building_id
-columns:
-  b_total_households: float64
-  b_total_jobs: float64
-  building_type_id: int64
-  city_id: int32
-  event_id: float64
-  hu_filter: int64
-  improvement_value: float64
-  land_area: int64
-  market_value: float64
-  mcd_model_quota: int64
-  non_residential_sqft: float64
-  parcel_id: int64
-  residential_units: float64
-  sp_filter: int64
-  sqft_per_unit: float64
-  sqft_price_nonres: float64
-  sqft_price_res: float64
-  step: object
-  stories: float64
-  wh: float64
-  wj: float64
-  year_built: int64
-  year_demo: int64
 ---
 name: employed_workers_rate
 indexs:
@@ -221,7 +181,7 @@ columns:
 ---
 name: group_quarters
 indexs:
-- None
+- person_id
 columns:
   age: int16
   building_id: int32
@@ -292,7 +252,7 @@ columns:
 ---
 name: jobs
 indexs:
-- None
+- job_id
 columns:
   building_id: int32
   home_based_status: int8
