@@ -386,6 +386,7 @@ def make_indicators(tab, geo_id):
         (00, 17),
         (25, 44),
         (25, 54),
+        (25, 64),
         (45, 64),
         (55, 64),
         (65, 84),
@@ -606,6 +607,7 @@ def list_indicators():
         "hh_pop_age_18_64",
         "hh_pop_age_00_17",
         "hh_pop_age_25_44",
+        "hh_pop_age_25_64",
         "hh_pop_age_45_64",
         "hh_pop_age_65_84",
         "hh_pop_age_85_inf",
@@ -646,6 +648,7 @@ def list_indicators():
         "pop_age_75_inf",
         "pop_age_25_54",
         "pop_age_55_64",
+        "pop_age_25_64",
     ]
     gq_pop = [
         ## race
@@ -667,6 +670,7 @@ def list_indicators():
         "gq_pop_age_18_64",
         "gq_pop_age_00_17",
         "gq_pop_age_25_44",
+        "gq_pop_age_25_64",
         "gq_pop_age_45_64",
         "gq_pop_age_65_84",
         "gq_pop_age_85_inf",
