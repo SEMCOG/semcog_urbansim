@@ -655,7 +655,7 @@ def filter_table(table, filter_series, ignore=None):
 
     filters = [
         _filterize(name, val)
-        for name, val in filter_series.iteritems()
+        for name, val in filter_series.items()
         if not (name in ignore or (isinstance(val, numbers.Number) and np.isnan(val)))
     ]
 
