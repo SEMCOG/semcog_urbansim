@@ -12,14 +12,13 @@ print(data_out)
 import models
 from urbansim.utils import misc, networks
 import time
-import output_indicators
 import logging
 
-# set up run
+RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
 indicator_spacing = 5
-upload_to_carto = True
+upload_to_carto = False
 run_debug = False
 add_2019 = True
 
@@ -127,14 +126,17 @@ orca.run(
     compress=True,
 )
 
-output_indicators.main(
-    data_out,
-    base_year,
-    final_year,
-    spacing=indicator_spacing,
-    upload_to_carto=upload_to_carto,
-    add_2019=add_2019,
-)
+if RUN_OUTPUT_INDICATORS:
+    # set up run
+    import output_indicators
+    output_indicators.main(
+        data_out,
+        base_year,
+        final_year,
+        spacing=indicator_spacing,
+        upload_to_carto=upload_to_carto,
+        add_2019=add_2019,
+    )
 
 utils.run_log(
     f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"

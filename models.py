@@ -474,7 +474,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(2)
+    pool = Pool(6)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
@@ -796,7 +796,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
                 newgq = filtered_gqpop.sample(diff, replace=True)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
                 newgq["city_id"] = city_id
-                gqpop = gqpop.append(newgq)
+                gqpop = pd.concat((gqpop, newgq))
 
             elif diff < 0:
                 diff = min(len(filtered_gqpop), abs(diff))
