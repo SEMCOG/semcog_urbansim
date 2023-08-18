@@ -102,13 +102,18 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     # remove extra columns
     hh_cols_to_std = [col for col in hh.columns if col not in ['building_id']]
+
     # standardize hh
     hh[hh_cols_to_std] = (hh[hh_cols_to_std]-hh[hh_cols_to_std].mean())/hh[hh_cols_to_std].std()
-    b_cols_to_std = [col for col in b.columns if col not in [building_hh_capacity_col]]
 
-    b_cols_with_0_std = b.columns[b.std()==0]
+    # building columsn to standardize
+    b_cols_to_std = [col for col in b.columns if col not in [building_hh_capacity_col]]
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
+    # fillin na with 0
+    b = b.fillna(0)
+
+    b_cols_with_0_std = b.columns[b.std()==0]
     # adding hh and b to orca
     orca.add_table('hh_hlcm', hh)
     orca.add_table('b_hlcm', b)
