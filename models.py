@@ -809,7 +809,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
         (gqpop.groupby("city_id").size().fillna(0) - city_large_area.gq_target).sum(),
     )
 
-    gqpop.to_csv("gqpop_" + str(year) + ".csv")
+    gqpop.to_csv("data/gqpop_" + str(year) + ".csv")
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
 
 

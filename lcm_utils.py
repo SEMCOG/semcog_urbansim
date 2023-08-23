@@ -750,10 +750,10 @@ def load_hlcm_dataset(valid_hh_vars, valid_b_vars, var_pool_table_path, hh_filte
         hh_region, b_region = load_hlcm_df(households, buildings, hh_var, b_var)
 
         # Cache the loaded DataFrames as CSV files
-        hh_region.to_csv('hh.csv')
-        b_region.to_csv('b_hlcm.csv')
+        hh_region.to_csv('data/hh.csv')
+        b_region.to_csv('data/b_hlcm.csv')
     else:
-        hh_region, b_region = load_cache_hh_b('hh.csv', 'b_hlcm.csv')
+        hh_region, b_region = load_cache_hh_b('data/hh.csv', 'data/b_hlcm.csv')
     return hh_region, b_region, vars_to_use
 
 def load_elcm_dataset(valid_job_vars, valid_b_vars, var_pool_table_path, job_filter_columns, b_filter_columns, use_cache=False):
@@ -809,10 +809,10 @@ def load_elcm_dataset(valid_job_vars, valid_b_vars, var_pool_table_path, job_fil
         job_region, b_region = load_elcm_df(jobs, buildings, job_var, b_var)
 
         # Cache the loaded DataFrames as CSV files
-        job_region.to_csv('jobs.csv')
-        b_region.to_csv('b_elcm.csv')
+        job_region.to_csv('data/jobs.csv')
+        b_region.to_csv('data/b_elcm.csv')
     else:
-        job_region, b_region = load_cache_hh_b('jobs.csv', 'b_elcm.csv')
+        job_region, b_region = load_cache_hh_b('data/jobs.csv', 'data/b_elcm.csv')
     return job_region, b_region, vars_to_use
 
 def load_cache_hh_b(hh_csv_path: str, b_csv_path: str):
