@@ -88,23 +88,29 @@ def mcd_hu_sampling_config():
 def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     """
     Apply the mcd total forecast to Limit and calculate the pool of housing 
-    units to match the distribution of the mcd_total growth table for the large_area
+    units to match the distribution of the mcd_total growth table for the MCD
     Parameters
     ----------
-    mcd_total : pandas.DataFrame
-        MCD total table
-    buildings : pandas.DataFrame
+    buildings : orca.DataFrameWrapper
         Buildings table 
+    households : orca.DataFrameWrapper
+        Households table 
+    mcd_total : orca.DataFrameWrapper
+        MCD total table
+    bg_hh_increase : orca.DataFrameWrapper
+        hh growth trend by block groups
     Returns
     -------
-    new_units : pandas.Series
-        Index of alternatives which have been picked as the candidates
+    None
     """
     # get current year
     year = orca.get_injectable("year")
-    # get housing unit table from buildings
+
+    # get config
     config = orca.get_injectable("mcd_hu_sampling_config")
     vacant_variable = config["vacant_variable"]
+
+    # get housing unit table from buildings
     blds = buildings.to_frame(
         [
             "building_id",
@@ -117,6 +123,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             "sp_filter",
         ]
     )
+    # get vacant units with index and value >0
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
@@ -125,36 +132,42 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     indexes = np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
     housing_units = blds.loc[indexes]
 
-    # the mcd_total for year and year-1
+    # the mcd_total for year
     mcd_total = mcd_total.to_frame([str(year)])
+
+    # get current inplaced households
     hh = households.to_frame(["semmcd", "building_id"])
     hh = hh[hh.building_id != -1]
-    hh_by_city = hh.groupby("semmcd").count().building_id
+
+    # groupby semmcd and get count
+    hh_by_city = hh.groupby("semmcd").size()
 
     # get the expected growth
     # growth = target_year_hh - current_hh
     mcd_growth = mcd_total[str(year)] - hh_by_city
 
-    # temp set NaN to 0
+    # temp set NaN growth to 0
     if mcd_growth.isna().sum() > 0:
         print("Warning: NaN exists in mcd_growth, replaced them with 0")
     mcd_growth = mcd_growth.fillna(0).astype(int)
 
-    # Calculate using Blockgroup HH count trend data
-    # from func update_bg_hh_increase
+    # Calculate using Block group HH count trend data
     bg_hh_increase = bg_hh_increase.to_frame()
     # use occupied, 3 year window trend = y_i - y_i-3
     bg_trend = bg_hh_increase.occupied - bg_hh_increase.previous_occupied
     bg_trend_norm_by_bg = (bg_trend - bg_trend.mean()) / bg_trend.std()
     bg_trend_norm_by_bg.name = "bg_trend"
 
-    # init output df
+    # init output mcd_model_quota Series
     new_units = pd.Series()
+
     # only selecting growth > 0
     mcd_growth = mcd_growth[mcd_growth > 0]
+
+    # loop through mcd growth target
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
-        # sorted by year built and bg growth trend
+        # sorted housing units by year built and bg growth trend
 
         # get valid city housing units for sampling
         city_units = housing_units[
@@ -170,28 +183,36 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 >= 0
             )
         ]
+
         # building_age normalized
         building_age = city_units.building_age
         building_age_norm = (building_age - building_age.mean()) / building_age.std()
+
         # bg trend normalized
         bg_trend_norm = (
             city_units[["geoid"]]
             .join(bg_trend_norm_by_bg, how="left", on="geoid")
             .bg_trend
         ).fillna(0)
+
         # sum of normalized score
         normalized_score = (-building_age_norm) + bg_trend_norm
+
         # set name to score
         normalized_score.name = "score"
+
         # use absolute index for sorting
         normalized_score = normalized_score.reset_index()
+
         # sorted by the score from high to low
         normalized_score = normalized_score.sort_values(
             by="score", ascending=False, ignore_index=False
         )
+
         # apply sorted index back to city_units
         city_units = city_units.iloc[normalized_score.index]
         # .sort_values(by='building_age', ascending=True)
+
         # pick the top k units
         growth = mcd_growth.loc[city]
         selected_units = city_units.iloc[:growth]
@@ -205,45 +226,54 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
 
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
+
     # !!important!! clean-up mcd_model_quota from last year before updating it
     buildings.update_col_from_series(
         "mcd_model_quota", pd.Series(0, index=blds.index), cast=True
     )
+
     # init new mcd_model_quota
     mcd_model_quota = pd.Series(0, index=blds.index)
     mcd_model_quota.loc[quota.index] = quota.values
+
     # update mcd_model_quota in buildings table
     buildings.update_col_from_series("mcd_model_quota", mcd_model_quota, cast=True)
 
 
 @orca.step()
 def update_bg_hh_increase(bg_hh_increase, households):
-    """Update blockgroup hh growth trend table used in mcd_sampling process
+    """
+    Update the block group household growth trend table used in the MCD sampling process.
 
     Args:
-        bg_hh_increase (DataFrameWrapper): blockgroup hh growth
-        households (DataFrameWrapper): households
+        bg_hh_increase (DataFrameWrapper): Blockgroup household growth trend table.
+        households (DataFrameWrapper): Households table.
+
+    Returns:
+        None
     """
-    # baseyear 2020
+    # Base year 2020
     base_year = 2020
     year = orca.get_injectable("year")
     year_diff = year - base_year
     hh = households.to_frame(["geoid"]).reset_index()
     hh_by_bg = hh.groupby("geoid").count().household_id
     bg_hh = bg_hh_increase.to_frame()
-    # move occupied hh count year down 1 year
+
+    # Move occupied hh count one year down
     # 2->3, 1->2, 0->1
     bg_hh["occupied_year_minus_3"] = bg_hh["occupied_year_minus_2"]
     bg_hh["occupied_year_minus_2"] = bg_hh["occupied_year_minus_1"]
     bg_hh["occupied_year_minus_1"] = hh_by_bg.fillna(0).astype("int")
-    # if the first few years, save the bg summary and use 2014 and 2019 data
+
+    # If the first few years, save the bg summary and use 2014 and 2019 data
     if year_diff > 4:
-        # update columns used for trend analysis
+        # Update columns used for trend analysis
         bg_hh["occupied"] = hh_by_bg
         bg_hh["previous_occupied"] = bg_hh["occupied_year_minus_3"]
-    # update bg_hh_increase table
-    orca.add_table("bg_hh_increase", bg_hh)
 
+    # Update bg_hh_increase table
+    orca.add_table("bg_hh_increase", bg_hh)
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
@@ -1493,9 +1523,20 @@ def add_extra_columns_nonres(df):
     return df.fillna(0)
 
 
-def add_extra_columns_res(df):
-    # type: (pd.DataFrame) -> pd.DataFrame
+def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
+    """
+    Add extra columns to a DataFrame containing residential property information.
+
+    Parameters:
+    df (pd.DataFrame): Input DataFrame containing residential property information.
+
+    Returns:
+    pd.DataFrame: DataFrame with added extra columns and calculated values.
+    """
+    # add nonres columns
     df = add_extra_columns_nonres(df)
+
+    # add sqft_per_units
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
     elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
@@ -1504,11 +1545,14 @@ def add_extra_columns_res(df):
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
         )
+
     # github issue #31
     # generating default `mcd_model_quota` as the same as the `residential_units`
     # df["mcd_model_quota"] = df["residential_units"]
+
     # set default mcd quota to 0
     df["mcd_model_quota"] = 0
+
     return df.fillna(0)
 
 
@@ -1535,7 +1579,7 @@ def probable_type(row):
     return btype
 
 
-def register_btype_distributions(buildings):
+def register_btype_distributions(buildings: pd.DataFrame):
     """
     Prior to adding new buildings selected by the developer model, this
     function registers a dictionary where keys are forms, and values are
@@ -1618,7 +1662,9 @@ def run_developer(
         pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id
     ]
 
+    # set default hu_filter to 0
     new_buildings["hu_filter"] = 0
+
     parcel_utils.add_buildings(
         dev.feasibility,
         buildings,
@@ -1686,43 +1732,81 @@ def run_developer(
 def residential_developer(
     households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
 ):
+    """
+    Simulate residential property development process
+
+    This function simulates the process of residential property development for MCDs.
+    It calculates the target number of new residential units to be developed based on target vacancies,
+    existing units, and desired occupancy rates. The function also updates the parcel and building tables
+    to reflect the new developments and their occupancy.
+
+    Parameters:
+    households (orca.DataFrameWrapper): Household data table.
+    parcels (orca.DataFrameWrapper): Parcels data table.
+    target_vacancies_mcd (orca.DataFrameWrapper): Target vacancies by MCD.
+    mcd_total (orca.DataFrameWrapper): MCD households targets
+    debug_res_developer (orca.DataFrameWrapper): Debugging table
+
+    Returns:
+    None
+    """
     # get current year
     year = orca.get_injectable("year")
+
+    # get target vacancies by mcd for current year
     target_vacancies = target_vacancies_mcd.to_frame()
     target_vacancies = target_vacancies[str(year)]
+
+    # get original buildings
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
-    # the mcd_total for year and year-1
+
+    # the mcd_total for year
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+
+    # load debugger df
     debug_res_developer = debug_res_developer.to_frame()
+
+    # loop through mcd id
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         print(f"developing residential units for {mcdid}")
+
+        # get original buildings in current mcd
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
+
         # handle missing mcdid
         if mcdid not in mcd_total.index:
             continue
+
+        # get target vacancy
         target_vacancy = float(target_vacancies[mcdid])
+
         # current hh from hh table
         cur_agents = (households.semmcd == mcdid).sum()
+
         # target hh from mcd_total table
         target_agents = mcd_total.loc[mcdid]
+
         # number of current total housing units
         num_units = mcd_orig_buildings.residential_units.sum()
 
         print("Number of current agents: {:,}".format(cur_agents))
         print("Number of target agents: {:,}".format(target_agents))
         print("Number of agent spaces: {:,}".format(int(num_units)))
-        print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
+        print("Current vacancy = {:.2f}".format(1.0 - cur_agents / float(num_units)))
         assert target_vacancy < 1.0
-        target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+        target_units = int(max((target_agents / (1.0 - target_vacancy) - num_units), 0))
         print(
             "Target vacancy = {:.2f}, target of new units = {:,}\n".format(
                 target_vacancy, target_units
             )
         )
 
+        # calculate prior form_btype_distributions
         register_btype_distributions(mcd_orig_buildings)
+
+        # run developer step
         units_added, parcels_idx_to_update = run_developer(
             target_units,
             mcdid,
@@ -1735,12 +1819,13 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+
         # update pct_undev to 100 if theres only one building in the parcel
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        # TODO: update parcels.pct_undev to 100 for units_added
         debug_res_developer = debug_res_developer.append(
             {
                 "year": year,
@@ -1761,21 +1846,48 @@ def residential_developer(
 
 @orca.step()
 def non_residential_developer(jobs, parcels, target_vacancies):
+    """
+    Non-residential space developer step.
+
+    This Orca step handles the development of non-residential spaces in different large areas based on target
+    vacancy rates and job demand. It calculates the necessary number of non-residential spaces to achieve the
+    target vacancy rate and then runs the non-residential developer model.
+
+    Parameters:
+    jobs (orca.DataFrameWrapper): Jobs
+    parcels (orca.DataFrameWrapper): Parcels
+    target_vacancies (orca.DataFrameWrapper): target vacancy rates for large areas.
+
+    Returns:
+    None
+    """
+    # get target vacancies
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
+
+    # get original buildings table
     orig_buildings = orca.get_table("buildings").to_frame(
         ["job_spaces", "large_area_id", "building_type_id"]
     )
+
+    # loop through large area
     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
+        # get large area buildings
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
+
+        # get current large area vacancy target
         target_vacancy = float(
             target_vacancies[
                 target_vacancies.large_area_id == lid
             ].non_res_target_vacancy_rate
         )
+
+        # number of non-homebased jobs in the large area
         num_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+
+        # number of total job spaces for LA
         num_units = la_orig_buildings.job_spaces.sum()
 
         print("Number of agents: {:,}".format(num_agents))
@@ -1789,7 +1901,10 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             )
         )
 
+        # calculate prior form_btype_distributions
         register_btype_distributions(la_orig_buildings)
+
+        # run nonres developer step
         spaces_added, parcels_idx_to_update = run_developer(
             target_units,
             lid,
@@ -1802,6 +1917,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             "nonres_developer.yaml",
             add_more_columns_callback=add_extra_columns_nonres,
         )
+
         # update pct_undev to 100 if theres only one building in the parcel
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
         # update parcels table
@@ -1810,6 +1926,20 @@ def non_residential_developer(jobs, parcels, target_vacancies):
 
 @orca.step()
 def update_sp_filter(buildings):
+    """
+    Update the 'sp_filter' column of the 'buildings' table for selected building types.
+
+    This step updates the 'sp_filter' column of the 'buildings' table based on the specified
+    'building_type_id' values. It sets the 'sp_filter' value to -1 for buildings with building
+    types that match the selected building type IDs. This step is used to exclude building from
+    demolition and LCM processes 
+
+    Parameters:
+    buildings (orca.DataFrameWrapper): Buildings data table.
+
+    Returns:
+    None
+    """
     # update sp_filter to -1 for selected building_types
     selected_btypes = {
         11: "Educational",
@@ -1822,6 +1952,7 @@ def update_sp_filter(buildings):
         94: "Death Care Services",
         95: "Parking Garage",
     }
+
     updated_buildings = buildings.to_frame(buildings.local_columns)
     print(
         "Updating %s buildings sp_filter to -1"
@@ -1831,9 +1962,13 @@ def update_sp_filter(buildings):
             ].shape[0]
         )
     )
+
+    # set sp_filter to -1
     updated_buildings.loc[
         updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
     ] = -1
+
+    # update buildings table
     orca.add_table("buildings", updated_buildings)
 
 
@@ -2047,19 +2182,27 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     """
     # define k: number of pseudo hh to drop each year
     k = 90
-    # drop k hh from pseudo buildings every year
+
+    # get households with sp_filter
     hh = households.to_frame(households.local_columns + ["sp_filter"])
-    # N number of existing pseudo households
+
+    # N: number of existing pseudo households
     N = hh[hh.sp_filter == -2].shape[0]
+
+    # if empty, return
     if N == 0:
-        # empty, return
         return
+
+    # if less than k, replace k
     if N < k:
-        # if less than k, replace k
         k = N
+
+    # sample k pseudo household to drop
     hh_to_drop = hh[hh.sp_filter == -2].sample(k)
+
     # unplace households and set sampled hh with building_id -1
     hh.loc[hh_to_drop.index, "building_id"] = -1
+
     # set resiential units to hh counts, avoid vacant units in pseudo buildings
     hhs_by_pseudo_b = (
         hh[(hh.sp_filter == -2) & (hh.building_id > -1)].groupby("building_id").size()
@@ -2070,6 +2213,8 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b
 
     print("Dropped %s hh from current pseudo buildings." % k)
+
+    # update households and buildings
     orca.add_table("households", hh)
     orca.add_table("buildings", bb)
 
