@@ -43,6 +43,7 @@ orca.run(
     [
         "build_networks_2050",
         "neighborhood_vars",
+        "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
         "random_demolition_events",
         "scheduled_development_events",
