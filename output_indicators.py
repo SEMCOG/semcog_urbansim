@@ -57,6 +57,7 @@ def upload_whatnots_to_postgres(run_name, whatnots):
     whatnots["large_area_id"] = whatnots["large_area_id"].astype(int)
     whatnots["city_id"] = whatnots["city_id"].astype(int)
     whatnots["zone_id"] = whatnots["zone_id"].astype(int)
+    whatnots["school_id"] = whatnots["school_id"].astype(int)
     whatnots["parcel_id"] = whatnots["parcel_id"].astype(int)
     print("Uploading whatnots table %s to postgres..." % table_name)
     whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
@@ -90,7 +91,7 @@ def upload_whatnots_to_carto(run_name, whatnots):
     update_privacy_table(tablename, "link")  # so that it can be view publicly
 
     # add three indexes using the sql api, will need to add more to this when we add in the school district data
-    index_query = """CREATE INDEX IF NOT EXISTS w{0}_indicator_zone_id_idx ON semcog.{0} USING btree (indicator, zone_id); CREATE INDEX IF NOT EXISTS w{0}_indicator_city_id_idx ON semcog.{0} USING btree (indicator, city_id);CREATE INDEX IF NOT EXISTS w{0}_indicator_large_area_id_idx ON semcog.{0} USING btree (indicator, large_area_id);""".format(
+    index_query = """CREATE INDEX IF NOT EXISTS w{0}_indicator_zone_id_idx ON semcog.{0} USING btree (indicator, zone_id); CREATE INDEX IF NOT EXISTS w{0}_indicator_city_id_idx ON semcog.{0} USING btree (indicator, city_id); CREATE INDEX IF NOT EXISTS w{0}_indicator_school_id_idx ON semcog.{0} USING btree (indicator, school_id);CREATE INDEX IF NOT EXISTS w{0}_indicator_large_area_id_idx ON semcog.{0} USING btree (indicator, large_area_id);""".format(
         tablename
     )
     url = """http://semcog.cartodb.com/api/v2/sql?q={0}&api_key={1}""".format(
@@ -152,15 +153,19 @@ def main(
 
     # make cities with large area table
     p = orca.get_table("parcels")
-    p = p.to_frame(["large_area_id", "city_id", "zone_id"])
+    p = p.to_frame(["large_area_id", "city_id", "school_id", "zone_id"])
     cities = (
         p[["city_id", "large_area_id"]].drop_duplicates("city_id").set_index("city_id")
     )
+    schools = (
+        p[["school_id", "large_area_id"]].drop_duplicates("school_id").set_index("school_id")
+    )
     orca.add_table("cities", cities)
+    orca.add_table("schools", schools)
 
     # initialize whatnot
     whatnot = p.reset_index().drop_duplicates(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"]
+        ["large_area_id", "city_id", "school_id", "zone_id", "parcel_id"]
     )
 
     # target year building
@@ -179,7 +184,7 @@ def main(
 
     # add missing zones from buildings
     orca_b = orca.get_table('buildings')
-    b_whatnot = orca_b.to_frame(['large_area_id', 'city_id', 'zone_id', 'parcel_id'])
+    b_whatnot = orca_b.to_frame(['large_area_id', 'city_id', 'school_id', 'zone_id', 'parcel_id'])
     b_whatnot = b_whatnot.drop_duplicates().reset_index(drop=True)
     whatnot = pd.concat([whatnot, b_whatnot], axis=0, ignore_index=True)
 
@@ -187,7 +192,7 @@ def main(
 
     # clean up whatnot index,
     whatnot = whatnot.drop_duplicates(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"]
+        ["large_area_id", "city_id", "school_id", "zone_id", "parcel_id"]
     ).reset_index(drop=True)
 
     whatnot.index.name = "whatnot_id"
@@ -197,6 +202,7 @@ def main(
     for tab, geo_id in [
         ("cities", "city_id"),
         ("semmcds", "semmcd"),
+        ("schools", "school_id"),
         ("zones", "zone_id"),
         ("large_areas", "large_area_id"),
         ("whatnots", "whatnot_id"),
@@ -208,7 +214,7 @@ def main(
     if add_2019:
         years = [2019] + years
     year_names = ["yr" + str(i) for i in years]
-    geom = ["cities", "semmcds", "zones", "large_areas", "whatnots"]
+    geom = ["cities", "schools", "semmcds", "zones", "large_areas", "whatnots"]
     tbls_to_load = [
         "parcels",
         "buildings",
@@ -271,7 +277,7 @@ def main(
         del df["hh_pop_age_median"]
 
         df[whatnots_local.columns] = whatnots_local
-        df.set_index(["large_area_id", "city_id", "zone_id", "parcel_id"], inplace=True)
+        df.set_index(["large_area_id", "city_id", "school_id", "zone_id", "parcel_id"], inplace=True)
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
 
@@ -283,7 +289,8 @@ def main(
 
     whatnots_output = pd.concat(whatnots_output).unstack(fill_value=0)
     whatnots_output.index.rename("city_id", level=1, inplace=True)
-    whatnots_output.index.rename("zone_id", level=2, inplace=True)
+    whatnots_output.index.rename("school_id", level=2, inplace=True)
+    whatnots_output.index.rename("zone_id", level=3, inplace=True)
     whatnots_output.columns = year_names
 
     if add_2019:
@@ -298,7 +305,7 @@ def main(
             os.path.join(all_years_dir, "whatnots_output_internal.csv")
         )
         # whatnots for external
-        not_jobs = [x for x in whatnots_output.index if "jobs" not in x[4]]
+        not_jobs = [x for x in whatnots_output.index if "jobs" not in x[5]]
         whatnots_output.loc[not_jobs, "yr2019"] = np.nan
         if spacing == 1:
             whatnots_output[[year_names[0]] + year_names[1::5]].to_csv(
@@ -324,7 +331,7 @@ def main(
     ### save indicators to excel files
     print("\n* Making indicators by year")
     start = time.time()
-    geom = ["cities", "large_areas", "semmcds", "zones"]
+    geom = ["cities", "large_areas", "semmcds", "schools", "zones"]
     not_jobs = [x for x in list_indicators() if "jobs" not in x]
     if add_2019:
         y5 = year_names[1::5]
