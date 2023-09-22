@@ -17,13 +17,13 @@ if __name__ == "__main__":
     parcels = gpd.read_postgis(text(sql), conn)
 
     # load state house
-    mi_house = gpd.read_file('~/share/da/Staff/Xie/share/GIS/MIHouseDistricts.shp')
-    mi_house['mi_house_id'] = mi_house['DISTRICT']
+    mi_house = gpd.read_file('~/share/da/Staff/Xie/share/GIS/mi_house.shp')
+    mi_house['mi_house_id'] = mi_house['district']
     mi_house = mi_house[['mi_house_id', 'geometry']]
 
     # load state senate
-    mi_senate = gpd.read_file('~/share/da/Staff/Xie/share/GIS/MISenateDistricts.shp')
-    mi_senate['mi_senate_id'] = mi_senate['DISTRICT']
+    mi_senate = gpd.read_file('~/share/da/Staff/Xie/share/GIS/mi_senate.shp')
+    mi_senate['mi_senate_id'] = mi_senate['district']
     mi_senate = mi_senate[['mi_senate_id', 'geometry']]
 
     # spatial join
