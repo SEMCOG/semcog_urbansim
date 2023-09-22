@@ -633,6 +633,16 @@ def zone_id(buildings, parcels, building_to_zone_baseyear):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def school_id(buildings, parcels):
     return misc.reindex(parcels.school_id, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def mi_house_id(buildings, parcels):
+    return misc.reindex(parcels.mi_house_id, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def mi_senate_id(buildings, parcels):
+    return misc.reindex(parcels.mi_senate_id, buildings.parcel_id).fillna(0)
     
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
