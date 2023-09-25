@@ -2,6 +2,7 @@ import orca
 import shutil
 
 import os
+orca.add_injectable('use_checkpoint', False)
 
 import models
 import utils
