@@ -559,3 +559,277 @@ def create_lcm_from_config(config_filename, model_attributes):
     # is it alt_capacity in largeMNL equals vacant_variable in 2045?
     model.alt_capacity = model_attributes['vacant_variable']
     return model
+
+def get_hlcm_valid_vars(data_path: str) -> tuple[list[str], list[str]]:
+    """
+    Extract valid household and building variable names from a YAML configuration file.
+
+    Parameters:
+    data_path (str): Path to the directory containing the variable validation YAML files.
+
+    Returns:
+    tuple: A tuple containing two lists of valid variable names: valid household variable names and valid building variable names.
+    """
+    var_validation_list = [
+        os.path.join(data_path, f)
+        for f in os.listdir(data_path)
+        if ("variable_validation" in f) and (f[-5:] == ".yaml")
+    ]
+    var_validation_last = max(var_validation_list, key=os.path.getctime)
+    
+    with open(var_validation_last, "r") as f:
+        vars_config = yaml.load(f, Loader=yaml.FullLoader)
+    
+    valid_b_vars = vars_config["buildings"]["valid variables"]
+    valid_hh_vars = vars_config["households"]["valid variables"]
+    return valid_hh_vars, valid_b_vars
+
+def get_elcm_valid_vars(data_path: str) -> tuple[list[str], list[str]]:
+    """
+    Extract valid household and building variable names from a YAML configuration file.
+
+    Parameters:
+    data_path (str): Path to the directory containing the variable validation YAML files.
+
+    Returns:
+    tuple: A tuple containing two lists of valid variable names: valid household variable names and valid building variable names.
+    """
+    var_validation_list = [
+        (data_path + "/" + f)
+        for f in os.listdir(data_path)
+        if ("variable_validation" in f) & (f[-5:] == ".yaml")
+    ]
+    var_validation_last = max(var_validation_list, key=os.path.getctime)
+    with open(var_validation_last, "r") as f:
+        vars_config = yaml.load(f, Loader=yaml.FullLoader)
+    valid_job_vars = vars_config["jobs"]["valid variables"]
+    valid_b_vars = vars_config["buildings"]["valid variables"]
+    return valid_job_vars, valid_b_vars
+
+def load_hlcm_df(households: orca.DataFrameWrapper, buildings: orca.DataFrameWrapper, hh_var: list[str], b_var: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Load and return household and building DataFrames.
+
+    Parameters:
+    households (orca.DataFrameWrapper): Orca DataFrameWrapper for households.
+    buildings (orca.DataFrameWrapper): Orca DataFrameWrapper for buildings.
+    hh_var (list[str]): Names of the household variables to load.
+    b_var (list[str]): Names of the building variables to load.
+
+    Returns:
+    tuple: A tuple containing two DataFrames: the household DataFrame and the building DataFrame.
+
+    Example:
+    >>> household_df, building_df = load_hlcm_df(households, buildings, ['persons'], ['parcel_id'])
+    """
+    hh = households.to_frame(hh_var)
+    b = buildings.to_frame(b_var)
+    return hh, b
+
+def load_elcm_df(jobs: orca.DataFrameWrapper, buildings: orca.DataFrameWrapper, job_var: list[str], b_var: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Load and return job and building DataFrames.
+
+    Parameters:
+    jobs (orca.DataFrameWrapper): Jobs data DataFrame.
+    buildings (orca.DataFrameWrapper): Building data DataFrame.
+    job_var (list[str]): Names of the job variables to load.
+    b_var (list[str]): Names of the building variables to load.
+
+    Returns:
+    tuple: A tuple containing two DataFrames: the job DataFrame and the building DataFrame.
+
+    Example:
+    >>> job_df, building_df = load_elcm_df(['employment'], ['parcel_id'])
+    """
+    job_df = jobs.to_frame(job_var)
+    b_df = buildings.to_frame(b_var)
+    return job_df, b_df
+
+def columns_in_vars(vars: list[str], valid_agent_vars: list[str], valid_b_vars: list[str]) -> tuple[list[str], list[str]]:
+    """
+    Categorize variables into agents and building columns.
+
+    This function takes a list of variable names and categorizes them into
+    agents columns and building columns based on the presence of a colon
+    separator or matching valid variable names.
+
+    Parameters:
+    vars (list[str]): List of variable names to categorize.
+    valid_agent_vars (list[str]): List of valid agents variable names
+    valid_b_vars (list[str]): List of valid building variable names
+
+    Returns:
+    tuple: A tuple containing two lists of strings: agents column names and building column names.
+    """
+    agent_columns, b_columns = [], []
+    for varname in vars:
+        if ':' in varname:
+            agent_col, b_col = map(str.strip, varname.split(':'))
+            if agent_col in valid_agent_vars:
+                agent_columns.append(agent_col)
+            if b_col in valid_b_vars:
+                b_columns.append(b_col)
+        elif varname in valid_agent_vars:
+            agent_columns.append(varname)
+        elif varname in valid_b_vars:
+            b_columns.append(varname)
+        else:
+            print(varname, " not found in both agents and buildings table")
+    return agent_columns, b_columns
+
+def get_interaction_vars(df: pd.DataFrame, varname: str) -> np.ndarray:
+    """
+    Get interaction variables from variable name.
+
+    This function calculates interaction variables based on the provided variable name
+    within the given DataFrame.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the variables.
+        varname (str): The name of the interaction variable.
+
+    Returns:
+        np.ndarray: A NumPy array containing the calculated interaction variables.
+
+    Example:
+    >>> data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
+    >>> df = pd.DataFrame(data)
+    >>> interaction_array = get_interaction_vars(df, 'A:B')
+    """
+    if ":" in varname:
+        var1, var2 = map(str.strip, varname.split(":"))
+        return (df[var1] * df[var2]).values.reshape(-1, 1)
+    else:
+        return df[varname].values.reshape(-1, 1)
+
+def load_hlcm_dataset(valid_hh_vars, valid_b_vars, var_pool_table_path, hh_filter_columns, b_filter_columns, use_cache=False):
+    """
+    Load and preprocess dataset variables
+
+    This function loads and preprocesses the dataset variables needed for estimation. It extracts the set of valid variables
+    from the variable pool table, loads the necessary variables from the 'buildings' and 'households' Orca tables,
+    and caches the resulting household and building DataFrames for later use.
+
+    Parameters:
+    valid_hh_vars (list): A list of valid household variable names.
+    valid_b_vars (list): A list of valid building variable names.
+
+    Returns:
+    tuple: A tuple containing the following elements:
+        - hh_region (pd.DataFrame): A DataFrame containing loaded household data.
+        - b_region (pd.DataFrame): A DataFrame containing loaded building data.
+        - vars_to_use (np.ndarray): An array of variable names used for modeling.
+    """
+    # Load the variable pool table and extract valid variable names
+    used_vars = pd.read_excel(var_pool_table_path, sheet_name=2)
+    v1 = used_vars[~used_vars["new variables 1"].isna()]["new variables 1"].unique()
+    v2 = used_vars[~used_vars["new variables 2"].isna()]["new variables 2"].unique()
+    vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
+
+    # Choose whether to reload data or use cached data
+    if not use_cache:
+        # from notebooks.models_test import *
+        import models
+        buildings = orca.get_table("buildings")
+        households = orca.get_table("households")
+
+        # set year to 2020 and run build network and neigh vars
+        orca.add_injectable('year', 2020)
+        orca.run(["build_networks_2050"])
+        orca.run(["neighborhood_vars"])
+
+        # set year to 2050 and run mcd_hu_sampling
+        orca.add_injectable('year', 2050)
+        orca.run(["mcd_hu_sampling"])
+
+        # Get valid variables for modeling and load corresponding data
+        hh_columns, b_columns = columns_in_vars(vars_to_use, valid_hh_vars, valid_b_vars)
+        hh_var = hh_columns + hh_filter_columns
+        b_var = b_columns + b_filter_columns
+        hh_region, b_region = load_hlcm_df(households, buildings, hh_var, b_var)
+
+        # Cache the loaded DataFrames as CSV files
+        hh_region.to_csv('data/hh.csv')
+        b_region.to_csv('data/b_hlcm.csv')
+    else:
+        hh_region, b_region = load_cache_hh_b('data/hh.csv', 'data/b_hlcm.csv')
+    return hh_region, b_region, vars_to_use
+
+def load_elcm_dataset(valid_job_vars, valid_b_vars, var_pool_table_path, job_filter_columns, b_filter_columns, use_cache=False):
+    """
+    Load and preprocess job and building datasets for ELCM estimation.
+
+    This function loads the job and building datasets, extracts valid variable names, and preprocesses the data
+    for estimation using the ELCM (Employment Location Choice Model).
+
+    Parameters:
+    valid_job_vars (list[str]): Valid job variables for modeling.
+    valid_b_vars (list[str]): Valid building variables for modeling.
+    var_pool_table_path (str): Path to the variable pool table Excel file.
+    job_filter_columns (list[str]): Job filter columns to exclude from the loaded data.
+    b_filter_columns (list[str]): Building filter columns to exclude from the loaded data.
+    use_cache (Boolean): Use cache(True) or reload(False)
+
+    Returns:
+    tuple: A tuple containing job_region DataFrame, building_region DataFrame, and vars_to_use array.
+
+    Example:
+    >>> job_region, building_region, vars_to_use = load_elcm_dataset(valid_job_vars, valid_b_vars,
+    ...                                                              var_pool_table_path, job_filter_columns,
+    ...                                                              b_filter_columns)
+    """
+    # Load the variable pool table and extract valid variable names
+    used_vars = pd.read_excel(var_pool_table_path, sheet_name=1)
+    v1 = used_vars[~used_vars["variables 1"].isna()]["variables 1"].unique()
+    v2 = used_vars[~used_vars["Variables 2"].isna()]["Variables 2"].unique()
+    vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
+
+    # Choose whether to reload data or use cached data
+    if not use_cache:
+        # from notebooks.models_test import *
+        import models
+        buildings = orca.get_table("buildings")
+        jobs = orca.get_table("jobs")
+
+        # set year to 2020 and run build network and neigh vars
+        orca.add_injectable('year', 2020)
+        orca.run(["build_networks_2050"])
+        orca.run(["neighborhood_vars"])
+
+        # set year to 2050 and run mcd_hu_sampling
+        orca.add_injectable('year', 2050)
+        orca.run(["mcd_hu_sampling"])
+
+        # Get valid variables for modeling and load corresponding data
+        job_columns, b_columns = columns_in_vars(vars_to_use, valid_job_vars, valid_b_vars)
+
+        job_var = job_columns + job_filter_columns
+        b_var = b_columns + b_filter_columns
+        job_region, b_region = load_elcm_df(jobs, buildings, job_var, b_var)
+
+        # Cache the loaded DataFrames as CSV files
+        job_region.to_csv('data/jobs.csv')
+        b_region.to_csv('data/b_elcm.csv')
+    else:
+        job_region, b_region = load_cache_hh_b('data/jobs.csv', 'data/b_elcm.csv')
+    return job_region, b_region, vars_to_use
+
+def load_cache_hh_b(hh_csv_path: str, b_csv_path: str):
+    """
+    Load household and building data from CSV files and register them as tables.
+
+    Parameters:
+    hh_csv_path (str): Path to the household CSV file.
+    b_csv_path (str): Path to the building CSV file.
+    """
+    try:
+        hh_region = pd.read_csv(hh_csv_path, index_col=0)
+        b_region = pd.read_csv(b_csv_path, index_col=0)
+    except FileNotFoundError:
+        print("CSV file not found. Please provide correct file paths.")
+        return 
+    
+    orca.add_table('households', hh_region)
+    orca.add_table('buildings', b_region)
+    return hh_region, b_region

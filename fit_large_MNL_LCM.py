@@ -6,11 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 import orca
-from urbansim.utils import misc
 from urbansim.models import util
-import sys
-import time
-from tqdm import tqdm
 import yaml
 
 from urbansim_templates.models import LargeMultinomialLogitStep
@@ -102,13 +98,21 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     # remove extra columns
     hh_cols_to_std = [col for col in hh.columns if col not in ['building_id']]
+
     # standardize hh
     hh[hh_cols_to_std] = (hh[hh_cols_to_std]-hh[hh_cols_to_std].mean())/hh[hh_cols_to_std].std()
-    b_cols_to_std = [col for col in b.columns if col not in [building_hh_capacity_col]]
 
-    b_cols_with_0_std = b.columns[b.std()==0]
+    # building columsn to standardize
+    b_cols_to_std = [col for col in b.columns if col not in [building_hh_capacity_col]]
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
+
+    # fillin na with 0
+    b = b.fillna(0)
+
+    # filter out columns with 0 std
+    b_cols_with_0_std = b.columns[b.std()==0]
+
     # adding hh and b to orca
     orca.add_table('hh_hlcm', hh)
     orca.add_table('b_hlcm', b)
@@ -143,12 +147,9 @@ def run_large_MNL(hh_region, b_region, LARGE_AREA_ID, number_of_vars_to_use=40):
 
     print('done')
 
-def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
+def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
     print("Running elcm largeMNL on slid %s..." % SLID)
     thetas = pd.read_csv("./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt" % (SLID, job_estimation_sample_size), index_col=0)
-    # job = job.fillna(0) # found 12 missing values in ln_income
-    job_region = orca.get_table('jobs').to_frame(list(thetas.index)+job_filter_columns)
-    b_region = orca.get_table('buildings').to_frame(list(thetas.index)+b_filter_columns)
 
     job = job_region[job_region.slid == SLID]
     job = job[job.building_id > 1]
@@ -165,9 +166,15 @@ def run_elcm_large_MNL(SLID, number_of_vars_to_use=40):
     job[job_cols_to_std] = (job[job_cols_to_std]-job[job_cols_to_std].mean())/job[job_cols_to_std].std()
 
     b_cols_to_std = [col for col in b.columns if col not in [building_job_capacity_col]]
-    b_cols_with_0_std = b.columns[b.std()==0]
     # standardize buildings
     b[b_cols_to_std] = (b[b_cols_to_std]-b[b_cols_to_std].mean())/b[b_cols_to_std].std()
+
+    # fillin na with 0
+    b = b.fillna(0)
+
+    # filter out columns with 0 std
+    b_cols_with_0_std = b.columns[b.std()==0]
+
     # adding job and b to orca
     orca.add_table('job_elcm', job)
     orca.add_table('b_elcm', b)

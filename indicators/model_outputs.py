@@ -386,6 +386,7 @@ def make_indicators(tab, geo_id):
         (00, 17),
         (25, 44),
         (25, 54),
+        (25, 64),
         (45, 64),
         (55, 64),
         (65, 84),
@@ -467,36 +468,34 @@ def make_indicators(tab, geo_id):
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def whatnot_id(parcels, whatnots, interesting_parcel_ids):
-    # TODO: add school_id back in at some point
-    parcels = parcels.to_frame(["large_area_id", "city_id", "zone_id"])
+    parcels = parcels.to_frame(["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"])
     parcels["parcel_id"] = parcels.index
     parcels.index.name = None
     parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
 
     whatnots = whatnots.to_frame(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"]
+        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
     ).reset_index()
     m = pd.merge(
-        parcels, whatnots, "left", ["large_area_id", "city_id", "zone_id", "parcel_id"],
+        parcels, whatnots, "left", ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"],
     )
     return m.whatnot_id
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def whatnot_id(buildings, whatnots, interesting_parcel_ids):
-    # TODO: add school_id back in at some point
     buildings = buildings.to_frame(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"]
+        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
     ).reset_index()
     buildings.loc[~buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
     whatnots = whatnots.to_frame(
-        ["large_area_id", "city_id", "zone_id", "parcel_id"]
+        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
     ).reset_index()
     m = pd.merge(
         buildings,
         whatnots,
         "left",
-        ["large_area_id", "city_id", "zone_id", "parcel_id"],
+        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"],
     )
     return m.set_index("building_id").whatnot_id
 
@@ -606,6 +605,7 @@ def list_indicators():
         "hh_pop_age_18_64",
         "hh_pop_age_00_17",
         "hh_pop_age_25_44",
+        "hh_pop_age_25_64",
         "hh_pop_age_45_64",
         "hh_pop_age_65_84",
         "hh_pop_age_85_inf",
@@ -646,6 +646,7 @@ def list_indicators():
         "pop_age_75_inf",
         "pop_age_25_54",
         "pop_age_55_64",
+        "pop_age_25_64",
     ]
     gq_pop = [
         ## race
@@ -667,6 +668,7 @@ def list_indicators():
         "gq_pop_age_18_64",
         "gq_pop_age_00_17",
         "gq_pop_age_25_44",
+        "gq_pop_age_25_64",
         "gq_pop_age_45_64",
         "gq_pop_age_65_84",
         "gq_pop_age_85_inf",

@@ -17,10 +17,22 @@ def slid(jobs):
 def zone_id(jobs, buildings):
     return misc.reindex(buildings.zone_id, jobs.building_id)
 
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def school_id(jobs, buildings):
+    return misc.reindex(buildings.school_id, jobs.building_id)
+
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
 def city_id(jobs, buildings):
     return misc.reindex(buildings.city_id, jobs.building_id)
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def mi_house_id(jobs, buildings):
+    return misc.reindex(buildings.mi_house_id, jobs.building_id)
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def mi_senate_id(jobs, buildings):
+    return misc.reindex(buildings.mi_senate_id, jobs.building_id)
 
 
 # #35
