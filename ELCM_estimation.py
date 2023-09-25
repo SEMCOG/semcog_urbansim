@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-# coding: utf-8
+"""
+ELCM_estimation.py
+
+This script performs estimation using the Automatic Relevance Determination (ARD-DCM)
+for sector_id x large area within an urban simulation context. It handles data loading, variable
+selection, estimation, and running Multinomial Logit (MNL) models. The script is designed for
+flexible execution across multiple large areas.
+"""
 from urbansim.models.regression import RegressionModel
 
 import os
 import numpy as np
 import pandas as pd
-import orca
-from urbansim.utils import misc
-import sys
 import time
-from tqdm import tqdm
-import time
-import yaml
 
+from lcm_utils import *
 from dcm_ard_libs import minimize, neglog_DCM
 from fit_large_MNL_LCM import run_elcm_large_MNL
 from urbansim_templates import modelmanager as mm
@@ -27,126 +29,52 @@ def warn(*args, **kwargs):
 
 os.chdir("/home/da/semcog_urbansim")
 
-# import utils
-# data_path = r"/home/da/share/U_RDF2050/model_inputs/base_hdf"
-data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
-hdf_list = [
-    (data_path + "/" + f)
-    for f in os.listdir(data_path)
-    if ("forecast_data_input" in f) & (f[-3:] == ".h5")
-]
-hdf_last = max(hdf_list, key=os.path.getctime)
-hdf = pd.HDFStore(hdf_last, "r")
-# hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
-print("HDF data: ", hdf_last)
-
-var_validation_list = [
-    (data_path + "/" + f)
-    for f in os.listdir(data_path)
-    if ("variable_validation" in f) & (f[-5:] == ".yaml")
-]
-var_validation_last = max(var_validation_list, key=os.path.getctime)
-with open(var_validation_last, "r") as f:
-    vars_config = yaml.load(f, Loader=yaml.FullLoader)
-valid_b_vars = vars_config["buildings"]["valid variables"]
-valid_job_vars = vars_config["jobs"]["valid variables"]
-
-
-def apply_filter_query(df, filters=None):
-    if filters:
-        if isinstance(filters, str):
-            query = filters
-        else:
-            query = " and ".join(filters)
-        return df.query(query)
-    else:
-        return df
-
-
-def load_hlcm_df(jobs, buildings, job_var, b_var):
-    jobs = jobs.to_frame(job_var)
-    b = buildings.to_frame(b_var)
-    return jobs, b
-
-def columns_in_vars(jobs, buildings, vars):
-    job_columns, b_columns = [], []
-    for varname in vars:
-        if varname in jobs.columns:
-            job_columns.append(varname.strip())
-        elif varname in buildings.columns:
-            b_columns.append(varname.strip())
-        else:
-            print(varname, " not found in both jobs and buildings table")
-    return job_columns, b_columns
-            
-
-def get_interaction_vars( df, varname):
-    """Get interaction variables from variable name
-
-    Args:
-        varname (string): name of the interaction variable
-    """
-    if ":" in varname:
-        var1, var2 = varname.split(":")
-        var1, var2 = var1.strip(), var2.strip()
-        return (df[var1] * df[var2]).values.reshape(-1, 1)
-    else:
-        return df[varname].values.reshape(-1, 1)
-
-
-used_vars = pd.read_excel("/home/da/share/urbansim/RDF2050/model_estimation/configs_elcm_large_area_sector.xlsx", sheet_name=1)
-v1 = used_vars[~used_vars["variables 1"].isna()]["variables 1"].unique()
-v2 = used_vars[~used_vars["Variables 2"].isna()]["Variables 2"].unique()
-vars_to_use = np.array(list(set(v1.tolist()).union(v2.tolist())))
-# vars_to_use = used_vars[0].unique()
-
 # config
-choice_column = "building_id"
+data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
+var_pool_table_path = "/home/da/share/urbansim/RDF2050/model_estimation/configs_elcm_large_area_sector.xlsx"
 job_filter_columns = ["building_id", "slid", "home_based_status"]
 b_filter_columns = ["large_area_id", "non_residential_sqft", "vacant_job_spaces"]
-# load variables
-RELOAD = False
-if RELOAD:
-    # from notebooks.models_test import *
-    import models
-    buildings = orca.get_table("buildings")
-    jobs = orca.get_table("jobs")
-    orca.add_injectable('year', 2020)
-    orca.run(["build_networks_2050"])
-    orca.run(["neighborhood_vars"])
-    # TODO: get vars from vars list from last forecast
-    job_columns, b_columns = columns_in_vars(jobs, buildings, vars_to_use)
 
-    job_var = job_columns + job_filter_columns
-    b_var = b_columns + b_filter_columns
-    job_region, b_region = load_hlcm_df(jobs, buildings, job_var, b_var)
-    job_region.to_csv('jobs.csv')
-    b_region.to_csv('b_elcm.csv')
-else:
-    job_region = pd.read_csv('jobs.csv', index_col=0)
-    b_region = pd.read_csv('b_elcm.csv', index_col=0)
-    orca.add_table('jobs', job_region)
-    orca.add_table('buildings', b_region)
+# Estimation Config
+JOBS_SAMPLE_SIZE = 10000
+ESTIMATION_SAMPLE_SIZE = 50
+TOP_VARIABLES_TO_USE = 20
 
-def estimation(SLID):
-    job_sample_size = 1000
-    estimation_sample_size = 80
+def estimation(SLID, job_region, b_region, vars_to_use):
+    """
+    Perform estimation using the ARD-DCM model for employment location choice.
+
+    This function performs estimation using the ARD-DCM (Automatic Relevance Determination) for employment
+    location choice for a given SLID, using the provided job and building data along with
+    a list of variables to use.
+
+    Parameters:
+    SLID (int): Jobs SLID.
+    job_region (pd.DataFrame): Job data DataFrame.
+    b_region (pd.DataFrame): Building data DataFrame.
+    vars_to_use (np.ndarray): Array of variable names
+
+    Returns:
+    None
+    """
     # sampling jobs
     # from the new move-ins, last 5-10 years
     # weighted by mcd_quota
     job = job_region[job_region.slid == SLID]
     job = job[job.building_id > 1]
     job = job[job.home_based_status == 0]
+
     # if total number of job is less than job_sample_size 
-    job_sample_size = min(job_sample_size, job.shape[0])
+    job_sample_size = min(JOBS_SAMPLE_SIZE, job.shape[0])
+
     job = job.sample(job_sample_size)
     job = job.reset_index()
     job = job.fillna(0)
-    # sampling b
+
     # sample buildings from the chosen job's buildings list
     bid_sample_pool = b_region[b_region.large_area_id == SLID % 1000].index
     sampled_b_id = []
-    for _ in range(estimation_sample_size-1):
+    for _ in range(ESTIMATION_SAMPLE_SIZE-1):
         for j in job.building_id:
             sampled_b_id.append(np.random.choice(bid_sample_pool[bid_sample_pool!=j]))
 
@@ -154,20 +82,23 @@ def estimation(SLID):
     b_sample = pd.concat([b_region.loc[job.building_id], b_sample])
     b_sample = b_sample.reset_index()
     b_sample = b_sample.fillna(0)
+
     # remove unnecessary col in jobs
     job = job[[col for col in job.columns if col not in job_filter_columns+["job_id"]]]
+
     # remove unnecessary col in buildings
     b_sample = b_sample[[col for col in b_sample.columns if col not in b_filter_columns]]
 
     X_df = pd.concat(
-        [pd.concat([job]*estimation_sample_size).reset_index(drop=True), b_sample], axis=1)
+        [pd.concat([job]*ESTIMATION_SAMPLE_SIZE).reset_index(drop=True), b_sample], axis=1)
     # Y: 1 for the building picked
-    # Y = X_df.building_id.isin(picked_bid).astype(int).values
     # Y: set first job_sample_size item 1
-    Y = np.zeros((job_sample_size*estimation_sample_size,1), dtype=int)
+    Y = np.zeros((job_sample_size*ESTIMATION_SAMPLE_SIZE,1), dtype=int)
     Y[:job_sample_size,0] = 1
+
     # remove extra cols
     X_df = X_df[[col for col in X_df.columns if col not in ['building_id']]]
+
     # create interaction variables
     newX_cols_name = vars_to_use
     X_wiv = np.array([])
@@ -186,15 +117,17 @@ def estimation(SLID):
 
     # only keep variables with variation
     X = X[:, np.std(X, axis=0, dtype=np.float64) > 0]
+
     # standardize X
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0, dtype=np.float64)
+
     # shuffle X
     shuffled_index = np.arange(Y.size)
     np.random.shuffle(shuffled_index)
     X = X[shuffled_index, :].astype(float)
     Y = Y[shuffled_index].reshape(-1, 1)
-    # TODO: Y_onehot
     Y_onehot = Y
+
     # availablechoice is 1
     available_choice = np.ones((X.shape[0], 1))
 
@@ -217,25 +150,33 @@ def estimation(SLID):
     out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
     out_theta.index = newX_cols_name[used_val]
     out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
-    out_theta.to_csv('./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt' % (SLID, estimation_sample_size))
+    out_theta.to_csv('./configs/elcm_2050/thetas/out_theta_job_%s_%s.txt' % (SLID, ESTIMATION_SAMPLE_SIZE))
 
     print("Warning: variables with 0 variation")
     print(newX_cols_name[unused_val.tolist()])
     print('ARD-DCM done')
 
 if __name__ == "__main__":
-    # run_elcm_large_MNL(job_region, b_region, 1100115, 10)
+    valid_job_vars, valid_b_vars = get_elcm_valid_vars(data_path)
+    job_region, b_region, vars_to_use = load_elcm_dataset(valid_job_vars, valid_b_vars, 
+                        var_pool_table_path, job_filter_columns, b_filter_columns, use_cache=True)
+
+    # get slid unique list
     slid_list = job_region['slid'].unique().tolist()
-    for slid in slid_list:
+
+    # loop through slid
+    for slid in slid_list[:5]:
         # if selected sector_id, skip it and use job scaling model instead
         sector_id = slid // 100000
         if sector_id in [1, 7, 12, 13, 15, 18]:
             continue
+
         # skip slid which have very small sample size
         if slid in [1100115, 1100147]:
             continue
-        # estimation(slid)
-        run_elcm_large_MNL(slid, 20)
+
+        estimation(slid, job_region, b_region, vars_to_use)
+        run_elcm_large_MNL(job_region, b_region, slid, TOP_VARIABLES_TO_USE)
     # estimation(500125)
     # run_elcm_large_MNL(job_region, b_region, 500125, 30)
     # slid which have failed LargeMNL run due to LinAlgError:

@@ -85,6 +85,21 @@ def zone_id(households, buildings):
     return misc.reindex(buildings.zone_id, households.building_id)
 
 
+@orca.column("households", cache=True, cache_scope="iteration")
+def school_id(households, buildings):
+    return misc.reindex(buildings.school_id, households.building_id)
+
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def mi_house_id(households, buildings):
+    return misc.reindex(buildings.mi_house_id, households.building_id)
+
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def mi_senate_id(households, buildings):
+    return misc.reindex(buildings.mi_senate_id, households.building_id)
+
+
 # #35 keep it for now as required by the refiner model
 # @orca.column("households", cache=True, cache_scope="iteration")
 # def b_zone_id(households, buildings):
@@ -253,6 +268,20 @@ def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
 
+@orca.column("persons", cache=True, cache_scope="iteration")
+def school_id(persons, households):
+    return misc.reindex(households.school_id, persons.household_id)
+
+@orca.column("persons", cache=True, cache_scope="iteration")
+def mi_house_id(persons, households):
+    return misc.reindex(households.mi_house_id, persons.household_id)
+
+
+@orca.column("persons", cache=True, cache_scope="iteration")
+def mi_senate_id(persons, households):
+    return misc.reindex(households.mi_senate_id, persons.household_id)
+
+
 # #35 keep it for now as required by the refiner model
 # @orca.column("persons", cache=True, cache_scope="iteration")
 # def b_zone_id(persons, households):
@@ -294,6 +323,18 @@ def large_area_id(households, persons):
 def zone_id(group_quarters, buildings):
     return misc.reindex(buildings.zone_id, group_quarters.building_id)
 
+@orca.column("group_quarters", cache=True, cache_scope="iteration")
+def school_id(group_quarters, buildings):
+    return misc.reindex(buildings.school_id, group_quarters.building_id)
+
+@orca.column("group_quarters", cache=True, cache_scope="iteration")
+def mi_house_id(group_quarters, buildings):
+    return misc.reindex(buildings.mi_house_id, group_quarters.building_id)
+
+
+@orca.column("group_quarters", cache=True, cache_scope="iteration")
+def mi_senate_id(group_quarters, buildings):
+    return misc.reindex(buildings.mi_senate_id, group_quarters.building_id)
 
 # @orca.column("group_quarters", cache=True, cache_scope="iteration")
 # def b_zone_id(group_quarters, buildings):

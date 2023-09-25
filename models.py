@@ -3,6 +3,8 @@ import time
 import yaml
 import operator
 from multiprocessing import Pool
+from collections import defaultdict
+import pickle
 
 import numpy as np
 import orca
@@ -88,23 +90,29 @@ def mcd_hu_sampling_config():
 def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     """
     Apply the mcd total forecast to Limit and calculate the pool of housing 
-    units to match the distribution of the mcd_total growth table for the large_area
+    units to match the distribution of the mcd_total growth table for the MCD
     Parameters
     ----------
-    mcd_total : pandas.DataFrame
-        MCD total table
-    buildings : pandas.DataFrame
+    buildings : orca.DataFrameWrapper
         Buildings table 
+    households : orca.DataFrameWrapper
+        Households table 
+    mcd_total : orca.DataFrameWrapper
+        MCD total table
+    bg_hh_increase : orca.DataFrameWrapper
+        hh growth trend by block groups
     Returns
     -------
-    new_units : pandas.Series
-        Index of alternatives which have been picked as the candidates
+    None
     """
     # get current year
     year = orca.get_injectable("year")
-    # get housing unit table from buildings
+
+    # get config
     config = orca.get_injectable("mcd_hu_sampling_config")
     vacant_variable = config["vacant_variable"]
+
+    # get housing unit table from buildings
     blds = buildings.to_frame(
         [
             "building_id",
@@ -117,6 +125,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             "sp_filter",
         ]
     )
+    # get vacant units with index and value >0
     vacant_units = blds[vacant_variable]
     vacant_units = vacant_units[vacant_units.index.values >= 0]
     vacant_units = vacant_units[vacant_units > 0]
@@ -125,36 +134,42 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     indexes = np.repeat(vacant_units.index.values, vacant_units.values.astype("int"))
     housing_units = blds.loc[indexes]
 
-    # the mcd_total for year and year-1
+    # the mcd_total for year
     mcd_total = mcd_total.to_frame([str(year)])
+
+    # get current inplaced households
     hh = households.to_frame(["semmcd", "building_id"])
     hh = hh[hh.building_id != -1]
-    hh_by_city = hh.groupby("semmcd").count().building_id
+
+    # groupby semmcd and get count
+    hh_by_city = hh.groupby("semmcd").size()
 
     # get the expected growth
     # growth = target_year_hh - current_hh
     mcd_growth = mcd_total[str(year)] - hh_by_city
 
-    # temp set NaN to 0
+    # temp set NaN growth to 0
     if mcd_growth.isna().sum() > 0:
         print("Warning: NaN exists in mcd_growth, replaced them with 0")
     mcd_growth = mcd_growth.fillna(0).astype(int)
 
-    # Calculate using Blockgroup HH count trend data
-    # from func update_bg_hh_increase
+    # Calculate using Block group HH count trend data
     bg_hh_increase = bg_hh_increase.to_frame()
     # use occupied, 3 year window trend = y_i - y_i-3
     bg_trend = bg_hh_increase.occupied - bg_hh_increase.previous_occupied
     bg_trend_norm_by_bg = (bg_trend - bg_trend.mean()) / bg_trend.std()
     bg_trend_norm_by_bg.name = "bg_trend"
 
-    # init output df
+    # init output mcd_model_quota Series
     new_units = pd.Series()
+
     # only selecting growth > 0
     mcd_growth = mcd_growth[mcd_growth > 0]
+
+    # loop through mcd growth target
     for city in mcd_growth.index:
         # for each city, make n_units = n_choosers
-        # sorted by year built and bg growth trend
+        # sorted housing units by year built and bg growth trend
 
         # get valid city housing units for sampling
         city_units = housing_units[
@@ -170,28 +185,36 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 >= 0
             )
         ]
+
         # building_age normalized
         building_age = city_units.building_age
         building_age_norm = (building_age - building_age.mean()) / building_age.std()
+
         # bg trend normalized
         bg_trend_norm = (
             city_units[["geoid"]]
             .join(bg_trend_norm_by_bg, how="left", on="geoid")
             .bg_trend
         ).fillna(0)
+
         # sum of normalized score
         normalized_score = (-building_age_norm) + bg_trend_norm
+
         # set name to score
         normalized_score.name = "score"
+
         # use absolute index for sorting
         normalized_score = normalized_score.reset_index()
+
         # sorted by the score from high to low
         normalized_score = normalized_score.sort_values(
             by="score", ascending=False, ignore_index=False
         )
+
         # apply sorted index back to city_units
         city_units = city_units.iloc[normalized_score.index]
         # .sort_values(by='building_age', ascending=True)
+
         # pick the top k units
         growth = mcd_growth.loc[city]
         selected_units = city_units.iloc[:growth]
@@ -205,45 +228,54 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
 
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
+
     # !!important!! clean-up mcd_model_quota from last year before updating it
     buildings.update_col_from_series(
         "mcd_model_quota", pd.Series(0, index=blds.index), cast=True
     )
+
     # init new mcd_model_quota
     mcd_model_quota = pd.Series(0, index=blds.index)
     mcd_model_quota.loc[quota.index] = quota.values
+
     # update mcd_model_quota in buildings table
     buildings.update_col_from_series("mcd_model_quota", mcd_model_quota, cast=True)
 
 
 @orca.step()
 def update_bg_hh_increase(bg_hh_increase, households):
-    """Update blockgroup hh growth trend table used in mcd_sampling process
+    """
+    Update the block group household growth trend table used in the MCD sampling process.
 
     Args:
-        bg_hh_increase (DataFrameWrapper): blockgroup hh growth
-        households (DataFrameWrapper): households
+        bg_hh_increase (DataFrameWrapper): Blockgroup household growth trend table.
+        households (DataFrameWrapper): Households table.
+
+    Returns:
+        None
     """
-    # baseyear 2020
+    # Base year 2020
     base_year = 2020
     year = orca.get_injectable("year")
     year_diff = year - base_year
     hh = households.to_frame(["geoid"]).reset_index()
     hh_by_bg = hh.groupby("geoid").count().household_id
     bg_hh = bg_hh_increase.to_frame()
-    # move occupied hh count year down 1 year
+
+    # Move occupied hh count one year down
     # 2->3, 1->2, 0->1
     bg_hh["occupied_year_minus_3"] = bg_hh["occupied_year_minus_2"]
     bg_hh["occupied_year_minus_2"] = bg_hh["occupied_year_minus_1"]
     bg_hh["occupied_year_minus_1"] = hh_by_bg.fillna(0).astype("int")
-    # if the first few years, save the bg summary and use 2014 and 2019 data
+
+    # If the first few years, save the bg summary and use 2014 and 2019 data
     if year_diff > 4:
-        # update columns used for trend analysis
+        # Update columns used for trend analysis
         bg_hh["occupied"] = hh_by_bg
         bg_hh["previous_occupied"] = bg_hh["occupied_year_minus_3"]
-    # update bg_hh_increase table
-    orca.add_table("bg_hh_increase", bg_hh)
 
+    # Update bg_hh_increase table
+    orca.add_table("bg_hh_increase", bg_hh)
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
@@ -474,7 +506,7 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
-    pool = Pool(2)
+    pool = Pool(6)
     cunks_per_la = pool.map(presses_trans, arg_per_la)
     pool.close()
     pool.join()
@@ -557,19 +589,129 @@ def households_transition(
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
 
+def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
+    # get hh swapping mapping
+    # 2hr runtime
+    # recommend using cached result
+    seeds = np.sort(hh.seed_id.unique())
+    # get adding new worker seed_id mapping
+    add_worker_dict = defaultdict(dict) 
+    drop_worker_dict = defaultdict(dict) 
+    for seed in seeds:
+        print('seed: ', seed)
+        # for each seed, find a counter seed which has 1 more worker and similar other attributes
+        seed_hh = hh_seeds[hh_seeds.seed_id== seed].iloc[0]
+        seed_p = p_seeds[p_seeds.seed_id == seed]
+        hh_pool = hh_seeds
+        hh_pool = hh_pool[hh_pool.persons == seed_hh.persons]
+        hh_pool = hh_pool[hh_pool.race_id == seed_hh.race_id]
+        hh_pool = hh_pool[hh_pool.aoh_bin == seed_hh.aoh_bin]
+        hh_pool = hh_pool[hh_pool.children == seed_hh.children]
+
+        seed_age_dist = np.sort(seed_p.age_bin.values)
+
+        if seed_hh.workers + seed_hh.children < seed_hh.persons:
+            hh_pool_add_worker = hh_pool[hh_pool.workers == seed_hh.workers + 1]
+            # add worker with more hh income
+            hh_pool_add_worker = hh_pool_add_worker[hh_pool_add_worker.inc_qt >= seed_hh.inc_qt]
+            N = hh_pool_add_worker.shape[0]
+            for i in range(N):
+                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_add_worker['seed_id'].iloc[i]]
+                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
+                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
+                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
+                    for k, v in new_age_bins.items():
+                        if k in prev_age_bins and v <= prev_age_bins[k]:
+                            continue
+                        add_age_bin = k
+                    add_worker_dict[add_age_bin][seed] = hh_pool_add_worker.iloc[i].seed_id
+                    break
+        if seed_hh.workers > 0:
+            hh_pool_drop_worker = hh_pool[hh_pool.workers == seed_hh.workers - 1]
+            N = hh_pool_drop_worker.shape[0]
+            for i in range(N):
+                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_drop_worker['seed_id'].iloc[i]]
+                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
+                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
+                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
+                    for k, v in prev_age_bins.items():
+                        if k in new_age_bins and v <= new_age_bins[k]:
+                            continue
+                        drop_age_bin = k
+                    drop_worker_dict[drop_age_bin][seed] = hh_pool_drop_worker.iloc[i].seed_id
+                    break
+    # clean up some key with more than 1 worker added/removed in a single hh
+    add_list = defaultdict(list)
+    for age, add_swappable in add_worker_dict.items():
+        for orig, target in add_swappable.items():
+            q = '(worker == 1)&(age_bin==%s)'%age
+            if p_seeds.loc[[orig]].query(q).shape[0]+1 != p_seeds.loc[[target]].query(q).shape[0]:
+                add_list[age].append(orig)
+    for age, ll in add_list.items():
+        for dk in ll:
+            del add_worker_dict[age][dk]
+    drop_list = defaultdict(list)
+    for age, drop_swappable in drop_worker_dict.items():
+        for orig, target in drop_swappable.items():
+            q = '(worker == 1)&(age_bin==%s)'%age
+            if p_seeds.loc[[orig]].query(q).shape[0] != p_seeds.loc[[target]].query(q).shape[0]+1:
+                drop_list[age].append(orig)
+    for age, ll in drop_list.items():
+        for dk in ll:
+            del drop_worker_dict[age][dk]
+
+    return add_worker_dict, drop_worker_dict
 
 @orca.step()
-def fix_lpr(households, persons, iter_var, employed_workers_rate):
+def cache_hh_seeds(households, persons, iter_var):
+    if iter_var != 2021:
+        print('skipping cache_hh_seeds for forecast year')
+        return
+    # caching hh and persons seeds at the start of the model run
+    hh = households.to_frame(households.local_columns + ["large_area_id"])
+    hh["target_workers"] = 0
+    hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
+    hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
+    # generate age bins
+    age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
+    age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
+    p = persons.to_frame(persons.local_columns + ["large_area_id"])
+    p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
+    p['age_bin'] = p['age_bin'].fillna(0).astype(int)
+    p = p.join(hh.seed_id, on='household_id')
+    
+    hh_seeds = hh.groupby('seed_id').first()
+    p_seeds = p.groupby(['seed_id', 'member_id']).first()
+    print('running cache_hh_seeds for base year')
+    orca.add_table('hh_seeds', hh_seeds)
+    orca.add_table('p_seeds', p_seeds)
+
+# TODO:
+# - Add worker by swapping hh with 1 worker more hh
+# - try to limit the impact to other variables
+# - same persons, children, income within range(?), car(?), race with worker + 1
+# - update persons table(optional) and households table
+@orca.step()
+def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
+    hh_seeds = hh_seeds.to_frame()
+    p_seeds = p_seeds.to_frame()
     changed_hhs = hh.copy()
     hh["target_workers"] = 0
+    hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
+    hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
+    # generate age bins
+    age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
+    age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
     p = persons.to_frame(persons.local_columns + ["large_area_id"])
+    p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
+    p['age_bin'] = p['age_bin'].fillna(0).astype(int)
+
+    p = p.join(hh.seed_id, on='household_id')
     changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
-    employed = p.worker == True
-    p["weight"] = 1.0 / np.sqrt(p.join(hh["workers"], "household_id").workers + 1.0)
 
     colls = [
         "persons",
@@ -580,8 +722,39 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
     ]  # , 'age_of_head'
     same = {tuple(idx): df[["income", "cars"]] for idx, df in hh.groupby(colls)}
 
-    new_employ = []
-    new_unemploy = []
+    # reset seeds index for generating mappings
+    hh_seeds = hh_seeds.reset_index()
+    p_seeds = p_seeds.reset_index()
+
+    USE_SWAPPING_SEED_MAPPING = True
+    aw_path = 'data/add_worker_dict.pkl'
+    dw_path = 'data/drop_worker_dict.pkl'
+    if not os.path.exists(aw_path):
+        USE_SWAPPING_SEED_MAPPING = False
+        print(aw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+    if not os.path.exists(dw_path):
+        USE_SWAPPING_SEED_MAPPING = False
+        print(dw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+    if USE_SWAPPING_SEED_MAPPING:
+        add_worker_df = pd.read_csv('data/add_worker_dict.csv', index_col=0)
+        add_worker_df.columns = add_worker_df.columns.astype(int)
+        drop_worker_df = pd.read_csv('data/drop_worker_dict.csv', index_col=0)
+        drop_worker_df.columns = drop_worker_df.columns.astype(int)
+    else:
+        add_worker_dict, drop_worker_dict = get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds)
+        add_worker_df = pd.DataFrame(add_worker_dict)
+        add_worker_df.to_csv(aw_path, index=True)
+        drop_worker_df = pd.DataFrame(drop_worker_dict)
+        drop_worker_df.to_csv(aw_path, index=True)
+
+    hh_seeds = hh_seeds.set_index('seed_id')
+    p_seeds = p_seeds.set_index('seed_id')
+
+    # p = p.reset_index().set_index('household_id')
+    pg = p.groupby('household_id')
+
+    hh_cols_to_swap = [col for col in hh.columns if col not in ['blkgrp', 'building_id', 'large_area_id']]
+    p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'household_id', 'large_area_id', 'weight']]
 
     for large_area_id, row in lpr.iterrows():
         select = (
@@ -591,40 +764,85 @@ def fix_lpr(households, persons, iter_var, employed_workers_rate):
         )
         emp_wokers_rate = row[str(iter_var)]
         lpr_workers = int(select.sum() * emp_wokers_rate)
-        # lpr_workers = int(lpr_segment)
-        num_workers = (select & employed).sum()
+        num_workers = (select & (p.worker == 1)).sum()
+
+        # get dict for seeds mapping
+        add_swappable = add_worker_df[row.age_min]
+        add_swappable = add_swappable[add_swappable.notna()].astype(int).to_dict()
+        drop_swappable = drop_worker_df[row.age_min]
+        drop_swappable = drop_swappable[drop_swappable.notna()].astype(int).to_dict()
 
         if lpr_workers > num_workers:
             # employ some persons
             num_new_employ = int(lpr_workers - num_workers)
-            new_employ.append(
-                choice(p[select & (~employed)].index, num_new_employ, False)
-            )
+            while num_new_employ > 0:
+                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(add_swappable))]
+                if hh_swap_pool.shape[0] == 0:
+                    break
+                to_add = min(hh_swap_pool.shape[0], num_new_employ)
+                # sample num_new_employ
+                hh_to_swap = hh_swap_pool.sample(to_add, replace=False)
+                # target seed_ids
+                target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
+                # overwrite old attributes except building_id, large_area_id, blkgrp
+                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                # hh persons overwrite
+                p_idx_to_update = np.array([], dtype=int)
+                for hh_id in hh_to_swap.index:
+                    hh_members = pg.get_group(hh_id)
+                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
+                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                # update added_employ
+                num_new_employ = int(lpr_workers - (
+                    (p.large_area_id == large_area_id)
+                    & (p.age >= row.age_min)
+                    & (p.age <= row.age_max)
+                    & (p.worker == 1)
+                ).sum())
+
         else:
             # unemploy some persons
-            prob = p[select & employed].weight
-            prob /= prob.sum()
-            new_unemploy.append(
-                choice(
-                    p[select & employed].index,
-                    int(num_workers - lpr_workers),
-                    False,
-                    p=prob,
-                )
-            )
+            num_drop_employ = int(num_workers - lpr_workers)
+            while num_drop_employ > 0:
+                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(drop_swappable))]
+                if hh_swap_pool.shape[0] == 0:
+                    break
+                to_drop = min(hh_swap_pool.shape[0], num_drop_employ)
+                # sample num_new_employ
+                hh_to_swap = hh_swap_pool.sample(to_drop, replace=False)
+                # target seed_ids
+                target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
+                # overwrite old attributes except building_id, large_area_id, blkgrp
+                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                # hh persons overwrite
+                p_idx_to_update = np.array([], dtype=int)
+                for hh_id in hh_to_swap.index:
+                    hh_members = pg.get_group(hh_id)
+                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
+                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                # update num_drop_employ
+                num_drop_employ = int((
+                    (p.large_area_id == large_area_id)
+                    & (p.age >= row.age_min)
+                    & (p.age <= row.age_max)
+                    & (p.worker == 1)
+                ).sum() - lpr_workers)
 
-        # print large_area_id, row.age_min, row.age_max, select.sum(), num_workers, lpr_workers, lpr
-
-    if len(new_employ) > 0:
-        p.loc[np.concatenate(new_employ), "worker"] = 1
-    if len(new_unemploy):
-        p.loc[np.concatenate(new_unemploy), "worker"] = 0
+        after_selected = (
+            (p.large_area_id == large_area_id)
+            & (p.age >= row.age_min)
+            & (p.age <= row.age_max)
+            & (p.worker == True)
+        )
+        print(large_area_id, row.age_min, row.age_max, num_workers, lpr_workers, after_selected.sum())
 
     hh["old_workers"] = hh.workers
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
     changed = hh.workers != hh.old_workers
     print(f"changed number of HHs from LPR is {len(changed)})")
+
+    # TODO: using hh controls to test out each segment number
 
     # save changed HHs and persons as valid samples for future transition model
 
@@ -796,7 +1014,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
                 newgq = filtered_gqpop.sample(diff, replace=True)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
                 newgq["city_id"] = city_id
-                gqpop = gqpop.append(newgq)
+                gqpop = pd.concat((gqpop, newgq))
 
             elif diff < 0:
                 diff = min(len(filtered_gqpop), abs(diff))
@@ -809,7 +1027,7 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
         (gqpop.groupby("city_id").size().fillna(0) - city_large_area.gq_target).sum(),
     )
 
-    gqpop.to_csv("gqpop_" + str(year) + ".csv")
+    gqpop.to_csv("data/gqpop_" + str(year) + ".csv")
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
 
 
@@ -1493,9 +1711,20 @@ def add_extra_columns_nonres(df):
     return df.fillna(0)
 
 
-def add_extra_columns_res(df):
-    # type: (pd.DataFrame) -> pd.DataFrame
+def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
+    """
+    Add extra columns to a DataFrame containing residential property information.
+
+    Parameters:
+    df (pd.DataFrame): Input DataFrame containing residential property information.
+
+    Returns:
+    pd.DataFrame: DataFrame with added extra columns and calculated values.
+    """
+    # add nonres columns
     df = add_extra_columns_nonres(df)
+
+    # add sqft_per_units
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
     elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
@@ -1504,11 +1733,14 @@ def add_extra_columns_res(df):
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
         )
+
     # github issue #31
     # generating default `mcd_model_quota` as the same as the `residential_units`
     # df["mcd_model_quota"] = df["residential_units"]
+
     # set default mcd quota to 0
     df["mcd_model_quota"] = 0
+
     return df.fillna(0)
 
 
@@ -1535,7 +1767,7 @@ def probable_type(row):
     return btype
 
 
-def register_btype_distributions(buildings):
+def register_btype_distributions(buildings: pd.DataFrame):
     """
     Prior to adding new buildings selected by the developer model, this
     function registers a dictionary where keys are forms, and values are
@@ -1618,7 +1850,9 @@ def run_developer(
         pid for pid in new_buildings.parcel_id if pid not in buildings.parcel_id
     ]
 
+    # set default hu_filter to 0
     new_buildings["hu_filter"] = 0
+
     parcel_utils.add_buildings(
         dev.feasibility,
         buildings,
@@ -1686,43 +1920,81 @@ def run_developer(
 def residential_developer(
     households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
 ):
+    """
+    Simulate residential property development process
+
+    This function simulates the process of residential property development for MCDs.
+    It calculates the target number of new residential units to be developed based on target vacancies,
+    existing units, and desired occupancy rates. The function also updates the parcel and building tables
+    to reflect the new developments and their occupancy.
+
+    Parameters:
+    households (orca.DataFrameWrapper): Household data table.
+    parcels (orca.DataFrameWrapper): Parcels data table.
+    target_vacancies_mcd (orca.DataFrameWrapper): Target vacancies by MCD.
+    mcd_total (orca.DataFrameWrapper): MCD households targets
+    debug_res_developer (orca.DataFrameWrapper): Debugging table
+
+    Returns:
+    None
+    """
     # get current year
     year = orca.get_injectable("year")
+
+    # get target vacancies by mcd for current year
     target_vacancies = target_vacancies_mcd.to_frame()
     target_vacancies = target_vacancies[str(year)]
+
+    # get original buildings
     orig_buildings = orca.get_table("buildings").to_frame(
         ["residential_units", "semmcd", "building_type_id"]
     )
-    # the mcd_total for year and year-1
+
+    # the mcd_total for year
     mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+
+    # load debugger df
     debug_res_developer = debug_res_developer.to_frame()
+
+    # loop through mcd id
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
         print(f"developing residential units for {mcdid}")
+
+        # get original buildings in current mcd
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
+
         # handle missing mcdid
         if mcdid not in mcd_total.index:
             continue
+
+        # get target vacancy
         target_vacancy = float(target_vacancies[mcdid])
+
         # current hh from hh table
         cur_agents = (households.semmcd == mcdid).sum()
+
         # target hh from mcd_total table
         target_agents = mcd_total.loc[mcdid]
+
         # number of current total housing units
         num_units = mcd_orig_buildings.residential_units.sum()
 
         print("Number of current agents: {:,}".format(cur_agents))
         print("Number of target agents: {:,}".format(target_agents))
         print("Number of agent spaces: {:,}".format(int(num_units)))
-        print("Current vacancy = {:.2f}".format(1 - cur_agents / float(num_units)))
+        print("Current vacancy = {:.2f}".format(1.0 - cur_agents / float(num_units)))
         assert target_vacancy < 1.0
-        target_units = int(max((target_agents / (1 - target_vacancy) - num_units), 0))
+        target_units = int(max((target_agents / (1.0 - target_vacancy) - num_units), 0))
         print(
             "Target vacancy = {:.2f}, target of new units = {:,}\n".format(
                 target_vacancy, target_units
             )
         )
 
+        # calculate prior form_btype_distributions
         register_btype_distributions(mcd_orig_buildings)
+
+        # run developer step
         units_added, parcels_idx_to_update = run_developer(
             target_units,
             mcdid,
@@ -1735,12 +2007,13 @@ def residential_developer(
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
         )
+
         # update pct_undev to 100 if theres only one building in the parcel
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        # TODO: update parcels.pct_undev to 100 for units_added
         debug_res_developer = debug_res_developer.append(
             {
                 "year": year,
@@ -1761,21 +2034,48 @@ def residential_developer(
 
 @orca.step()
 def non_residential_developer(jobs, parcels, target_vacancies):
+    """
+    Non-residential space developer step.
+
+    This Orca step handles the development of non-residential spaces in different large areas based on target
+    vacancy rates and job demand. It calculates the necessary number of non-residential spaces to achieve the
+    target vacancy rate and then runs the non-residential developer model.
+
+    Parameters:
+    jobs (orca.DataFrameWrapper): Jobs
+    parcels (orca.DataFrameWrapper): Parcels
+    target_vacancies (orca.DataFrameWrapper): target vacancy rates for large areas.
+
+    Returns:
+    None
+    """
+    # get target vacancies
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
         target_vacancies.year == orca.get_injectable("year")
     ]
+
+    # get original buildings table
     orig_buildings = orca.get_table("buildings").to_frame(
         ["job_spaces", "large_area_id", "building_type_id"]
     )
+
+    # loop through large area
     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
+        # get large area buildings
         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
+
+        # get current large area vacancy target
         target_vacancy = float(
             target_vacancies[
                 target_vacancies.large_area_id == lid
             ].non_res_target_vacancy_rate
         )
+
+        # number of non-homebased jobs in the large area
         num_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+
+        # number of total job spaces for LA
         num_units = la_orig_buildings.job_spaces.sum()
 
         print("Number of agents: {:,}".format(num_agents))
@@ -1789,7 +2089,10 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             )
         )
 
+        # calculate prior form_btype_distributions
         register_btype_distributions(la_orig_buildings)
+
+        # run nonres developer step
         spaces_added, parcels_idx_to_update = run_developer(
             target_units,
             lid,
@@ -1802,6 +2105,7 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             "nonres_developer.yaml",
             add_more_columns_callback=add_extra_columns_nonres,
         )
+
         # update pct_undev to 100 if theres only one building in the parcel
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
         # update parcels table
@@ -1810,6 +2114,20 @@ def non_residential_developer(jobs, parcels, target_vacancies):
 
 @orca.step()
 def update_sp_filter(buildings):
+    """
+    Update the 'sp_filter' column of the 'buildings' table for selected building types.
+
+    This step updates the 'sp_filter' column of the 'buildings' table based on the specified
+    'building_type_id' values. It sets the 'sp_filter' value to -1 for buildings with building
+    types that match the selected building type IDs. This step is used to exclude building from
+    demolition and LCM processes 
+
+    Parameters:
+    buildings (orca.DataFrameWrapper): Buildings data table.
+
+    Returns:
+    None
+    """
     # update sp_filter to -1 for selected building_types
     selected_btypes = {
         11: "Educational",
@@ -1822,6 +2140,7 @@ def update_sp_filter(buildings):
         94: "Death Care Services",
         95: "Parking Garage",
     }
+
     updated_buildings = buildings.to_frame(buildings.local_columns)
     print(
         "Updating %s buildings sp_filter to -1"
@@ -1831,9 +2150,13 @@ def update_sp_filter(buildings):
             ].shape[0]
         )
     )
+
+    # set sp_filter to -1
     updated_buildings.loc[
         updated_buildings.building_type_id.isin(selected_btypes), "sp_filter"
     ] = -1
+
+    # update buildings table
     orca.add_table("buildings", updated_buildings)
 
 
@@ -2047,19 +2370,27 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     """
     # define k: number of pseudo hh to drop each year
     k = 90
-    # drop k hh from pseudo buildings every year
+
+    # get households with sp_filter
     hh = households.to_frame(households.local_columns + ["sp_filter"])
-    # N number of existing pseudo households
+
+    # N: number of existing pseudo households
     N = hh[hh.sp_filter == -2].shape[0]
+
+    # if empty, return
     if N == 0:
-        # empty, return
         return
+
+    # if less than k, replace k
     if N < k:
-        # if less than k, replace k
         k = N
+
+    # sample k pseudo household to drop
     hh_to_drop = hh[hh.sp_filter == -2].sample(k)
+
     # unplace households and set sampled hh with building_id -1
     hh.loc[hh_to_drop.index, "building_id"] = -1
+
     # set resiential units to hh counts, avoid vacant units in pseudo buildings
     hhs_by_pseudo_b = (
         hh[(hh.sp_filter == -2) & (hh.building_id > -1)].groupby("building_id").size()
@@ -2070,6 +2401,8 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b
 
     print("Dropped %s hh from current pseudo buildings." % k)
+
+    # update households and buildings
     orca.add_table("households", hh)
     orca.add_table("buildings", bb)
 

@@ -10,18 +10,21 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
-# set up run
+# run config 
+RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
 indicator_spacing = 5
-upload_to_carto = True
+upload_to_carto = False
 run_debug = False
 add_2019 = True
 
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
+
+# Checkpoint config
 # run starting from last checkpoint year
-orca.add_injectable('use_checkpoint', True)
+orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1206.h5')
 
 import models
@@ -54,6 +57,7 @@ orca.run(
     [
         "build_networks_2050",
         "neighborhood_vars",
+        "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
         "random_demolition_events",
         "scheduled_development_events",
@@ -139,7 +143,7 @@ orca.run(
 )
 
 # if use checkpoint to resume run, add result from previous year back
-if not orca.get_injectable('use_checkpoint'):
+if orca.get_injectable('use_checkpoint'):
     store_la = pd.HDFStore(data_out, mode="r")
     run_path = "/home/da/semcog_urbansim/runs"
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
@@ -151,14 +155,17 @@ if not orca.get_injectable('use_checkpoint'):
         store_la[k] = old_result[k]
     old_result.close()
 
-output_indicators.main(
-    data_out,
-    base_year,
-    final_year,
-    spacing=indicator_spacing,
-    upload_to_carto=upload_to_carto,
-    add_2019=add_2019,
-)
+if RUN_OUTPUT_INDICATORS:
+    # set up run
+    import output_indicators
+    output_indicators.main(
+        data_out,
+        base_year,
+        final_year,
+        spacing=indicator_spacing,
+        upload_to_carto=upload_to_carto,
+        add_2019=add_2019,
+    )
 
 utils.run_log(
     f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
