@@ -52,8 +52,13 @@ for name in [
     "landmark_worksites",
     "multi_parcel_buildings",
     "mcd_total",
+    "dropped_buildings",
+    "bg_hh_increase",
 ]:
     store = orca.get_injectable("store")
+    if name not in store:
+        print('skip loading %s while adding table to orca' % name)
+        continue
     orca.add_table(name, store[name])
 
 # #35 change csv column name from b_city_id to city_id
@@ -101,7 +106,9 @@ def buildings(store):
     pseudo_buildings = pseudo_buildings[
         [col for col in df.columns if col in pseudo_buildings]
     ]
-    df = pd.concat([df, pseudo_buildings], axis=0)
+    if pseudo_buildings[pseudo_buildings.index.isin(df.index)].shape[0] == 0:
+        # if no pseudo parcel in, add them
+        df = pd.concat([df, pseudo_buildings], axis=0)
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.market_value < 0, "market_value"] = 0
@@ -228,7 +235,9 @@ def parcels(store, zoning):
     parcels_df = store["parcels"]
     # Added parcels from pseudo buildings
     pseudo_parcels = store["pseudo_parcel_2020"]
-    parcels_df = pd.concat([parcels_df, pseudo_parcels], axis=0)
+    if pseudo_parcels[pseudo_parcels.index.isin(parcels_df.index)].shape[0] == 0:
+        # if no pseudo parcel in, add them
+        parcels_df = pd.concat([parcels_df, pseudo_parcels], axis=0)
     # concat pseudo buildings parcels
     #  based on zoning.is_developable, adjust parcels pct_undev
     pct_undev = zoning.pct_undev.copy()

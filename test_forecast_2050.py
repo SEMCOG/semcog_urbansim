@@ -2,6 +2,7 @@ import orca
 import shutil
 import sys
 import os
+import pandas as pd
 import utils
 
 # get run number and set up log file
@@ -9,11 +10,7 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
-import models
-from urbansim.utils import misc, networks
-import time
-import logging
-
+# run config 
 RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
@@ -21,6 +18,21 @@ indicator_spacing = 5
 upload_to_carto = False
 run_debug = False
 add_2019 = True
+
+orca.add_injectable('base_year', base_year)
+orca.add_injectable('final_year', final_year)
+
+# Checkpoint config
+# run starting from last checkpoint year
+orca.add_injectable('use_checkpoint', False)
+orca.add_injectable('runnum_to_resume', 'run1206.h5')
+
+import models
+from urbansim.utils import misc, networks
+import time
+import output_indicators
+import logging
+
 
 # check disk space, need at least 16GB
 # total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
@@ -38,6 +50,8 @@ utils.run_log(run_info)
 
 if run_debug is True:
     utils.debug_log()
+
+run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get_injectable('checkpoint_year')
 
 orca.run(
     [
@@ -72,7 +86,7 @@ orca.run(
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
     ],
-    iter_vars=list(range(base_year + 1, final_year + 1)),
+    iter_vars=list(range(run_start + 1, final_year + 1)),
     data_out=data_out,
     out_base_tables=[
         "jobs",
@@ -122,10 +136,24 @@ orca.run(
         "persons",
         "group_quarters",
         "dropped_buildings",
+        "bg_hh_increase",
     ],
     out_interval=1,
     compress=True,
 )
+
+# if use checkpoint to resume run, add result from previous year back
+if orca.get_injectable('use_checkpoint'):
+    store_la = pd.HDFStore(data_out, mode="r")
+    run_path = "/home/da/semcog_urbansim/runs"
+    hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
+    old_result = pd.HDFStore(hdf_path, "r")
+    for k in old_result:
+        if '/base/' in k:
+            continue
+        print('adding %s to output hdf from checkpoint...' % k)
+        store_la[k] = old_result[k]
+    old_result.close()
 
 if RUN_OUTPUT_INDICATORS:
     # set up run
