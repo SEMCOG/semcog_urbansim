@@ -54,4 +54,13 @@ if __name__ == "__main__":
 
     # save parcel_id to ids
     parcels[['parcel_id', 'mi_house_id', 'mi_senate_id']].to_csv('data/parcel_to_legis.csv', index=False)
+
+    # postgis table schema
+    # CREATE TABLE terra_parcels_to_legislative (
+    #     parcel_id INT NOT NULL PRIMARY KEY,
+    #     mi_house_id INT,
+    #     mi_senate_id INT
+    # );
+    # upload to postgis
+    # \copy terra_parcels_to_legislative(parcel_id, mi_house_id, mi_senate_id) FROM 'data/parcel_to_legis.csv' DELIMITER ',' HEADER CSV
     
