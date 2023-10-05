@@ -643,6 +643,11 @@ def mi_house_id(buildings, parcels):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def mi_senate_id(buildings, parcels):
     return misc.reindex(parcels.mi_senate_id, buildings.parcel_id).fillna(0)
+
+    
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def us_congress_id(buildings, parcels):
+    return misc.reindex(parcels.us_congress_id, buildings.parcel_id).fillna(0)
     
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
