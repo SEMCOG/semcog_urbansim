@@ -67,6 +67,9 @@ def add_legislative_ids(parcels):
 
     parcels['mi_senate_id'] = p2l['mi_senate_id']
     parcels['mi_senate_id'] = parcels['mi_senate_id'].fillna(-1).astype(int)
+
+    parcels['us_congress_id'] = p2l['us_congress_id']
+    parcels['us_congress_id'] = parcels['us_congress_id'].fillna(-1).astype(int)
     return parcels
     
 
@@ -80,6 +83,7 @@ def upload_whatnots_to_postgres(run_name, whatnots):
     whatnots["school_id"] = whatnots["school_id"].astype(int)
     whatnots["mi_house_id"] = whatnots["mi_house_id"].astype(int)
     whatnots["mi_senate_id"] = whatnots["mi_senate_id"].astype(int)
+    whatnots["us_congress_id"] = whatnots["us_congress_id"].astype(int)
     whatnots["parcel_id"] = whatnots["parcel_id"].astype(int)
     print("Uploading whatnots table %s to postgres..." % table_name)
     whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
@@ -118,6 +122,7 @@ def upload_whatnots_to_carto(run_name, whatnots):
     CREATE INDEX IF NOT EXISTS w{0}_indicator_school_id_idx ON semcog.{0} USING btree (indicator, school_id);
     CREATE INDEX IF NOT EXISTS w{0}_indicator_mi_house_idx ON semcog.{0} USING btree (indicator, mi_house_id);
     CREATE INDEX IF NOT EXISTS w{0}_indicator_mi_senate_idx ON semcog.{0} USING btree (indicator, mi_senate_id);
+    CREATE INDEX IF NOT EXISTS w{0}_indicator_us_congress_idx ON semcog.{0} USING btree (indicator, us_congress_id);
     CREATE INDEX IF NOT EXISTS w{0}_indicator_large_area_id_idx ON semcog.{0} USING btree (indicator, large_area_id);""".format(
         tablename
     )
@@ -184,7 +189,7 @@ def main(
     # make cities with large area table
     p = orca.get_table("parcels")
 
-    p = p.to_frame(["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"])
+    p = p.to_frame(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"])
 
     cities = (
         p[["city_id", "large_area_id"]].drop_duplicates("city_id").set_index("city_id")
@@ -198,14 +203,18 @@ def main(
     mi_senate = (
         p[["mi_senate_id"]].drop_duplicates("mi_senate_id").set_index("mi_senate_id")
     )
+    us_congress = (
+        p[["us_congress_id"]].drop_duplicates("us_congress_id").set_index("us_congress_id")
+    )
     orca.add_table("cities", cities)
     orca.add_table("schools", schools)
     orca.add_table("mi_house", mi_house)
     orca.add_table("mi_senate", mi_senate)
+    orca.add_table("us_congress", us_congress)
 
     # initialize whatnot
     whatnot = p.reset_index().drop_duplicates(
-        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
     )
 
     # target year building
@@ -224,7 +233,7 @@ def main(
 
     # add missing zones from buildings
     orca_b = orca.get_table('buildings')
-    b_whatnot = orca_b.to_frame(['large_area_id', "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id', 'parcel_id'])
+    b_whatnot = orca_b.to_frame(['large_area_id', "us_congress_id", "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id', 'parcel_id'])
     b_whatnot = b_whatnot.drop_duplicates().reset_index(drop=True)
     whatnot = pd.concat([whatnot, b_whatnot], axis=0, ignore_index=True)
 
@@ -232,7 +241,7 @@ def main(
 
     # clean up whatnot index,
     whatnot = whatnot.drop_duplicates(
-        ["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
     ).reset_index(drop=True)
 
     whatnot.index.name = "whatnot_id"
@@ -245,6 +254,7 @@ def main(
         ("schools", "school_id"),
         ("mi_house", "mi_house_id"),
         ("mi_senate", "mi_senate_id"),
+        ("us_congress", "us_congress_id"),
         ("zones", "zone_id"),
         ("large_areas", "large_area_id"),
         ("whatnots", "whatnot_id"),
@@ -256,7 +266,7 @@ def main(
     if add_2019:
         years = [2019] + years
     year_names = ["yr" + str(i) for i in years]
-    geom = ["cities", "mi_senate", "mi_house", "schools", "semmcds", "zones", "large_areas", "whatnots"]
+    geom = ["cities", "us_congress", "mi_senate", "mi_house", "schools", "semmcds", "zones", "large_areas", "whatnots"]
     tbls_to_load = [
         "parcels",
         "buildings",
@@ -319,7 +329,7 @@ def main(
         del df["hh_pop_age_median"]
 
         df[whatnots_local.columns] = whatnots_local
-        df.set_index(["large_area_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"], inplace=True)
+        df.set_index(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"], inplace=True)
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
 
@@ -330,11 +340,12 @@ def main(
         whatnots_output.append(df)
 
     whatnots_output = pd.concat(whatnots_output).unstack(fill_value=0)
-    whatnots_output.index.rename("mi_senate_id", level=1, inplace=True)
-    whatnots_output.index.rename("mi_house_id", level=2, inplace=True)
-    whatnots_output.index.rename("city_id", level=3, inplace=True)
-    whatnots_output.index.rename("school_id", level=4, inplace=True)
-    whatnots_output.index.rename("zone_id", level=5, inplace=True)
+    whatnots_output.index.rename("us_congress_id", level=1, inplace=True)
+    whatnots_output.index.rename("mi_senate_id", level=2, inplace=True)
+    whatnots_output.index.rename("mi_house_id", level=3, inplace=True)
+    whatnots_output.index.rename("city_id", level=4, inplace=True)
+    whatnots_output.index.rename("school_id", level=5, inplace=True)
+    whatnots_output.index.rename("zone_id", level=6, inplace=True)
     whatnots_output.columns = year_names
 
     if add_2019:
@@ -375,7 +386,7 @@ def main(
     ### save indicators to excel files
     print("\n* Making indicators by year")
     start = time.time()
-    geom = ["cities", "large_areas", "mi_senate", "mi_house", "semmcds", "schools", "zones"]
+    geom = ["cities", "large_areas", "us_congress", "mi_senate", "mi_house", "semmcds", "schools", "zones"]
     not_jobs = [x for x in list_indicators() if "jobs" not in x]
     if add_2019:
         y5 = year_names[1::5]

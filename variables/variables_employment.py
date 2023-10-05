@@ -34,6 +34,9 @@ def mi_house_id(jobs, buildings):
 def mi_senate_id(jobs, buildings):
     return misc.reindex(buildings.mi_senate_id, jobs.building_id)
 
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def us_congress_id(jobs, buildings):
+    return misc.reindex(buildings.us_congress_id, jobs.building_id)
 
 # #35
 # @orca.column('jobs', cache=True, cache_scope='iteration')
