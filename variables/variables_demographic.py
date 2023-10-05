@@ -100,6 +100,11 @@ def mi_senate_id(households, buildings):
     return misc.reindex(buildings.mi_senate_id, households.building_id)
 
 
+@orca.column("households", cache=True, cache_scope="iteration")
+def us_congress_id(households, buildings):
+    return misc.reindex(buildings.us_congress_id, households.building_id)
+
+
 # #35 keep it for now as required by the refiner model
 # @orca.column("households", cache=True, cache_scope="iteration")
 # def b_zone_id(households, buildings):
@@ -282,6 +287,11 @@ def mi_senate_id(persons, households):
     return misc.reindex(households.mi_senate_id, persons.household_id)
 
 
+@orca.column("persons", cache=True, cache_scope="iteration")
+def us_congress_id(persons, households):
+    return misc.reindex(households.us_congress_id, persons.household_id)
+
+
 # #35 keep it for now as required by the refiner model
 # @orca.column("persons", cache=True, cache_scope="iteration")
 # def b_zone_id(persons, households):
@@ -335,6 +345,11 @@ def mi_house_id(group_quarters, buildings):
 @orca.column("group_quarters", cache=True, cache_scope="iteration")
 def mi_senate_id(group_quarters, buildings):
     return misc.reindex(buildings.mi_senate_id, group_quarters.building_id)
+
+
+@orca.column("group_quarters", cache=True, cache_scope="iteration")
+def us_congress_id(group_quarters, buildings):
+    return misc.reindex(buildings.us_congress_id, group_quarters.building_id)
 
 # @orca.column("group_quarters", cache=True, cache_scope="iteration")
 # def b_zone_id(group_quarters, buildings):
