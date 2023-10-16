@@ -3,7 +3,6 @@ import shutil
 import random
 import pandas as pd
 import numpy as np
-from urbansim.utils import misc
 import orca
 import verify_data_structure
 import utils
@@ -161,7 +160,7 @@ def verify():
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
     print("HDF data: ", hdf_last)
 
-    if orca.get_injectable('use_checkpoint'):
+    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         # copy input hdf
         shutil.copy(hdf_last, working_store)
         hdf_store.close()
