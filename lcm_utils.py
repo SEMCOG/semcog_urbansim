@@ -6,6 +6,8 @@ import yaml
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, r2_score
+import torch
+from forecast_estimation.models.LCM_torch import LCM_NN
 
 import orca
 from urbansim.utils import misc
@@ -154,6 +156,7 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
 
 def register_choice_model_step(model_name, agents_name):
 
+    # TODO: Update simulate steps with lcm nn model
     @orca.step(model_name)
     def choice_model_simulate(location_choice_models):
         model = location_choice_models[model_name]
@@ -529,7 +532,8 @@ def get_model_category_configs():
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs_2050.yaml')) as f:
+    # TODO: update yaml_configs_2050.yaml
+    with open(os.path.join(misc.configs_dir(), 'yaml_configs_nn.yaml')) as f:
         yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
@@ -559,6 +563,31 @@ def create_lcm_from_config(config_filename, model_attributes):
     # is it alt_capacity in largeMNL equals vacant_variable in 2045?
     model.alt_capacity = model_attributes['vacant_variable']
     return model
+
+
+# TODO: create new create_lcm function for lcm_nn
+def load_torch_lcm(config_filename, model_attributes):
+    """
+    For a given model filename and dictionary of model category
+    attributes, instantiate a torch model object.
+
+    config_filename: model filename
+    model_attributes: model_structure.yaml
+    """
+    device = torch.device('cpu')
+    state = torch.load(config_filename, map_location=device)
+
+    lcm = LCM_NN( 
+        state['input_size'], 
+        hidden_layer=state['hidden_layer'], 
+        lr=state['lr'], 
+        weight_decay=state['weight_decay']
+    )
+
+    lcm.load_model(config_filename)
+
+    return lcm
+
 
 def get_hlcm_valid_vars(data_path: str) -> tuple[list[str], list[str]]:
     """
