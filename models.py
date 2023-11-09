@@ -26,22 +26,26 @@ from functools import reduce
 location_choice_models = {}
 hlcm_step_names = []
 elcm_step_names = []
+hlcm_model_path = '/mnt/hgfs/RDF2050/data/models'
 model_configs = lcm_utils.get_model_category_configs()
 for model_category_name, model_category_attributes in model_configs.items():
     if model_category_attributes["model_type"] == "location_choice":
         model_config_files = model_category_attributes["config_filenames"]
 
         for model_config in model_config_files:
-            model = lcm_utils.create_lcm_from_config(
-                model_config, model_category_attributes
-            )
-            location_choice_models[model.name] = model
 
             if model_category_name == "hlcm":
+                # load torch-based hlcm model
+                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, model_config), model_category_attributes)
                 hlcm_step_names.append(model.name)
 
             if model_category_name == "elcm":
+                model = lcm_utils.create_lcm_from_config(
+                    model_config, model_category_attributes
+                )
                 elcm_step_names.append(model.name)
+
+            location_choice_models[model.name] = model
 
 orca.add_injectable("location_choice_models", location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
