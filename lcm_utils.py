@@ -154,12 +154,12 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_choice_model_step(model_name, agents_name):
+def register_elcm_model_step(model_name, agents_name):
 
     # TODO: Update simulate steps with lcm nn model
     @orca.step(model_name)
-    def choice_model_simulate(location_choice_models):
-        model = location_choice_models[model_name]
+    def choice_model_simulate(emp_location_choice_models):
+        model = emp_location_choice_models[model_name]
         if 'hlcm' in model_name:
             alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
             # filter for picking hh with no building_id assigned
@@ -224,6 +224,74 @@ def register_choice_model_step(model_name, agents_name):
 
         orca.get_table(agents_name).update_col_from_series(
             model.choice_column, model.choices, cast=True)
+
+    return choice_model_simulate
+
+
+def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
+
+    # TODO: Update simulate steps with lcm nn model
+    @orca.step(model_name)
+    def choice_model_simulate(hh_location_choice_models):
+        model = hh_location_choice_models[model_name]
+
+        # chooser segment
+        la_id = model_name.split('_')[2][2:]
+        hh_size = model_name.split('_')[3]
+        ownership = model_name.split('_')[4]
+        aoh = model_name.split('_')[5].split('.')[0]
+        
+        # pre filter
+        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
+
+        # filter for picking hh with no building_id assigned
+        chooser_filter = "(building_id==-1)&(hh_size_%s==1)&(ownership_%s==1)&(aoh_%s==1)" % (hh_size, ownership, aoh)
+
+        # filter alternatives
+        alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
+            
+        # load variables from model
+        variable_cols = model.variables
+
+        # filter for choosers and alternatives
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+
+        # choosers
+        choosers = orca.get_table('households')
+        choosers_df = choosers.to_frame(choosers_filter_cols)
+        # query using chooser_pre_filter to match whats used in estimation
+        choosers_df = choosers_df.query(chooser_pre_filter)
+        # std choosers columns
+        # filter using chooser_filter
+        final_choosers_df = choosers_df.query(chooser_filter)
+
+        # alternatives
+        alts = orca.get_table('buildings')
+
+        # all variables should ben available
+        assert all([True if col in alts.columns else False for col in variable_cols])
+
+        formula_alts_col = variable_cols
+        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[alt_capacity])
+
+        # query using alts_pre_filter to match whats used in estimation
+        alts_idx = alts_df.query(alts_pre_filter).index
+
+        # std alts columns
+        alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
+        # std could introduce NaN, fill them with 0 after that
+        alts_df.loc[alts_idx, formula_alts_col] = ((
+            alts_col_df)/alts_col_df.std()).fillna(0.0)
+
+        # filter using alt_filter
+        final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
+
+        # TODO: construct predict DF with capacity and get result
+
+        # TODO: update households table
+        # orca.get_table('households').update_col_from_series(
+        #     model.choice_column, model.choices, cast=True)
 
     return choice_model_simulate
 
