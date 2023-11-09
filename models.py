@@ -23,7 +23,7 @@ from functools import reduce
 
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
-location_choice_models = {}
+hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
 hlcm_model_path = '/mnt/hgfs/RDF2050/data/models'
@@ -37,17 +37,18 @@ for model_category_name, model_category_attributes in model_configs.items():
             if model_category_name == "hlcm":
                 # load torch-based hlcm model
                 model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, model_config), model_category_attributes)
-                hlcm_step_names.append(model.name)
+                hlcm_step_names.append(model_config)
+                hh_location_choice_models[model_config, model]
 
             if model_category_name == "elcm":
                 model = lcm_utils.create_lcm_from_config(
                     model_config, model_category_attributes
                 )
                 elcm_step_names.append(model.name)
+                emp_location_choice_models[model.name] = model
 
-            location_choice_models[model.name] = model
-
-orca.add_injectable("location_choice_models", location_choice_models)
+orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
+orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
 # run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
@@ -57,8 +58,11 @@ orca.add_injectable(
     sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]),
 )
 
-for name, model in list(location_choice_models.items()):
-    lcm_utils.register_choice_model_step(model.name, model.choosers)
+for name, model in list(hh_location_choice_models.items()):
+    lcm_utils.register_hlcm_model_step(model.name, alt_capacity=model_configs['hlcm']['vacant_variable'])
+
+for name, model in list(emp_location_choice_models.items()):
+    lcm_utils.register_elcm_model_step(model.name, model.choosers)
 
 
 @orca.step()
