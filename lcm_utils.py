@@ -265,6 +265,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # std choosers columns
         # filter using chooser_filter
         final_choosers_df = choosers_df.query(chooser_filter)
+        n = len(final_choosers_df)
 
         # alternatives
         alts = orca.get_table('buildings')
@@ -288,10 +289,20 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # TODO: construct predict DF with capacity and get result
+        final_alts_df = final_alts_df[formula_alts_col + [alt_capacity]]
+        predict_X_df = final_alts_df.loc[
+            np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
+            formula_alts_col
+        ]
+
+        # run predict
+        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        picked_idx = np.argpartition(pred, -n)[-n:]
+        picked_bid = predict_X_df.iloc[picked_idx].index
 
         # TODO: update households table
-        # orca.get_table('households').update_col_from_series(
-        #     model.choice_column, model.choices, cast=True)
+        orca.get_table('households').update_col_from_series(
+            'building_id', picked_bid, cast=True)
 
     return choice_model_simulate
 
