@@ -38,7 +38,7 @@ for model_category_name, model_category_attributes in model_configs.items():
                 # load torch-based hlcm model
                 model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, model_config), model_category_attributes)
                 hlcm_step_names.append(model_config)
-                hh_location_choice_models[model_config, model]
+                hh_location_choice_models[model_config] = model
 
             if model_category_name == "elcm":
                 model = lcm_utils.create_lcm_from_config(
@@ -59,7 +59,7 @@ orca.add_injectable(
 )
 
 for name, model in list(hh_location_choice_models.items()):
-    lcm_utils.register_hlcm_model_step(model.name, alt_capacity=model_configs['hlcm']['vacant_variable'])
+    lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
 
 for name, model in list(emp_location_choice_models.items()):
     lcm_utils.register_elcm_model_step(model.name, model.choosers)
