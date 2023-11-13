@@ -267,6 +267,10 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         final_choosers_df = choosers_df.query(chooser_filter)
         n = len(final_choosers_df)
 
+        # return if not needed
+        if n == 0:
+            return
+
         # alternatives
         alts = orca.get_table('buildings')
 
@@ -300,9 +304,12 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         picked_idx = np.argpartition(pred, -n)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
 
+        # update building_id
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+
         # TODO: update households table
         orca.get_table('households').update_col_from_series(
-            'building_id', picked_bid, cast=True)
+            'building_id', final_choosers_df['building_id'], cast=True)
 
     return choice_model_simulate
 
