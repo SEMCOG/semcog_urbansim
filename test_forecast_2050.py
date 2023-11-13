@@ -30,7 +30,6 @@ orca.add_injectable('runnum_to_resume', 'run1206.h5')
 import models
 from urbansim.utils import misc, networks
 import time
-import output_indicators
 import logging
 
 
@@ -155,6 +154,8 @@ if orca.get_injectable('use_checkpoint'):
         store_la[k] = old_result[k]
     old_result.close()
 
+# load late because of introduce of new vars
+import output_indicators
 if RUN_OUTPUT_INDICATORS:
     # set up run
     import output_indicators
