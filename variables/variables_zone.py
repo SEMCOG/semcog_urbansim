@@ -357,7 +357,7 @@ for geography in geographic_levels:
 
 
 def standardize(series):
-    if series.dtype != np.object:
+    if series.dtype != object:
         series = (series - series.mean()) / series.std()
     return series
 
