@@ -1,4 +1,5 @@
 import os
+import yaml
 import shutil
 import random
 import pandas as pd
@@ -180,3 +181,10 @@ def verify():
 
 orca.add_injectable("store", verify())
 
+# load HLCM models
+with open('configs/yaml_configs_2050.yaml', 'r') as f:
+    ym = yaml.safe_load(f)
+
+ym['hlcm'] = os.listdir('/mnt/hgfs/RDF2050/data/models')
+with open('configs/yaml_configs_nn.yaml', 'w') as f:
+    yaml.dump(ym, f)

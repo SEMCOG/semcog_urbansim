@@ -307,9 +307,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # update building_id
         choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
 
+        print("Placed %s households." % len(picked_bid))
+
         # TODO: update households table
         orca.get_table('households').update_col_from_series(
-            'building_id', final_choosers_df['building_id'], cast=True)
+            'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
     return choice_model_simulate
 
