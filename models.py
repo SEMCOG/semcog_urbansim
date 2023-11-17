@@ -2411,7 +2411,7 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     print("Dropped %s hh from current pseudo buildings." % k)
 
     # update households and buildings
-    orca.add_table("households", hh)
+    orca.add_table("households", hh[households.local_columns]) # remove extra columns
     orca.add_table("buildings", bb)
 
 
