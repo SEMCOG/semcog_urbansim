@@ -615,13 +615,13 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         return score, residuals
 
 
-def get_model_category_configs():
+def get_model_category_configs(yaml_configs):
     """
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
     # TODO: update yaml_configs_2050.yaml
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs_nn.yaml')) as f:
+    with open(os.path.join(misc.configs_dir(), yaml_configs)) as f:
         yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
@@ -631,6 +631,17 @@ def get_model_category_configs():
         category_attributes['config_filenames'] = yaml_configs[model_category]
 
     return model_category_configs
+
+
+def load_model_configs_from_path(path, yaml_configs):
+    # load all available model files from path and dump into yaml_configs
+    nn_models = os.listdir(os.path.join(path, 'pts'))
+    # with open(os.path.join(misc.configs_dir(), yaml_configs), 'r+') as f:
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'r') as f:
+        ym = yaml.safe_load(f)
+        ym['hlcm'] = nn_models
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'w') as f:
+        yaml.dump(ym, f)
 
 
 def create_lcm_from_config(config_filename, model_attributes):
