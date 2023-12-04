@@ -26,8 +26,17 @@ from functools import reduce
 hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
-hlcm_model_path = '/mnt/hgfs/RDF2050/data/models'
-model_configs = lcm_utils.get_model_category_configs()
+
+# get config paths
+hlcm_model_path = orca.get_injectable('hlcm_model_path')
+yaml_configs = orca.get_injectable('yaml_configs')
+
+# load hlcm model config from path and save to yaml
+lcm_utils.load_model_configs_from_path(hlcm_model_path, yaml_configs)
+
+# load model_configs
+model_configs = lcm_utils.get_model_category_configs(yaml_configs)
+
 for model_category_name, model_category_attributes in model_configs.items():
     if model_category_attributes["model_type"] == "location_choice":
         model_config_files = model_category_attributes["config_filenames"]
@@ -36,7 +45,7 @@ for model_category_name, model_category_attributes in model_configs.items():
 
             if model_category_name == "hlcm":
                 # load torch-based hlcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, model_config), model_category_attributes)
+                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
                 hlcm_step_names.append(model_config)
                 hh_location_choice_models[model_config] = model
 

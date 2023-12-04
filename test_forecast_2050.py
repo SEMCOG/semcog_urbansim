@@ -15,9 +15,13 @@ RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
 indicator_spacing = 5
-upload_to_carto = False
+upload_to_carto = True
 run_debug = False
 add_2019 = True
+
+# hlcm configs
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23nov30')
+orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
