@@ -4,7 +4,7 @@ import shutil
 import os
 orca.add_injectable('use_checkpoint', False)
 # hlcm configs
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23nov30')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23dec06')
 orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 
 import models
