@@ -30,6 +30,7 @@ elcm_step_names = []
 # get config paths
 if not orca.is_injectable('hlcm_model_path'):
     orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23dec14')
+    orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 hlcm_model_path = orca.get_injectable('hlcm_model_path')
 yaml_configs = orca.get_injectable('yaml_configs')
 
