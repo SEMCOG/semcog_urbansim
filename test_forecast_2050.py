@@ -20,7 +20,7 @@ run_debug = False
 add_2019 = True
 
 # hlcm configs
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23dec14')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23dec21')
 orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 
 orca.add_injectable('base_year', base_year)
@@ -56,10 +56,14 @@ if run_debug is True:
 
 run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get_injectable('checkpoint_year')
 
+# run init_taz_hlcm_trend_by_year
+orca.run(['init_taz_hlcm_trend_by_year'])
+
 orca.run(
     [
         "build_networks_2050",
         "neighborhood_vars",
+        "update_taz_hlcm_trend",
         "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
         "random_demolition_events",
