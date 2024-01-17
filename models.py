@@ -13,6 +13,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
+from forecast_estimation.utils import load_taz_vars_from_orca, load_taz_vars_from_hdf
 
 import utils
 import lcm_utils
@@ -309,39 +310,15 @@ def init_taz_hlcm_trend_by_year():
     # init taz_hlcm_trend object
     taz_hlcm_trend_by_year = {}
 
-    # initiating 2015 attribute df
+    # # initiating 2015 attribute df
     hdf_input_2045 = orca.get_injectable('hdf_input_2045')
-    hdf = pd.HDFStore(hdf_input_2045, 'r')
-    h = hdf['households']
-    b = hdf['buildings']
-    h = h.join(b[['b_zone_id']], on='building_id')
-    hh_count = h['b_zone_id'].value_counts()
-    hh_pop = h.groupby('b_zone_id').sum()['persons']
-    hu_count = b.groupby('b_zone_id').sum()['residential_units']
-    nonres_sqft = b.groupby('b_zone_id').sum()['non_residential_sqft']
-    # compile
-    df = pd.DataFrame(data={'hh_count':hh_count, 'hh_pop':hh_pop, 'hu_count':hu_count, 'nonres_sqft':nonres_sqft})
-    df = df.fillna(0).astype(int)
-    df.index = df.index.astype(int)
-    taz_hlcm_trend_by_year['2015'] = df
-
-    # initiating baseyear attribute df
+    df_2015 = load_taz_vars_from_hdf(hdf_input_2045)
+    taz_hlcm_trend_by_year['2015'] = df_2015
     print('Finishing init TAZ vars from hdf', hdf_input_2045)
-    buildings = orca.get_table('buildings')
-    b = buildings.to_frame(buildings.local_columns + ['zone_id'])
-    h = orca.get_table('households').local
-    b = b[b.zone_id > 0]
-    h = h.join(b[['zone_id']], on='building_id')
-    hh_count = h['zone_id'].value_counts()
-    hh_pop = h.groupby('zone_id').sum()['persons']
-    hu_count = b.groupby('zone_id').sum()['residential_units']
-    nonres_sqft = b.groupby('zone_id').sum()['non_residential_sqft']
-    # compile
-    df = pd.DataFrame(data={'hh_count':hh_count, 'hh_pop':hh_pop, 'hu_count':hu_count, 'nonres_sqft':nonres_sqft})
-    df = df.fillna(0).astype(int)
-    df.index = df.index.astype(int)
+    # initiating baseyear attribute df
+    df_cur = load_taz_vars_from_orca()
+    taz_hlcm_trend_by_year['2020'] = df_cur
     print('Finishing loading TAZ vars from orca...')
-    taz_hlcm_trend_by_year['2020'] = df
 
     # add to injectable
     orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
@@ -353,28 +330,12 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     """
     base_year = 2020
     year_delta = 5
-    hh = households.local
-    b = buildings.to_frame(buildings.local_columns + ['zone_id'])
 
-    # join zone_id from building
-    hh = hh.join(b[['zone_id']], on='building_id')
-
-    # filter out NaN zone_id
-    hh = hh[~hh['zone_id'].isna()]
-    b = b[~b['zone_id'].isna()]
-
-    hh_count = hh['zone_id'].value_counts()
-    hh_pop = hh.groupby('zone_id').sum()['persons']
-    hu_count = b.groupby('zone_id').sum()['residential_units']
-    nonres_sqft = b.groupby('zone_id').sum()['non_residential_sqft']
-
-    # compile
-    df = pd.DataFrame(data={'hh_count':hh_count, 'hh_pop':hh_pop, 'hu_count':hu_count, 'nonres_sqft':nonres_sqft})
-    df = df.fillna(0).astype(int)
-    df.index = df.index.astype(int)
+    # get current trend df
+    df_cur = load_taz_vars_from_orca()
     
     # update taz_hlcm_trend_by_year
-    taz_hlcm_trend_by_year[str(year)] = df
+    taz_hlcm_trend_by_year[str(year)] = df_cur
     orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
 
     # define building variables
@@ -387,7 +348,7 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
     cur_df = taz_hlcm_trend_by_year[str(cur_year)]
     diff = cur_df - prev_df
-    for var in df.columns:
+    for var in df_cur.columns:
         print("registering building variable", var+"_taz_5yr_change")
         @orca.column("buildings", var+"_taz_5yr_change")
         def func():
