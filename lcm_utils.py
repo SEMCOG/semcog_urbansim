@@ -313,6 +313,13 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         orca.get_table('households').update_col_from_series(
             'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
+        # Update alts table to reduce remaining capacity
+        picked_hu = picked_bid.value_counts()
+        new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
+        if (new_capacity < 0).any():
+            raise ValueError("Encounter negative value while calculating new building capacity")
+        orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
+
     return choice_model_simulate
 
 
