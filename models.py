@@ -137,6 +137,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     blds = buildings.to_frame(
         [
             "building_id",
+            "large_area_id",
             "semmcd",
             vacant_variable,
             "building_age",
@@ -246,6 +247,27 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 % (city, selected_units.shape[0], growth)
             )
         new_units = pd.concat([new_units, selected_units])
+    
+    # TODO: check if quota is greater or equal to #of unplaced households 
+    la_ids = blds.large_area_id.unique()
+    h = households.local
+    for la_id in la_ids:
+        la_quota = new_units[new_units.large_area_id == la_id].shape[0]
+        la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        if la_quota < la_unplaced_hh: 
+            # not enough la_quota for unplaced hhs
+            # sample LA housing units to match
+            diff = la_unplaced_hh - la_quota
+            la_housing_units = housing_units[housing_units.large_area_id == la_id]
+            la_new_units = new_units[new_units.large_area_id == la_id]
+            rem = (la_housing_units.index.value_counts() - la_new_units.index.value_counts())
+            rem_by_bid = rem[~rem.isna() & (rem > 0)].astype(int)
+            while diff > 0:
+                pool = rem_by_bid[rem_by_bid > 0]
+                picked = rem_by_bid.sample(1).index[0]
+                pool.loc[picked] -= 1
+                new_units = pd.concat([new_units, blds.loc[[picked]]])
+                diff -= 1
 
     # add mcd model quota to building table
     quota = new_units.index.value_counts()

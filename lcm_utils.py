@@ -301,7 +301,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
-        picked_idx = np.argpartition(pred, -n)[-n:]
+        picked_idx = np.argsort(pred)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id
