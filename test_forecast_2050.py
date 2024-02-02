@@ -29,7 +29,7 @@ orca.add_injectable('final_year', final_year)
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1206.h5')
+orca.add_injectable('runnum_to_resume', 'run1251.h5')
 
 import models
 from urbansim.utils import misc, networks

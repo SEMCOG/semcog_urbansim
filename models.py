@@ -262,8 +262,10 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             la_new_units = new_units[new_units.large_area_id == la_id]
             rem = (la_housing_units.index.value_counts() - la_new_units.index.value_counts())
             rem_by_bid = rem[~rem.isna() & (rem > 0)].astype(int)
+            print( "%s missing %s HU: total remaining vacancy of %s" % (la_id, diff, rem_by_bid.sum()))
             while diff > 0:
                 pool = rem_by_bid[rem_by_bid > 0]
+                # TODO: rem_by_bid may be empty
                 picked = rem_by_bid.sample(1).index[0]
                 pool.loc[picked] -= 1
                 new_units = pd.concat([new_units, blds.loc[[picked]]])
@@ -2538,7 +2540,10 @@ def refine_housing_units(households, buildings, mcd_total):
     """
     year = orca.get_injectable("year")
     b = buildings.to_frame(
-        buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"]
+        buildings.local_columns + [
+            "hu_filter", "sp_filter", "semmcd", 
+            "large_area_id", "vacant_residential_units"
+        ]
     )
     mcd_total = mcd_total.to_frame([str(year)])
 
@@ -2565,7 +2570,7 @@ def refine_housing_units(households, buildings, mcd_total):
     hu_mcd_diff_gt_0 = hu_mcd_diff[hu_mcd_diff["diff"] > 0]
 
     for city, row in hu_mcd_diff_gt_0.iterrows():
-        add_hu = int(row["diff"] * 1.1)
+        add_hu = int(row["diff"] * 1.2)
         local_units = housing_units.loc[
             (housing_units.building_type_id.isin([81, 82, 83]))
             & (housing_units.city_id == city)
@@ -2581,6 +2586,32 @@ def refine_housing_units(households, buildings, mcd_total):
             "Adding %s units to city %s, actually added %s"
             % (add_hu, city, new_units.sum())
         )
+
+    # TODO: ensure LA has enough HU for unplaced HH
+    la_ids = b.large_area_id.unique()
+    h = households.local
+    for la_id in la_ids:
+        la_empty_units = b[b.large_area_id == la_id].vacant_residential_units.sum()
+        la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        if la_empty_units < la_unplaced_hh: 
+            # not enough la_empty_units for unplaced hhs
+            # sample LA housing units to match
+            diff = la_unplaced_hh - la_empty_units
+            local_units = housing_units.loc[
+                (housing_units.building_type_id.isin([81, 82, 83]))
+                & (housing_units.large_area_id == la_id)
+            ]
+            # filter out hu_filter and sp_filter
+            local_units = local_units[local_units["hu_filter"] == 0]
+            local_units = local_units[local_units["sp_filter"] >= 0]
+            print( "%s missing %s HU: total housing units of %s" % (la_id, diff, local_units.sum()))
+            new_units = local_units.sample(
+                diff, replace=False, random_state=1).index.value_counts()
+            b.loc[new_units.index, "residential_units"] += new_units
+            print(
+                "Adding %s units to large_area %s, actually added %s"
+                % (diff, la_id, new_units.sum())
+            )
 
     # update res_units in building table
     buildings.update_col_from_series(
