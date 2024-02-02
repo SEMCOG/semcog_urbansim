@@ -157,6 +157,7 @@ def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
     hdf_last = '/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5'
+    orca.add_injectable("input_hdf_path", hdf_last)
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
     print("HDF data: ", hdf_last)
