@@ -366,9 +366,14 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     # load building_id to zone_id mapping
     b_to_taz = buildings.to_frame(['zone_id']).zone_id
     
-    # generate TAZ trend variables
-    prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-    cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
     diff = cur_df - prev_df
     for var in df_cur.columns:
         print("registering building variable", var+"_taz_5yr_change")
@@ -764,18 +769,33 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
 
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
-    if iter_var != 2021:
+    # run if hh_seeds not found
+    if iter_var != 2021 and orca.is_injectable("hh_seeds"):
         print('skipping cache_hh_seeds for forecast year')
         return
+
+    # if resume running from forecast year
+    if not orca.is_injectable("hh_seeds"):
+        input_hdf = pd.HDFStore(orca.get_injectable("input_hdf_path"), 'r')
+        parcels = input_hdf['parcels']
+        b = input_hdf['buildings']
+        b = b.join(parcels[['large_area_id']], on='parcel_id')
+        hh = input_hdf['households']
+        hh = hh.join(b[['large_area_id']], on='building_id')
+        p = input_hdf['persons']
+        p = p.join(hh[['large_area_id']], on='household_id')
+        input_hdf.close()
+    else:
+        hh = households.to_frame(households.local_columns + ["large_area_id"])
+        p = persons.to_frame(persons.local_columns + ["large_area_id"])
+
     # caching hh and persons seeds at the start of the model run
-    hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
     hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
     # generate age bins
     age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
     age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
-    p = persons.to_frame(persons.local_columns + ["large_area_id"])
     p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
     p['age_bin'] = p['age_bin'].fillna(0).astype(int)
     p = p.join(hh.seed_id, on='household_id')
