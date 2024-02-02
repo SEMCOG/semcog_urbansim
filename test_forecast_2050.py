@@ -57,7 +57,9 @@ if run_debug is True:
 run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get_injectable('checkpoint_year')
 
 # run init_taz_hlcm_trend_by_year
-orca.run(['init_taz_hlcm_trend_by_year'])
+orca.run([
+    'init_taz_hlcm_trend_by_year',
+])
 
 orca.run(
     [
@@ -151,7 +153,7 @@ orca.run(
 
 # if use checkpoint to resume run, add result from previous year back
 if orca.get_injectable('use_checkpoint'):
-    store_la = pd.HDFStore(data_out, mode="r")
+    store_la = pd.HDFStore(data_out, mode="a")
     run_path = "/home/da/semcog_urbansim/runs"
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
     old_result = pd.HDFStore(hdf_path, "r")
