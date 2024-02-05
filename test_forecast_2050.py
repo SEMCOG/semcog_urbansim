@@ -29,7 +29,7 @@ orca.add_injectable('final_year', final_year)
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1251.h5')
+orca.add_injectable('runnum_to_resume', 'run1249.h5')
 
 import models
 from urbansim.utils import misc, networks
@@ -158,11 +158,12 @@ if orca.get_injectable('use_checkpoint'):
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
     old_result = pd.HDFStore(hdf_path, "r")
     for k in old_result:
-        if '/base/' in k:
+        if '/base/' in k or k in store_la.keys():
             continue
         print('adding %s to output hdf from checkpoint...' % k)
         store_la[k] = old_result[k]
     old_result.close()
+    store_la.close()
 
 # load late because of introduce of new vars
 import output_indicators
