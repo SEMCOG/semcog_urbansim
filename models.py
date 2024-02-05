@@ -254,20 +254,20 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     for la_id in la_ids:
         la_quota = new_units[new_units.large_area_id == la_id].shape[0]
         la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        print( "%s: la_quota %s la_unplaced_hh %s" % (la_id, la_quota, la_unplaced_hh))
         if la_quota < la_unplaced_hh: 
             # not enough la_quota for unplaced hhs
             # sample LA housing units to match
             diff = la_unplaced_hh - la_quota
             la_housing_units = housing_units[housing_units.large_area_id == la_id]
             la_new_units = new_units[new_units.large_area_id == la_id]
-            rem = (la_housing_units.index.value_counts() - la_new_units.index.value_counts())
-            rem_by_bid = rem[~rem.isna() & (rem > 0)].astype(int)
+            rem = la_housing_units.index.value_counts().sub( la_new_units.index.value_counts(), fill_value=0).astype(int)
+            rem_by_bid = rem[(rem > 0)]
             print( "%s missing %s HU: total remaining vacancy of %s" % (la_id, diff, rem_by_bid.sum()))
             while diff > 0:
-                pool = rem_by_bid[rem_by_bid > 0]
                 # TODO: rem_by_bid may be empty
-                picked = rem_by_bid.sample(1).index[0]
-                pool.loc[picked] -= 1
+                picked = rem_by_bid[rem_by_bid > 0].sample(1).index[0]
+                rem_by_bid.loc[picked] = rem_by_bid.loc[picked] - 1
                 new_units = pd.concat([new_units, blds.loc[[picked]]])
                 diff -= 1
 
@@ -2591,8 +2591,12 @@ def refine_housing_units(households, buildings, mcd_total):
     la_ids = b.large_area_id.unique()
     h = households.local
     for la_id in la_ids:
-        la_empty_units = b[b.large_area_id == la_id].vacant_residential_units.sum()
+        # getting placeable empty housing units
+        la_empty_units = b[(b.large_area_id == la_id) & (b.hu_filter == 0) & (
+            b.sp_filter >= 0)].vacant_residential_units.sum()
+        # getting unplaced households count
         la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        print( "%s: la_empty_units %s la_unplaced_hh %s" % (la_id, la_empty_units, la_unplaced_hh))
         if la_empty_units < la_unplaced_hh: 
             # not enough la_empty_units for unplaced hhs
             # sample LA housing units to match
