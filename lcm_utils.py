@@ -292,12 +292,16 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        # TODO: construct predict DF with capacity and get result
+        # construct predict DF with capacity and get result
         final_alts_df = final_alts_df[formula_alts_col + [alt_capacity]]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
         ]
+
+        # sample predict_X_df to 1:5 preventing hlcm segment order issue
+        M = min(len(predict_X_df), n * 5) # HU pool count
+        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
@@ -309,7 +313,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         print("Placed %s households." % len(picked_bid))
 
-        # TODO: update households table
+        # update households table
         orca.get_table('households').update_col_from_series(
             'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
