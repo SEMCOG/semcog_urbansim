@@ -198,13 +198,11 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             (housing_units.semmcd == city)
             & (
                 # only sampling hu_filter == 0
-                housing_units.hu_filter
-                == 0
+                housing_units.hu_filter == 0
             )
             & (
                 # only sampling sp_filter >= 0
-                housing_units.sp_filter
-                >= 0
+                housing_units.sp_filter >= 0
             )
         ]
 
@@ -259,7 +257,11 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             # not enough la_quota for unplaced hhs
             # sample LA housing units to match
             diff = la_unplaced_hh - la_quota
-            la_housing_units = housing_units[housing_units.large_area_id == la_id]
+            la_housing_units = housing_units[
+                (housing_units.large_area_id == la_id)
+                & (housing_units.hu_filter == 0) # housing units should be filtered
+                & (housing_units.sp_filter >= 0)
+            ]
             la_new_units = new_units[new_units.large_area_id == la_id]
             rem = la_housing_units.index.value_counts().sub( la_new_units.index.value_counts(), fill_value=0).astype(int)
             rem_by_bid = rem[(rem > 0)]
