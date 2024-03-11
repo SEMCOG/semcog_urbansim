@@ -408,6 +408,14 @@ def hh_size_4pp(households):
     return (households.persons>=4).astype('int8')
 
 @orca.column("households", cache=True, cache_scope="iteration")
+def children_has_children(households):
+    return (households.children>0).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def children_no_children(households):
+    return (households.children>0).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
 def ownership_own(households):
     return households.ten.lt(3).astype('int8')
 
