@@ -235,17 +235,30 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
     def choice_model_simulate(hh_location_choice_models):
         model = hh_location_choice_models[model_name]
 
+        model_path = orca.get_injectable('hlcm_model_path')
+        model_desc_path = os.path.join(model_path, 'model_description.yaml')
+        with open(model_desc_path, 'r') as f:
+            model_desc = yaml.load(f, Loader=yaml.FullLoader)
+
         # chooser segment
         la_id = model_name.split('_')[2][2:]
-        hh_size = model_name.split('_')[3]
-        ownership = model_name.split('_')[4]
-        aoh = model_name.split('_')[5].split('.')[0]
+        filter_text = ''
+        for cat_name, categories in model_desc['hh_categories'].items():
+            for cat in categories:
+                if cat in model_name:
+                    filter_text += '&(%s_%s==1)' % (cat_name, cat)
+                    break
+
+        # hh_size = model_name.split('_')[3]
+        # ownership = model_name.split('_')[4]
+        # aoh = model_name.split('_')[5].split('.')[0]
         
         # pre filter
         alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
 
         # filter for picking hh with no building_id assigned
-        chooser_filter = "(building_id==-1)&(hh_size_%s==1)&(ownership_%s==1)&(aoh_%s==1)" % (hh_size, ownership, aoh)
+        # chooser_filter = "(building_id==-1)&(hh_size_%s==1)&(ownership_%s==1)&(aoh_%s==1)" % (hh_size, ownership, aoh)
+        chooser_filter = "(building_id==-1)" + filter_text
 
         # filter alternatives
         alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
