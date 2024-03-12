@@ -413,7 +413,7 @@ def children_has_children(households):
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def children_no_children(households):
-    return (households.children>0).astype('int8')
+    return (households.children==0).astype('int8')
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def ownership_own(households):
