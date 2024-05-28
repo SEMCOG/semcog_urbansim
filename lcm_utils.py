@@ -261,7 +261,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         chooser_filter = "(building_id==-1)" + filter_text
 
         # filter alternatives
-        alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
+        alt_filter = "(residential_units>0) & (%s>0) & (hu_filter==0) & (sp_filter>=0)" % (alt_capacity)
             
         # load variables from model
         variable_cols = model.variables
@@ -290,8 +290,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # all variables should ben available
         assert all([True if col in alts.columns else False for col in variable_cols])
 
-        formula_alts_col = variable_cols
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[alt_capacity])
+        formula_alts_col = list(set(variable_cols))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity])))
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
@@ -306,7 +306,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[formula_alts_col + [alt_capacity]]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -330,12 +330,14 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         orca.get_table('households').update_col_from_series(
             'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
-        # Update alts table to reduce remaining capacity
-        picked_hu = picked_bid.value_counts()
-        new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
-        if (new_capacity < 0).any():
-            raise ValueError("Encounter negative value while calculating new building capacity")
-        orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
+        # if alt_capacity exists in local_columns, updates it
+        if alt_capacity in alts.local_columns:
+            # Update alts table to reduce remaining capacity
+            picked_hu = picked_bid.value_counts()
+            new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
+            if (new_capacity < 0).any():
+                raise ValueError("Encounter negative value while calculating new building capacity")
+            orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
 
     return choice_model_simulate
 
