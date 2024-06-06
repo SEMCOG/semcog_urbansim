@@ -387,11 +387,11 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
     diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
     # increase hh_pop by 100%pp
-    diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000 ) // (N)) 
+    diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
     # increase with_children hh by 100%
-    diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000 ) // (N)) 
-    # reduce one_persons_hh count by 50%
-    diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000 ) // (N)) 
+    diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
+    # reduce one_persons_hh count by 100%
+    diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
 
     for var in df_cur.columns:
         print("registering building variable", var+"_taz_5yr_change")
