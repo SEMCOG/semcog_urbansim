@@ -431,6 +431,40 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
 
     for var in df_cur.columns:
+        print("registering building variable", var+"_taz_10yr_change")
+        @orca.column("buildings", var+"_taz_10yr_change")
+        def func():
+            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+    # define 5yr trend variables
+    year_delta = 5
+    # define building variables
+    cur_year = base_year if year <= base_year+5 else year
+    
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    diff = cur_df - prev_df
+
+    # Experimental: 
+    # * For Dearborn, taz zone 420-472,
+    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
+    # N = len(selected_taz_ids) # total number of applicable TAZs
+    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
+    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
+    # # increase hh_pop by 100%pp
+    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
+    # # increase with_children hh by 100%
+    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
+    # # reduce one_persons_hh count by 100%
+    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+
+    for var in df_cur.columns:
         print("registering building variable", var+"_taz_5yr_change")
         @orca.column("buildings", var+"_taz_5yr_change")
         def func():
