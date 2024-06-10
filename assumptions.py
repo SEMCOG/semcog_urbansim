@@ -182,5 +182,6 @@ def verify():
 
 # 2045 input hdf
 orca.add_injectable('hdf_input_2045', '/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5')
+orca.add_injectable('forecast_input_2040', '/mnt/hgfs/urbansim/RDF2050/model_improvements/2024_spring/2010_data')
 
 orca.add_injectable("store", verify())
