@@ -20,11 +20,18 @@ run_debug = False
 add_2019 = True
 
 # hlcm configs
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Feb15')
 orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
+
+# scenario controls
+orca.add_injectable('ENABLE_SCENARIO', True)
+orca.add_injectable('scenario_hh_control_path',
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_06102024.csv')
+orca.add_injectable('scenario_remi_total_pop',
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la06102024.csv')
 
 # Checkpoint config
 # run starting from last checkpoint year
