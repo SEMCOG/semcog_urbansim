@@ -22,6 +22,16 @@ import dataset
 import variables
 from functools import reduce
 
+# Setup Scenario controls
+if orca.get_injectable('ENABLE_SCENARIO'):
+    hh_controls_path = orca.get_injectable('scenario_hh_control_path')
+    new_hh_controls = pd.read_csv(hh_controls_path, index_col=0)
+    orca.add_table('annual_household_control_totals', new_hh_controls)
+
+    remi_total_pop_path = orca.get_injectable('scenario_remi_total_pop')
+    new_remi_total_pop = pd.read_csv(remi_total_pop_path, index_col=0)
+    orca.add_table('remi_pop_total', new_remi_total_pop)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 hh_location_choice_models, emp_location_choice_models = {}, {}
