@@ -21,8 +21,8 @@ add_2019 = True
 
 # hlcm configs
 # orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5') # with&w/o children
-orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05/')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Jun13') # with&w/o children
+orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun11/')
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)
