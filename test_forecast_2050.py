@@ -20,10 +20,8 @@ run_debug = False
 add_2019 = True
 
 # hlcm configs
-# orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5') # with&w/o children
-orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05/')
-orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
@@ -31,7 +29,7 @@ orca.add_injectable('final_year', final_year)
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1257.h5')
+orca.add_injectable('runnum_to_resume', 'run1249.h5')
 
 import models
 from urbansim.utils import misc, networks
@@ -91,7 +89,7 @@ orca.run(
     + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
     + [
-        # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
+        "elcm_home_based",
         "jobs_scaling_model",
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
