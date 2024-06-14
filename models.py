@@ -30,21 +30,13 @@ elcm_step_names = []
 
 # get config paths
 if not orca.is_injectable('hlcm_model_path'):
-    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
-
-if not orca.is_injectable('elcm_model_path'):
-    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
-
-if not orca.is_injectable('yaml_configs'):
-    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
-
+    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_23dec14')
+    orca.add_injectable('yaml_configs', 'yaml_configs_nn.yaml')
 hlcm_model_path = orca.get_injectable('hlcm_model_path')
-elcm_model_path = orca.get_injectable('elcm_model_path')
 yaml_configs = orca.get_injectable('yaml_configs')
 
 # load hlcm model config from path and save to yaml
-lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
-lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
+lcm_utils.load_model_configs_from_path(hlcm_model_path, yaml_configs)
 
 # load model_configs
 model_configs = lcm_utils.get_model_category_configs(yaml_configs)
@@ -62,28 +54,28 @@ for model_category_name, model_category_attributes in model_configs.items():
                 hh_location_choice_models[model_config] = model
 
             if model_category_name == "elcm":
-                # load torch-based elcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
-                elcm_step_names.append(model_config)
-                emp_location_choice_models[model_config] = model
+                model = lcm_utils.create_lcm_from_config(
+                    model_config, model_category_attributes
+                )
+                elcm_step_names.append(model.name)
+                emp_location_choice_models[model.name] = model
 
 orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
 orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
-# sort hlcm
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
-# sort elcm: run elcm by specific job_sector sequence defined below
+# run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
 elcm_sector_order = {sector: idx for idx, sector in enumerate(elcm_sector_order)}
 orca.add_injectable(
     "elcm_step_names",
-    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x.split('.')[0].split('_')[-1][6:])]),
+    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]),
 )
 
 for name, model in list(hh_location_choice_models.items()):
     lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
 
 for name, model in list(emp_location_choice_models.items()):
-    lcm_utils.register_elcm_model_step(name, alt_capacity=model_configs['elcm']['vacant_variable'])
+    lcm_utils.register_elcm_model_step(model.name, model.choosers)
 
 
 @orca.step()
