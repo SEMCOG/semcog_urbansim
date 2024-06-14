@@ -154,124 +154,77 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
+def register_elcm_model_step(model_name, agents_name):
 
     # TODO: Update simulate steps with lcm nn model
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models):
         model = emp_location_choice_models[model_name]
-
-        model_path = orca.get_injectable('elcm_model_path')
-        model_desc_path = os.path.join(model_path, 'model_description.yaml')
-        with open(model_desc_path, 'r') as f:
-            model_desc = yaml.load(f, Loader=yaml.FullLoader)
+        if 'hlcm' in model_name:
+            alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
+            # filter for picking hh with no building_id assigned
+            chooser_filter = "(building_id==-1)"
+            alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
+        elif 'elcm' in model_name:
+            chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
+            alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
+            # filter for picking jobs with not building_id assigned
+            chooser_filter = "(building_id==-1)"
+            alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
             
-        # chooser segment
-        la_id = model_name.split('_')[2][2:]
-        # sector_id = model_name.split('.')[0].split('_')[-1][6:]
-        home_based = model_name.split('_')[3] == 'homebased'
-        filter_text = ''
-        for cat_name, categories in model_desc['job_categories'].items():
-            for cat in categories:
-                if cat in model_name:
-                    filter_text += '&(%s_%s==1)' % (cat_name, cat)
-                    break
-
-        # pre filter
-        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
-
-        # filter for picking jobs with no building_id assigned
-        chooser_filter = "(building_id==-1)" + filter_text
-        # filter alternatives
-        # alt_filter = "(%s>0)&(sp_filter>=0)" & (alt_capacity)
-        alt_filter = "(sp_filter>=0)"
-        if not home_based:
-            alt_filter += '&(non_residential_sqft>0)&(%s>0)' % (alt_capacity)
-        else:
-            alt_filter += '&(residential_units>0)'
-
-        # load variables from model
-        variable_cols = model.variables
-
-        # filter for choosers and alternatives
+        # initialize simulation choosers and alts table
+        formula_cols = columns_in_formula(model.model_expression)
         choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
-
         # choosers
-        choosers = orca.get_table('jobs')
-        choosers_df = choosers.to_frame(choosers_filter_cols)
+        choosers = orca.get_table(model.choosers)
+        formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
+        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
-        choosers_df = choosers_df.query(chooser_pre_filter)
+        choosers_idx = choosers_df.query(chooser_pre_filter).index
         # std choosers columns
+        chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
+        choosers_df.loc[choosers_idx, formula_chooser_col] = (
+            chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
         # filter using chooser_filter
-        final_choosers_df = choosers_df.query(chooser_filter)
-        n = len(final_choosers_df)
-
-        # return if not needed
-        if n == 0:
-            return
+        final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
 
         # alternatives
-        alts = orca.get_table('buildings')
-
-        # all variables should ben available
-        assert all([True if col in alts.columns else False for col in variable_cols])
-
-        formula_alts_col = list(set(variable_cols))
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity])))
-
+        alts = orca.get_table(model.alternatives)
+        formula_alts_col = [col for col in formula_cols if col in alts.columns]
+        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
+        # std alts columns
+        alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
+        # std could introduce NaN, fill them with 0 after that
+        alts_df.loc[alts_idx, formula_alts_col] = ((
+            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
 
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
-        if not home_based:
-            # for non home based use jobs space as capacity
-            predict_X_df = final_alts_df.loc[
-                np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
-                formula_alts_col
-            ]
-        else:
-            predict_X_df = final_alts_df.loc[
-                final_alts_df.index,
-                formula_alts_col
-            ]
-
-        # std alts columns before predicting
-        # std could introduce NaN, fill them with 0 after that
-        predict_X_df = ((
-            predict_X_df)/predict_X_df.std()).fillna(0.0)
-
-        # sample predict_X_df to 1:5 preventing elcm segment order issue
-        M = min(len(predict_X_df), n * 5) # HU pool count
-        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
-
-        # run predict
-        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
-        picked_idx = np.argsort(pred)[-n:]
-        picked_bid = predict_X_df.iloc[picked_idx].index
-
-        # update building_id
-        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
-
-        print("Placed %s jobs." % len(picked_bid))
-
-        # update jobs table
-        orca.get_table('jobs').update_col_from_series(
-            'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
-
-        # if alt_capacity exists in local_columns, updates it
-        if alt_capacity in alts.local_columns:
-            # Update alts table to reduce remaining capacity
-            picked_hu = picked_bid.value_counts()
-            new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
-            if (new_capacity < 0).any():
-                raise ValueError("Encounter negative value while calculating new building capacity")
-            orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
+        orca.add_table('choosers', final_choosers_df)
+        orca.add_table('alternatives', final_alts_df)
         
+        model.out_choosers = 'choosers'
+        model.out_chooser_filters = None # already filtered
+        model.out_alternatives = 'alternatives'
+        model.out_alt_filters = None # already filtered
+
+        model.run(chooser_batch_size=1000)
+
+        # if not choices, return
+        if not type(model.choices) == pd.Series:
+            print('There are 0 unplaced agents.')
+            return
+
+        print('There are {} unplaced agents.'
+              .format(model.choices.isnull().sum()))
+
+        orca.get_table(agents_name).update_col_from_series(
+            model.choice_column, model.choices, cast=True)
+
     return choice_model_simulate
 
 
@@ -705,23 +658,13 @@ def get_model_category_configs(yaml_configs):
     return model_category_configs
 
 
-def load_hlcm_model_configs_from_path(path, yaml_configs):
+def load_model_configs_from_path(path, yaml_configs):
     # load all available model files from path and dump into yaml_configs
     nn_models = os.listdir(os.path.join(path, 'pts'))
     # with open(os.path.join(misc.configs_dir(), yaml_configs), 'r+') as f:
     with open(os.path.join(misc.configs_dir(), yaml_configs), 'r') as f:
         ym = yaml.safe_load(f)
         ym['hlcm'] = nn_models
-    with open(os.path.join(misc.configs_dir(), yaml_configs), 'w') as f:
-        yaml.dump(ym, f)
-
-def load_elcm_model_configs_from_path(path, yaml_configs):
-    # load all available model files from path and dump into yaml_configs
-    nn_models = os.listdir(os.path.join(path, 'pts'))
-    # with open(os.path.join(misc.configs_dir(), yaml_configs), 'r+') as f:
-    with open(os.path.join(misc.configs_dir(), yaml_configs), 'r') as f:
-        ym = yaml.safe_load(f)
-        ym['elcm'] = nn_models
     with open(os.path.join(misc.configs_dir(), yaml_configs), 'w') as f:
         yaml.dump(ym, f)
 
