@@ -29,7 +29,7 @@ orca.add_injectable('final_year', final_year)
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', True)
 orca.add_injectable('scenario_hh_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_06102024.csv')
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_combined_income_06182024.csv')
 orca.add_injectable('scenario_remi_total_pop',
     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la06102024.csv')
 
