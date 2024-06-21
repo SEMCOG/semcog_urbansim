@@ -2572,8 +2572,7 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
 
 @orca.step()
 def refine_housing_units(households, buildings, mcd_total):
-    """ Refine housing units before mcd_hu_sampling to allow it matching mcd_total or 
-    total unplaced households depends on which one is larger
+    """ Refine housing units before mcd_hu_sampling to allow it matching mcd_total
 
     Args:
         households (DataFrame Wrapper): households
