@@ -429,6 +429,7 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
         cur_df = taz_hlcm_trend_by_year[str(cur_year)]
     diff = cur_df - prev_df
 
+
     # Experimental: 
     # * For Dearborn, taz zone 420-472,
     # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
