@@ -29,14 +29,14 @@ orca.add_injectable('final_year', final_year)
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', True)
 orca.add_injectable('scenario_hh_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_combined_income_06182024.csv')
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_06242024.csv')
 orca.add_injectable('scenario_remi_total_pop',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la06102024.csv')
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la06242024.csv')
 
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1249.h5')
+orca.add_injectable('runnum_to_resume', 'run1271.h5')
 
 import models
 from urbansim.utils import misc, networks
