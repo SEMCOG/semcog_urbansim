@@ -2663,7 +2663,7 @@ def refine_housing_units(households, buildings, mcd_total):
             local_units = local_units[local_units["sp_filter"] >= 0]
             print( "%s missing %s HU: total housing units of %s" % (la_id, diff, local_units.sum()))
             new_units = local_units.sample(
-                diff, replace=False, random_state=1).index.value_counts()
+                int(diff), replace=False, random_state=1).index.value_counts()
             b.loc[new_units.index, "residential_units"] += new_units
             print(
                 "Adding %s units to large_area %s, actually added %s"
