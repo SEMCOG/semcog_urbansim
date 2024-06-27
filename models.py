@@ -636,9 +636,24 @@ def households_transition(
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
+    region_hh.index = region_hh.index.astype(int)
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+    # issue #56
+    # append hh_seeds and p_seeds to the end 
+    hh_seeds = orca.get_table('hh_seeds').to_frame().reset_index()[region_hh.columns]
+    p_seeds = orca.get_table('p_seeds').to_frame().reset_index()#[region_p.columns]
+    max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
+    hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
+    hh_seeds.index.name = 'household_id'
+    p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
+    p_seeds.index.name = 'person_id'
+    # map hh_id back to p_seeds
+    p_seeds['household_id'] = p_seeds['seed_id'].map(hh_seeds.reset_index().set_index('seed_id')['household_id'])
+    # append
+    region_hh = pd.concat((region_hh, hh_seeds), axis=0)
+    region_p = pd.concat((region_p, p_seeds), axis=0)
 
     if "changed_hhs" in orca.list_tables():
         ## add changed hhs and persons from previous year back (ensure transition sample availability )
