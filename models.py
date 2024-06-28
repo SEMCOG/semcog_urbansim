@@ -647,6 +647,9 @@ def households_transition(
     max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
     hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
     hh_seeds.index.name = 'household_id'
+    # set hh_seeds building_id to -1
+    hh_seeds['building_id'] = -1
+
     p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
     p_seeds.index.name = 'person_id'
     # map hh_id back to p_seeds
