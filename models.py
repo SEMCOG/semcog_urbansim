@@ -882,7 +882,7 @@ def cache_hh_seeds(households, persons, iter_var):
         return
 
     # if resume running from forecast year
-    if iter_var != 2021 and not orca.is_injectable("hh_seeds"):
+    if iter_var != 2021 and not orca.is_table("hh_seeds"):
         input_hdf = pd.HDFStore(orca.get_injectable("input_hdf_path"), 'r')
         parcels = input_hdf['parcels']
         b = input_hdf['buildings']
