@@ -879,7 +879,7 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
     # run if hh_seeds not found
-    if iter_var != 2021 and orca.is_injectable("hh_seeds"):
+    if iter_var != 2021 and orca.is_table("hh_seeds"):
         print('skipping cache_hh_seeds for forecast year')
         return
 
