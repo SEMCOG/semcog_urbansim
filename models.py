@@ -22,6 +22,21 @@ import dataset
 import variables
 from functools import reduce
 
+# Setup Scenario controls
+if orca.get_injectable('ENABLE_SCENARIO'):
+    hh_controls_path = orca.get_injectable('scenario_hh_control_path')
+    new_hh_controls = pd.read_csv(hh_controls_path, index_col=0)
+    orca.add_table('annual_household_control_totals', new_hh_controls)
+
+    remi_total_pop_path = orca.get_injectable('scenario_remi_total_pop')
+    new_remi_total_pop = pd.read_csv(remi_total_pop_path, index_col=0)
+    orca.add_table('remi_pop_total', new_remi_total_pop)
+
+    if orca.is_injectable('scenario_emp_control_path'):
+        emp_controls_path = orca.get_injectable('scenario_emp_control_path')
+        new_emp_controls = pd.read_csv(emp_controls_path, index_col=0)
+        orca.add_table('annual_employment_control_totals', new_emp_controls)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 hh_location_choice_models, emp_location_choice_models = {}, {}
@@ -392,6 +407,42 @@ def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
         prev_df = taz_hlcm_trend_by_year[str(cur_year)]
         cur_df = taz_hlcm_trend_by_year[str(cur_year)]
     diff = cur_df - prev_df
+
+    for var in df_cur.columns:
+        print("registering building variable", var+"_taz_10yr_change")
+        @orca.column("buildings", var+"_taz_10yr_change")
+        def func():
+            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+    # define 5yr trend variables
+    year_delta = 5
+    # define building variables
+    cur_year = base_year if year <= base_year+5 else year
+    
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    diff = cur_df - prev_df
+
+
+    # Experimental: 
+    # * For Dearborn, taz zone 420-472,
+    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
+    # N = len(selected_taz_ids) # total number of applicable TAZs
+    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
+    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
+    # # increase hh_pop by 100%pp
+    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
+    # # increase with_children hh by 100%
+    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
+    # # reduce one_persons_hh count by 100%
+    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+
     for var in df_cur.columns:
         print("registering building variable", var+"_taz_10yr_change")
         @orca.column("buildings", var+"_taz_10yr_change")
@@ -632,9 +683,27 @@ def households_transition(
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
+    region_hh.index = region_hh.index.astype(int)
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+    # issue #56
+    # append hh_seeds and p_seeds to the end 
+    hh_seeds = orca.get_table('hh_seeds').to_frame().reset_index()[region_hh.columns]
+    p_seeds = orca.get_table('p_seeds').to_frame().reset_index()#[region_p.columns]
+    max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
+    hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
+    hh_seeds.index.name = 'household_id'
+    # set hh_seeds building_id to -1
+    hh_seeds['building_id'] = -1
+
+    p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
+    p_seeds.index.name = 'person_id'
+    # map hh_id back to p_seeds
+    p_seeds['household_id'] = p_seeds['seed_id'].map(hh_seeds.reset_index().set_index('seed_id')['household_id'])
+    # append
+    region_hh = pd.concat((region_hh, hh_seeds), axis=0)
+    region_p = pd.concat((region_p, p_seeds), axis=0)
 
     if "changed_hhs" in orca.list_tables():
         ## add changed hhs and persons from previous year back (ensure transition sample availability )
@@ -821,12 +890,12 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
     # run if hh_seeds not found
-    if iter_var != 2021 and orca.is_injectable("hh_seeds"):
+    if iter_var != 2021 and orca.is_table("hh_seeds"):
         print('skipping cache_hh_seeds for forecast year')
         return
 
     # if resume running from forecast year
-    if iter_var != 2021 and not orca.is_injectable("hh_seeds"):
+    if iter_var != 2021 and not orca.is_table("hh_seeds"):
         input_hdf = pd.HDFStore(orca.get_injectable("input_hdf_path"), 'r')
         parcels = input_hdf['parcels']
         b = input_hdf['buildings']
@@ -2660,7 +2729,7 @@ def refine_housing_units(households, buildings, mcd_total):
             local_units = local_units[local_units["sp_filter"] >= 0]
             print( "%s missing %s HU: total housing units of %s" % (la_id, diff, local_units.sum()))
             new_units = local_units.sample(
-                diff, replace=False, random_state=1).index.value_counts()
+                int(diff), replace=False, random_state=1).index.value_counts()
             b.loc[new_units.index, "residential_units"] += new_units
             print(
                 "Adding %s units to large_area %s, actually added %s"

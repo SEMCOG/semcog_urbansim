@@ -343,6 +343,13 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
 
+        # std alts columns
+        std_cols = [col for col in formula_alts_col if col != alt_capacity]
+        alts_col_df = alts_df.loc[alts_idx, std_cols]
+        # std could introduce NaN, fill them with 0 after that
+        alts_df.loc[alts_idx, std_cols] = ((
+            alts_col_df)/alts_col_df.std()).fillna(0.0)
+
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
@@ -353,10 +360,9 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             formula_alts_col
         ]
 
-        # std alts columns before predicting
-        # std could introduce NaN, fill them with 0 after that
-        predict_X_df = ((
-            predict_X_df)/predict_X_df.std()).fillna(0.0)
+        # std alt_capacity variable if it's in formula_alts_col
+        if alt_capacity in formula_alts_col:
+            predict_X_df[alt_capacity] = predict_X_df[alt_capacity] / predict_X_df[alt_capacity].std()
 
         # sample predict_X_df to 1:5 preventing hlcm segment order issue
         M = min(len(predict_X_df), n * 5) # HU pool count
