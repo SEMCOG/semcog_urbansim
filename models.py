@@ -32,6 +32,11 @@ if orca.get_injectable('ENABLE_SCENARIO'):
     new_remi_total_pop = pd.read_csv(remi_total_pop_path, index_col=0)
     orca.add_table('remi_pop_total', new_remi_total_pop)
 
+    if orca.is_injectable('scenario_emp_control_path'):
+        emp_controls_path = orca.get_injectable('scenario_emp_control_path')
+        new_emp_controls = pd.read_csv(emp_controls_path, index_col=0)
+        orca.add_table('annual_employment_control_totals', new_emp_controls)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
 hh_location_choice_models, emp_location_choice_models = {}, {}
