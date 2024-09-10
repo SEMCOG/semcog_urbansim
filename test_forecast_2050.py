@@ -42,6 +42,23 @@ orca.add_injectable('scenario_remi_total_pop',
 orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1257.h5')
 
+# dump all setting in yaml in run folder
+with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), "w") as f:
+    import yaml
+    yaml.dump({
+            "RUN NUMBER": data_out,
+            "hlcm_model_path": orca.get_injectable("hlcm_model_path") if orca.is_injectable("hlcm_model_path") else "N/A",
+            "elcm_model_path": orca.get_injectable("elcm_model_path") if orca.is_injectable("elcm_model_path") else "N/A",
+            "yaml_configs": orca.get_injectable("yaml_configs") if orca.is_injectable("yaml_configs") else "N/A",
+            "base_year": orca.get_injectable("base_year") if orca.is_injectable("base_year") else "N/A",
+            "final_year": orca.get_injectable("final_year") if orca.is_injectable("final_year") else "N/A",
+            "ENABLE_SCENARIO": orca.get_injectable("ENABLE_SCENARIO") if orca.is_injectable("ENABLE_SCENARIO") else "N/A",
+            "scenario_hh_control_path": orca.get_injectable("scenario_hh_control_path") if orca.is_injectable("scenario_hh_control_path") else "N/A",
+            "scenario_remi_total_pop": orca.get_injectable("scenario_remi_total_pop") if orca.is_injectable("scenario_remi_total_pop") else "N/A",
+            "use_checkpoint": orca.get_injectable("use_checkpoint") if orca.is_injectable("use_checkpoint") else "N/A",
+            "runnum_to_resume": orca.get_injectable("runnum_to_resume") if orca.is_injectable("runnum_to_resume") else "N/A",
+        }, f, default_flow_style=False)
+
 import models
 from urbansim.utils import misc, networks
 import time
