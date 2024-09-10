@@ -22,7 +22,7 @@ add_2019 = True
 # hlcm configs
 # orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
 orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5') # with&w/o children
-orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05/')
+orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun11/')
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)
@@ -31,9 +31,9 @@ orca.add_injectable('final_year', final_year)
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', True)
 orca.add_injectable('scenario_hh_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/new_baseline_outway_big_hhs/annual_household_control_totals_2050_08102024.csv')
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/new_baseline/annual_household_control_totals_2050_07012024.csv')
 orca.add_injectable('scenario_remi_total_pop',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/new_baseline_outway_big_hhs/remi_total_pop_la08102024.csv')
+    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/new_baseline/remi_total_pop_la07012024.csv')
 # orca.add_injectable('scenario_emp_control_path',
 #     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/high_proftech/annual_employment_control_totals.csv')
 
