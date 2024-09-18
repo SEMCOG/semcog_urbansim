@@ -173,7 +173,7 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         filter_text = ''
         for cat_name, categories in model_desc['job_categories'].items():
             for cat in categories:
-                if cat in model_name:
+                if cat in model_name.split('_'):
                     filter_text += '&(%s_%s==1)' % (cat_name, cat)
                     break
 
