@@ -173,8 +173,34 @@ def register_elcm_model_step(model_name, agents_name):
             chooser_filter = "(building_id==-1)"
             alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
             
-        # initialize simulation choosers and alts table
-        formula_cols = columns_in_formula(model.model_expression)
+        # chooser segment
+        la_id = model_name.split('_')[2][2:]
+        # sector_id = model_name.split('.')[0].split('_')[-1][6:]
+        home_based = model_name.split('_')[3] == 'homebased'
+        filter_text = ''
+        for cat_name, categories in model_desc['job_categories'].items():
+            for cat in categories:
+                if cat in model_name.split('_'):
+                    filter_text += '&(%s_%s==1)' % (cat_name, cat)
+                    break
+
+        # pre filter
+        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
+
+        # filter for picking jobs with no building_id assigned
+        chooser_filter = "(building_id==-1)" + filter_text
+        # filter alternatives
+        # alt_filter = "(%s>0)&(sp_filter>=0)" & (alt_capacity)
+        alt_filter = "(sp_filter>=0)"
+        if not home_based:
+            alt_filter += '&(non_residential_sqft>0)&(%s>0)' % (alt_capacity)
+        else:
+            alt_filter += '&(residential_units>0)'
+
+        # load variables from model
+        variable_cols = model.variables
+
+        # filter for choosers and alternatives
         choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
         # choosers
