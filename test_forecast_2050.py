@@ -27,7 +27,7 @@ orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
 
 # scenario controls
-orca.add_injectable('ENABLE_SCENARIO', True)
+orca.add_injectable('ENABLE_SCENARIO', False)
 orca.add_injectable('scenario_hh_control_path',
     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/new_baseline_outway_big_hhs/annual_household_control_totals_2050_08102024.csv')
 orca.add_injectable('scenario_remi_total_pop',
@@ -41,7 +41,9 @@ orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1249.h5')
 
 # dump all setting in yaml in run folder
-with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), "w") as f:
+if not os.path.exists(orca.get_injectable("data_out_dir")):
+    os.makedirs(orca.get_injectable("data_out_dir"))
+with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), "w+") as f:
     import yaml
     yaml.dump({
             "RUN NUMBER": data_out,
