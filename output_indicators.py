@@ -84,7 +84,6 @@ def upload_whatnots_to_postgres(run_name, whatnots):
     whatnots["mi_house_id"] = whatnots["mi_house_id"].astype(int)
     whatnots["mi_senate_id"] = whatnots["mi_senate_id"].astype(int)
     whatnots["us_congress_id"] = whatnots["us_congress_id"].astype(int)
-    whatnots["parcel_id"] = whatnots["parcel_id"].astype(int)
     print("Uploading whatnots table %s to postgres..." % table_name)
     whatnots.to_sql(table_name, conn_str, index=False, if_exists="replace")
     return
@@ -214,7 +213,7 @@ def main(
 
     # initialize whatnot
     whatnot = p.reset_index().drop_duplicates(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     )
 
     # target year building
@@ -233,15 +232,13 @@ def main(
 
     # add missing zones from buildings
     orca_b = orca.get_table('buildings')
-    b_whatnot = orca_b.to_frame(['large_area_id', "us_congress_id", "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id', 'parcel_id'])
+    b_whatnot = orca_b.to_frame(['large_area_id', "us_congress_id", "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id'])
     b_whatnot = b_whatnot.drop_duplicates().reset_index(drop=True)
     whatnot = pd.concat([whatnot, b_whatnot], axis=0, ignore_index=True)
 
-    whatnot.loc[~whatnot.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
-
     # clean up whatnot index,
     whatnot = whatnot.drop_duplicates(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index(drop=True)
 
     whatnot.index.name = "whatnot_id"
@@ -329,7 +326,7 @@ def main(
         del df["hh_pop_age_median"]
 
         df[whatnots_local.columns] = whatnots_local
-        df.set_index(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"], inplace=True)
+        df.set_index(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"], inplace=True)
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
 
