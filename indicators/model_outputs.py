@@ -471,13 +471,13 @@ def whatnot_id(parcels, whatnots, interesting_parcel_ids):
     parcels = parcels.to_frame(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"])
     parcels["parcel_id"] = parcels.index
     parcels.index.name = None
-    parcels.loc[~parcels.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
+    parcels.loc[parcels.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
 
     whatnots = whatnots.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index()
     m = pd.merge(
-        parcels, whatnots, "left", ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"],
+        parcels, whatnots, "left", ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"],
     )
     return m.whatnot_id
 
@@ -485,17 +485,17 @@ def whatnot_id(parcels, whatnots, interesting_parcel_ids):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def whatnot_id(buildings, whatnots, interesting_parcel_ids):
     buildings = buildings.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index()
-    buildings.loc[~buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
+    buildings.loc[buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
     whatnots = whatnots.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"]
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index()
     m = pd.merge(
         buildings,
         whatnots,
         "left",
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id", "parcel_id"],
+        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"],
     )
     return m.set_index("building_id").whatnot_id
 
