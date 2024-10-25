@@ -487,7 +487,6 @@ def whatnot_id(buildings, whatnots, interesting_parcel_ids):
     buildings = buildings.to_frame(
         ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index()
-    buildings.loc[buildings.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
     whatnots = whatnots.to_frame(
         ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
     ).reset_index()
