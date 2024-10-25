@@ -180,7 +180,7 @@ def register_elcm_model_step(model_name, agents_name):
         filter_text = ''
         for cat_name, categories in model_desc['job_categories'].items():
             for cat in categories:
-                if cat in model_name.split('_'):
+                if cat in model_name.split('.')[0].split('_'):
                     filter_text += '&(%s_%s==1)' % (cat_name, cat)
                     break
 
