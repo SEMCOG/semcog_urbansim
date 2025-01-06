@@ -508,6 +508,32 @@ def make_employment_proportion_variable(sector_id):
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
         return (jobs_sector / total_jobs).fillna(0)
 
+def make_building_employment_variable(sector_id):
+    """
+    Generate jobs by sectors in building variable. Registers with orca.
+    """
+    var_name = "bldg_jobs_sector_%s" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        jobs = orca.get_table("jobs")
+        jobs = jobs.to_frame(jobs.local_columns)
+        jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
+        return jobs_sector.fillna(0)
+
+def make_employment_node_ratio_variable(sector_id):
+    """
+    Generate jobs by sectors in building variable. Registers with orca.
+    """
+    var_name = "nodes_walk_job_ratio_sector_%s" % sector_id
+    node_walk_varname = "nodes_walk_sector%s_jobs" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        buildings = orca.get_table("buildings").to_frame(['nodes_walk_jobs', node_walk_varname])
+        node_total_jobs = buildings["nodes_walk_jobs"]
+        node_sector_jobs = buildings[node_walk_varname]
+        return (node_sector_jobs / node_total_jobs).fillna(0)
 
 def make_disagg_var(
     from_geog_name,
@@ -577,6 +603,8 @@ for var_to_log in vars_to_log:
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
+    make_building_employment_variable(sector)
+    make_employment_node_ratio_variable(sector)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
