@@ -4,6 +4,7 @@ import sys
 import os
 import pandas as pd
 import utils
+import subprocess
 
 # get run number and set up log file
 data_out = utils.get_run_filename()
@@ -57,6 +58,8 @@ with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), 
             "scenario_remi_total_pop": orca.get_injectable("scenario_remi_total_pop") if orca.is_injectable("scenario_remi_total_pop") else "N/A",
             "use_checkpoint": orca.get_injectable("use_checkpoint") if orca.is_injectable("use_checkpoint") else "N/A",
             "runnum_to_resume": orca.get_injectable("runnum_to_resume") if orca.is_injectable("runnum_to_resume") else "N/A",
+            "git_branch_name": subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode().strip(),
+            "git_commit_id": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
         }, f, default_flow_style=False)
 
 import models
