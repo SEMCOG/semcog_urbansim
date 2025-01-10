@@ -231,8 +231,51 @@ def register_elcm_model_step(model_name, agents_name):
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        orca.add_table('choosers', final_choosers_df)
-        orca.add_table('alternatives', final_alts_df)
+        # construct predict DF with capacity and get result
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
+        if not home_based:
+            # for non home based use jobs space as capacity
+            predict_X_df = final_alts_df.loc[
+                np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
+                formula_alts_col
+            ]
+        else:
+            predict_X_df = final_alts_df.loc[
+                final_alts_df.index,
+                formula_alts_col
+            ]
+
+        # std alts columns before predicting
+        # std could introduce NaN, fill them with 0 after that
+        predict_X_df = ((
+            predict_X_df)/predict_X_df.std()).fillna(0.0)
+
+        # sample predict_X_df to 1:5 preventing elcm segment order issue
+        M = len(predict_X_df) # use all filtered buildings
+        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
+
+        # run predict
+        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        picked_idx = np.argsort(pred)[-n:]
+        picked_bid = predict_X_df.iloc[picked_idx].index
+
+        # update building_id
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+
+        print("Placed %s jobs." % len(picked_bid))
+
+        # update jobs table
+        orca.get_table('jobs').update_col_from_series(
+            'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
+
+        # if alt_capacity exists in local_columns, updates it
+        if alt_capacity in alts.local_columns:
+            # Update alts table to reduce remaining capacity
+            picked_hu = picked_bid.value_counts()
+            new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
+            if (new_capacity < 0).any():
+                raise ValueError("Encounter negative value while calculating new building capacity")
+            orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
         
         model.out_choosers = 'choosers'
         model.out_chooser_filters = None # already filtered
