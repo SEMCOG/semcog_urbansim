@@ -1621,7 +1621,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
 
 @orca.step()
-def scheduled_development_events(buildings, iter_var, events_addition):
+def scheduled_development_events(buildings, iter_var, events_addition, refiner_events):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -1651,9 +1651,17 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
+        sched_dev["sp_filter"] = 0
         sched_dev["event_id"] = ebid  # add back event_id
-        # set sp_filter to -1 to nonres event to prevent future reloaction
-        sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
+
+        # set sp_filter to -1 to nonres event with refiner events to prevent future reloaction
+        refinements = refiner_events.to_frame()
+        refinements = refinements[refinements.year == iter_var]
+        refinements = refinements[refinements.agents == 'jobs']
+        for _, record in refinements.iterrows():
+            dev_w_ref = sched_dev[sched_dev.non_residential_sqft > 0].query(record.location_expression)
+            if len(dev_w_ref) > 0:
+                sched_dev.loc[dev_w_ref.index, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
