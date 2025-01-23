@@ -250,8 +250,8 @@ def register_elcm_model_step(model_name, agents_name):
         predict_X_df = ((
             predict_X_df)/predict_X_df.std()).fillna(0.0)
 
-        # sample predict_X_df to 1:5 preventing elcm segment order issue
-        M = len(predict_X_df) # use all filtered buildings
+        # sample predict_X_df to 1:8 preventing elcm segment order issue
+        M = min(len(predict_X_df), n * 8) # use all filtered buildings
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
