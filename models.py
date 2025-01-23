@@ -1656,8 +1656,7 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
 
         # set sp_filter to -1 to nonres event with refiner events to prevent future reloaction
         refinements = refiner_events.to_frame()
-        refinements = refinements[refinements.year == iter_var]
-        refinements = refinements[refinements.agents == 'jobs']
+        refinements = refinements[refinements.year >= iter_var]
         for _, record in refinements.iterrows():
             dev_w_ref = sched_dev[sched_dev.non_residential_sqft > 0].query(record.location_expression)
             if len(dev_w_ref) > 0:
