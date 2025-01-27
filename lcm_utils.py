@@ -198,6 +198,12 @@ def register_elcm_model_step(model_name, agents_name):
         else:
             alt_filter += '&(residential_units>0)'
 
+        # building age weight adjustment
+        adj_var = 'building_age'
+        adj_bin = [6, 21,]
+        adj_weights = [1.5, 1.2, 1.0]
+        # adj_weights = [1.0, 1.0, 1.0]
+
         # load variables from model
         variable_cols = model.variables
 
@@ -218,9 +224,18 @@ def register_elcm_model_step(model_name, agents_name):
         final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
 
         # alternatives
-        alts = orca.get_table(model.alternatives)
-        formula_alts_col = [col for col in formula_cols if col in alts.columns]
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
+        alts = orca.get_table('buildings')
+
+        # all variables should ben available
+        assert all([True if col in alts.columns else False for col in variable_cols])
+
+        formula_alts_col = list(set(variable_cols))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity]+['building_type_id','stories',adj_var])))
+
+        # ** set office building (23) with 10+ stories adj_var to 0
+        mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
+        alts_df.loc[mask_office_10plus, adj_var] = 0
+
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
         # std alts columns
@@ -233,7 +248,7 @@ def register_elcm_model_step(model_name, agents_name):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity] + [adj_var]))]
         if not home_based:
             # for non home based use jobs space as capacity
             predict_X_df = final_alts_df.loc[
@@ -266,7 +281,17 @@ def register_elcm_model_step(model_name, agents_name):
 
         # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
-        picked_idx = np.argsort(pred)[-n:]
+        # adj weight using adj_var
+        # get adj_var
+        adj_arr = final_alts_df.loc[predict_X_df.index, adj_var].to_numpy()
+        # binning
+        adj_arr = np.digitize(adj_arr, adj_bin)
+        # get weights
+        adj_arr = np.array(adj_weights)[adj_arr]
+        # apply weights to pred
+        pred_weighted = pred * adj_arr
+
+        picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id
