@@ -6,6 +6,7 @@ import yaml
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, r2_score
+from sklearn.preprocessing import RobustScaler
 import torch
 from forecast_estimation.models.LCM_torch import LCM_NN
 from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
@@ -245,10 +246,19 @@ def register_elcm_model_step(model_name, agents_name):
                 formula_alts_col
             ]
 
-        # std alts columns before predicting
-        # std could introduce NaN, fill them with 0 after that
-        predict_X_df = ((
-            predict_X_df)/predict_X_df.std()).fillna(0.0)
+        # Fit the scaler on the fitting data
+        scaler = RobustScaler()
+        # replace np.inf to 0
+        predict_X_df = predict_X_df.replace(np.inf, 0.0)
+        predict_X_df = predict_X_df.replace(-np.inf, 0.0)
+        # Fit and transform while keeping as DataFrame
+        predict_X_df = pd.DataFrame(
+            scaler.fit_transform(predict_X_df),
+            columns=predict_X_df.columns,
+            index=predict_X_df.index
+        )
+        # clip transform before scaling
+        predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
         # sample predict_X_df to 1:8 preventing elcm segment order issue
         M = min(len(predict_X_df), n * 8) # use all filtered buildings
