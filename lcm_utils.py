@@ -200,9 +200,15 @@ def register_elcm_model_step(model_name, agents_name):
 
         # building age weight adjustment
         adj_var = 'building_age'
-        adj_bin = [6, 21,]
-        adj_weights = [1.5, 1.2, 1.0]
+        adj_bin = [16, 31,]
+        # adj_bin = [11, 26,]
+        adj_weights = [5.0, 3.0, 1.0]
+        # adj_weights = [3.0, 2.0, 1.0]
+        # adj_weights = [1.5, 1.2, 1.0]
         # adj_weights = [1.0, 1.0, 1.0]
+
+        # Vacancy rate calculation
+        space_col = 'job_spaces'  # Column for total spaces
 
         # load variables from model
         variable_cols = model.variables
@@ -230,7 +236,7 @@ def register_elcm_model_step(model_name, agents_name):
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity]+['building_type_id','stories',adj_var])))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, space_col]+['building_type_id','stories',adj_var])))
 
         # ** set office building (23) with 10+ stories adj_var to 0
         mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
@@ -248,7 +254,25 @@ def register_elcm_model_step(model_name, agents_name):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity] + [adj_var]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, space_col] + [adj_var]))]
+
+        # Calculate vacancy rate dynamically
+        # Handle division by zero by setting vacancy rate to 0 when job_spaces is 0
+        final_alts_df['vacancy_rate'] = np.where(
+            final_alts_df[space_col] == 0,  # Condition: job_spaces == 0
+            0.0,  # If true, set vacancy rate to 0
+            final_alts_df[alt_capacity] / final_alts_df[space_col]  # Otherwise, calculate vacancy rate
+        )
+
+        # Ensure vacancy_rate is between 0 and 1
+        final_alts_df['vacancy_rate'] = np.clip(final_alts_df['vacancy_rate'], 0.0, 1.0)
+        # Invert vacancy rate so higher vacancy results in lower weights
+        final_alts_df['vacancy_weight'] = 1.0  # Default weight (no penalty)
+
+        # Apply vacancy penalty only to buildings with age 10+
+        mask_age_10plus = final_alts_df[adj_var] >= 10
+        final_alts_df.loc[mask_age_10plus, 'vacancy_weight'] = 1 - final_alts_df.loc[mask_age_10plus, 'vacancy_rate']
+
         if not home_based:
             # for non home based use jobs space as capacity
             predict_X_df = final_alts_df.loc[
@@ -275,12 +299,17 @@ def register_elcm_model_step(model_name, agents_name):
         # clip transform before scaling
         predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
-        # sample predict_X_df to 1:8 preventing elcm segment order issue
-        M = min(len(predict_X_df), n * 8) # use all filtered buildings
+        # sample predict_X_df to 1:5 preventing elcm segment order issue
+        M = min(len(predict_X_df), n * 5) # use all filtered buildings
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+
+        # Apply vacancy weights
+        vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
+        pred_weighted = pred * vacancy_weights
+
         # adj weight using adj_var
         # get adj_var
         adj_arr = final_alts_df.loc[predict_X_df.index, adj_var].to_numpy()
@@ -289,7 +318,7 @@ def register_elcm_model_step(model_name, agents_name):
         # get weights
         adj_arr = np.array(adj_weights)[adj_arr]
         # apply weights to pred
-        pred_weighted = pred * adj_arr
+        pred_weighted = pred_weighted * adj_arr
 
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
