@@ -323,14 +323,20 @@ def bike_nearest_library(buildings, parcels):
 def bike_nearest_park(buildings, parcels):
     return misc.reindex(parcels.bike_nearest_park, buildings.parcel_id)
 
-
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age(buildings, year):
+    # Retrieve year_built and city_id series
     year_built = buildings.year_built
-    year_built[year_built < 1600] = year_built[year_built > 1600].mean()
+    city_id = buildings.city_id
+    # Define a mask for invalid year_built entries
+    invalid_mask = (year_built < 1600) | (year_built > 2100) | year_built.isna()
+    # Calculate the median year_built for each city_id group
+    median_year_built_by_city_id = year_built.groupby(city_id).transform('median').astype(int)
+    # Replace invalid year_built entries with the median of their city_id group
+    year_built = year_built.where(~invalid_mask, median_year_built_by_city_id)
+    # Calculate building age
     age = year - year_built
     return age
-
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age_gt_50(buildings):
