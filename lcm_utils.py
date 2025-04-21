@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, r2_score
 import torch
 from forecast_estimation.models.LCM_torch import LCM_NN
+from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
 
 import orca
 from urbansim.utils import misc
@@ -295,13 +296,23 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
-
-        # std alts columns
+        
+        scaler = model_name.split('_')[7][:-3]
+        # alts_col_df alts columns
         std_cols = [col for col in formula_alts_col if col != alt_capacity]
         alts_col_df = alts_df.loc[alts_idx, std_cols]
-        # std could introduce NaN, fill them with 0 after that
-        alts_df.loc[alts_idx, std_cols] = ((
-            alts_col_df)/alts_col_df.std()).fillna(0.0)
+        if scaler == 'std':
+            alts_col_df = std_scaler_transform(alts_col_df)
+        elif scaler == 'robust':
+            alts_col_df = robust_scaler_transform(alts_col_df)
+        elif scaler == 'minmax':
+            alts_col_df = min_max_scaler_transform(alts_col_df)
+        else:
+            # std by default
+            alts_col_df = std_scaler_transform(alts_col_df)
+
+        # fill them back to alts_df
+        alts_df.loc[alts_idx, std_cols] = alts_col_df
 
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
@@ -315,7 +326,20 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         # std alt_capacity variable if it's in formula_alts_col
         if alt_capacity in formula_alts_col:
-            predict_X_df[alt_capacity] = predict_X_df[alt_capacity] / predict_X_df[alt_capacity].std()
+            # predict_X_df[alt_capacity] = scaler.fit_transform(predict_X_df[alt_capacity].to_numpy().reshape(-1,1))
+            alt_capacity_arr = predict_X_df[alt_capacity].to_numpy().reshape(-1,1)
+            if scaler == 'std':
+                predict_X_df[alt_capacity] = std_scaler_transform(alt_capacity_arr)
+            elif scaler == 'robust':
+                predict_X_df[alt_capacity] = robust_scaler_transform(alt_capacity_arr)
+            elif scaler == 'minmax':
+                predict_X_df[alt_capacity] = min_max_scaler_transform(alt_capacity_arr)
+            else:
+                # std by default
+                predict_X_df[alt_capacity] = std_scaler_transform(alt_capacity_arr)
+
+        # clip transform after scaling
+        predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
         # sample predict_X_df to 1:5 preventing hlcm segment order issue
         M = min(len(predict_X_df), n * 5) # HU pool count
