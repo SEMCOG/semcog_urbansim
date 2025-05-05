@@ -6,6 +6,7 @@ import warnings
 import requests
 import json
 import orca
+import shutil
 from collections import defaultdict
 from urbansim.utils import misc
 from time import sleep
@@ -376,7 +377,11 @@ def main(
 
     # upload_whatnots_to_postgres(os.path.basename(out_dir), whatnots_output)
     if upload_to_carto is True:
-        upload_whatnots_to_carto(os.path.basename(out_dir), whatnots_output)
+        try:
+            upload_whatnots_to_carto(os.path.basename(out_dir), whatnots_output)
+        except Exception as e:
+            print("Error uploading to carto:", e)
+            pass
     end = time.time()
     print("runtime whatnots:", end - start)
 
@@ -513,6 +518,12 @@ def main(
     writer.save()
     end = time.time()
     print("runtime:", end - start)
+
+    # copy all files in out_dir to ~/share/urbansim/RDF2050/model_runs if it exists
+    if os.path.exists("/home/da/share/urbansim/RDF2050/model_runs"):
+        for f in os.listdir(out_dir):
+            shutil.copy(os.path.join(out_dir, f), "/home/da/share/urbansim/RDF2050/model_runs")
+        print("copied all files in %s to /home/da/share/urbansim/RDF2050/model_runs" % out_dir)
 
     store_la.close()
 
