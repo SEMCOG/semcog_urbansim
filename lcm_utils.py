@@ -297,10 +297,20 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
         
-        scaler = model_name.split('_')[7][:-3]
         # alts_col_df alts columns
         std_cols = [col for col in formula_alts_col if col != alt_capacity]
         alts_col_df = alts_df.loc[alts_idx, std_cols]
+
+        # derive scaler from model_name, default to 'std' if no 8th segment
+        name_parts = model_name.split('_')
+        try:
+            scaler = name_parts[7]
+            # strip trailing ".pt" if present
+            if scaler.endswith('.pt'):
+                scaler = scaler[:-3]
+        except IndexError:
+            scaler = 'std'
+
         if scaler == 'std':
             alts_col_df = std_scaler_transform(alts_col_df)
         elif scaler == 'robust':
