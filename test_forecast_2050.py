@@ -41,7 +41,7 @@ orca.add_injectable('scenario_emp_control_path',
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1273.h5')
+orca.add_injectable('runnum_to_resume', 'run1257.h5')
 
 # dump all setting in yaml in run folder
 if not os.path.exists(orca.get_injectable("data_out_dir")):
@@ -122,7 +122,7 @@ orca.run(
     + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
     + [
-        "elcm_home_based",
+        # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
         "jobs_scaling_model",
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold

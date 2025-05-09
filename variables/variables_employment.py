@@ -72,3 +72,60 @@ def nodeid_walk(jobs, buildings):
 @orca.column('jobs', cache=True, cache_scope='iteration')
 def nodeid_drv(jobs, buildings):
     return misc.reindex(buildings.nodeid_drv, jobs.building_id)
+
+### ELCM NN dummy variables definition
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def home_based_homebased(jobs):
+    return jobs.home_based_status == 1
+    
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def home_based_nonhomebased(jobs):
+    return jobs.home_based_status == 0
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector3(jobs):
+    return jobs.sector_id == 3
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector6(jobs):
+    return jobs.sector_id == 6 
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector10(jobs):
+    return jobs.sector_id == 10 
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector11(jobs):
+    return jobs.sector_id == 11
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector14(jobs):
+    return jobs.sector_id == 14
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector9(jobs):
+    return jobs.sector_id == 9
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector4(jobs):
+    return jobs.sector_id == 4
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector2(jobs):
+    return jobs.sector_id == 2
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector5(jobs):
+    return jobs.sector_id == 5
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector16(jobs):
+    return jobs.sector_id == 16
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector17(jobs):
+    return jobs.sector_id == 17
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def job_sector_sector8(jobs):
+    return jobs.sector_id == 8
