@@ -519,11 +519,17 @@ def main(
     end = time.time()
     print("runtime:", end - start)
 
-    # copy all files in out_dir to ~/share/urbansim/RDF2050/model_runs if it exists
+    # copy all files in out_dir to /home/da/share/urbansim/RDF2050/model_runs/run1330
     if os.path.exists("/home/da/share/urbansim/RDF2050/model_runs"):
+        run_dir_name = os.path.basename(out_dir.rstrip("/"))
+        dest_dir = os.path.join("/home/da/share/urbansim/RDF2050/model_runs", run_dir_name)
+
+        os.makedirs(dest_dir, exist_ok=True)
+
         for f in os.listdir(out_dir):
-            shutil.copy(os.path.join(out_dir, f), "/home/da/share/urbansim/RDF2050/model_runs")
-        print("copied all files in %s to /home/da/share/urbansim/RDF2050/model_runs" % out_dir)
+            shutil.copy(os.path.join(out_dir, f), dest_dir)
+
+        print(f"Copied all files in {out_dir} to {dest_dir}")
 
     store_la.close()
 
