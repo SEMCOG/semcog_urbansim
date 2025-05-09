@@ -434,3 +434,27 @@ def aoh_lt65(households):
 @orca.column("households", cache=True, cache_scope="iteration")
 def aoh_65p(households):
     return households.age_of_head.ge(65).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt1(households):
+    return (households.income_quartile == 1).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt2(households):
+    return (households.income_quartile == 2).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt3(households):
+    return (households.income_quartile == 3).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt4(households):
+    return (households.income_quartile == 4).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_highinc(households):
+    return households.income.gt(79999).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_lowinc(households):
+    return households.income.le(79999).astype('int8')
