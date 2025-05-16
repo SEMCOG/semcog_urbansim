@@ -376,6 +376,16 @@ def init_taz_hlcm_trend_by_year():
     # add to injectable
     orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
 
+    # init job sector and building type weights
+    job_btype = orca.get_table('jobs').to_frame(['sector_id', 'building_type_id'])
+
+    # Count occurrences
+    joint_counts = job_btype.groupby(['building_type_id', 'sector_id']).size().unstack(fill_value=0)
+
+    # Normalize across building types to get conditional probabilities
+    prob_matrix = joint_counts.div(joint_counts.sum(axis=0), axis=1)
+    orca.add_injectable('job_btype_baseyear_prob_matrix', prob_matrix)
+
 
 @orca.step()
 def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
