@@ -160,7 +160,7 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
 
     # TODO: Update simulate steps with lcm nn model
     @orca.step(model_name)
-    def choice_model_simulate(emp_location_choice_models):
+    def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
         model = emp_location_choice_models[model_name]
 
         model_path = orca.get_injectable('elcm_model_path')
@@ -172,6 +172,7 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         la_id = model_name.split('_')[2][2:]
         # sector_id = model_name.split('.')[0].split('_')[-1][6:]
         home_based = model_name.split('_')[3] == 'homebased'
+        job_sector = int(model_name.split('.')[0].split('_')[4][6:])
         filter_text = ''
         for cat_name, categories in model_desc['job_categories'].items():
             for cat in categories:
@@ -245,7 +246,7 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, space_col] + [adj_var]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, space_col] + [adj_var, 'building_type_id']))]
 
         # Calculate vacancy rate dynamically
         # Handle division by zero by setting vacancy rate to 0 when job_spaces is 0
@@ -263,6 +264,11 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         # Apply vacancy penalty only to buildings with age 10+
         mask_age_10plus = final_alts_df[adj_var] >= 10
         final_alts_df.loc[mask_age_10plus, 'vacancy_weight'] = 1 - final_alts_df.loc[mask_age_10plus, 'vacancy_rate']
+
+        # get job_btype_matrix with current job_sector (Series NumofBtype X 1)
+        job_btype_matrix = job_btype_baseyear_prob_matrix[job_sector]
+        # assign weights to final_alts_df as job_btype_ratio
+        final_alts_df['job_btype_ratio'] = final_alts_df['building_type_id'].map(job_btype_matrix).fillna(0.0)
 
         if not home_based:
             # for non home based use jobs space as capacity
@@ -310,6 +316,11 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         adj_arr = np.array(adj_weights)[adj_arr]
         # apply weights to pred
         pred_weighted = pred_weighted * adj_arr
+
+        # adj pred_weighted using job_btype_matrix
+        job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
+        # job_btype_arr N_of_job_spaces X 1
+        pred_weighted = pred_weighted * job_btype_arr
 
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index

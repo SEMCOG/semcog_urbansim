@@ -73,6 +73,10 @@ def nodeid_walk(jobs, buildings):
 def nodeid_drv(jobs, buildings):
     return misc.reindex(buildings.nodeid_drv, jobs.building_id)
 
+@orca.column('jobs', cache=True, cache_scope='iteration')
+def building_type_id(jobs, buildings):
+    return misc.reindex(buildings.building_type_id, jobs.building_id)
+
 ### ELCM NN dummy variables definition
 @orca.column('jobs', cache=True, cache_scope='iteration')
 def home_based_homebased(jobs):
