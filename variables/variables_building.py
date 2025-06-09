@@ -514,6 +514,31 @@ def make_employment_proportion_variable(sector_id):
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
         return (jobs_sector / total_jobs).fillna(0)
 
+def make_employment_taz_proportion_variable(sector_id):
+    """
+    Generate employment proportion of total jobs by sector in TAZ 
+    reindex to buildings level. Registers with orca.
+    issue #65
+    """
+    var_name = "taz_empratio_%s" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        buildings = orca.get_table("buildings")
+        jobs = orca.get_table("jobs")
+        # total_jobs = buildings.b_total_jobs
+        jobs = jobs.to_frame(['sector_id', 'zone_id'])
+        # calculate total jobs by TAZ
+        total_jobs = jobs.groupby('zone_id').size()
+        # filter jobs by sector
+        jobs_sector = jobs[jobs.sector_id == sector_id].zone_id.value_counts()
+        # calculate proportion of jobs by TAZ
+        taz_empratio = (jobs_sector / total_jobs).fillna(0)
+        # make sure the value is between 0 and 1
+        taz_empratio = taz_empratio.clip(lower=0, upper=1)
+        # reindex to buildings
+        return misc.reindex(taz_empratio, buildings.zone_id).fillna(0)
+
 def make_building_employment_variable(sector_id):
     """
     Generate jobs by sectors in building variable. Registers with orca.
@@ -611,6 +636,7 @@ for sector in emp_sectors:
     make_employment_proportion_variable(sector)
     make_building_employment_variable(sector)
     make_employment_node_ratio_variable(sector)
+    make_employment_taz_proportion_variable(sector)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")

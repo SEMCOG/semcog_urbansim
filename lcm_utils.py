@@ -202,6 +202,9 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         # adj_weights = [1.5, 1.2, 1.0]
         # adj_weights = [1.0, 1.0, 1.0]
 
+        # TAZ job sector proportion variable 
+        taz_emp_ratio_var = 'taz_empratio_%s' % job_sector
+
         # Vacancy rate calculation
         space_col = 'job_spaces'  # Column for total spaces
 
@@ -233,7 +236,12 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, space_col]+['building_type_id','stories',adj_var])))
+        alts_df = alts.to_frame(list(set(
+            formula_alts_col+
+            alts_filter_cols +
+            [alt_capacity, space_col]+
+            ['building_type_id', 'stories', adj_var, taz_emp_ratio_var]
+        )))
 
         # ** set office building (23) with 10+ stories adj_var to 0
         mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
@@ -246,20 +254,22 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, space_col] + [adj_var, 'building_type_id']))]
+        final_alts_df = final_alts_df[list(set(
+            formula_alts_col+ 
+            [alt_capacity, space_col]+ 
+            [adj_var, 'building_type_id', taz_emp_ratio_var]
+        ))]
 
         # Calculate vacancy rate dynamically
-        # Handle division by zero by setting vacancy rate to 0 when job_spaces is 0
-        final_alts_df['vacancy_rate'] = np.where(
-            final_alts_df[space_col] == 0,  # Condition: job_spaces == 0
-            0.0,  # If true, set vacancy rate to 0
-            final_alts_df[alt_capacity] / final_alts_df[space_col]  # Otherwise, calculate vacancy rate
+        vacancy_rate = np.where(
+            final_alts_df[space_col] == 0,
+            0.0,
+            final_alts_df[alt_capacity] / final_alts_df[space_col]
         )
+        final_alts_df.loc[:, 'vacancy_rate'] = np.clip(vacancy_rate, 0.0, 1.0)
 
-        # Ensure vacancy_rate is between 0 and 1
-        final_alts_df['vacancy_rate'] = np.clip(final_alts_df['vacancy_rate'], 0.0, 1.0)
         # Invert vacancy rate so higher vacancy results in lower weights
-        final_alts_df['vacancy_weight'] = 1.0  # Default weight (no penalty)
+        final_alts_df.loc[:, 'vacancy_weight'] = 1.0
 
         # Apply vacancy penalty only to buildings with age 10+
         mask_age_10plus = final_alts_df[adj_var] >= 10
@@ -321,6 +331,13 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
         # job_btype_arr N_of_job_spaces X 1
         pred_weighted = pred_weighted * job_btype_arr
+
+        # ONLY run this adjustment for sector 14 and 16
+        # adj taz sector employment ratio using taz_emp_ratio_var
+        if job_sector in [14, 16]:
+            taz_emp_ratio_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
+            # adj pred_weighted using taz_emp_ratio_arr
+            pred_weighted = pred_weighted * taz_emp_ratio_arr
 
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
