@@ -306,8 +306,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         # clip transform before scaling
         predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
-        # sample predict_X_df to 1:5 preventing elcm segment order issue
-        M = min(len(predict_X_df), n * 5) # use all filtered buildings
+        # sample predict_X_df to 1:20 preventing elcm segment order issue
+        M = min(len(predict_X_df), n * 20) # use all filtered buildings
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
@@ -315,7 +315,6 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
 
         # Apply vacancy weights
         vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
-        pred_weighted = pred * vacancy_weights
 
         # adj weight using adj_var
         # get adj_var
@@ -323,21 +322,54 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         # binning
         adj_arr = np.digitize(adj_arr, adj_bin)
         # get weights
-        adj_arr = np.array(adj_weights)[adj_arr]
+        building_age_weights = np.array(adj_weights)[adj_arr] = np.array(adj_weights)[adj_arr]
         # apply weights to pred
-        pred_weighted = pred_weighted * adj_arr
 
         # adj pred_weighted using job_btype_matrix
         job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
         # job_btype_arr N_of_job_spaces X 1
-        pred_weighted = pred_weighted * job_btype_arr
 
         # ONLY run this adjustment for sector 14 and 16
         # adj taz sector employment ratio using taz_emp_ratio_var
         if job_sector in [14, 16]:
             taz_emp_ratio_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
-            # adj pred_weighted using taz_emp_ratio_arr
-            pred_weighted = pred_weighted * taz_emp_ratio_arr
+            
+            # do min-max normalization if all the same return 1.0
+            min_val, max_val = taz_emp_ratio_arr.min(), taz_emp_ratio_arr.max()
+            if min_val == max_val:
+                taz_emp_ratio_arr = np.ones(len(taz_emp_ratio_arr))
+            else:
+                taz_emp_ratio_arr = (taz_emp_ratio_arr - min_val) / (max_val - min_val)
+        else:
+            # if not sector 14 or 16, use ones
+            taz_emp_ratio_arr = np.ones(len(predict_X_df))
+        
+        ## special adjustment
+        # if la_id is '5' and job_sector is 14, use new set of weights
+        if int(la_id) == 5 and job_sector == 14:
+            weight_building_age=0.1
+            weight_vacancy=0.5
+            weight_btype_matrix=0.1 
+            weight_taz_ratio=3.0
+            # Combine with weights (normalized to sum to 1)
+            total_weight = weight_building_age + weight_vacancy + weight_btype_matrix + weight_taz_ratio
+            weight_building_age /= total_weight
+            weight_vacancy /= total_weight
+            weight_btype_matrix /= total_weight
+            weight_taz_ratio /= total_weight
+
+            # Compute log of weights to reduce skew, then take exp to smooth impact
+            log_adjustment = (
+                weight_building_age * np.log(building_age_weights + 1e-6) +
+                weight_vacancy * np.log(vacancy_weights + 1e-6) +
+                weight_btype_matrix * np.log(job_btype_arr + 1e-6) +
+                weight_taz_ratio * np.log(taz_emp_ratio_arr + 1e-6)
+            )
+
+            pred_weighted = pred * np.exp(log_adjustment)
+        else:
+            # use regular multiplication
+            pred_weighted = pred * building_age_weights * vacancy_weights * job_btype_arr * taz_emp_ratio_arr
 
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
