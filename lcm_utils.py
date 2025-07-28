@@ -331,7 +331,7 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
 
         # ONLY run this adjustment for sector 14 and 16
         # adj taz sector employment ratio using taz_emp_ratio_var
-        if job_sector in [14, 16]:
+        if job_sector in [14, 3]:
             taz_emp_ratio_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
             
             # do min-max normalization if all the same return 1.0
@@ -344,6 +344,11 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
             # if not sector 14 or 16, use ones
             taz_emp_ratio_arr = np.ones(len(predict_X_df))
         
+        ## sector 16 on Oakland county
+            # weight_building_age=0.1
+            # weight_vacancy=0.5
+            # weight_btype_matrix=3.0
+            # weight_taz_ratio=0.5
         ## special adjustment
         # if la_id is '5' and job_sector is 14, use new set of weights
         if int(la_id) == 5 and job_sector == 14:
