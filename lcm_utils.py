@@ -156,23 +156,21 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
-
-    # TODO: Update simulate steps with lcm nn model
+def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None):
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
         model = emp_location_choice_models[model_name]
 
+        # Parse LA and sector info from model name
         model_path = orca.get_injectable('elcm_model_path')
         model_desc_path = os.path.join(model_path, 'model_description.yaml')
         with open(model_desc_path, 'r') as f:
             model_desc = yaml.load(f, Loader=yaml.FullLoader)
-            
-        # chooser segment
+
         la_id = model_name.split('_')[2][2:]
-        # sector_id = model_name.split('.')[0].split('_')[-1][6:]
         home_based = model_name.split('_')[3] == 'homebased'
         job_sector = int(model_name.split('.')[0].split('_')[4][6:])
+
         filter_text = ''
         for cat_name, categories in model_desc['job_categories'].items():
             for cat in categories:
@@ -180,87 +178,51 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
                     filter_text += '&(%s_%s==1)' % (cat_name, cat)
                     break
 
-        # pre filter
-        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
-
-        # filter for picking jobs with no building_id assigned
-        chooser_filter = "(building_id==-1)" + filter_text
-        # filter alternatives
-        # alt_filter = "(%s>0)&(sp_filter>=0)" & (alt_capacity)
+        # === FILTERS ===
+        alts_pre_filter = chooser_pre_filter = f"(large_area_id=={la_id})"
+        chooser_filter = f"(building_id==-1){filter_text}"
         alt_filter = "(sp_filter>=0)"
         if not home_based:
-            alt_filter += '&(non_residential_sqft>0)&(%s>0)' % (alt_capacity)
+            alt_filter += f'&(non_residential_sqft>0)&({alt_capacity}>0)'
         else:
             alt_filter += '&(residential_units>0)'
 
-        # building age weight adjustment
-        adj_var = 'building_age'
-        adj_bin = [16, 31,]
-        # adj_bin = [11, 26,]
-        adj_weights = [5.0, 3.0, 1.0]
-        # adj_weights = [3.0, 2.0, 1.0]
-        # adj_weights = [1.5, 1.2, 1.0]
-        # adj_weights = [1.0, 1.0, 1.0]
+        # === GET DATA ===
+        choosers = orca.get_table('jobs')
+        alts = orca.get_table('buildings')
 
-        # TAZ job sector proportion variable 
-        taz_emp_ratio_var = 'taz_empratio_%s' % job_sector
-
-        # Vacancy rate calculation
-        space_col = 'job_spaces'  # Column for total spaces
-
-        # load variables from model
         variable_cols = model.variables
-
-        # filter for choosers and alternatives
         choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
 
-        # choosers
-        choosers = orca.get_table('jobs')
         choosers_df = choosers.to_frame(choosers_filter_cols)
-        # query using chooser_pre_filter to match whats used in estimation
         choosers_df = choosers_df.query(chooser_pre_filter)
-        # std choosers columns
-        # filter using chooser_filter
         final_choosers_df = choosers_df.query(chooser_filter)
         n = len(final_choosers_df)
-
-        # return if not needed
         if n == 0:
             return
 
-        # alternatives
-        alts = orca.get_table('buildings')
+        # Compute building age adjustment
+        bld_age_var = 'building_age'
+        taz_emp_ratio_var = f'taz_empratio_{job_sector}'
+        space_col = 'job_spaces'
 
-        # all variables should ben available
-        assert all([True if col in alts.columns else False for col in variable_cols])
-
-        formula_alts_col = list(set(variable_cols))
         alts_df = alts.to_frame(list(set(
-            formula_alts_col+
-            alts_filter_cols +
-            [alt_capacity, space_col]+
-            ['building_type_id', 'stories', adj_var, taz_emp_ratio_var]
+            variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id', 'stories', bld_age_var, taz_emp_ratio_var]
         )))
 
-        # ** set office building (23) with 10+ stories adj_var to 0
+        # Set bld_age_var to 0 for 10+ story offices
         mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
-        alts_df.loc[mask_office_10plus, adj_var] = 0
+        alts_df.loc[mask_office_10plus, bld_age_var] = 0
 
-        # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
-
-        # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        # construct predict DF with capacity and get result
         final_alts_df = final_alts_df[list(set(
-            formula_alts_col+ 
-            [alt_capacity, space_col]+ 
-            [adj_var, 'building_type_id', taz_emp_ratio_var]
+            variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id', taz_emp_ratio_var]
         ))]
 
-        # Calculate vacancy rate dynamically
+        # Compute vacancy rate
         vacancy_rate = np.where(
             final_alts_df[space_col] == 0,
             0.0,
@@ -268,137 +230,98 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces'):
         )
         final_alts_df.loc[:, 'vacancy_rate'] = np.clip(vacancy_rate, 0.0, 1.0)
 
-        # Invert vacancy rate so higher vacancy results in lower weights
+        # Assign vacancy weight
         final_alts_df.loc[:, 'vacancy_weight'] = 1.0
-
-        # Apply vacancy penalty only to buildings with age 10+
-        mask_age_10plus = final_alts_df[adj_var] >= 10
+        mask_age_10plus = final_alts_df[bld_age_var] >= 10
         final_alts_df.loc[mask_age_10plus, 'vacancy_weight'] = 1 - final_alts_df.loc[mask_age_10plus, 'vacancy_rate']
 
-        # get job_btype_matrix with current job_sector (Series NumofBtype X 1)
         job_btype_matrix = job_btype_baseyear_prob_matrix[job_sector]
-        # assign weights to final_alts_df as job_btype_ratio
         final_alts_df['job_btype_ratio'] = final_alts_df['building_type_id'].map(job_btype_matrix).fillna(0.0)
 
         if not home_based:
-            # for non home based use jobs space as capacity
             predict_X_df = final_alts_df.loc[
                 np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
-                formula_alts_col
+                variable_cols
             ]
         else:
-            predict_X_df = final_alts_df.loc[
-                final_alts_df.index,
-                formula_alts_col
-            ]
+            predict_X_df = final_alts_df.loc[final_alts_df.index, variable_cols]
 
-        # Fit the scaler on the fitting data
         scaler = RobustScaler()
-        # replace np.inf to 0
-        predict_X_df = predict_X_df.replace(np.inf, 0.0)
-        predict_X_df = predict_X_df.replace(-np.inf, 0.0)
-        # Fit and transform while keeping as DataFrame
+        predict_X_df = predict_X_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
         predict_X_df = pd.DataFrame(
             scaler.fit_transform(predict_X_df),
             columns=predict_X_df.columns,
             index=predict_X_df.index
         )
-        # clip transform before scaling
-        predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
+        predict_X_df = np.clip(predict_X_df, -5, 5)
 
-        # sample predict_X_df to 1:20 preventing elcm segment order issue
-        M = min(len(predict_X_df), n * 20) # use all filtered buildings
+        M = min(len(predict_X_df), n * 20)
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
-        # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
 
-        # Apply vacancy weights
+        # === CALIBRATION ===
+        calibration = elcm_calibration_config
+        method = calibration.get("calibration_method", "multiplicative")
+        weights = calibration.get("weights", {})
+        use_taz_cluster = calibration.get("use_taz_cluster_by_sector", {}).get(job_sector, False)
+        override_key = f"la_{la_id}_sector_{job_sector}"
+        if override_key in calibration.get("overrides", {}):
+            method = calibration["overrides"][override_key].get("calibration_method", method)
+            weights = calibration["overrides"][override_key].get("weights", weights)
+
+        # Default weights fallback
+        weight_building_age = weights.get("building_age", 1.0)
+        weight_vacancy = weights.get("vacancy", 1.0)
+        weight_btype = weights.get("btype_matrix", 1.0)
+        weight_taz = weights.get("taz_cluster", 1.0)
+
+        # Apply individual weight components
+        building_age_weights = final_alts_df.loc[predict_X_df.index, bld_age_var]
+        building_age_weights = np.digitize(building_age_weights, [16, 31])
+        building_age_weights = np.array([5.0, 3.0, 1.0])[building_age_weights]
+
         vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
-
-        # adj weight using adj_var
-        # get adj_var
-        adj_arr = final_alts_df.loc[predict_X_df.index, adj_var].to_numpy()
-        # binning
-        adj_arr = np.digitize(adj_arr, adj_bin)
-        # get weights
-        building_age_weights = np.array(adj_weights)[adj_arr] = np.array(adj_weights)[adj_arr]
-        # apply weights to pred
-
-        # adj pred_weighted using job_btype_matrix
         job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
-        # job_btype_arr N_of_job_spaces X 1
 
-        # ONLY run this adjustment for sector 14 and 16
-        # adj taz sector employment ratio using taz_emp_ratio_var
-        if job_sector in [14, 3]:
-            taz_emp_ratio_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
-            
-            # do min-max normalization if all the same return 1.0
-            min_val, max_val = taz_emp_ratio_arr.min(), taz_emp_ratio_arr.max()
-            if min_val == max_val:
-                taz_emp_ratio_arr = np.ones(len(taz_emp_ratio_arr))
-            else:
-                taz_emp_ratio_arr = (taz_emp_ratio_arr - min_val) / (max_val - min_val)
+        if use_taz_cluster:
+            taz_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
+            min_val, max_val = taz_arr.min(), taz_arr.max()
+            taz_cluster_arr = np.ones_like(taz_arr) if min_val == max_val else (taz_arr - min_val) / (max_val - min_val)
         else:
-            # if not sector 14 or 16, use ones
-            taz_emp_ratio_arr = np.ones(len(predict_X_df))
-        
-        ## sector 16 on Oakland county
-            # weight_building_age=0.1
-            # weight_vacancy=0.5
-            # weight_btype_matrix=3.0
-            # weight_taz_ratio=0.5
-        ## special adjustment
-        # if la_id is '5' and job_sector is 14, use new set of weights
-        if int(la_id) == 5 and job_sector == 14:
-            weight_building_age=0.1
-            weight_vacancy=0.5
-            weight_btype_matrix=0.1 
-            weight_taz_ratio=3.0
-            # Combine with weights (normalized to sum to 1)
-            total_weight = weight_building_age + weight_vacancy + weight_btype_matrix + weight_taz_ratio
-            weight_building_age /= total_weight
-            weight_vacancy /= total_weight
-            weight_btype_matrix /= total_weight
-            weight_taz_ratio /= total_weight
+            taz_cluster_arr = np.ones(len(predict_X_df))
 
-            # Compute log of weights to reduce skew, then take exp to smooth impact
-            log_adjustment = (
-                weight_building_age * np.log(building_age_weights + 1e-6) +
-                weight_vacancy * np.log(vacancy_weights + 1e-6) +
-                weight_btype_matrix * np.log(job_btype_arr + 1e-6) +
-                weight_taz_ratio * np.log(taz_emp_ratio_arr + 1e-6)
+        # Final calibration
+        if method == 'log_weighted':
+            total = weight_building_age + weight_vacancy + weight_btype + weight_taz
+            pred_weighted = pred * np.exp(
+                (weight_building_age / total) * np.log(building_age_weights + 1e-6) +
+                (weight_vacancy / total) * np.log(vacancy_weights + 1e-6) +
+                (weight_btype / total) * np.log(job_btype_arr + 1e-6) +
+                (weight_taz / total) * np.log(taz_cluster_arr + 1e-6)
             )
-
-            pred_weighted = pred * np.exp(log_adjustment)
         else:
             # use regular multiplication
-            pred_weighted = pred * building_age_weights * vacancy_weights * job_btype_arr * taz_emp_ratio_arr
+            pred_weighted = pred * building_age_weights * vacancy_weights * job_btype_arr * taz_cluster_arr
 
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
 
-        # update building_id
+        # Assign buildings
         choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+        orca.get_table('jobs').update_col_from_series('building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
-        print("Placed %s jobs." % len(picked_bid))
-
-        # update jobs table
-        orca.get_table('jobs').update_col_from_series(
-            'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
-
-        # if alt_capacity exists in local_columns, updates it
+        # Update capacity if applicable
         if alt_capacity in alts.local_columns:
-            # Update alts table to reduce remaining capacity
             picked_hu = picked_bid.value_counts()
             new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
             if (new_capacity < 0).any():
-                raise ValueError("Encounter negative value while calculating new building capacity")
+                raise ValueError("Negative capacity detected.")
             orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
-        
-    return choice_model_simulate
 
+        print(f"Placed {len(picked_bid)} jobs.")
+
+    return choice_model_simulate
 
 def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
