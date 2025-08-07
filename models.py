@@ -98,7 +98,11 @@ for name, model in list(hh_location_choice_models.items()):
     lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
 
 for name, model in list(emp_location_choice_models.items()):
-    lcm_utils.register_elcm_model_step(name, alt_capacity=model_configs['elcm']['vacant_variable'])
+    lcm_utils.register_elcm_model_step(
+        name, 
+        alt_capacity=model_configs['elcm']['vacant_variable'], 
+        elcm_calibration_config=model_configs['elcm']['calibration']
+    )
 
 
 @orca.step()
