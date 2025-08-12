@@ -390,3 +390,71 @@ def year_built(households, buildings):
 @orca.column("households", cache=True, cache_scope="iteration")
 def mcd_model_quota(households, buildings):
     return misc.reindex(buildings.mcd_model_quota, households.building_id)
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def hh_size_1p(households):
+    return (households.persons==1).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def hh_size_2p(households):
+    return (households.persons==2).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def hh_size_3p(households):
+    return (households.persons==3).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def hh_size_4pp(households):
+    return (households.persons>=4).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def children_has_children(households):
+    return (households.children>0).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def children_no_children(households):
+    return (households.children==0).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def ownership_own(households):
+    return households.ten.lt(3).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def ownership_rent(households):
+    return households.ten.ge(3).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def aoh_lt35(households):
+    return households.age_of_head.lt(35).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def aoh_lt65(households):
+    return (households.age_of_head.ge(35) & households.age_of_head.lt(65)).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def aoh_65p(households):
+    return households.age_of_head.ge(65).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt1(households):
+    return (households.income_quartile == 1).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt2(households):
+    return (households.income_quartile == 2).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt3(households):
+    return (households.income_quartile == 3).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def incomeqt_incqt4(households):
+    return (households.income_quartile == 4).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_highinc(households):
+    return households.income.gt(79999).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_lowinc(households):
+    return households.income.le(79999).astype('int8')

@@ -6,6 +6,10 @@ import yaml
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, r2_score
+from sklearn.preprocessing import RobustScaler
+import torch
+from forecast_estimation.models.LCM_torch import LCM_NN
+from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
 
 import orca
 from urbansim.utils import misc
@@ -152,75 +156,321 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
-def register_choice_model_step(model_name, agents_name):
-
+def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None):
     @orca.step(model_name)
-    def choice_model_simulate(location_choice_models):
-        model = location_choice_models[model_name]
-        if 'hlcm' in model_name:
-            alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (model_name.split('_')[1])
-            # filter for picking hh with no building_id assigned
-            chooser_filter = "(building_id==-1)"
-            alt_filter = "(residential_units>0) & (mcd_model_quota>0) & (hu_filter==0) & (sp_filter>=0)"
-        elif 'elcm' in model_name:
-            chooser_pre_filter = "(slid==%s) & (home_based_status==0)" % (model_name.split('_')[1])
-            alts_pre_filter = "(large_area_id==%s)" % (int(model_name.split('_')[1]) % 1000)
-            # filter for picking jobs with not building_id assigned
-            chooser_filter = "(building_id==-1)"
-            alt_filter = "(non_residential_sqft>0)&(sp_filter>=0)"
-            
-        # initialize simulation choosers and alts table
-        formula_cols = columns_in_formula(model.model_expression)
+    def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
+        model = emp_location_choice_models[model_name]
+
+        # Parse LA and sector info from model name
+        model_path = orca.get_injectable('elcm_model_path')
+        model_desc_path = os.path.join(model_path, 'model_description.yaml')
+        with open(model_desc_path, 'r') as f:
+            model_desc = yaml.load(f, Loader=yaml.FullLoader)
+
+        la_id = model_name.split('_')[2][2:]
+        home_based = model_name.split('_')[3] == 'homebased'
+        job_sector = int(model_name.split('.')[0].split('_')[4][6:])
+
+        filter_text = ''
+        for cat_name, categories in model_desc['job_categories'].items():
+            for cat in categories:
+                if cat in model_name.split('.')[0].split('_'):
+                    filter_text += '&(%s_%s==1)' % (cat_name, cat)
+                    break
+
+        # === FILTERS ===
+        alts_pre_filter = chooser_pre_filter = f"(large_area_id=={la_id})"
+        chooser_filter = f"(building_id==-1){filter_text}"
+        alt_filter = "(sp_filter>=0)"
+        if not home_based:
+            alt_filter += f'&(non_residential_sqft>0)&({alt_capacity}>0)'
+        else:
+            alt_filter += '&(residential_units>0)'
+
+        # === GET DATA ===
+        choosers = orca.get_table('jobs')
+        alts = orca.get_table('buildings')
+
+        variable_cols = model.variables
         choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
         alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+
+        choosers_df = choosers.to_frame(choosers_filter_cols)
+        choosers_df = choosers_df.query(chooser_pre_filter)
+        final_choosers_df = choosers_df.query(chooser_filter)
+        n = len(final_choosers_df)
+        if n == 0:
+            return
+
+        # Compute building age adjustment
+        bld_age_var = 'building_age'
+        taz_emp_ratio_var = f'taz_empratio_{job_sector}'
+        space_col = 'job_spaces'
+
+        alts_df = alts.to_frame(list(set(
+            variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id', 'stories', bld_age_var, taz_emp_ratio_var]
+        )))
+
+        # Set bld_age_var to 0 for 10+ story offices
+        mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
+        alts_df.loc[mask_office_10plus, bld_age_var] = 0
+
+        alts_idx = alts_df.query(alts_pre_filter).index
+        final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
+
+        final_alts_df = final_alts_df[list(set(
+            variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id', taz_emp_ratio_var]
+        ))]
+
+        # Compute vacancy rate
+        vacancy_rate = np.where(
+            final_alts_df[space_col] == 0,
+            0.0,
+            final_alts_df[alt_capacity] / final_alts_df[space_col]
+        )
+        final_alts_df.loc[:, 'vacancy_rate'] = np.clip(vacancy_rate, 0.0, 1.0)
+
+        # Assign vacancy weight
+        final_alts_df.loc[:, 'vacancy_weight'] = 1.0
+        mask_age_10plus = final_alts_df[bld_age_var] >= 10
+        final_alts_df.loc[mask_age_10plus, 'vacancy_weight'] = 1 - final_alts_df.loc[mask_age_10plus, 'vacancy_rate']
+
+        job_btype_matrix = job_btype_baseyear_prob_matrix[job_sector]
+        final_alts_df['job_btype_ratio'] = final_alts_df['building_type_id'].map(job_btype_matrix).fillna(0.0)
+
+        if not home_based:
+            predict_X_df = final_alts_df.loc[
+                np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
+                variable_cols
+            ]
+        else:
+            predict_X_df = final_alts_df.loc[final_alts_df.index, variable_cols]
+
+        scaler = RobustScaler()
+        predict_X_df = predict_X_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
+        predict_X_df = pd.DataFrame(
+            scaler.fit_transform(predict_X_df),
+            columns=predict_X_df.columns,
+            index=predict_X_df.index
+        )
+        predict_X_df = np.clip(predict_X_df, -5, 5)
+
+        M = min(len(predict_X_df), n * 20)
+        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
+
+        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+
+        # === CALIBRATION ===
+        calibration = elcm_calibration_config
+        method = calibration.get("calibration_method", "multiplicative")
+        weights = calibration.get("weights", {})
+        use_taz_cluster = calibration.get("use_taz_cluster_by_sector", {}).get(job_sector, False)
+        override_key = f"la_{la_id}_sector_{job_sector}"
+        if override_key in calibration.get("overrides", {}):
+            method = calibration["overrides"][override_key].get("calibration_method", method)
+            weights = calibration["overrides"][override_key].get("weights", weights)
+
+        # Default weights fallback
+        weight_building_age = weights.get("building_age", 1.0)
+        weight_vacancy = weights.get("vacancy", 1.0)
+        weight_btype = weights.get("btype_matrix", 1.0)
+        weight_taz = weights.get("taz_cluster", 1.0)
+
+        # Apply individual weight components
+        building_age_weights = final_alts_df.loc[predict_X_df.index, bld_age_var]
+        building_age_weights = np.digitize(building_age_weights, [16, 31])
+        building_age_weights = np.array([5.0, 3.0, 1.0])[building_age_weights]
+
+        vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
+        job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
+
+        if use_taz_cluster:
+            taz_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
+            min_val, max_val = taz_arr.min(), taz_arr.max()
+            taz_cluster_arr = np.ones_like(taz_arr) if min_val == max_val else (taz_arr - min_val) / (max_val - min_val)
+        else:
+            taz_cluster_arr = np.ones(len(predict_X_df))
+
+        # Final calibration
+        if method == 'log_weighted':
+            total = weight_building_age + weight_vacancy + weight_btype + weight_taz
+            pred_weighted = pred * np.exp(
+                (weight_building_age / total) * np.log(building_age_weights + 1e-6) +
+                (weight_vacancy / total) * np.log(vacancy_weights + 1e-6) +
+                (weight_btype / total) * np.log(job_btype_arr + 1e-6) +
+                (weight_taz / total) * np.log(taz_cluster_arr + 1e-6)
+            )
+        else:
+            # use regular multiplication
+            pred_weighted = pred * building_age_weights * vacancy_weights * job_btype_arr * taz_cluster_arr
+
+        picked_idx = np.argsort(pred_weighted)[-n:]
+        picked_bid = predict_X_df.iloc[picked_idx].index
+
+        # Assign buildings
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+        orca.get_table('jobs').update_col_from_series('building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
+
+        # Update capacity if applicable
+        if alt_capacity in alts.local_columns:
+            picked_hu = picked_bid.value_counts()
+            new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
+            if (new_capacity < 0).any():
+                raise ValueError("Negative capacity detected.")
+            orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
+
+        print(f"Placed {len(picked_bid)} jobs.")
+
+    return choice_model_simulate
+
+def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
+
+    # TODO: Update simulate steps with lcm nn model
+    @orca.step(model_name)
+    def choice_model_simulate(hh_location_choice_models):
+        model = hh_location_choice_models[model_name]
+
+        model_path = orca.get_injectable('hlcm_model_path')
+        model_desc_path = os.path.join(model_path, 'model_description.yaml')
+        with open(model_desc_path, 'r') as f:
+            model_desc = yaml.load(f, Loader=yaml.FullLoader)
+
+        # chooser segment
+        la_id = model_name.split('_')[2][2:]
+        filter_text = ''
+        for cat_name, categories in model_desc['hh_categories'].items():
+            for cat in categories:
+                if cat in model_name:
+                    filter_text += '&(%s_%s==1)' % (cat_name, cat)
+                    break
+
+        # hh_size = model_name.split('_')[3]
+        # ownership = model_name.split('_')[4]
+        # aoh = model_name.split('_')[5].split('.')[0]
+        
+        # pre filter
+        alts_pre_filter = chooser_pre_filter = "(large_area_id==%s)" % (la_id)
+
+        # filter for picking hh with no building_id assigned
+        # chooser_filter = "(building_id==-1)&(hh_size_%s==1)&(ownership_%s==1)&(aoh_%s==1)" % (hh_size, ownership, aoh)
+        chooser_filter = "(building_id==-1)" + filter_text
+
+        # filter alternatives
+        alt_filter = "(residential_units>0) & (%s>0) & (hu_filter==0) & (sp_filter>=0)" % (alt_capacity)
+            
+        # load variables from model
+        variable_cols = model.variables
+
+        # filter for choosers and alternatives
+        choosers_filter_cols = columns_in_filters(chooser_filter) + columns_in_filters(chooser_pre_filter)
+        alts_filter_cols = columns_in_filters(alt_filter) + columns_in_filters(alts_pre_filter)
+
         # choosers
-        choosers = orca.get_table(model.choosers)
-        formula_chooser_col = [col for col in formula_cols if col in choosers.columns]
-        choosers_df = choosers.to_frame(formula_chooser_col+choosers_filter_cols)
+        choosers = orca.get_table('households')
+        choosers_df = choosers.to_frame(choosers_filter_cols)
         # query using chooser_pre_filter to match whats used in estimation
-        choosers_idx = choosers_df.query(chooser_pre_filter).index
+        choosers_df = choosers_df.query(chooser_pre_filter)
         # std choosers columns
-        chooser_col_df = choosers_df.loc[choosers_idx, formula_chooser_col]
-        choosers_df.loc[choosers_idx, formula_chooser_col] = (
-            chooser_col_df-chooser_col_df.mean())/chooser_col_df.std()
         # filter using chooser_filter
-        final_choosers_df = choosers_df.loc[choosers_idx].query(chooser_filter)
+        final_choosers_df = choosers_df.query(chooser_filter)
+        n = len(final_choosers_df)
+
+        # return if not needed
+        if n == 0:
+            return
 
         # alternatives
-        alts = orca.get_table(model.alternatives)
-        formula_alts_col = [col for col in formula_cols if col in alts.columns]
-        alts_df = alts.to_frame(formula_alts_col+alts_filter_cols+[model.alt_capacity])
+        alts = orca.get_table('buildings')
+
+        # all variables should ben available
+        assert all([True if col in alts.columns else False for col in variable_cols])
+
+        formula_alts_col = list(set(variable_cols))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity])))
+
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
-        # std alts columns
-        alts_col_df = alts_df.loc[alts_idx, formula_alts_col]
-        # std could introduce NaN, fill them with 0 after that
-        alts_df.loc[alts_idx, formula_alts_col] = ((
-            alts_col_df-alts_col_df.mean())/alts_col_df.std()).fillna(0)
+        
+        # alts_col_df alts columns
+        std_cols = [col for col in formula_alts_col if col != alt_capacity]
+        alts_col_df = alts_df.loc[alts_idx, std_cols]
+
+        # derive scaler from model_name, default to 'std' if no 8th segment
+        name_parts = model_name.split('_')
+        try:
+            scaler = name_parts[7]
+            # strip trailing ".pt" if present
+            if scaler.endswith('.pt'):
+                scaler = scaler[:-3]
+        except IndexError:
+            scaler = 'std'
+
+        if scaler == 'std':
+            alts_col_df = std_scaler_transform(alts_col_df)
+        elif scaler == 'robust':
+            alts_col_df = robust_scaler_transform(alts_col_df)
+        elif scaler == 'minmax':
+            alts_col_df = min_max_scaler_transform(alts_col_df)
+        else:
+            # std by default
+            alts_col_df = std_scaler_transform(alts_col_df)
+
+        # fill them back to alts_df
+        alts_df.loc[alts_idx, std_cols] = alts_col_df
 
         # filter using alt_filter
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
-        orca.add_table('choosers', final_choosers_df)
-        orca.add_table('alternatives', final_alts_df)
-        
-        model.out_choosers = 'choosers'
-        model.out_chooser_filters = None # already filtered
-        model.out_alternatives = 'alternatives'
-        model.out_alt_filters = None # already filtered
+        # construct predict DF with capacity and get result
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
+        predict_X_df = final_alts_df.loc[
+            np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
+            formula_alts_col
+        ]
 
-        model.run(chooser_batch_size=1000)
+        # std alt_capacity variable if it's in formula_alts_col
+        if alt_capacity in formula_alts_col:
+            # predict_X_df[alt_capacity] = scaler.fit_transform(predict_X_df[alt_capacity].to_numpy().reshape(-1,1))
+            alt_capacity_arr = predict_X_df[alt_capacity].to_numpy().reshape(-1,1)
+            if scaler == 'std':
+                predict_X_df[alt_capacity] = std_scaler_transform(alt_capacity_arr)
+            elif scaler == 'robust':
+                predict_X_df[alt_capacity] = robust_scaler_transform(alt_capacity_arr)
+            elif scaler == 'minmax':
+                predict_X_df[alt_capacity] = min_max_scaler_transform(alt_capacity_arr)
+            else:
+                # std by default
+                predict_X_df[alt_capacity] = std_scaler_transform(alt_capacity_arr)
 
-        # if not choices, return
-        if not type(model.choices) == pd.Series:
-            print('There are 0 unplaced agents.')
-            return
+        # clip transform after scaling
+        predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
-        print('There are {} unplaced agents.'
-              .format(model.choices.isnull().sum()))
+        # sample predict_X_df to 1:5 preventing hlcm segment order issue
+        M = min(len(predict_X_df), n * 5) # HU pool count
+        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
-        orca.get_table(agents_name).update_col_from_series(
-            model.choice_column, model.choices, cast=True)
+        # run predict
+        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        picked_idx = np.argsort(pred)[-n:]
+        picked_bid = predict_X_df.iloc[picked_idx].index
+
+        # update building_id
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+
+        print("Placed %s households." % len(picked_bid))
+
+        # update households table
+        orca.get_table('households').update_col_from_series(
+            'building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
+
+        # if alt_capacity exists in local_columns, updates it
+        if alt_capacity in alts.local_columns:
+            # Update alts table to reduce remaining capacity
+            picked_hu = picked_bid.value_counts()
+            new_capacity = alts_df.loc[picked_hu.index][alt_capacity] - picked_hu
+            if (new_capacity < 0).any():
+                raise ValueError("Encounter negative value while calculating new building capacity")
+            orca.get_table('buildings').update_col_from_series(alt_capacity, new_capacity, cast=True)
 
     return choice_model_simulate
 
@@ -524,12 +774,13 @@ class SimulationChoiceModel(MNLDiscreteChoiceModel):
         return score, residuals
 
 
-def get_model_category_configs():
+def get_model_category_configs(yaml_configs):
     """
     Returns dictionary where key is model category name and value is dictionary
     of model category attributes, including individual model config filename(s)
     """
-    with open(os.path.join(misc.configs_dir(), 'yaml_configs_2050.yaml')) as f:
+    # TODO: update yaml_configs_2050.yaml
+    with open(os.path.join(misc.configs_dir(), yaml_configs)) as f:
         yaml_configs = yaml.load(f, Loader=yaml.FullLoader)
 
     with open(os.path.join(misc.configs_dir(), 'model_structure.yaml')) as f:
@@ -539,6 +790,27 @@ def get_model_category_configs():
         category_attributes['config_filenames'] = yaml_configs[model_category]
 
     return model_category_configs
+
+
+def load_hlcm_model_configs_from_path(path, yaml_configs):
+    # load all available model files from path and dump into yaml_configs
+    nn_models = os.listdir(os.path.join(path, 'pts'))
+    # with open(os.path.join(misc.configs_dir(), yaml_configs), 'r+') as f:
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'r') as f:
+        ym = yaml.safe_load(f)
+        ym['hlcm'] = nn_models
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'w') as f:
+        yaml.dump(ym, f)
+
+def load_elcm_model_configs_from_path(path, yaml_configs):
+    # load all available model files from path and dump into yaml_configs
+    nn_models = os.listdir(os.path.join(path, 'pts'))
+    # with open(os.path.join(misc.configs_dir(), yaml_configs), 'r+') as f:
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'r') as f:
+        ym = yaml.safe_load(f)
+        ym['elcm'] = nn_models
+    with open(os.path.join(misc.configs_dir(), yaml_configs), 'w') as f:
+        yaml.dump(ym, f)
 
 
 def create_lcm_from_config(config_filename, model_attributes):
@@ -559,6 +831,31 @@ def create_lcm_from_config(config_filename, model_attributes):
     # is it alt_capacity in largeMNL equals vacant_variable in 2045?
     model.alt_capacity = model_attributes['vacant_variable']
     return model
+
+
+# TODO: create new create_lcm function for lcm_nn
+def load_torch_lcm(config_filename, model_attributes):
+    """
+    For a given model filename and dictionary of model category
+    attributes, instantiate a torch model object.
+
+    config_filename: model filename
+    model_attributes: model_structure.yaml
+    """
+    device = torch.device('cpu')
+    state = torch.load(config_filename, map_location=device)
+
+    lcm = LCM_NN( 
+        state['input_size'], 
+        hidden_layer=state['hidden_layer'], 
+        lr=state['lr'], 
+        weight_decay=state['weight_decay']
+    )
+
+    lcm.load_model(config_filename)
+
+    return lcm
+
 
 def get_hlcm_valid_vars(data_path: str) -> tuple[list[str], list[str]]:
     """

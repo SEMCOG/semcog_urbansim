@@ -1,4 +1,5 @@
 import os
+import yaml
 import shutil
 import random
 import pandas as pd
@@ -156,6 +157,7 @@ def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
     hdf_last = '/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5'
+    orca.add_injectable("input_hdf_path", hdf_last)
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
     print("HDF data: ", hdf_last)
@@ -178,5 +180,8 @@ def verify():
     return hdf_store
 
 
-orca.add_injectable("store", verify())
+# 2045 input hdf
+orca.add_injectable('hdf_input_2045', '/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5')
+orca.add_injectable('forecast_input_2040', '/mnt/hgfs/urbansim/RDF2050/model_improvements/2024_spring/2010_data')
 
+orca.add_injectable("store", verify())
