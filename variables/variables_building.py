@@ -224,7 +224,8 @@ def vacant_residential_units(buildings, households):
 
 @orca.column("buildings")
 def vacant_job_spaces(buildings, jobs):
-    return buildings.job_spaces.sub(jobs.building_id.value_counts(), fill_value=0)
+    # clip by 0 to prevent negative vacant job spaces
+    return buildings.job_spaces.sub(jobs.building_id.value_counts(), fill_value=0).clip(lower=0)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
@@ -323,14 +324,20 @@ def bike_nearest_library(buildings, parcels):
 def bike_nearest_park(buildings, parcels):
     return misc.reindex(parcels.bike_nearest_park, buildings.parcel_id)
 
-
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age(buildings, year):
+    # Retrieve year_built and city_id series
     year_built = buildings.year_built
-    year_built[year_built < 1600] = year_built[year_built > 1600].mean()
+    city_id = buildings.city_id
+    # Define a mask for invalid year_built entries
+    invalid_mask = (year_built < 1600) | (year_built > 2100) | year_built.isna()
+    # Calculate the median year_built for each city_id group
+    median_year_built_by_city_id = year_built.groupby(city_id).transform('median').astype(int)
+    # Replace invalid year_built entries with the median of their city_id group
+    year_built = year_built.where(~invalid_mask, median_year_built_by_city_id)
+    # Calculate building age
     age = year - year_built
     return age
-
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age_gt_50(buildings):
@@ -508,6 +515,57 @@ def make_employment_proportion_variable(sector_id):
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
         return (jobs_sector / total_jobs).fillna(0)
 
+def make_employment_taz_proportion_variable(sector_id):
+    """
+    Generate employment proportion of total jobs by sector in TAZ 
+    reindex to buildings level. Registers with orca.
+    issue #65
+    """
+    var_name = "taz_empratio_%s" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        buildings = orca.get_table("buildings")
+        jobs = orca.get_table("jobs")
+        # total_jobs = buildings.b_total_jobs
+        jobs = jobs.to_frame(['sector_id', 'zone_id'])
+        # calculate total jobs by TAZ
+        total_jobs = jobs.groupby('zone_id').size()
+        # filter jobs by sector
+        jobs_sector = jobs[jobs.sector_id == sector_id].zone_id.value_counts()
+        # calculate proportion of jobs by TAZ
+        taz_empratio = (jobs_sector / total_jobs).fillna(0)
+        # make sure the value is between 0 and 1
+        taz_empratio = taz_empratio.clip(lower=0, upper=1)
+        # reindex to buildings
+        return misc.reindex(taz_empratio, buildings.zone_id).fillna(0)
+
+def make_building_employment_variable(sector_id):
+    """
+    Generate jobs by sectors in building variable. Registers with orca.
+    """
+    var_name = "bldg_jobs_sector_%s" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        jobs = orca.get_table("jobs")
+        jobs = jobs.to_frame(jobs.local_columns)
+        jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
+        return jobs_sector.fillna(0)
+
+def make_employment_node_ratio_variable(sector_id):
+    """
+    Generate jobs by sectors in building variable. Registers with orca.
+    """
+    var_name = "nodes_walk_job_ratio_sector_%s" % sector_id
+    node_walk_varname = "nodes_walk_sector%s_jobs" % sector_id
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        buildings = orca.get_table("buildings").to_frame(['nodes_walk_jobs', node_walk_varname])
+        node_total_jobs = buildings["nodes_walk_jobs"]
+        node_sector_jobs = buildings[node_walk_varname]
+        return (node_sector_jobs / node_total_jobs).fillna(0)
 
 def make_disagg_var(
     from_geog_name,
@@ -577,6 +635,9 @@ for var_to_log in vars_to_log:
 emp_sectors = np.arange(18) + 1
 for sector in emp_sectors:
     make_employment_proportion_variable(sector)
+    make_building_employment_variable(sector)
+    make_employment_node_ratio_variable(sector)
+    make_employment_taz_proportion_variable(sector)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")

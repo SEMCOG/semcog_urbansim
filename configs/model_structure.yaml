@@ -6,7 +6,7 @@ models:
         alternatives_id_name: building_id
         alternatives_name: buildings
         supply_variable: residential_units
-        vacant_variable: mcd_model_quota
+        vacant_variable: vacant_residential_units
 
     elcm: 
         model_type: location_choice
@@ -15,3 +15,28 @@ models:
         alternatives_name: buildings
         supply_variable: job_spaces
         vacant_variable: vacant_job_spaces
+        calibration:
+            # Calibration method can be 'multiplicative' or 'log_weighted'
+            calibration_method: multiplicative  # or 'log_weighted'
+
+            weights:
+                # Weights for the calibration method
+                building_age: 1.0
+                vacancy: 1.0
+                btype_matrix: 1.0
+                taz_cluster: 1.0
+
+            use_taz_cluster_by_sector:
+                # Use TAZ cluster for specific sectors
+                14: true
+                3: true
+
+            overrides:
+                # Overrides for specific sector LA combinations
+                la_5_sector_14:
+                    calibration_method: log_weighted
+                    weights:
+                        building_age: 0.1
+                        vacancy: 0.5
+                        btype_matrix: 0.1
+                        taz_cluster: 3.0

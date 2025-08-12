@@ -3,6 +3,150 @@ import orca
 import pandas as pd
 from urbansim.utils import misc
 
+@orca.table(cache=True)
+def buildings(store):
+    df = store["buildings"]
+    df = df.fillna(0)
+    # Todo: combine two sqft prices into one and set non use sqft price to 0
+    df["market_value"] = 0
+    df["sqft_price_nonres"] = df.market_value * 1.0 / 0.7 / df.non_residential_sqft
+    df.loc[df.sqft_price_nonres > 1000, "sqft_price_nonres"] = 0
+    df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
+    df["sqft_price_res"] = (
+        df.market_value
+        * 1.0
+        / 0.7
+        / (df.sqft_per_unit.astype(int) * df.residential_units)
+    )
+    df.loc[df.sqft_price_res > 1000, "sqft_price_res"] = 0
+    df.loc[df.sqft_price_res < 0, "sqft_price_res"] = 0
+    df.fillna(0, inplace=True)
+
+    df["mcd_model_quota"] = 0
+
+    df = pd.merge(
+        df,
+        store["parcels"][["city_id"]],
+        left_on="parcel_id",
+        right_index=True,
+        how="left",
+    )
+    df["city_id"] = df["city_id"].fillna(0)
+    df["hu_filter"] = 0
+    cites = [551, 1155, 1100, 3130, 6020, 6040]
+    sample = df[df.residential_units > 0]
+    sample = sample[~(sample.index.isin(store["households"].building_id))]
+    # #35
+    for c in sample.city_id.unique():
+        frac = 0.8 if c in cites else 0
+        # #35
+        df.loc[
+            sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
+            "hu_filter",
+        ] = 1
+
+    # TODO, this is placeholder. will update with special emp buildings lookup later
+
+    df[
+        "sp_filter"
+    ] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    # !!important set pseudo buildings to -2 sp_filter
+    df.loc[df.index > 90000000, "sp_filter"] = -2
+
+    df["event_id"] = 0  # also add event_id for event reference
+
+    return df
+
+
+@orca.table(cache=True)
+def households(hh, buildings):
+    df = hh
+    b = buildings.to_frame(["large_area_id", "residential_units"])
+    b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
+    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+        b.index.values, (df.building_id == -1).sum()
+    )
+
+    bid_to_la = {
+        1: 3, 2: 125, 3:99, 4: 161, 5: 115, 6: 147, 7: 93, 8: 5
+    }
+    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    hh_to_assign = df.loc[idx_invalid_building_id, "building_id"]
+    for bid, laid in bid_to_la.items():
+        local_hh = hh_to_assign[hh_to_assign//1000000 == bid]
+        # sample la hu
+        df.loc[local_hh.index, 'building_id'] = np.random.choice(
+            b[(b.large_area_id==laid)&(b.residential_units>0)].index.values, local_hh.size
+        )
+
+    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id,)
+
+    # dtype optimization
+    df["workers"] = df["workers"].fillna(0).astype(np.int8)
+    df["children"] = df["children"].fillna(0).astype(np.int8)
+    df["persons"] = df["persons"].astype(np.int8)
+    df["cars"] = df["cars"].astype(np.int8)
+    df["race_id"] = df["race_id"].astype(np.int8)
+    df["income"] = df["income"].astype(np.int32)
+    df["age_of_head"] = df["age_of_head"].astype(np.int8)
+    df["large_area_id"] = df["large_area_id"].astype(np.uint8)
+    return df.fillna(0)
+
+
+@orca.table(cache=True)
+def persons(p):
+    df = p
+    df["relate"] = df["relate"].astype(np.int8)
+    df["age"] = df["age"].astype(np.int8)
+    df["worker"] = df["worker"].astype(np.int8)
+    df["sex"] = df["sex"].astype(np.int8)
+    df["race_id"] = df["race_id"].astype(np.int8)
+    df["member_id"] = df["member_id"].astype(np.int8)
+    df["household_id"] = df["household_id"].astype(np.int64)
+    return df
+
+
+@orca.table(cache=True)
+def jobs(store, buildings):
+    df = store["jobs"]
+    b = buildings.to_frame(["large_area_id"])
+    b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
+    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+        b.index.values, (df.building_id == -1).sum()
+    )
+    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
+        b.index.values, idx_invalid_building_id.sum()
+    )
+    df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
+    return df.fillna(0)
+
+
+@orca.table(cache=True)
+def parcels(store, zoning):
+    parcels_df = store["parcels"]
+    # concat pseudo buildings parcels
+    #  based on zoning.is_developable, adjust parcels pct_undev
+    pct_undev = zoning.pct_undev.copy()
+    # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
+    pct_undev[zoning.is_developable == 0] = 100
+    # Parcel is developable, but refer to the field “percent_undev” for how much of the parcel is actually developable (1,791,169 parcels)
+    # Parcel is developable, but contains underground storage tanks
+    pct_undev[zoning.is_developable == 2] += 10
+    parcels_df["pct_undev"] = pct_undev.clip(0, 100).astype("int16")
+    parcels_df["pct_undev"] = parcels_df["pct_undev"].fillna(0)
+    return parcels_df
+
+@orca.table(cache=True)
+def base_job_space(buildings):
+    return buildings.jobs_non_home_based.to_frame("base_job_space")
+
+@orca.table(cache=True)
+def building_to_zone_baseyear():
+    # baseyear building_id to zone_id mapping
+    # fix the issue where one parcel could have multiple TAZ zone
+    return pd.read_csv('data/building_to_zone_baseyear_2020_shrink.csv').set_index('building_id')
+
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_is_allowed_residential():
@@ -467,34 +611,32 @@ def make_indicators(tab, geo_id):
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
-def whatnot_id(parcels, whatnots, interesting_parcel_ids):
-    parcels = parcels.to_frame(["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"])
-    parcels["parcel_id"] = parcels.index
+def whatnot_id(parcels, whatnots,):
+    parcels = parcels.to_frame(["large_area_id", "city_id", "zone_id"])
     parcels.index.name = None
-    parcels.loc[parcels.parcel_id.isin(interesting_parcel_ids), "parcel_id"] = 0
 
     whatnots = whatnots.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
+        ["large_area_id", "city_id", "zone_id"]
     ).reset_index()
     m = pd.merge(
-        parcels, whatnots, "left", ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"],
+        parcels, whatnots, "left", ["large_area_id", "city_id", "zone_id"],
     )
     return m.whatnot_id
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def whatnot_id(buildings, whatnots, interesting_parcel_ids):
+def whatnot_id(buildings, whatnots,):
     buildings = buildings.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
+        ["large_area_id", "city_id", "zone_id"]
     ).reset_index()
     whatnots = whatnots.to_frame(
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"]
+        ["large_area_id", "city_id", "zone_id"]
     ).reset_index()
     m = pd.merge(
         buildings,
         whatnots,
         "left",
-        ["large_area_id", "us_congress_id", "mi_senate_id", "mi_house_id", "city_id", "school_id", "zone_id"],
+        ["large_area_id", "city_id", "zone_id"],
     )
     return m.set_index("building_id").whatnot_id
 
@@ -536,7 +678,7 @@ orca.add_injectable(
 
 # === indicators ===
 def list_indicators():
-    main = ["hh", "hh_pop", "gq_pop", "pop", "jobs_total", "housing_units"]
+    main = ["hh", "hh_pop", "housing_units"]
     hh = [
         ## size
         "household_size",
@@ -647,35 +789,6 @@ def list_indicators():
         "pop_age_55_64",
         "pop_age_25_64",
     ]
-    gq_pop = [
-        ## race
-        "gq_pop_race_1",
-        "gq_pop_race_2",
-        "gq_pop_race_3",
-        "gq_pop_race_4",
-        "pct_gq_pop_race_1",
-        "pct_gq_pop_race_2",
-        "pct_gq_pop_race_3",
-        "pct_gq_pop_race_4",
-        ## age
-        "gq_pop_age_00_04",
-        "gq_pop_age_05_17",
-        "gq_pop_age_18_24",
-        "gq_pop_age_25_34",
-        "gq_pop_age_35_64",
-        "gq_pop_age_65_inf",
-        "gq_pop_age_18_64",
-        "gq_pop_age_00_17",
-        "gq_pop_age_25_44",
-        "gq_pop_age_25_64",
-        "gq_pop_age_45_64",
-        "gq_pop_age_65_84",
-        "gq_pop_age_85_inf",
-        "gq_pop_age_35_59",
-        "gq_pop_age_60_64",
-        "gq_pop_age_65_74",
-        "gq_pop_age_75_inf",
-    ]
     ## job by sector
     sec_ids = sorted(set(orca.get_table("jobs").sector_id))
     job = [f"jobs_sec_{str(i).zfill(2)}" for i in sec_ids]
@@ -684,9 +797,9 @@ def list_indicators():
     ]
     ## land use
     parcel_building = [
-        "parcel_is_allowed_residential",
-        "parcel_is_allowed_demolition",
-        "hu_filter",
+        # "parcel_is_allowed_residential",
+        # "parcel_is_allowed_demolition",
+        # "hu_filter",
         "buildings",
         "vacant_units",
         "job_spaces",
@@ -703,10 +816,6 @@ def list_indicators():
         main
         + hh
         + hh_pop
-        + pop
-        + gq_pop
-        + job
-        + job_home_based
         + parcel_building
         + building_sqft
     )

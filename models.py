@@ -13,6 +13,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
+from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_vars_from_hdf, load_2010_taz_vars_from_folder
 
 import utils
 import lcm_utils
@@ -21,40 +22,87 @@ import dataset
 import variables
 from functools import reduce
 
+# Setup Scenario controls
+if orca.get_injectable('ENABLE_SCENARIO'):
+    hh_controls_path = orca.get_injectable('scenario_hh_control_path')
+    new_hh_controls = pd.read_csv(hh_controls_path, index_col=0)
+    orca.add_table('annual_household_control_totals', new_hh_controls)
+
+    remi_total_pop_path = orca.get_injectable('scenario_remi_total_pop')
+    new_remi_total_pop = pd.read_csv(remi_total_pop_path, index_col=0)
+    orca.add_table('remi_pop_total', new_remi_total_pop)
+
+    if orca.is_injectable('scenario_emp_control_path'):
+        emp_controls_path = orca.get_injectable('scenario_emp_control_path')
+        new_emp_controls = pd.read_csv(emp_controls_path, index_col=0)
+        orca.add_table('annual_employment_control_totals', new_emp_controls)
+
 # Set up location choice model objects.
 # Register as injectable to be used throughout simulation
-location_choice_models = {}
+hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
-model_configs = lcm_utils.get_model_category_configs()
+
+# get config paths
+if not orca.is_injectable('hlcm_model_path'):
+    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+
+if not orca.is_injectable('elcm_model_path'):
+    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
+
+if not orca.is_injectable('yaml_configs'):
+    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
+
+hlcm_model_path = orca.get_injectable('hlcm_model_path')
+elcm_model_path = orca.get_injectable('elcm_model_path')
+yaml_configs = orca.get_injectable('yaml_configs')
+
+# load hlcm model config from path and save to yaml
+lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
+lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
+
+# load model_configs
+model_configs = lcm_utils.get_model_category_configs(yaml_configs)
+
 for model_category_name, model_category_attributes in model_configs.items():
     if model_category_attributes["model_type"] == "location_choice":
         model_config_files = model_category_attributes["config_filenames"]
 
         for model_config in model_config_files:
-            model = lcm_utils.create_lcm_from_config(
-                model_config, model_category_attributes
-            )
-            location_choice_models[model.name] = model
 
             if model_category_name == "hlcm":
-                hlcm_step_names.append(model.name)
+                # load torch-based hlcm model
+                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
+                hlcm_step_names.append(model_config)
+                hh_location_choice_models[model_config] = model
 
             if model_category_name == "elcm":
-                elcm_step_names.append(model.name)
+                # load torch-based elcm model
+                model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
+                elcm_step_names.append(model_config)
+                emp_location_choice_models[model_config] = model
 
-orca.add_injectable("location_choice_models", location_choice_models)
+orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
+orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
+# sort hlcm
 orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
-# run elcm by specific job_sector sequence defined below
+# sort elcm: run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
 elcm_sector_order = {sector: idx for idx, sector in enumerate(elcm_sector_order)}
 orca.add_injectable(
     "elcm_step_names",
-    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x[5:]) // 100000]),
+    sorted(elcm_step_names, key=lambda x: elcm_sector_order[int(x.split('.')[0].split('_')[-1][6:])]),
 )
 
-for name, model in list(location_choice_models.items()):
-    lcm_utils.register_choice_model_step(model.name, model.choosers)
+for name, model in list(hh_location_choice_models.items()):
+    lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
+
+for name, model in list(emp_location_choice_models.items()):
+    lcm_utils.register_elcm_model_step(
+        name, 
+        alt_capacity=model_configs['elcm']['vacant_variable'], 
+        elcm_calibration_config=model_configs['elcm']['calibration']
+    )
 
 
 @orca.step()
@@ -116,6 +164,7 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
     blds = buildings.to_frame(
         [
             "building_id",
+            "large_area_id",
             "semmcd",
             vacant_variable,
             "building_age",
@@ -176,13 +225,11 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
             (housing_units.semmcd == city)
             & (
                 # only sampling hu_filter == 0
-                housing_units.hu_filter
-                == 0
+                housing_units.hu_filter == 0
             )
             & (
                 # only sampling sp_filter >= 0
-                housing_units.sp_filter
-                >= 0
+                housing_units.sp_filter >= 0
             )
         ]
 
@@ -225,6 +272,33 @@ def mcd_hu_sampling(buildings, households, mcd_total, bg_hh_increase):
                 % (city, selected_units.shape[0], growth)
             )
         new_units = pd.concat([new_units, selected_units])
+    
+    # TODO: check if quota is greater or equal to #of unplaced households 
+    la_ids = blds.large_area_id.unique()
+    h = households.local
+    for la_id in la_ids:
+        la_quota = new_units[new_units.large_area_id == la_id].shape[0]
+        la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        print( "%s: la_quota %s la_unplaced_hh %s" % (la_id, la_quota, la_unplaced_hh))
+        if la_quota < la_unplaced_hh: 
+            # not enough la_quota for unplaced hhs
+            # sample LA housing units to match
+            diff = la_unplaced_hh - la_quota
+            la_housing_units = housing_units[
+                (housing_units.large_area_id == la_id)
+                & (housing_units.hu_filter == 0) # housing units should be filtered
+                & (housing_units.sp_filter >= 0)
+            ]
+            la_new_units = new_units[new_units.large_area_id == la_id]
+            rem = la_housing_units.index.value_counts().sub( la_new_units.index.value_counts(), fill_value=0).astype(int)
+            rem_by_bid = rem[(rem > 0)]
+            print( "%s missing %s HU: total remaining vacancy of %s" % (la_id, diff, rem_by_bid.sum()))
+            while diff > 0:
+                # TODO: rem_by_bid may be empty
+                picked = rem_by_bid[rem_by_bid > 0].sample(1).index[0]
+                rem_by_bid.loc[picked] = rem_by_bid.loc[picked] - 1
+                new_units = pd.concat([new_units, blds.loc[[picked]]])
+                diff -= 1
 
     # add mcd model quota to building table
     quota = new_units.index.value_counts()
@@ -276,6 +350,167 @@ def update_bg_hh_increase(bg_hh_increase, households):
 
     # Update bg_hh_increase table
     orca.add_table("bg_hh_increase", bg_hh)
+
+@orca.step()
+def init_taz_hlcm_trend_by_year():
+    """ Initialize taz_hlcm_trend_by_year injectable objection in orca
+    - load 2045 input hdf 
+    - load households and buildings from orca
+    - compute variables 
+    - saving DF to obj
+    - update injectable
+    """
+    # init taz_hlcm_trend object
+    taz_hlcm_trend_by_year = {}
+
+    # # initiating 2010 attribute df
+    input_2040 = orca.get_injectable('forecast_input_2040')
+    df_2010 = load_2010_taz_vars_from_folder(input_2040)
+    taz_hlcm_trend_by_year['2010'] = df_2010
+    # # initiating 2015 attribute df
+    hdf_input_2045 = orca.get_injectable('hdf_input_2045')
+    df_2015 = load_2015_taz_vars_from_hdf(hdf_input_2045)
+    taz_hlcm_trend_by_year['2015'] = df_2015
+    print('Finishing init TAZ vars from hdf', hdf_input_2045)
+    # initiating baseyear attribute df
+    df_cur = load_taz_vars_from_orca()
+    taz_hlcm_trend_by_year['2020'] = df_cur
+    print('Finishing loading TAZ vars from orca...')
+
+    # add to injectable
+    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+
+    # init job sector and building type weights
+    job_btype = orca.get_table('jobs').to_frame(['sector_id', 'building_type_id'])
+
+    # Count occurrences
+    joint_counts = job_btype.groupby(['building_type_id', 'sector_id']).size().unstack(fill_value=0)
+
+    # Normalize across building types to get conditional probabilities
+    prob_matrix = joint_counts.div(joint_counts.sum(axis=0), axis=1)
+    orca.add_injectable('job_btype_baseyear_prob_matrix', prob_matrix)
+
+
+@orca.step()
+def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
+    """Update taz_hlcm_trend_by_year for the year
+    """
+    base_year = 2020
+
+    # get current trend df
+    df_cur = load_taz_vars_from_orca()
+    
+    # update taz_hlcm_trend_by_year
+    taz_hlcm_trend_by_year[str(year)] = df_cur
+    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+
+    # load building_id to zone_id mapping
+    b_to_taz = buildings.to_frame(['zone_id']).zone_id
+
+    # define 10yr trend variables
+    year_delta = 10
+    # define building variables
+    cur_year = base_year if year <= base_year+10 else year
+    
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    diff = cur_df - prev_df
+
+    # Experimental: 
+    # * For Dearborn, taz zone 420-472,
+    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
+    # N = len(selected_taz_ids) # total number of applicable TAZs
+    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
+    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
+    # # increase hh_pop by 100%pp
+    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
+    # # increase with_children hh by 100%
+    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
+    # # reduce one_persons_hh count by 100%
+    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+
+    for var in df_cur.columns:
+        print("registering building variable", var+"_taz_10yr_change")
+        @orca.column("buildings", var+"_taz_10yr_change")
+        def func():
+            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+    # define 5yr trend variables
+    year_delta = 5
+    # define building variables
+    cur_year = base_year if year <= base_year+5 else year
+    
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    diff = cur_df - prev_df
+
+
+    # Experimental: 
+    # * For Dearborn, taz zone 420-472,
+    selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
+    N = len(selected_taz_ids) # total number of applicable TAZs
+    # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
+    diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
+    # increase hh_pop by 100%pp
+    diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000 ) // (N)) 
+    # increase with_children hh by 100%
+    diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000 ) // (N)) 
+    # reduce one_persons_hh count by 50%
+    diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000 ) // (N)) 
+
+    for var in df_cur.columns:
+        print("registering building variable", var+"_taz_10yr_change")
+        @orca.column("buildings", var+"_taz_10yr_change")
+        def func():
+            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+    # define 5yr trend variables
+    year_delta = 5
+    # define building variables
+    cur_year = base_year if year <= base_year+5 else year
+    
+    # if not exist, use flat trend
+    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
+        # generate TAZ trend variables
+        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    else:
+        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
+        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
+    diff = cur_df - prev_df
+
+
+    # Experimental: 
+    # * For Dearborn, taz zone 420-472,
+    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
+    # N = len(selected_taz_ids) # total number of applicable TAZs
+    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
+    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
+    # # increase hh_pop by 100%pp
+    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
+    # # increase with_children hh by 100%
+    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
+    # # reduce one_persons_hh count by 100%
+    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+
+    for var in df_cur.columns:
+        print("registering building variable", var+"_taz_5yr_change")
+        @orca.column("buildings", var+"_taz_5yr_change")
+        def func():
+            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
 
 @orca.step()
 def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
@@ -476,9 +711,27 @@ def households_transition(
     region_ct[max_cols] = region_ct[max_cols].replace(-1, np.inf)
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
+    region_hh.index = region_hh.index.astype(int)
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+    # issue #56
+    # append hh_seeds and p_seeds to the end 
+    hh_seeds = orca.get_table('hh_seeds').to_frame().reset_index()[region_hh.columns]
+    p_seeds = orca.get_table('p_seeds').to_frame().reset_index()#[region_p.columns]
+    max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
+    hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
+    hh_seeds.index.name = 'household_id'
+    # set hh_seeds building_id to -1
+    hh_seeds['building_id'] = -1
+
+    p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
+    p_seeds.index.name = 'person_id'
+    # map hh_id back to p_seeds
+    p_seeds['household_id'] = p_seeds['seed_id'].map(hh_seeds.reset_index().set_index('seed_id')['household_id'])
+    # append
+    region_hh = pd.concat((region_hh, hh_seeds), axis=0)
+    region_p = pd.concat((region_p, p_seeds), axis=0)
 
     if "changed_hhs" in orca.list_tables():
         ## add changed hhs and persons from previous year back (ensure transition sample availability )
@@ -664,18 +917,33 @@ def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
 
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
-    if iter_var != 2021:
+    # run if hh_seeds not found
+    if iter_var != 2021 and orca.is_table("hh_seeds"):
         print('skipping cache_hh_seeds for forecast year')
         return
+
+    # if resume running from forecast year
+    if iter_var != 2021 and not orca.is_table("hh_seeds"):
+        input_hdf = pd.HDFStore(orca.get_injectable("input_hdf_path"), 'r')
+        parcels = input_hdf['parcels']
+        b = input_hdf['buildings']
+        b = b.join(parcels[['large_area_id']], on='parcel_id')
+        hh = input_hdf['households']
+        hh = hh.join(b[['large_area_id']], on='building_id')
+        p = input_hdf['persons']
+        p = p.join(hh[['large_area_id']], on='household_id')
+        input_hdf.close()
+    else:
+        hh = households.to_frame(households.local_columns + ["large_area_id"])
+        p = persons.to_frame(persons.local_columns + ["large_area_id"])
+
     # caching hh and persons seeds at the start of the model run
-    hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
     hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
     # generate age bins
     age_bin = [-1, 15, 19, 21, 24, 29, 34, 44, 54, 59, 61, 64, 69, 74, 199]
     age_bin_labels = [0,16,20,22,25,30,35,45,55,60,62,65,70,75,200]
-    p = persons.to_frame(persons.local_columns + ["large_area_id"])
     p['age_bin'] = pd.cut(p.age, age_bin, labels=age_bin_labels[:-1])
     p['age_bin'] = p['age_bin'].fillna(0).astype(int)
     p = p.join(hh.seed_id, on='household_id')
@@ -1410,7 +1678,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
 
 @orca.step()
-def scheduled_development_events(buildings, iter_var, events_addition):
+def scheduled_development_events(buildings, iter_var, events_addition, refiner_events):
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -1440,9 +1708,16 @@ def scheduled_development_events(buildings, iter_var, events_addition):
         sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
+        sched_dev["sp_filter"] = 0
         sched_dev["event_id"] = ebid  # add back event_id
-        # set sp_filter to -1 to nonres event to prevent future reloaction
-        sched_dev.loc[sched_dev.non_residential_sqft > 0, "sp_filter"] = -1
+
+        # set sp_filter to -1 to nonres event with refiner events to prevent future reloaction
+        refinements = refiner_events.to_frame()
+        refinements = refinements[refinements.year >= iter_var]
+        for _, record in refinements.iterrows():
+            dev_w_ref = sched_dev[sched_dev.non_residential_sqft > 0].query(record.location_expression)
+            if len(dev_w_ref) > 0:
+                sched_dev.loc[dev_w_ref.index, "sp_filter"] = -1
         b = buildings.to_frame(buildings.local_columns)
 
         all_buildings = parcel_utils.merge_buildings(b, sched_dev[b.columns], False)
@@ -2403,13 +2678,14 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     print("Dropped %s hh from current pseudo buildings." % k)
 
     # update households and buildings
-    orca.add_table("households", hh)
+    orca.add_table("households", hh[households.local_columns]) # remove extra columns
     orca.add_table("buildings", bb)
 
 
 @orca.step()
 def refine_housing_units(households, buildings, mcd_total):
-    """ Refine housing units before mcd_hu_sampling to allow it matching mcd_total
+    """ Refine housing units before mcd_hu_sampling to allow it matching mcd_total or 
+    total unplaced households depends on which one is larger
 
     Args:
         households (DataFrame Wrapper): households
@@ -2418,7 +2694,10 @@ def refine_housing_units(households, buildings, mcd_total):
     """
     year = orca.get_injectable("year")
     b = buildings.to_frame(
-        buildings.local_columns + ["hu_filter", "sp_filter", "semmcd"]
+        buildings.local_columns + [
+            "hu_filter", "sp_filter", "semmcd", 
+            "large_area_id", "vacant_residential_units"
+        ]
     )
     mcd_total = mcd_total.to_frame([str(year)])
 
@@ -2445,7 +2724,7 @@ def refine_housing_units(households, buildings, mcd_total):
     hu_mcd_diff_gt_0 = hu_mcd_diff[hu_mcd_diff["diff"] > 0]
 
     for city, row in hu_mcd_diff_gt_0.iterrows():
-        add_hu = int(row["diff"] * 1.1)
+        add_hu = int(row["diff"] * 1.2)
         local_units = housing_units.loc[
             (housing_units.building_type_id.isin([81, 82, 83]))
             & (housing_units.city_id == city)
@@ -2461,6 +2740,36 @@ def refine_housing_units(households, buildings, mcd_total):
             "Adding %s units to city %s, actually added %s"
             % (add_hu, city, new_units.sum())
         )
+
+    # TODO: ensure LA has enough HU for unplaced HH
+    la_ids = b.large_area_id.unique()
+    h = households.local
+    for la_id in la_ids:
+        # getting placeable empty housing units
+        la_empty_units = b[(b.large_area_id == la_id) & (b.hu_filter == 0) & (
+            b.sp_filter >= 0)].vacant_residential_units.sum()
+        # getting unplaced households count
+        la_unplaced_hh = h[(h.large_area_id == la_id) & (h.building_id == -1)].shape[0]
+        print( "%s: la_empty_units %s la_unplaced_hh %s" % (la_id, la_empty_units, la_unplaced_hh))
+        if la_empty_units < la_unplaced_hh: 
+            # not enough la_empty_units for unplaced hhs
+            # sample LA housing units to match
+            diff = la_unplaced_hh - la_empty_units
+            local_units = housing_units.loc[
+                (housing_units.building_type_id.isin([81, 82, 83]))
+                & (housing_units.large_area_id == la_id)
+            ]
+            # filter out hu_filter and sp_filter
+            local_units = local_units[local_units["hu_filter"] == 0]
+            local_units = local_units[local_units["sp_filter"] >= 0]
+            print( "%s missing %s HU: total housing units of %s" % (la_id, diff, local_units.sum()))
+            new_units = local_units.sample(
+                int(diff), replace=False, random_state=1).index.value_counts()
+            b.loc[new_units.index, "residential_units"] += new_units
+            print(
+                "Adding %s units to large_area %s, actually added %s"
+                % (diff, la_id, new_units.sum())
+            )
 
     # update res_units in building table
     buildings.update_col_from_series(
