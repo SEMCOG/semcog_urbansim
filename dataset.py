@@ -10,7 +10,7 @@ import assumptions
 
 warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 
-table_dir = "~/semcog_urbansim/data"
+table_dir = "data"
 
 for name in [
     "remi_pop_total",
