@@ -520,9 +520,9 @@ def main(
     print("runtime:", end - start)
 
     # copy all files in out_dir to /home/da/share/urbansim/RDF2050/model_runs/run1330
-    if os.path.exists("/home/da/share/urbansim/RDF2050/model_runs"):
+    if os.path.exists("/mnt/hgfs/urbansim/RDF2050/model_runs"):
         run_dir_name = os.path.basename(out_dir.rstrip("/"))
-        dest_dir = os.path.join("/home/da/share/urbansim/RDF2050/model_runs", run_dir_name)
+        dest_dir = os.path.join("/mnt/hgfs/urbansim/RDF2050/model_runs", run_dir_name)
 
         os.makedirs(dest_dir, exist_ok=True)
 
