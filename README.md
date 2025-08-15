@@ -65,3 +65,14 @@ micromamba activate forecast
 ```
 nohup python test_forecast_2050.py >> runs/run_stdout/simulation_log.txt 2>&1 &
 ```
+
+### Commit, Export and Load
+```
+docker commit forecast-sim forecast_simulation
+```
+```
+docker save -o forecast-sim-image.tar forecast_simulation
+```
+```
+docker load -i forecast_simulation_final.tar
+```
