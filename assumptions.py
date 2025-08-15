@@ -99,10 +99,10 @@ random.seed(seed)
 np.random.seed(seed)
 utils.run_log(f"Seed: {seed}")
 
-working_store = '/home/da/semcog_urbansim/data/checkpoint_store.h5'
+working_store = 'data/checkpoint_store.h5'
 
 def load_latest_input_hdf():
-    data_path = r"/home/da/share/urbansim/RDF2050/model_inputs/base_hdf"
+    data_path = r"/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf"
     if os.path.exists(data_path) == False:
         data_path = "/home/da/share/U_RDF2050/model_inputs/base_hdf"
     hdf_list = [
@@ -111,14 +111,14 @@ def load_latest_input_hdf():
         if ("forecast_data_input" in f) & (f[-3:] == ".h5")
     ]
     hdf_last = max(hdf_list, key=os.path.getctime)
-    hdf_last = "/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5"
+    hdf_last = "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5"
     utils.run_log(f"Data: {hdf_last}")
 
     return hdf_last
 
 def load_last_checkpoint(runnum):
     # example runnum run1001.h5
-    run_path = "/home/da/semcog_urbansim/runs"
+    run_path = "runs"
     hdf_path = os.path.join(run_path, runnum)
     utils.run_log(f"Loading checkpoint data: {hdf_path}")
     saved_run = pd.HDFStore(hdf_path, "r")
@@ -156,7 +156,7 @@ def update_store_from_checkpoint(store, checkpoint):
 def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
-    hdf_last = '/home/da/share/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5'
+    hdf_last = "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5"
     orca.add_injectable("input_hdf_path", hdf_last)
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
@@ -174,7 +174,7 @@ def verify():
 
     # verifying data structure and save data structure config
     new = verify_data_structure.yaml_from_store(hdf_store)
-    with open("/home/da/semcog_urbansim/configs/data_structure.yaml", "w") as out:
+    with open("configs/data_structure.yaml", "w") as out:
         out.write(new)
 
     return hdf_store
