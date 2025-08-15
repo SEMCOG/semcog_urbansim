@@ -1,31 +1,35 @@
-FROM python/3.9.18-alpine3.18
+FROM mambaorg/micromamba:1.5.6-bullseye
 LABEL maintainer="SEMCOG"
 
-ARG DEBIAN_FRONTEND=noninteractive
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
+    build-essential \
+    wget \
+    curl \
+    libsndfile1-dev \
+    tesseract-ocr \
+    espeak-ng \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt update
-RUN apt install -y git libsndfile1-dev tesseract-ocr espeak-ng python3 python3-pip ffmpeg build-essential
-RUN python3 -m pip install --no-cache-dir --upgrade pip
+# Create micromamba env with Python 3.9
+RUN micromamba create -y -n forecast python=3.9 -c conda-forge
 
-RUN git clone https://github.com/SEMCOG/semcog_urbansim && cd semcog_urbansim && git checkout forecast_2050
+# Set ENV and activate shell
+ENV PATH=/opt/conda/envs/forecast/bin:$PATH
+ENV CONDA_DEFAULT_ENV=forecast
+ENV CONDA_PREFIX=/opt/conda/envs/forecast
+SHELL ["/bin/bash", "-c"]
 
-RUN git clone https://github.com/SEMCOG/urbansim.git && cd urbansim && git checkout dev
-RUN python3 -m pip install --no-cache-dir -e ./urbansim
+# Optional for interactive shell convenience
+RUN echo "source activate forecast" >> ~/.bashrc
 
-RUN git clone https://github.com/SEMCOG/urbansim_parcels.git && cd urbansim_parcels && git checkout master
-RUN python3 -m pip install --no-cache-dir -e ./urbansim_parcels
+# Copy Python requirements
+COPY requirements.txt /tmp/requirements.txt
 
-RUN git clone https://github.com/UDST/urbansim_templates.git && cd urbansim_templates && git checkout dev
-RUN python3 -m pip install --no-cache-dir -e ./urbansim_templates
+# Install dependencies in the forecast env
+RUN micromamba run -n forecast pip install --no-cache-dir --upgrade pip && \
+    micromamba run -n forecast pip install --no-cache-dir -r /tmp/requirements.txt
 
-RUN git clone https://github.com/UDST/pandana.git && cd pandana && git checkout dev
-RUN python3 -m pip install --no-cache-dir -e ./pandana
-
-RUN git clone https://github.com/UDST/developer && cd developer && git checkout master
-RUN python3 -m pip install --no-cache-dir -e ./developer
-
-RUN git clone https://github.com/UDST/choicemodels.git && cd choicemodels && git checkout dev
-RUN python3 -m pip install --no-cache-dir -e ./choicemodels
-
-RUN python3 -m pip install --no-cache-dir git+https://github.com/facebookresearch/detectron2.git pytesseract
-RUN python3 -m pip install tqdm pandas==1.5.3 carto==1.11.3 cartoframes==1.2.4 sklearn==0.0 openpyxl wheel
+CMD [ "bash" ]

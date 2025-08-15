@@ -2442,7 +2442,7 @@ def build_networks_2050(parcels):
 
     # networks in semcog_networks.h5
     with open(
-        "/home/da/semcog_urbansim/configs/available_networks_2050.yaml", "r"
+        "configs/available_networks_2050.yaml", "r"
     ) as stream:
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
