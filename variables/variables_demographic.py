@@ -262,6 +262,16 @@ def workers_gt_cars(households):
 def workers_lte_cars(households):
     return (households.workers <= households.cars).astype("int32")
 
+@orca.column("households", cache=True, cache_scope="iteration")
+def seniors(persons):
+    persons = persons.to_frame(["household_id", "age"])
+    return persons[persons.age >= 65].groupby("household_id").size()
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def with_seniors(households):
+    households = households.to_frame(["seniors"])
+    return households[households.seniors > 0]
+
 
 #####################
 # PERSONS VARIABLES
