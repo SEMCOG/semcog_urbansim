@@ -385,8 +385,14 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # all variables should ben available
         assert all([True if col in alts.columns else False for col in variable_cols])
 
+        # model hhtype
+        if "no_children" in model_name:
+            taz_children_type_var = 'taz_hhtype_ratio_children_no_children'
+        else:
+            taz_children_type_var = 'taz_hhtype_ratio_children_has_children'
+
         formula_alts_col = list(set(variable_cols))
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity])))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, taz_children_type_var])))
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
@@ -422,7 +428,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, taz_children_type_var]))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -451,7 +457,21 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         # run predict
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
-        picked_idx = np.argsort(pred)[-n:]
+
+        # === CALIBRATION ===
+        USE_HHWCHILDREN_TAZ_CLUSTER = True
+        if USE_HHWCHILDREN_TAZ_CLUSTER:
+            taz_arr = final_alts_df.loc[predict_X_df.index, taz_children_type_var].to_numpy()
+            min_val, max_val = taz_arr.min(), taz_arr.max()
+            taz_children_type_arr = np.ones_like(taz_arr) if min_val == max_val else (taz_arr - min_val) / (max_val - min_val)
+        else:
+            taz_children_type_arr = np.ones(len(predict_X_df))
+
+        # Apply individual weight components
+        # default to multiplicative calibration
+        pred_weighted = pred * taz_children_type_arr
+        
+        picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id

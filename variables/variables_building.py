@@ -540,6 +540,31 @@ def make_employment_taz_proportion_variable(sector_id):
         # reindex to buildings
         return misc.reindex(taz_empratio, buildings.zone_id).fillna(0)
 
+def make_household_taz_proportion_variable(hh_type):
+    """
+    Generate household type proportion of total households in TAZ 
+    reindex to buildings level. Registers with orca.
+    * hh_type -- (must predefined in households table)
+    issue #73
+    """
+    var_name = "taz_hhtype_ratio_%s" % hh_type
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
+    def func():
+        buildings = orca.get_table("buildings")
+        hh = orca.get_table("households")
+        hh = hh.to_frame([hh_type, 'zone_id'])
+        # calculate total hh by TAZ
+        total_hh = hh.groupby('zone_id').size()
+        # filter hh by hh_type
+        hh_type_count = hh[hh[hh_type] == 1].zone_id.value_counts()
+        # calculate proportion of hh_type by TAZ
+        taz_hhtype_ratio = (hh_type_count / total_hh).fillna(0)
+        # make sure the value is between 0 and 1
+        taz_hhtype_ratio = taz_hhtype_ratio.clip(lower=0, upper=1)
+        # reindex to buildings
+        return misc.reindex(taz_hhtype_ratio, buildings.zone_id).fillna(0)
+
 def make_building_employment_variable(sector_id):
     """
     Generate jobs by sectors in building variable. Registers with orca.
@@ -639,6 +664,8 @@ for sector in emp_sectors:
     make_employment_node_ratio_variable(sector)
     make_employment_taz_proportion_variable(sector)
 
+for hh_type in ["children_has_children", "children_no_children"]:
+    make_household_taz_proportion_variable(hh_type)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):
