@@ -461,9 +461,29 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # === CALIBRATION ===
         USE_HHWCHILDREN_TAZ_CLUSTER = True
         if USE_HHWCHILDREN_TAZ_CLUSTER:
-            taz_arr = final_alts_df.loc[predict_X_df.index, taz_children_type_var].to_numpy()
-            min_val, max_val = taz_arr.min(), taz_arr.max()
-            taz_children_type_arr = np.ones_like(taz_arr) if min_val == max_val else (taz_arr - min_val) / (max_val - min_val)
+            # Load base ratios table
+            base_ratios_df = orca.get_table("taz_hh_type_base_ratios").to_frame()
+
+            # Get current TAZ ratios for this hh type
+            current_ratios = final_alts_df.loc[predict_X_df.index, taz_children_type_var].to_numpy()
+
+            # Get baseyear ratios aligned to same index
+            bld_to_taz = alts.to_frame(("zone_id"))['zone_id']
+            taz_ids = bld_to_taz.reindex(predict_X_df.index).to_numpy()
+            # Get corresponding base-year ratios
+            base_ratios = base_ratios_df[taz_children_type_var].reindex(taz_ids).to_numpy()
+
+            # Compute adjustment factor: closer to 1 if current ≈ base
+            # Compute correction factor
+            with np.errstate(divide='ignore', invalid='ignore'):
+                # Difference direction: + if current < base (need more), - if current > base (need less)
+                ratio_diff = base_ratios - current_ratios
+                # Use exponential scaling to keep weights in reasonable range (~0.5 to 2)
+                # Scale correction linearly — tune the factor if needed (e.g., 1.5)
+                correction_factor = 1.0 + ratio_diff
+                # Handle NaNs, infinite, and clip to keep range reasonable
+                taz_children_type_arr = np.nan_to_num(correction_factor, nan=1.0, posinf=2.0, neginf=0.5)
+                taz_children_type_arr = np.clip(taz_children_type_arr, 0.5, 2.0)
         else:
             taz_children_type_arr = np.ones(len(predict_X_df))
 
