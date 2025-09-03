@@ -390,6 +390,29 @@ def init_taz_hlcm_trend_by_year():
     prob_matrix = joint_counts.div(joint_counts.sum(axis=0), axis=1)
     orca.add_injectable('job_btype_baseyear_prob_matrix', prob_matrix)
 
+    # Calculate baseyear TAZ households with_children ratio
+    # and save to table taz_hh_type_base_ratios
+    hh = orca.get_table("households")
+    hh_types = ['children_has_children', 'children_no_children']
+    hh_df = hh.to_frame(columns=hh_types+["zone_id"])
+    # Initialize result dictionary
+    result = {}
+    for hh_type in hh_types:
+        # Calculate total households by TAZ
+        total_hh = hh_df.groupby("zone_id").size()
+        # Count households of this type
+        type_hh_count = hh_df.loc[hh_df[hh_type] == 1, "zone_id"].value_counts()
+        # Compute ratio by TAZ
+        ratio = (type_hh_count / total_hh).fillna(0).clip(lower=0, upper=1)
+        # Add to result dictionary
+        result["taz_hhtype_ratio_%s" % hh_type] = ratio
+    # Combine into DataFrame with TAZ as index
+    taz_hh_type_base_ratios = pd.DataFrame(result).fillna(0)
+    # Ensure zone_id is index
+    taz_hh_type_base_ratios.index.name = "zone_id"
+    # Register with Orca
+    orca.add_table("taz_hh_type_base_ratios", taz_hh_type_base_ratios)
+
 
 @orca.step()
 def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
