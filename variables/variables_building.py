@@ -3,6 +3,7 @@ import orca
 import pandas as pd
 from urbansim.utils import misc
 import variables
+import lcm_utils
 
 
 #####################
@@ -540,29 +541,29 @@ def make_employment_taz_proportion_variable(sector_id):
         # reindex to buildings
         return misc.reindex(taz_empratio, buildings.zone_id).fillna(0)
 
-def make_household_taz_proportion_variable(hh_type):
+def make_household_taz_proportion_variable(hh_types):
     """
-    Generate household type proportion of total households in TAZ 
-    reindex to buildings level. Registers with orca.
-    * hh_type -- (must predefined in households table)
-    issue #73
-    """
-    var_name = "taz_hhtype_ratio_%s" % hh_type
+    Generate household type *interaction* proportion of total households in TAZ,
+    reindexed to the buildings level. Registers with orca.
 
+    * hh_types -- single string or tuple of strings (e.g., 'with_children' or ('with_children', 'with_senior'))
+    """
+    if isinstance(hh_types, str):
+        hh_types = (hh_types,)
+    var_name = "taz_hhtype_ratio_" + "_".join(hh_types)
     @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
     def func():
         buildings = orca.get_table("buildings")
         hh = orca.get_table("households")
-        hh = hh.to_frame([hh_type, 'zone_id'])
-        # calculate total hh by TAZ
-        total_hh = hh.groupby('zone_id').size()
-        # filter hh by hh_type
-        hh_type_count = hh[hh[hh_type] == 1].zone_id.value_counts()
-        # calculate proportion of hh_type by TAZ
-        taz_hhtype_ratio = (hh_type_count / total_hh).fillna(0)
-        # make sure the value is between 0 and 1
-        taz_hhtype_ratio = taz_hhtype_ratio.clip(lower=0, upper=1)
-        # reindex to buildings
+        hh_df = hh.to_frame(list(hh_types) + ['zone_id'])
+        # Total number of households per TAZ
+        total_hh = hh_df.groupby('zone_id').size()
+        # Households satisfying all hh_type == 1
+        mask = np.logical_and.reduce([hh_df[hh_type] == 1 for hh_type in hh_types])
+        hh_type_count = hh_df.loc[mask, 'zone_id'].value_counts()
+        # Proportion calculation
+        taz_hhtype_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
+        # Reindex to buildings
         return misc.reindex(taz_hhtype_ratio, buildings.zone_id).fillna(0)
 
 def make_building_employment_variable(sector_id):
@@ -664,8 +665,11 @@ for sector in emp_sectors:
     make_employment_node_ratio_variable(sector)
     make_employment_taz_proportion_variable(sector)
 
-for hh_type in ["children_has_children", "children_no_children"]:
-    make_household_taz_proportion_variable(hh_type)
+# taz_segments will be like
+# [("children_has_children", "ownership_own", "aoh_lt35"), ...]
+taz_segments = lcm_utils.get_hlcm_taz_segment()
+for seg in taz_segments:
+    make_household_taz_proportion_variable(seg)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):
