@@ -2316,13 +2316,13 @@ def residential_developer(
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        debug_res_developer = debug_res_developer.append(
-            {
+        debug_res_developer = pd.concat(
+            [debug_res_developer, pd.DataFrame([{
                 "year": year,
                 "mcd": mcdid,
                 "target_units": target_units,
                 "units_added": units_added,
-            },
+            }])],
             ignore_index=True,
         )
         if units_added < target_units:

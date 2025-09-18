@@ -511,17 +511,18 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             # Train calibrator model (choose one)
             # XGBoost
             model = xgb.XGBRegressor(
-                n_estimators=30,
-                learning_rate=0.2,      # Slow learning helps reduce overfitting
+                n_estimators=100,
+                learning_rate=0.05,      # Slow learning helps reduce overfitting
                 max_depth=3,             # Prevents over-complex trees
                 subsample=0.7,           # Row subsampling
-                colsample_bytree=1.0,    # Feature subsampling
+                colsample_bytree=0.7,    # Feature subsampling
                 reg_alpha=1.0,           # L1 regularization (sparse solutions)
                 reg_lambda=10.0,         # Stronger L2 regularization
-                min_child_weight=3,     # Avoid splits on small samples
+                min_child_weight=10,     # Avoid splits on small samples
                 random_state=42,
                 verbosity=1,
-                tree_method='gpu_hist'
+                tree_method='hist',
+                device = "cuda"
             )
             model.fit(X_train_scaled.values, y_taz.values)
 
