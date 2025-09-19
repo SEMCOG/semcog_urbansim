@@ -393,19 +393,23 @@ def init_taz_hlcm_trend_by_year():
     # Calculate baseyear TAZ households with_children ratio
     # and save to table taz_hh_type_base_ratios
     hh = orca.get_table("households")
-    hh_types = ['children_has_children', 'children_no_children']
-    hh_df = hh.to_frame(columns=hh_types+["zone_id"])
+    # hh_types = ['children_has_children', 'children_no_children']
+    hh_segments = lcm_utils.get_hlcm_taz_segment()
+    # hh_df = hh.to_frame(columns=hh_types+["zone_id"])
     # Initialize result dictionary
     result = {}
-    for hh_type in hh_types:
+    for hh_types in hh_segments:
+        hh_df = hh.to_frame(list(hh_types) + ['zone_id'])
         # Calculate total households by TAZ
         total_hh = hh_df.groupby("zone_id").size()
+        # Households satisfying all hh_type == 1
+        mask = np.logical_and.reduce([hh_df[hh_type] == 1 for hh_type in hh_types])
         # Count households of this type
-        type_hh_count = hh_df.loc[hh_df[hh_type] == 1, "zone_id"].value_counts()
+        hh_type_count = hh_df.loc[mask, 'zone_id'].value_counts()
         # Compute ratio by TAZ
-        ratio = (type_hh_count / total_hh).fillna(0).clip(lower=0, upper=1)
+        taz_hhtype_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
         # Add to result dictionary
-        result["taz_hhtype_ratio_%s" % hh_type] = ratio
+        result["taz_hhtype_ratio_%s" % "_".join(hh_types)] = taz_hhtype_ratio
     # Combine into DataFrame with TAZ as index
     taz_hh_type_base_ratios = pd.DataFrame(result).fillna(0)
     # Ensure zone_id is index
@@ -2312,13 +2316,13 @@ def residential_developer(
         # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
-        debug_res_developer = debug_res_developer.append(
-            {
+        debug_res_developer = pd.concat(
+            [debug_res_developer, pd.DataFrame([{
                 "year": year,
                 "mcd": mcdid,
                 "target_units": target_units,
                 "units_added": units_added,
-            },
+            }])],
             ignore_index=True,
         )
         if units_added < target_units:
