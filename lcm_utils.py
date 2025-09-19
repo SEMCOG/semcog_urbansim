@@ -3,10 +3,12 @@
 import os
 import copy
 import yaml
+import itertools
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, r2_score
+from sklearn.metrics import accuracy_score, r2_score, mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import RobustScaler
+import xgboost as xgb
 import torch
 from forecast_estimation.models.LCM_torch import LCM_NN
 from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
@@ -338,10 +340,12 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # chooser segment
         la_id = model_name.split('_')[2][2:]
         filter_text = ''
+        taz_segment_type_var = 'taz_hhtype_ratio'
         for cat_name, categories in model_desc['hh_categories'].items():
             for cat in categories:
                 if cat in model_name:
                     filter_text += '&(%s_%s==1)' % (cat_name, cat)
+                    taz_segment_type_var += '_%s_%s' % (cat_name, cat)
                     break
 
         # hh_size = model_name.split('_')[3]
@@ -385,14 +389,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         # all variables should ben available
         assert all([True if col in alts.columns else False for col in variable_cols])
 
-        # model hhtype
-        if "no_children" in model_name:
-            taz_children_type_var = 'taz_hhtype_ratio_children_no_children'
-        else:
-            taz_children_type_var = 'taz_hhtype_ratio_children_has_children'
-
         formula_alts_col = list(set(variable_cols))
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, taz_children_type_var])))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, taz_segment_type_var])))
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
@@ -428,7 +426,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, taz_children_type_var]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, taz_segment_type_var]))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -459,37 +457,94 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
 
         # === CALIBRATION ===
-        USE_HHWCHILDREN_TAZ_CLUSTER = True
-        if USE_HHWCHILDREN_TAZ_CLUSTER:
-            # Load base ratios table
+        USE_TAZ_CALIBRATOR_MODEL = True
+        if USE_TAZ_CALIBRATOR_MODEL:
+            # Build training targets from observed & base ratios
             base_ratios_df = orca.get_table("taz_hh_type_base_ratios").to_frame()
+            current_ratios = final_alts_df.loc[predict_X_df.index, taz_segment_type_var].to_numpy()
 
-            # Get current TAZ ratios for this hh type
-            current_ratios = final_alts_df.loc[predict_X_df.index, taz_children_type_var].to_numpy()
-
-            # Get baseyear ratios aligned to same index
-            bld_to_taz = alts.to_frame(("zone_id"))['zone_id']
+            bld_to_taz = alts.to_frame(['zone_id'])['zone_id']
             taz_ids = bld_to_taz.reindex(predict_X_df.index).to_numpy()
-            # Get corresponding base-year ratios
-            base_ratios = base_ratios_df[taz_children_type_var].reindex(taz_ids).to_numpy()
+            base_ratios = base_ratios_df[taz_segment_type_var].reindex(taz_ids).to_numpy()
 
-            # Compute adjustment factor: closer to 1 if current ≈ base
-            # Compute correction factor
+            # Compute y_train = base / current (avoid divide-by-zero)
             with np.errstate(divide='ignore', invalid='ignore'):
-                # Difference direction: + if current < base (need more), - if current > base (need less)
-                ratio_diff = base_ratios - current_ratios
-                # Use exponential scaling to keep weights in reasonable range (~0.5 to 2)
-                # Scale correction linearly — tune the factor if needed (e.g., 1.5)
-                correction_factor = 1.0 + ratio_diff
-                # Handle NaNs, infinite, and clip to keep range reasonable
-                taz_children_type_arr = np.nan_to_num(correction_factor, nan=1.0, posinf=2.0, neginf=0.5)
-                taz_children_type_arr = np.clip(taz_children_type_arr, 0.5, 2.0)
+                y_train = np.divide(base_ratios, current_ratios)
+                y_train = np.nan_to_num(y_train, nan=1.0, posinf=2.0, neginf=0.5)
+
+            # Load and prepare TAZ features
+            # TODO: load current all TAZ available in alt_df
+            taz_df = orca.get_table('zones').to_frame()
+            # Handle missing zone_id = -1
+            if -1 not in taz_df.index:
+                taz_df.loc[-1] = taz_df.mean(numeric_only=True)
+
+            # Get TAZ features for buildings used
+            used_taz_ids = pd.Series(taz_ids).dropna().unique()
+            # Filter to TAZs used and select only numeric float columns
+            valid_columns = taz_df.select_dtypes(include=['float', 'float32', 'float64']).columns
+            # some exclusions
+            valid_columns = [col for col in valid_columns if col not in ['tazce10_n']]
+
+            X_train = taz_df.loc[taz_df.index.intersection(used_taz_ids), valid_columns].fillna(0.0)
+            # Scale features
+            scaler = RobustScaler()
+            X_train_scaled = pd.DataFrame(
+                scaler.fit_transform(X_train),
+                index=X_train.index,
+                columns=X_train.select_dtypes(include='number').columns
+            )
+            # Feature Selection, remove low variance columns
+            low_variance_cols = X_train_scaled.var()[X_train_scaled.var() < 1e-5].index
+            X_train_scaled.drop(columns=low_variance_cols, inplace=True)
+
+            # Aggregate y_train to TAZ level
+            taz_weights = pd.Series(y_train, index=taz_ids).groupby(taz_ids).mean()
+            y_taz = taz_weights.reindex(X_train_scaled.index).fillna(1.0)
+
+            # === Pre-train baseline error (if using a naive model like predicting mean) ===
+            naive_pred = np.full_like(y_taz.values, fill_value=y_taz.mean())
+            mse_naive = mean_squared_error(y_taz.values, naive_pred)
+            mae_naive = mean_absolute_error(y_taz.values, naive_pred)
+            print(f"[Calibrator] Pre-train baseline error: MSE={mse_naive:.4f}, MAE={mae_naive:.4f}")
+
+            # Train calibrator model (choose one)
+            # XGBoost
+            model = xgb.XGBRegressor(
+                n_estimators=100,
+                learning_rate=0.05,      # Slow learning helps reduce overfitting
+                max_depth=3,             # Prevents over-complex trees
+                subsample=0.7,           # Row subsampling
+                colsample_bytree=0.7,    # Feature subsampling
+                reg_alpha=1.0,           # L1 regularization (sparse solutions)
+                reg_lambda=10.0,         # Stronger L2 regularization
+                min_child_weight=10,     # Avoid splits on small samples
+                random_state=42,
+                verbosity=1,
+                tree_method='hist',
+                device = "cuda"
+            )
+            model.fit(X_train_scaled.values, y_taz.values)
+
+            # === Post-train prediction error ===
+            y_pred = model.predict(X_train_scaled.values)
+            mse_model = mean_squared_error(y_taz.values, y_pred)
+            mae_model = mean_absolute_error(y_taz.values, y_pred)
+            print(f"[Calibrator] Post-train error:        MSE={mse_model:.4f}, MAE={mae_model:.4f}")
+
+            # Predict adjustment weights
+            taz_predicted_weights = pd.Series(y_pred, index=X_train_scaled.index)
+            taz_predicted_weights = taz_predicted_weights.clip(lower=0.5, upper=2.0)
+
+            # Map to HU-level rows in predict_X_df
+            taz_segment_adj_arr = taz_predicted_weights.reindex(taz_ids).fillna(1.0).to_numpy()
+
         else:
-            taz_children_type_arr = np.ones(len(predict_X_df))
+            taz_segment_adj_arr = np.ones(len(predict_X_df))
 
         # Apply individual weight components
         # default to multiplicative calibration
-        pred_weighted = pred * taz_children_type_arr
+        pred_weighted = pred * taz_segment_adj_arr 
         
         picked_idx = np.argsort(pred_weighted)[-n:]
         picked_bid = predict_X_df.iloc[picked_idx].index
@@ -1170,3 +1225,26 @@ def load_cache_hh_b(hh_csv_path: str, b_csv_path: str):
     orca.add_table('households', hh_region)
     orca.add_table('buildings', b_region)
     return hh_region, b_region
+
+def get_hlcm_taz_segment():
+    """Generate TAZ segments variables based on model description hlcm_model_path.
+    orca.get_injectable('hlcm_model_path')
+
+    Returns:
+        [(hh_cat1, hh_cat_2, hh_cat_3), ...]: products of all household categories
+    """
+    model_path = orca.get_injectable('hlcm_model_path')
+    model_desc_path = os.path.join(model_path, 'model_description.yaml')
+    with open(model_desc_path, 'r') as f:
+        model_desc = yaml.load(f, Loader=yaml.FullLoader)
+
+    # make taz_segments a list of like (children_type, ownership, aoh)
+    # Extract category keys and build prefixed values
+    category_keys = list(model_desc['hh_categories'].keys())
+    category_values = [
+        [f"{cat_name}_{cat_val}" for cat_val in model_desc['hh_categories'][cat_name]]
+        for cat_name in category_keys
+    ]
+    # Cartesian product of all category combinations
+    taz_segments = list(itertools.product(*category_values))
+    return taz_segments
