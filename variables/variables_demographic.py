@@ -263,15 +263,30 @@ def workers_lte_cars(households):
     return (households.workers <= households.cars).astype("int32")
 
 @orca.column("households", cache=True, cache_scope="iteration")
-def seniors(persons):
+def seniors(persons, households):
     persons = persons.to_frame(["household_id", "age"])
-    return persons[persons.age >= 65].groupby("household_id").size()
+    # Count persons aged 65+ per household
+    seniors_count = persons[persons.age >= 65].groupby("household_id").size()
+    # Reindex to include all households, fill missing with 0
+    return seniors_count.reindex(households.index).fillna(0).astype(int)
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def with_seniors(households):
     households = households.to_frame(["seniors"])
-    return households[households.seniors > 0]
+    return (households.seniors > 0).astype('int8')
 
+@orca.column("households", cache=True, cache_scope="iteration")
+def without_seniors(households):
+    households = households.to_frame(["seniors"])
+    return (households.seniors <= 0).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def senior_with_seniors(households):
+    return (households.with_seniors == 1).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def senior_without_seniors(households):
+    return (households.without_seniors == 1).astype('int8')
 
 #####################
 # PERSONS VARIABLES
@@ -463,8 +478,12 @@ def incomeqt_incqt4(households):
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_highinc(households):
-    return households.income.gt(79999).astype('int8')
+    return (households.incomeqt_incqt4 == 1).astype('int8')
+
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_midinc(households):
+    return ((households.incomeqt_incqt2 == 1) | (households.incomeqt_incqt3 == 1)).astype('int8')
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_lowinc(households):
-    return households.income.le(79999).astype('int8')
+    return (households.incomeqt_incqt1 == 1).astype('int8')
