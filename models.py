@@ -7,6 +7,7 @@ from collections import defaultdict
 import pickle
 
 import numpy as np
+import random
 import orca
 import pandana as pdna
 import pandas as pd
@@ -84,8 +85,14 @@ for model_category_name, model_category_attributes in model_configs.items():
 
 orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
 orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
-# sort hlcm
-orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names, reverse=True))
+# METHOD 1: sort hlcm by name, will follow large_area -> first_cat -> second_cat -> third_cat
+orca.add_injectable("hlcm_step_names", sorted(hlcm_step_names))
+
+# METHOD 2: Randomize hlcm segments running order
+# random.shuffle(hlcm_step_names)
+
+orca.add_injectable("hlcm_step_names", hlcm_step_names)
+
 # sort elcm: run elcm by specific job_sector sequence defined below
 elcm_sector_order = [3, 6, 10, 11, 14, 9, 4, 2, 5, 16, 17, 8]
 elcm_sector_order = {sector: idx for idx, sector in enumerate(elcm_sector_order)}
