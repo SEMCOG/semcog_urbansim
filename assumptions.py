@@ -153,6 +153,117 @@ def update_store_from_checkpoint(store, checkpoint):
             store[tb] = checkpoint[k]
     return store
 
+### Transportation accessibility variables
+NEAR_MAX_VARS = {
+    "walk": {
+        "indicator_table": "accessibility_walk_indicator_by_parcel",
+        "fillna_val": 35.0,
+        "column_names": [
+            "hospitals_walk_near_max30",
+            "urgent_cares_walk_near_max30",
+            "health_centers_walk_near_max30",
+            "all_healthcare_walk_near_max30",
+            "grocery_stores_walk_near_max30",
+            "libraries_walk_near_max30",
+            "parks_local_walk_near_max30",
+            "parks_bike_walk_near_max30",
+            "parks_school_walk_near_max30",
+            "parks_local_school_walk_near_max30",
+            "schools_k8_walk_near_max30",
+            "schools_912_walk_near_max30",
+            "pharmacies_walk_near_max30",
+            "childcare_walk_near_max30",
+            "fire_stations_walk_near_max30",
+            "fixed_route_bus_walk_near_max30",
+            "american_job_centers_walk_near_max30",
+            "community_colleges_walk_near_max30",
+            "passenger_train_stations_walk_near_max30",
+        ]
+    },
+    "bike": {
+        "indicator_table": "accessibility_bike_indicator_by_parcel",
+        "fillna_val": 65.0,
+        "column_names": [
+            "hospitals_bike_near_max60",
+            "urgent_cares_bike_near_max60",
+            "health_centers_bike_near_max60",
+            "all_healthcare_bike_near_max60",
+            "grocery_stores_bike_near_max60",
+            "libraries_bike_near_max60",
+            "parks_local_bike_near_max60",
+            "parks_bike_bike_near_max60",
+            "parks_school_bike_near_max60",
+            "parks_local_school_bike_near_max60",
+            "schools_k8_bike_near_max60",
+            "schools_912_bike_near_max60",
+            "pharmacies_bike_near_max60",
+            "childcare_bike_near_max60",
+            "fire_stations_bike_near_max60",
+            "fixed_route_bus_bike_near_max60",
+            "american_job_centers_bike_near_max60",
+            "community_colleges_bike_near_max60",
+            "passenger_airports_bike_near_max60",
+            "passenger_train_stations_bike_near_max60",
+        ]
+    },
+    "drive": {
+        "indicator_table": "accessibility_drive_indicator_by_parcel",
+        "fillna_val": 65.0,
+        "column_names": [
+            "hospitals_drive_near_max60",
+            "urgent_cares_drive_near_max60",
+            "health_centers_drive_near_max60",
+            "all_healthcare_drive_near_max60",
+            "grocery_stores_drive_near_max60",
+            "libraries_drive_near_max60",
+            "parks_vehicle_drive_near_max60",
+            "schools_k8_drive_near_max60",
+            "schools_912_drive_near_max60",
+            "pharmacies_drive_near_max60",
+            "childcare_drive_near_max60",
+            "fire_stations_drive_near_max60",
+            "american_job_centers_drive_near_max60",
+            "community_colleges_drive_near_max60",
+            "passenger_airports_drive_near_max60",
+            "passenger_train_stations_drive_near_max60",
+        ]
+    }
+}
+
+# Variables for 'cumulative' and 'gravity' accessibility (fillna_value is 0)
+CUMULATIVE_VARS = {
+    "walk": {
+        "indicator_table": "accessibility_walk_indicator_by_parcel",
+        "fillna_val": 0,
+        "column_names": [
+            "jobs_walk_cumulative_5min", "jobs_walk_cumulative_10min",
+            "jobs_walk_cumulative_15min", "jobs_walk_cumulative_30min",
+            "fixed_route_bus_weekday_walk_10min", "fixed_route_bus_weekend_walk_10min"
+        ]
+    },
+    "bike": {
+        "indicator_table": "accessibility_bike_indicator_by_parcel",
+        "fillna_val": 0,
+        "column_names": [
+            "jobs_bike_cumulative_5min", "jobs_bike_cumulative_10min",
+            "jobs_bike_cumulative_15min", "jobs_bike_cumulative_30min",
+            "fixed_route_bus_weekday_bike_10min", "fixed_route_bus_weekend_bike_10min"
+        ]
+    },
+    "drive": {
+        "indicator_table": "accessibility_drive_indicator_by_parcel",
+        "fillna_val": 0,
+        "column_names": [
+            "jobs_drive_cumulative_10min", "jobs_drive_cumulative_15min",
+            "jobs_drive_cumulative_20min", "jobs_drive_cumulative_25min",
+            "jobs_drive_cumulative_30min", "jobs_drive_cumulative_45min",
+            "jobs_drive_gravity_90min"
+        ]
+    }
+}
+orca.add_injectable("NEAR_MAX_VARS", NEAR_MAX_VARS)
+orca.add_injectable("CUMULATIVE_VARS", CUMULATIVE_VARS)
+
 def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
