@@ -270,17 +270,17 @@ def poi():
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/D/access/outputs/indicators/walk/walk_indicators_by_parcel_20250905.csv').set_index('parcel_id')
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/walk/walk_indicators_by_parcel_20251111.csv').set_index('parcel_id')
 
 @orca.table(cache=True)
 def accessibility_bike_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/D/access/outputs/indicators/bike/bike_indicators_by_parcel_20250908.csv').set_index('parcel_id')
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/bike/bike_indicators_by_parcel_20251111.csv').set_index('parcel_id')
 
 @orca.table(cache=True)
 def accessibility_drive_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/D/access/outputs/indicators/drive/drive_indicators_by_parcel_20250924.csv').set_index('parcel_id')
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/drive/drive_indicators_by_parcel_20251111.csv').set_index('parcel_id')
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
