@@ -37,7 +37,7 @@ for name in [
     "crime_rates",
     "schools",
     "jobs_2019",
-    "poi",
+    # "poi",
     "group_quarters",
     "group_quarters_households",
     "group_quarters_control_totals",
@@ -261,6 +261,26 @@ def building_to_zone_baseyear():
     # fix the issue where one parcel could have multiple TAZ zone
     return pd.read_csv('data/building_to_zone_baseyear_2020_shrink.csv').set_index('building_id')
 
+### TODO: have data moved inside HDF input before 2055 forecast
+@orca.table(cache=True)
+def poi():
+    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
+    return pd.read_csv('/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/pois.csv').set_index('index')
+
+@orca.table(cache=True)
+def accessibility_walk_indicator_by_parcel():
+    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/walk/walk_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+
+@orca.table(cache=True)
+def accessibility_bike_indicator_by_parcel():
+    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/bike/bike_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+
+@orca.table(cache=True)
+def accessibility_drive_indicator_by_parcel():
+    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
+    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/drive/drive_indicators_by_parcel_20251111.csv').set_index('parcel_id')
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
