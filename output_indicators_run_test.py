@@ -30,7 +30,7 @@ upload_to_carto = True
 run_debug = False
 add_2019 = True
 # data_out = './runs/run2120_TAZ_refinement_090823_school_legis.h5'
-data_out = 'runs/run1290.h5'
+data_out = 'runs/run1362.h5'
 
 output_indicators.main(
     data_out,
