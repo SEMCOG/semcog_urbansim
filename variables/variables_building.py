@@ -804,3 +804,55 @@ for var in orca.get_table("buildings").columns:
         continue
     register_standardized_variable("buildings", var)
 
+## Accessibility Variable Generator Function
+def make_bld_accessibility_var(column_name, indicator_table_name, fillna_value):
+    """
+    Generator function to create and register an Orca column for
+    accessibility variables
+    """
+    @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
+    def func(buildings):
+        # Select the correct indicator table based on the indicator_table_name passed 
+        # to the generator function, which is retained in this closure.
+        if indicator_table_name == "accessibility_walk_indicator_by_parcel":
+            indicator_table = orca.get_table("accessibility_walk_indicator_by_parcel")
+        elif indicator_table_name == "accessibility_bike_indicator_by_parcel":
+            indicator_table = orca.get_table("accessibility_bike_indicator_by_parcel")
+        elif indicator_table_name == "accessibility_drive_indicator_by_parcel":
+            indicator_table = orca.get_table("accessibility_drive_indicator_by_parcel")
+        else:
+            raise ValueError(f"Unknown indicator table: {indicator_table_name}")
+        # Replicate the core logic: get column, reindex to parcels, fill NaN
+        return misc.reindex(indicator_table[column_name], buildings.parcel_id).fillna(fillna_value)
+    return func
+
+### Load transportation accessibility variables for walk, bike and drive
+# defined in assumptions.py
+NEAR_MAX_VARS = orca.get_injectable("NEAR_MAX_VARS")
+CUMULATIVE_VARS = orca.get_injectable("CUMULATIVE_VARS")
+
+# Define Near-Max Variables
+for mode, config in NEAR_MAX_VARS.items():
+    indicator_table = config["indicator_table"]
+    fillna_val = config["fillna_val"]
+    # Loop over the list of full column names
+    for column_name in config["column_names"]:
+        # Call the generator function to create and register the Orca column
+        make_bld_accessibility_var(
+            column_name=column_name,
+            indicator_table_name=indicator_table,
+            fillna_value=fillna_val,
+        )
+
+# Define Cumulative Variables
+for mode, config in CUMULATIVE_VARS.items():
+    indicator_table = config["indicator_table"]
+    fillna_val = config["fillna_val"]
+    # Loop over the list of full column names
+    for column_name in config["column_names"]:
+        # Call the generator function to create and register the Orca column
+        make_bld_accessibility_var(
+            column_name=column_name,
+            indicator_table_name=indicator_table,
+            fillna_value=fillna_val,
+        )
