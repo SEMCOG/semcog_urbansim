@@ -22,7 +22,7 @@ add_2019 = True
 
 # hlcm configs
 # orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_25Sep24')
+orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_25Nov13')
 orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/')
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
@@ -41,7 +41,7 @@ orca.add_injectable('scenario_emp_control_path',
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1257.h5')
+orca.add_injectable('runnum_to_resume', 'run1360.h5')
 
 # dump all setting in yaml in run folder
 if not os.path.exists(orca.get_injectable("data_out_dir")):
@@ -187,7 +187,7 @@ orca.run(
 # if use checkpoint to resume run, add result from previous year back
 if orca.get_injectable('use_checkpoint'):
     store_la = pd.HDFStore(data_out, mode="a")
-    run_path = "/home/da/semcog_urbansim/runs"
+    run_path = "/mnt/semcog_urbansim/runs"
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
     old_result = pd.HDFStore(hdf_path, "r")
     for k in old_result:
