@@ -18,6 +18,10 @@ def zone_id(jobs, buildings):
     return misc.reindex(buildings.zone_id, jobs.building_id)
 
 @orca.column('jobs', cache=True, cache_scope='iteration')
+def tract_id(jobs, buildings):
+    return misc.reindex(buildings.tract_id, jobs.building_id)
+
+@orca.column('jobs', cache=True, cache_scope='iteration')
 def school_id(jobs, buildings):
     return misc.reindex(buildings.school_id, jobs.building_id)
 

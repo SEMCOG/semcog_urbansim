@@ -712,6 +712,11 @@ def census_bg_id(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
+def tract_id(buildings, parcels):
+    return misc.reindex(parcels.tract_id, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
 def zone_id(buildings, parcels, building_to_zone_baseyear):
     # use zone_id from parcel as default
     zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
