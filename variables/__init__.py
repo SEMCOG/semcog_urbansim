@@ -4,3 +4,4 @@ from .variables_demographic import *
 from .variables_employment import *
 from .variables_zone import *
 from .variables_building import *
+from .variables_tract import *
