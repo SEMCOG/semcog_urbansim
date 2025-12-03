@@ -35,17 +35,17 @@ def jobs_within_30_min(jobs, parcels, travel_data):
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
-def households(households):
-    return households.tract_id.groupby(households.tract_id).size().fillna(0)
+def households(households, census_tracts):
+    return households.tract_id.groupby(households.tract_id).size().reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
-def population(households):
-    return households.persons.groupby(households.tract_id).sum().fillna(0)
+def population(households, census_tracts):
+    return households.persons.groupby(households.tract_id).sum().reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
-def employment(jobs, parcels, travel_data):
+def employment(jobs, parcels, travel_data, census_tracts):
     td = travel_data.to_frame()
     zone_id = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({"zone_id": jobs.zone_id})
@@ -54,11 +54,11 @@ def employment(jobs, parcels, travel_data):
     parcel_var = misc.reindex(zone_var, parcels.zone_id)
     # now aggregate to tracts using average
     tract_var = parcel_var.groupby(parcels.tract_id).mean()
-    return tract_var.fillna(0)
+    return tract_var.reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
-def retail_jobs(jobs, parcels, travel_data):
+def retail_jobs(jobs, parcels, travel_data, census_tracts):
     td = travel_data.to_frame()
     zone_id = np.unique(td.reset_index().to_zone_id)
     j = pd.DataFrame({"zone_id": jobs.zone_id, "sector_id": jobs.sector_id})
@@ -73,14 +73,14 @@ def retail_jobs(jobs, parcels, travel_data):
     parcel_var = misc.reindex(zone_var, parcels.zone_id)
     # now aggregate to tracts using average
     tract_var = parcel_var.groupby(parcels.tract_id).mean()
-    return tract_var.fillna(0)
+    return tract_var.reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def empden(
-    census_tracts, parcels,
+    census_tracts, parcels
 ):
-    return (census_tracts.employment / parcels.acres.groupby(parcels.tract_id).sum()).fillna(0)
+    return (census_tracts.employment / parcels.acres.groupby(parcels.tract_id).sum()).reindex(census_tracts.index).fillna(0)
 
 
 def logsum_based_accessibility(travel_data, zones, name_attribute, spatial_var):
@@ -194,8 +194,8 @@ def logsum_job_low_income(zones, parcels, travel_data):
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
-def z_total_jobs(jobs):
-    return jobs.tract_id.value_counts().fillna(0)
+def z_total_jobs(jobs, census_tracts):
+    return jobs.tract_id.value_counts().reindex(census_tracts.index).fillna(0)
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def transit_jobs_60min(census_tracts, parcels, travel_data):
@@ -318,6 +318,34 @@ def percent_vacant_job_spaces(buildings, parcels):
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
+def avg_sqft_price_res(buildings, census_tracts):
+    buildings = buildings.to_frame( ["sqft_price_res", "tract_id"])
+    sqft_price_res = buildings.groupby("tract_id").sqft_price_res.median()
+    return sqft_price_res.reindex(census_tracts.index).fillna(0)
+
+
+@orca.column("census_tracts", cache=True, cache_scope="iteration")
+def avg_sqft_price_res(buildings, census_tracts):
+    buildings = buildings.to_frame( ["sqft_price_res", "tract_id"])
+    sqft_price_res = buildings.groupby("tract_id").sqft_price_res.median()
+    return sqft_price_res.reindex(census_tracts.index).fillna(0)
+
+
+@orca.column("census_tracts", cache=True, cache_scope="iteration")
+def crime_ucr_rate(buildings, census_tracts):
+    buildings = buildings.to_frame( ["crime_ucr_rate", "tract_id"])
+    crime_ucr_rate = buildings.groupby("tract_id").crime_ucr_rate.mean()
+    return crime_ucr_rate.reindex(census_tracts.index).fillna(0)
+
+
+@orca.column("census_tracts", cache=True, cache_scope="iteration")
+def crime_other_rate(buildings, census_tracts):
+    buildings = buildings.to_frame( ["crime_other_rate", "tract_id"])
+    crime_other_rate = buildings.groupby("tract_id").crime_other_rate.mean()
+    return crime_other_rate.reindex(census_tracts.index).fillna(0)
+
+
+@orca.column("census_tracts", cache=True, cache_scope="iteration")
 def percent_vacant_residential_units(buildings, parcels):
     buildings = buildings.to_frame(
         buildings.local_columns + ["vacant_residential_units", "zone_id"]
@@ -370,25 +398,25 @@ def mean_age_of_head(households):
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def prop_race_1(census_tracts, households):
     households = households.to_frame(["race_id", "tract_id"])
-    return (households.query("race_id == 1").groupby("tract_id").size() / census_tracts.households).fillna(0)
+    return (households.query("race_id == 1").groupby("tract_id").size() / census_tracts.households).reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def prop_race_2(census_tracts, households):
     households = households.to_frame(["race_id", "tract_id"])
-    return (households.query("race_id == 2").groupby("tract_id").size() / census_tracts.households).fillna(0)
+    return (households.query("race_id == 2").groupby("tract_id").size() / census_tracts.households).reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def prop_race_3(census_tracts, households):
     households = households.to_frame(["race_id", "tract_id"])
-    return (households.query("race_id == 3").groupby("tract_id").size() / census_tracts.households).fillna(0)
+    return (households.query("race_id == 3").groupby("tract_id").size() / census_tracts.households).reindex(census_tracts.index).fillna(0)
 
 
 @orca.column("census_tracts", cache=True, cache_scope="iteration")
 def prop_race_4(census_tracts, households):
     households = households.to_frame(["race_id", "tract_id"])
-    return (households.query("race_id == 4").groupby("tract_id").size() / census_tracts.households).fillna(0)
+    return (households.query("race_id == 4").groupby("tract_id").size() / census_tracts.households).reindex(census_tracts.index).fillna(0)
 
 
 ##########  Parcel vars to add for proforma calibration
