@@ -541,30 +541,30 @@ def make_employment_taz_proportion_variable(sector_id):
         # reindex to buildings
         return misc.reindex(taz_empratio, buildings.zone_id).fillna(0)
 
-def make_household_taz_proportion_variable(hh_types):
+def make_household_tract_proportion_variable(hh_types):
     """
-    Generate household type *interaction* proportion of total households in TAZ,
+    Generate household type *interaction* proportion of total households in tract,
     reindexed to the buildings level. Registers with orca.
 
     * hh_types -- single string or tuple of strings (e.g., 'with_children' or ('with_children', 'with_senior'))
     """
     if isinstance(hh_types, str):
         hh_types = (hh_types,)
-    var_name = "taz_hhtype_ratio_" + "_".join(hh_types)
+    var_name = "tract_hh_type_ratio_" + "_".join(hh_types)
     @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
     def func():
         buildings = orca.get_table("buildings")
         hh = orca.get_table("households")
-        hh_df = hh.to_frame(list(hh_types) + ['zone_id'])
+        hh_df = hh.to_frame(list(hh_types) + ['tract_id'])
         # Total number of households per TAZ
-        total_hh = hh_df.groupby('zone_id').size()
+        total_hh = hh_df.groupby('tract_id').size()
         # Households satisfying all hh_type == 1
         mask = np.logical_and.reduce([hh_df[hh_type] == 1 for hh_type in hh_types])
-        hh_type_count = hh_df.loc[mask, 'zone_id'].value_counts()
+        hh_type_count = hh_df.loc[mask, 'tract_id'].value_counts()
         # Proportion calculation
-        taz_hhtype_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
+        tract_hhtype_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
         # Reindex to buildings
-        return misc.reindex(taz_hhtype_ratio, buildings.zone_id).fillna(0)
+        return misc.reindex(tract_hhtype_ratio, buildings.tract_id).fillna(0)
 
 def make_building_employment_variable(sector_id):
     """
@@ -667,9 +667,9 @@ for sector in emp_sectors:
 
 # taz_segments will be like
 # [("children_has_children", "ownership_own", "aoh_lt35"), ...]
-taz_segments = lcm_utils.get_hlcm_taz_segment()
+taz_segments = lcm_utils.get_hlcm_segment()
 for seg in taz_segments:
-    make_household_taz_proportion_variable(seg)
+    make_household_tract_proportion_variable(seg)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):
@@ -709,6 +709,11 @@ def ln_residential_units(buildings):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def census_bg_id(buildings, parcels):
     return misc.reindex(parcels.census_bg_id, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def tract_id(buildings, parcels):
+    return misc.reindex(parcels.tract_id, buildings.parcel_id).fillna(0)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")

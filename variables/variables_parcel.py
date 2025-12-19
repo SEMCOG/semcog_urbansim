@@ -262,6 +262,17 @@ def max_height(parcels, zoning):
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
+def tract_id(parcels):
+    # need int32 to avoid overflow
+    bg_id = parcels['census_bg_id'].astype('int32')
+    cty_id = parcels['county_id'].astype('int32')
+    tract_id = bg_id // 1000 + cty_id * 10000
+    # set tract_id to -1 for bg_id <0
+    tract_id = tract_id.where(parcels['census_bg_id']>0, other=-1)
+    return tract_id
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_size(parcels):
     # apply pct_undev to parcel_size, which will be used in feasibility step
     return parcels.parcel_sqft - (
