@@ -86,6 +86,11 @@ def zone_id(households, buildings):
 
 
 @orca.column("households", cache=True, cache_scope="iteration")
+def tract_id(households, buildings):
+    return misc.reindex(buildings.tract_id, households.building_id)
+
+
+@orca.column("households", cache=True, cache_scope="iteration")
 def school_id(households, buildings):
     return misc.reindex(buildings.school_id, households.building_id)
 
@@ -297,6 +302,9 @@ def senior_without_seniors(households):
 def zone_id(persons, households):
     return misc.reindex(households.zone_id, persons.household_id)
 
+@orca.column("persons", cache=True, cache_scope="iteration")
+def tract_id(persons, households):
+    return misc.reindex(households.tract_id, persons.household_id)
 
 @orca.column("persons", cache=True, cache_scope="iteration")
 def school_id(persons, households):
@@ -357,6 +365,10 @@ def large_area_id(households, persons):
 @orca.column("group_quarters", cache=True, cache_scope="iteration")
 def zone_id(group_quarters, buildings):
     return misc.reindex(buildings.zone_id, group_quarters.building_id)
+
+@orca.column("group_quarters", cache=True, cache_scope="iteration")
+def tract_id(group_quarters, buildings):
+    return misc.reindex(buildings.tract_id, group_quarters.building_id)
 
 @orca.column("group_quarters", cache=True, cache_scope="iteration")
 def school_id(group_quarters, buildings):
