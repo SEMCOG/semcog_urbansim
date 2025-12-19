@@ -250,6 +250,19 @@ def parcels(store, zoning):
     parcels_df["pct_undev"] = parcels_df["pct_undev"].fillna(0)
     return parcels_df
 
+@orca.table(cache=True)
+def census_tracts(store):
+    parcels_df = store["parcels"]
+    # remove pseudo parcels with bg_id <0
+    parcels_df = parcels_df[parcels_df['census_bg_id']>0]
+    # need int32 to avoid overflow
+    bg_id = parcels_df['census_bg_id'].astype('int32')
+    cty_id = parcels_df['county_id'].astype('int32')
+    tract_id = bg_id // 1000 + cty_id * 10000
+    # craete tracts df
+    tracts_df = pd.DataFrame({'tract_id': tract_id, 'county_id': cty_id})
+    unique_tracts = tracts_df.groupby('tract_id').first()
+    return unique_tracts
 
 @orca.table(cache=True)
 def base_job_space(buildings):
