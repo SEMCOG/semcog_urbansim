@@ -1953,6 +1953,15 @@ def parcel_average_price(use):
 def shifters():
     with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
+        if False:
+            ##### Warnining #####
+            print("WARNING: Overwriting cost shifters to be all ones for testing baseline calibration.")
+            ## Overwrite cost_shifters with constants 1 to test baseline calibration
+            shifters = cfg['calibration']['proforma_cost_shifters']
+            # Iterate through categories (residential/non_residential) and update values
+            for category in shifters:
+                for key in shifters[category]:
+                    shifters[category][key] = 1
         return cfg
 
 
