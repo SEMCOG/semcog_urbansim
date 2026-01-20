@@ -2177,9 +2177,15 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
+    # calculate spaces_added
+    if supply_fname == 'job_spaces':
+        spaces_added = new_buildings.job_spaces.sum() - new_buildings.current_units.sum()
+    else:
+        # default to residential units
+        spaces_added = new_buildings.residential_units.sum() - new_buildings.current_units.sum()
     # return the number of units added and the list of parcel_id for updating pct_undev
     return (
-        new_buildings.residential_units.sum() - new_buildings.current_units.sum(),
+        spaces_added,
         pid_need_updates,
     )
 
@@ -2373,6 +2379,9 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         ["job_spaces", "large_area_id", "building_type_id"]
     )
 
+    orig_jobs = jobs.to_frame(['building_id', 'home_based_status', 'large_area_id'])
+    orig_jobs = orig_jobs[orig_jobs.home_based_status == 0]
+
     # loop through large area
     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
         # get large area buildings
@@ -2385,44 +2394,54 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             ].non_res_target_vacancy_rate
         )
 
-        # number of non-homebased jobs in the large area
-        num_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+        # #90
+        # loop through building form
+        for form in ["office", "retail", "industrial", "medical", "entertainment"]:
+            # calculate num_agents
+            # form_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+            form_btype_ids = orca.get_injectable("form_to_btype")[form]
+            form_blds = la_orig_buildings[la_orig_buildings.building_type_id.isin(form_btype_ids)]
+            # number of non-homebased jobs in the large area
+            num_agents = (
+                    (orig_jobs.large_area_id == lid) & 
+                    (orig_jobs.building_id.isin(form_blds.index))
+                ).sum()
+            # number of total job spaces for LA
+            num_units = form_blds.job_spaces.sum()
 
-        # number of total job spaces for LA
-        num_units = la_orig_buildings.job_spaces.sum()
-
-        print("Number of agents: {:,}".format(num_agents))
-        print("Number of agent spaces: {:,}".format(int(num_units)))
-        assert target_vacancy < 1.0
-        target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-        print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
-        print(
-            "Target vacancy = {:.2f}, target of new units = {:,}".format(
-                target_vacancy, target_units
+            print(f"Developing {form} spaces for large area {lid}:")
+            print("Number of agents: {:,}".format(num_agents))
+            print("Number of agent spaces: {:,}".format(int(num_units)))
+            assert target_vacancy < 1.0
+            target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+            print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
+            print(
+                "Target vacancy = {:.2f}, target of new units = {:,}".format(
+                    target_vacancy, target_units
+                )
             )
-        )
 
-        # calculate prior form_btype_distributions
-        register_btype_distributions(la_orig_buildings)
+            # calculate prior form_btype_distributions
+            register_btype_distributions(la_orig_buildings)
 
-        # run nonres developer step
-        spaces_added, parcels_idx_to_update = run_developer(
-            target_units,
-            lid,
-            ["office", "retail", "industrial", "medical", "entertainment"],
-            orca.get_table("buildings"),
-            "job_spaces",
-            parcels.parcel_size,
-            parcels.ave_unit_size,
-            parcels.total_job_spaces,
-            "nonres_developer.yaml",
-            add_more_columns_callback=add_extra_columns_nonres,
-        )
+            # run nonres developer step
+            spaces_added, parcels_idx_to_update = run_developer(
+                target_units,
+                lid,
+                [form],
+                orca.get_table("buildings"),
+                "job_spaces",
+                parcels.parcel_size,
+                parcels.ave_unit_size,
+                parcels.total_job_spaces,
+                "nonres_developer.yaml",
+                add_more_columns_callback=add_extra_columns_nonres,
+            )
 
-        # update pct_undev to 100 if theres only one building in the parcel
-        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-        # update parcels table
-        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+            # update pct_undev to 100 if theres only one building in the parcel
+            pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+            # update parcels table
+            parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
 @orca.step()

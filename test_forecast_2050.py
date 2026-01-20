@@ -41,7 +41,7 @@ orca.add_injectable('scenario_emp_control_path',
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
-orca.add_injectable('runnum_to_resume', 'run1360.h5')
+orca.add_injectable('runnum_to_resume', 'run1365.h5')
 
 # dump all setting in yaml in run folder
 if not os.path.exists(orca.get_injectable("data_out_dir")):
