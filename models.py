@@ -2262,6 +2262,9 @@ def residential_developer(
 
     # get target vacancies by mcd for current year
     target_vacancies = target_vacancies_mcd.to_frame()
+    # ## TEST without MCD control: set vacancy rate to baseyear 2020
+    # target_vacancies = target_vacancies[str(2020)]
+
     target_vacancies = target_vacancies[str(year)]
 
     # get original buildings
