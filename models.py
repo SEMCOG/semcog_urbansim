@@ -18,10 +18,23 @@ from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_var
 
 import utils
 import lcm_utils
+from functools import reduce
+
+# set configs if they are not set
+if not orca.is_injectable('hlcm_model_path'):
+    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+
+if not orca.is_injectable('elcm_model_path'):
+    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
+
+if not orca.is_injectable('yaml_configs'):
+    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
+
+if not orca.is_injectable('ENABLE_SCENARIO'):
+    orca.add_injectable('ENABLE_SCENARIO', False)
 
 import dataset
 import variables
-from functools import reduce
 
 # Setup Scenario controls
 if orca.get_injectable('ENABLE_SCENARIO'):
@@ -43,16 +56,6 @@ if orca.get_injectable('ENABLE_SCENARIO'):
 hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
-
-# get config paths
-if not orca.is_injectable('hlcm_model_path'):
-    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
-
-if not orca.is_injectable('elcm_model_path'):
-    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
-
-if not orca.is_injectable('yaml_configs'):
-    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 hlcm_model_path = orca.get_injectable('hlcm_model_path')
 elcm_model_path = orca.get_injectable('elcm_model_path')
