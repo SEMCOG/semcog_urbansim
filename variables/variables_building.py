@@ -17,15 +17,56 @@ import lcm_utils
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def hedonic_id(buildings):
-    hedonic_id = buildings.large_area_id * 100 + buildings.building_type_id
-    hedonic_id.loc[
-        # buildings.building_type_id.isin([24, 32, 42, 43, 52, 53, 61, 62])
-        buildings.building_type_id.isin(
-            [11, 13, 14, 32, 41, 42, 52, 53, 61, 63, 71, 84, 91, 92, 93, 94, 95]
-        )
-    ] = buildings.building_type_id
-    # hedonic_id.loc[hedonic_id == 571] = 371
-    # hedonic_id.loc[hedonic_id == 584] = 384
+    """
+    Calculate hedonic_id with building type aggregation to solve sampling issues.
+
+    Aggregation Strategy (Strategy 1):
+    - Institutional types (11, 13, 14, 92, 93) → 11
+    - TCU subtypes (41, 42, 95) → 41
+    - Medical subtypes (51, 52, 53) → 51
+    - Entertainment + Hospitality (61, 63, 65, 91) → 61
+
+    This increases sample sizes for rare building types while maintaining
+    area segmentation where data supports it.
+    """
+    # Create a copy of building_type_id for mapping
+    btype_mapped = buildings.building_type_id.copy()
+
+    # Aggregate Institutional types (11, 13, 14, 92, 93) → 11
+    # Includes: various institutional buildings
+    btype_mapped[btype_mapped.isin([13, 14, 92, 93])] = 11
+
+    # Aggregate TCU subtypes (41, 42, 95) → 41
+    # TCU = Transportation, Communication, Utilities (parking, delivery services, etc.)
+    btype_mapped[btype_mapped.isin([42, 95])] = 41
+
+    # Aggregate Medical subtypes (51, 52, 53) → 51
+    # Includes: hospitals, clinics, medical offices
+    btype_mapped[btype_mapped.isin([52, 53])] = 51
+
+    # Aggregate Entertainment + Hospitality (61, 63, 65, 91) → 61
+    # Includes: entertainment venues, hotels, restaurants
+    btype_mapped[btype_mapped.isin([63, 65, 91])] = 61
+
+    # Calculate hedonic_id with mapped building types
+    hedonic_id = buildings.large_area_id * 100 + btype_mapped
+
+    # Use all-building model for types that don't have enough samples for area segmentation
+    # These building types use building_type_id as hedonic_id directly (area 0)
+    all_building_btypes = [
+        11,  # Institutional (aggregated from 11, 13, 14, 92, 93)
+        32,  # Industrial (rare variant, uses all buildings)
+        41,  # TCU (aggregated from 41, 42, 95, uses all buildings)
+        51,  # Medical (aggregated from 51, 52, 53 - may have area models where samples allow)
+        61,  # Entertainment+Hospitality (aggregated from 61, 63, 65, 91)
+        71,  # Others
+        84,  # Residential (shouldn't be in non-res but keeping for safety)
+        94,  # Other commercial
+    ]
+
+    # For types marked as all-building, use building_type_id directly (area 0)
+    hedonic_id.loc[btype_mapped.isin(all_building_btypes)] = btype_mapped
+
     return hedonic_id
 
 
