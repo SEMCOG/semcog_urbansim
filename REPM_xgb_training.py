@@ -31,6 +31,7 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.feature_selection import VarianceThreshold, mutual_info_regression
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge, Lasso
+from sklearn.dummy import DummyRegressor
 
 # ==============================================================================
 # CONFIGURATION - Edit these settings as needed
@@ -40,7 +41,7 @@ from sklearn.linear_model import Ridge, Lasso
 REPM_XGB_PATH = "./configs/repm_xgb/"
 
 # Grid search settings
-USE_GRID_SEARCH = False  # Set to True for hyperparameter tuning (slower)
+USE_GRID_SEARCH = True  # Set to True for hyperparameter tuning (slower)
 # GRID_SEARCH_BASELINE options:
 #   - None: Use default grid search parameters
 #   - "auto": Automatically load existing grid_search_{model_name}.yaml for each segment
@@ -402,7 +403,7 @@ def _remove_correlated_features(X, feat_names, threshold=0.95):
 
 
 def _train_ridge_model(X_all, y, feat_names, sample_size, segment, start_time):
-    """Train Ridge regression model for small samples."""
+    """Train Ridge regression model with dummy mean fallback for small samples."""
     # Feature selection based on sample size
     X_selected, feat_names_selected, selected = _select_features_by_importance(
         X_all, y, feat_names, sample_size, model_type='ridge'
@@ -430,27 +431,55 @@ def _train_ridge_model(X_all, y, feat_names, sample_size, segment, start_time):
     )
 
     # Use stronger regularization for smaller samples
-    # Increased from 50 to 100 for better regularization on tiny samples
     alpha = max(1.0, 100.0 / sample_size)
 
-    model = Ridge(alpha=alpha, random_state=42)
-    model.fit(X_train, y_train)
+    # Train both Ridge and Dummy models
+    ridge = Ridge(alpha=alpha, random_state=42)
+    ridge.fit(X_train, y_train)
 
-    # Predictions
-    y_pred_train = model.predict(X_train)
-    y_pred_test = model.predict(X_test)
+    dummy = DummyRegressor(strategy='mean')
+    dummy.fit(X_train, y_train)
+
+    # Evaluate both models
+    ridge_train_pred = ridge.predict(X_train)
+    ridge_test_pred = ridge.predict(X_test)
+    ridge_r2_train = r2_score(y_train, ridge_train_pred)
+    ridge_r2_test = r2_score(y_test, ridge_test_pred)
+
+    dummy_test_pred = dummy.predict(X_test)
+    dummy_r2_test = r2_score(y_test, dummy_test_pred)
+
+    # Hybrid: Choose the better model (with small tolerance for Ridge)
+    # Use Ridge if it's within 0.05 of Dummy, to prefer feature-based models
+    tolerance = 0.05
+    if ridge_r2_test >= dummy_r2_test - tolerance:
+        # Ridge wins or is close enough
+        model = ridge
+        model_type = 'ridge'
+        y_pred_train = ridge_train_pred
+        y_pred_test = ridge_test_pred
+        print(f"  R²: train={ridge_r2_train:.4f}, test={ridge_r2_test:.4f} (Ridge α={alpha:.2f}, test={test_size:.0%})")
+    else:
+        # Dummy mean predictor wins
+        model = dummy
+        model_type = 'dummy'
+        y_pred_train = dummy.predict(X_train)
+        y_pred_test = dummy_test_pred
+        print(f"  R²: train={r2_score(y_train, y_pred_train):.4f}, test={dummy_r2_test:.4f} (DUMMY mean - Ridge was {ridge_r2_test:.4f})")
 
     # Compute metrics
     metrics = _compute_metrics(y_test, y_pred_test, y_train, y_pred_train)
     metrics['sample_size'] = sample_size
     metrics['n_features'] = len(feat_names)
 
-    # Feature importance (absolute coefficient values, normalized)
-    importance = np.abs(model.coef_)
-    total_importance = importance.sum() or 1
-    importance_norm = {feat_names[i]: float(importance[i] / total_importance) for i in range(len(feat_names))}
-
-    print(f"  R²: train={metrics['r2_train']:.4f}, test={metrics['r2_test']:.4f} (Ridge α={alpha:.2f}, test={test_size:.0%})")
+    # Feature importance (only meaningful for Ridge)
+    if model_type == 'ridge':
+        importance = np.abs(model.coef_)
+        total_importance = importance.sum() or 1
+        importance_norm = {feat_names[i]: float(importance[i] / total_importance) for i in range(len(feat_names))}
+    else:
+        # Dummy has no feature importance
+        importance_norm = {feat: 0.0 for feat in feat_names}
 
     return {
         'model': model,
@@ -463,7 +492,7 @@ def _train_ridge_model(X_all, y, feat_names, sample_size, segment, start_time):
         'training_time': time.time() - start_time,
         'using_grid_search': False,
         'using_gs_baseline': False,
-        'model_type': 'ridge',
+        'model_type': model_type,
     }
 
 
@@ -539,7 +568,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
             model, param_grid, cv=3, scoring='r2', verbose=0, n_jobs=-1,
             return_train_score=True
         )
-        gs.fit(X_all, y, eval_set=[(X_test, y_test)], verbose=False)
+        gs.fit(X_all, y)
 
         model = gs.best_estimator_
         best_params = gs.best_params_
@@ -754,9 +783,9 @@ def run_repm_training():
     print("-"*80)
     print(f"{'Model':<18} {'Samples':<10} {'Features':<10} {'R²':<8} {'RMSE':<8} {'Time':<9}")
     if USE_GRID_SEARCH:
-        marker_legend = "Markers: R = Ridge (<100), + = refined GS, # = full GS"
+        marker_legend = "Markers: R = Ridge, D = Dummy (mean), + = refined GS, # = full GS"
     else:
-        marker_legend = "Markers: R = Ridge (<100), * = using GS, (blank) = default"
+        marker_legend = "Markers: R = Ridge, D = Dummy (mean), * = using GS, (blank) = default"
     print("-"*80 + " " + marker_legend)
 
     results = {}
@@ -800,6 +829,8 @@ def run_repm_training():
         # '+' = GS with baseline, '#' = full GS
         if model_type == 'ridge':
             gs_marker = 'R'
+        elif model_type == 'dummy':
+            gs_marker = 'D'
         elif USE_GRID_SEARCH:
             if artifacts.get('using_gs_baseline', False):
                 gs_marker = '+'
@@ -821,8 +852,9 @@ def run_repm_training():
     training_time_total = time.time() - overall_start
     n_using_gs = sum(1 for r in results.values() if r.get('using_grid_search', False))
     n_using_gs_baseline = sum(1 for r in results.values() if r.get('using_gs_baseline', False))
+    n_xgboost = sum(1 for r in results.values() if r.get('model_type', 'xgboost') == 'xgboost')
     n_ridge = sum(1 for r in results.values() if r.get('model_type', 'xgboost') == 'ridge')
-    n_xgboost = len(results) - n_ridge
+    n_dummy = sum(1 for r in results.values() if r.get('model_type', 'xgboost') == 'dummy')
 
     summary = {
         'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
@@ -853,8 +885,13 @@ def run_repm_training():
     print("="*80)
 
     print(f"\nCompleted: {len(results)}/{len(segments)} models trained")
-    if n_ridge > 0:
-        print(f"Model Types: {n_ridge} Ridge (<100 samples), {n_xgboost} XGBoost (100+ samples)")
+    if n_ridge > 0 or n_dummy > 0:
+        model_types_str = f"{n_xgboost} XGBoost (100+ samples)"
+        if n_ridge > 0:
+            model_types_str += f", {n_ridge} Ridge"
+        if n_dummy > 0:
+            model_types_str += f", {n_dummy} Dummy (mean fallback)"
+        print(f"Model Types: {model_types_str}")
     if USE_GRID_SEARCH and n_using_gs_baseline > 0:
         print(f"Grid Search: {n_using_gs_baseline} with baseline (+), {len(results) - n_using_gs_baseline} full (#)")
     elif not USE_GRID_SEARCH and n_using_gs > 0:
