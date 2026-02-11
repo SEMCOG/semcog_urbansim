@@ -67,14 +67,29 @@ class REPMXGBoostModel:
 
             self.model = xgb.XGBRegressor()
             self.model.load_model(xgb_model_path)
-        else:  # Ridge or other sklearn models
+        elif model_type == 'ridge':
+            sklearn_model_path = os.path.join(model_path, "sklearn_model.pkl")
+            if not os.path.exists(sklearn_model_path):
+                raise FileNotFoundError(f"Ridge model file not found: {sklearn_model_path}")
+
+            self.model = joblib.load(sklearn_model_path)
+        elif model_type == 'dummy':
+            sklearn_model_path = os.path.join(model_path, "sklearn_model.pkl")
+            if not os.path.exists(sklearn_model_path):
+                raise FileNotFoundError(f"Dummy model file not found: {sklearn_model_path}")
+
+            self.model = joblib.load(sklearn_model_path)
+            print(f"Loaded {model_type} model {self.model_name} (mean predictor fallback)")
+        else:
+            # Fallback for any sklearn model
             sklearn_model_path = os.path.join(model_path, "sklearn_model.pkl")
             if not os.path.exists(sklearn_model_path):
                 raise FileNotFoundError(f"Sklearn model file not found: {sklearn_model_path}")
 
             self.model = joblib.load(sklearn_model_path)
 
-        print(f"Loaded {model_type} model {self.model_name} with {len(self.feature_names)} features")
+        if model_type != 'dummy':
+            print(f"Loaded {model_type} model {self.model_name} with {len(self.feature_names)} features")
         print(f"Model R²: {self.metadata['metrics']['r2_val']:.4f}")
 
     def predict(self, X):
@@ -115,11 +130,16 @@ class REPMXGBoostModel:
         Returns:
         pd.DataFrame: DataFrame with feature names and importance scores
         """
-        importances = self.metadata['feature_importances']
+        importances = self.metadata['feature_importance']
+        # Filter out zero importance (dummy models)
+        importances = {k: v for k, v in importances.items() if v > 0}
         sorted_features = sorted(importances.items(), key=lambda x: x[1], reverse=True)
 
         df = pd.DataFrame(sorted_features[:top_n], columns=['feature', 'importance'])
-        df['importance_pct'] = df['importance'] / df['importance'].sum() * 100
+        if len(df) > 0 and df['importance'].sum() > 0:
+            df['importance_pct'] = df['importance'] / df['importance'].sum() * 100
+        else:
+            df['importance_pct'] = 0.0
 
         return df
 
