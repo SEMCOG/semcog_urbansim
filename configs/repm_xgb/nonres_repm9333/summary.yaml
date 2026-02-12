@@ -1,0 +1,23 @@
+model_name: nonres_repm9333
+model_type: xgboost
+hedonic_id: 9333
+type: non-residential
+sample_size: 412
+n_features: 150
+performance:
+  r2_train: '0.9154'
+  r2_val: '0.4343'
+  r2_adj_val: '0.4343'
+  rmse_val: '0.4358'
+  mae_val: '0.2014'
+top_features:
+  drv_nearest_healthcenter: 0.0
+  stories: 0.0
+  nodes_drv_log_sum_20min_pop: 0.0010255265515297651
+  nodes_drv_log_sum_10min_pop: 0.0017954263603314757
+  nodes_walk_vacancy_750m: 0.003669029101729393
+  nodes_walk_log_30min_retail_jobs: 0.0021900241263210773
+  nodes_walk_log_15min_retail_jobs: 0.0017008092254400253
+  nodes_walk_entertainment: 0.0006518586887978017
+  nodes_walk_medical: 0.0023590975906699896
+  nodes_walk_retail: 6.183537334436551e-05

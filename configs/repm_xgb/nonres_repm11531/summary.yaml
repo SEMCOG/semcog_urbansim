@@ -1,0 +1,23 @@
+model_name: nonres_repm11531
+model_type: xgboost
+hedonic_id: 11531
+type: non-residential
+sample_size: 242
+n_features: 150
+performance:
+  r2_train: '0.9712'
+  r2_val: '0.5488'
+  r2_adj_val: '0.5488'
+  rmse_val: '0.5164'
+  mae_val: '0.3858'
+top_features:
+  parks_vehicle_drive_near_max150: 0.015071956440806389
+  libraries_drive_near_max150: 0.0031078846659511328
+  passenger_train_stations_bike_near_max120: 0.001882994663901627
+  passenger_airports_bike_near_max120: 0.0
+  nodes_walk_race_4_hhs: 0.0009423863375559449
+  nodes_walk_race_2_hhs: 0.0006208146805875003
+  nodes_walk_senior_hhs: 0.0030521773733198643
+  nodes_walk_large_hhs: 0.0005311383865773678
+  health_centers_bike_near_max120: 0.004242743365466595
+  urgent_cares_bike_near_max120: 0.007590236607939005

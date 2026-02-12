@@ -1,0 +1,23 @@
+model_name: res_repm9383
+model_type: xgboost
+hedonic_id: 9383
+type: residential
+sample_size: 491
+n_features: 150
+performance:
+  r2_train: '0.9950'
+  r2_val: '0.9527'
+  r2_adj_val: '0.9527'
+  rmse_val: '0.1564'
+  mae_val: '0.0755'
+top_features:
+  nodes_walk_max_retail_far: 0.01289278082549572
+  nodes_drv_elem_school_perf: 0.0037028908263891935
+  nodes_drv_log_sum_30min_jobs: 0.005803019739687443
+  nodes_drv_log_sum_15min_jobs: 0.003962973598390818
+  bike_nearest_grocery: 0.0005083552096039057
+  nodes_walk_percent_race3: 0.0008142917649820447
+  nodes_walk_percent_race2: 0.002890476491302252
+  drv_nearest_healthcenter: 0.0
+  nodes_walk_max_office_far: 0.004287917632609606
+  nodes_walk_max_industrial_far: 0.0

@@ -1,0 +1,23 @@
+model_name: nonres_repm9921
+model_type: xgboost
+hedonic_id: 9921
+type: non-residential
+sample_size: 4307
+n_features: 208
+performance:
+  r2_train: '0.9730'
+  r2_val: '0.7822'
+  r2_adj_val: '0.7822'
+  rmse_val: '0.2879'
+  mae_val: '0.1808'
+top_features:
+  sqft_per_unit: 0.005956040695309639
+  stories: 0.01188754290342331
+  improvement_value: 0.035933151841163635
+  land_area: 0.025950001552700996
+  residential_sqft: 0.005327276885509491
+  building_sqft: 0.038586799055337906
+  vacant_residential_units: 0.0
+  vacant_job_spaces: 0.0669092983007431
+  parcel_sqft: 0.017359411343932152
+  crime_ucr_rate: 0.004501919262111187
