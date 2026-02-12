@@ -1,0 +1,23 @@
+model_name: nonres_repm11523
+model_type: xgboost
+hedonic_id: 11523
+type: non-residential
+sample_size: 408
+n_features: 150
+performance:
+  r2_train: '0.9861'
+  r2_val: '0.8474'
+  r2_adj_val: '0.8474'
+  rmse_val: '0.2945'
+  mae_val: '0.2367'
+top_features:
+  nodes_walk_log_sum_nonresidential_units: 0.005148035939782858
+  nodes_walk_log_sum_residential_units: 0.004449484404176474
+  bldg_jobs_sector_7: 0.0
+  jobs_drive_cumulative_25min: 0.0
+  jobs_drive_cumulative_20min: 0.0
+  jobs_drive_cumulative_15min: 0.010285395197570324
+  fixed_route_bus_weekday_bike_10min: 0.0008463647100143135
+  pharmacies_bike_near_max120: 0.0015972686232998967
+  parks_school_bike_near_max120: 0.003548671491444111
+  parks_local_bike_near_max120: 0.012929357588291168

@@ -1,0 +1,109 @@
+best_params: &id001
+  learning_rate: 0.06
+  max_depth: 3
+  n_estimators: 600
+  subsample: 0.6
+best_score: 0.7289665610069042
+best_cv_mean: 0.7289665610069042
+best_cv_std: 0.027655343936290017
+model_name: nonres_repm9323
+timestamp: '2026-02-11 21:52:19'
+sample_size: 537
+n_features: 197
+all_results:
+  params:
+  - learning_rate: 0.04
+    max_depth: 3
+    n_estimators: 400
+    subsample: 0.6
+  - learning_rate: 0.04
+    max_depth: 3
+    n_estimators: 400
+    subsample: 0.8
+  - learning_rate: 0.04
+    max_depth: 3
+    n_estimators: 600
+    subsample: 0.6
+  - learning_rate: 0.04
+    max_depth: 3
+    n_estimators: 600
+    subsample: 0.8
+  - learning_rate: 0.04
+    max_depth: 5
+    n_estimators: 400
+    subsample: 0.6
+  - learning_rate: 0.04
+    max_depth: 5
+    n_estimators: 400
+    subsample: 0.8
+  - learning_rate: 0.04
+    max_depth: 5
+    n_estimators: 600
+    subsample: 0.6
+  - learning_rate: 0.04
+    max_depth: 5
+    n_estimators: 600
+    subsample: 0.8
+  - learning_rate: 0.06
+    max_depth: 3
+    n_estimators: 400
+    subsample: 0.6
+  - learning_rate: 0.06
+    max_depth: 3
+    n_estimators: 400
+    subsample: 0.8
+  - *id001
+  - learning_rate: 0.06
+    max_depth: 3
+    n_estimators: 600
+    subsample: 0.8
+  - learning_rate: 0.06
+    max_depth: 5
+    n_estimators: 400
+    subsample: 0.6
+  - learning_rate: 0.06
+    max_depth: 5
+    n_estimators: 400
+    subsample: 0.8
+  - learning_rate: 0.06
+    max_depth: 5
+    n_estimators: 600
+    subsample: 0.6
+  - learning_rate: 0.06
+    max_depth: 5
+    n_estimators: 600
+    subsample: 0.8
+  mean_test_score:
+  - 0.7168396042993507
+  - 0.7136861533680796
+  - 0.7202689206850414
+  - 0.717135703598501
+  - 0.6945119969360517
+  - 0.6854479435254436
+  - 0.6959013389619654
+  - 0.6862878002808691
+  - 0.7263963097534006
+  - 0.7141947652364703
+  - 0.7289665610069042
+  - 0.7161017193660381
+  - 0.6934787258586775
+  - 0.6782214009686233
+  - 0.6941120547763169
+  - 0.6784992225356885
+  std_test_score:
+  - 0.015929325417905156
+  - 0.02793925814565551
+  - 0.016442574598273193
+  - 0.02822126348200107
+  - 0.025440744147902483
+  - 0.01169974247805684
+  - 0.025481167366983783
+  - 0.011403622812976157
+  - 0.027062181646418198
+  - 0.023084833604578626
+  - 0.027655343936290017
+  - 0.02315179724361269
+  - 0.029969034174287843
+  - 0.03162956574565764
+  - 0.02968618686110298
+  - 0.03153016486340467

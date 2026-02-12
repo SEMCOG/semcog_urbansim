@@ -1,0 +1,23 @@
+model_name: nonres_repm94
+model_type: xgboost
+hedonic_id: 94
+type: non-residential
+sample_size: 243
+n_features: 150
+performance:
+  r2_train: '0.9951'
+  r2_val: '0.7898'
+  r2_adj_val: '0.7898'
+  rmse_val: '0.3561'
+  mae_val: '0.2720'
+top_features:
+  nodes_walk_sector6_jobs: 0.004685256630182266
+  schools_k8_bike_near_max120: 0.001189068891108036
+  nodes_walk_sector7_jobs: 0.0011980935232713819
+  parks_school_bike_near_max120: 0.003328944556415081
+  nodes_walk_sector8_jobs: 0.009978372603654861
+  bike_nearest_library: 0.0008619591826573014
+  zones_logsum_job_low_income: 0.020647751167416573
+  zones_logsum_pop_low_income: 0.1268787384033203
+  zones_logsum_pop_mid_income: 0.0018301208037883043
+  mode_income_quartile: 0.02122020162642002
