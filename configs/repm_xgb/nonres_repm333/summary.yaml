@@ -1,0 +1,23 @@
+model_name: nonres_repm333
+model_type: xgboost
+hedonic_id: 333
+type: non-residential
+sample_size: 1733
+n_features: 216
+performance:
+  r2_train: '0.9684'
+  r2_val: '0.7772'
+  r2_adj_val: '0.7772'
+  rmse_val: '0.2678'
+  mae_val: '0.1597'
+top_features:
+  stories: 0.05731162801384926
+  improvement_value: 0.014973368495702744
+  residential_sqft: 0.0
+  building_sqft: 0.01938813179731369
+  job_spaces: 0.010360540822148323
+  vacant_job_spaces: 0.06204865500330925
+  parcel_sqft: 0.0036224820651113987
+  crime_ucr_rate: 0.010031751357018948
+  crime_other_rate: 0.00016504229279235005
+  drv_nearest_hospital: 0.0016273811925202608
