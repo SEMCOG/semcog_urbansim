@@ -11,7 +11,7 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 
-# run config 
+# run config
 RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
@@ -60,6 +60,7 @@ with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), 
             "scenario_remi_total_pop": orca.get_injectable("scenario_remi_total_pop") if orca.is_injectable("scenario_remi_total_pop") else "N/A",
             "use_checkpoint": orca.get_injectable("use_checkpoint") if orca.is_injectable("use_checkpoint") else "N/A",
             "runnum_to_resume": orca.get_injectable("runnum_to_resume") if orca.is_injectable("runnum_to_resume") else "N/A",
+            "repm_model_type": "XGBoost",
             "git_branch_name": subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode().strip(),
             "git_commit_id": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
         }, f, default_flow_style=False)
@@ -68,7 +69,6 @@ import models
 from urbansim.utils import misc, networks
 import time
 import logging
-
 
 # check disk space, need at least 16GB
 # total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
