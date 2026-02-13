@@ -558,7 +558,8 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
 
 def make_repm_func(model_name, yaml_file, dep_var):
     """
-    Generator function for single-model REPMs.
+    Generator function for single-model REPMs (Lasso/YAML-based).
+    Kept for reference, not used in production.
     """
 
     @orca.step(model_name)
@@ -571,18 +572,162 @@ def make_repm_func(model_name, yaml_file, dep_var):
     return func
 
 
+def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
+    """
+    Generator function for XGBoost-based REPMs.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of the model step (e.g., "res_repm381")
+    xgb_model_dir : str
+        Path to XGBoost model directory (e.g., "configs/repm_xgb")
+    dep_var : str
+        Target variable name ("sqft_price_res" or "sqft_price_nonres")
+    """
+
+    @orca.step(model_name)
+    def func():
+        from repm_xgb_utils import load_repm_xgb_model
+
+        buildings = orca.get_table("buildings")
+
+        # Get year with fallback
+        year = orca.get_injectable("year") if orca.is_injectable("year") else None
+
+        # Load trained model
+        model_wrapper = load_repm_xgb_model(model_name, model_dir=xgb_model_dir)
+
+        # Get hedonic_id from model metadata for filtering
+        hedonic_id = int(model_wrapper.metadata['hedonic_id'])
+
+        # Get filter columns from metadata
+        size_col = model_wrapper.metadata['size_col']
+        price_col = model_wrapper.metadata['price_col']
+
+        # Get all feature names needed by model
+        feature_names = model_wrapper.feature_names
+
+        # Load all needed columns from buildings table (with caching via utils)
+        needed_cols = list(set(['hedonic_id', size_col, price_col] + feature_names))
+        buildings_df = utils.get_cached_buildings_df(buildings, needed_cols, year)
+
+        # Apply filters (same as old system)
+        filter_mask = (
+            (buildings_df['hedonic_id'] == hedonic_id) &
+            (buildings_df[size_col] > 0) &
+            (buildings_df[price_col] > 1) &
+            (buildings_df[price_col] < 650)
+        )
+
+        # Check for missing features and fill with 0
+        missing_features = set(feature_names) - set(buildings_df.columns)
+        if missing_features:
+            print(f"  Warning: {len(missing_features)} missing features, filling with 0")
+            for feat in missing_features:
+                buildings_df[feat] = 0
+
+        # Handle inf/nan values
+        buildings_df = buildings_df.replace([np.inf, -np.inf], 0)
+        buildings_df = buildings_df.fillna(0)
+
+        # Select features in correct order for filtered buildings only
+        X = buildings_df.loc[filter_mask, feature_names]
+
+        if len(X) == 0:
+            print(f"  {model_name}: No buildings match filter (hedonic_id={hedonic_id})")
+            return pd.Series(dtype=float)
+
+        # Make predictions (log-transformed prices)
+        log_prices = model_wrapper.predict(X)
+
+        # Inverse transform: expm1 is inverse of log1p
+        prices = np.expm1(log_prices)
+
+        # Create series for update (only for filtered buildings)
+        building_indices = buildings_df.index[filter_mask]
+        price_series = pd.Series(prices, index=building_indices)
+
+        # Clamp values (same as old system)
+        price_series = price_series.clip(lower=1, upper=700)
+
+        # Store predictions for comparison (via utils)
+        pred_key = 'res' if dep_var == 'sqft_price_res' else 'nonres'
+        utils.add_xgb_prediction(pred_key, hedonic_id, price_series, model_name,
+                                 model_wrapper.metadata['metrics']['r2_val'])
+
+        # Update buildings table
+        buildings.update_col_from_series(dep_var, price_series, cast=True)
+
+        print(f"  {model_name}: Updated {len(price_series)} buildings (R²={model_wrapper.metadata['metrics']['r2_val']:.4f})")
+
+        return price_series
+
+    return func
+
+
+@orca.step()
+def repm_comparison_log():
+    """
+    Compare XGBoost vs Lasso predictions and log results.
+    Calls the implementation in utils.py.
+    """
+    utils.repm_comparison_log()
+
+
+# Register XGBoost REPM steps
 repm_step_names = []
-for repm_config in os.listdir(os.path.join(misc.models_dir(), "repm_2050")):
-    model_name = repm_config.split(".")[0]
+xgb_repm_dir = "configs/repm_xgb"
 
-    if repm_config.startswith("res"):
-        dep_var = "sqft_price_res"
-    elif repm_config.startswith("nonres"):
-        dep_var = "sqft_price_nonres"
+# Use absolute path for checking existence
+xgb_model_full_path = os.path.abspath(xgb_repm_dir)
+if not os.path.exists(xgb_model_full_path):
+    # Try relative to models directory
+    xgb_model_full_path = os.path.join(misc.models_dir(), "repm_xgb")
+    xgb_repm_dir = os.path.join(misc.models_dir(), "repm_xgb")
 
-    make_repm_func(model_name, "repm_2050/" + repm_config, dep_var)
-    repm_step_names.append(model_name)
-orca.add_injectable("repm_step_names", repm_step_names)
+if os.path.exists(xgb_model_full_path):
+    for model_dir in sorted(os.listdir(xgb_model_full_path)):
+        model_path = os.path.join(xgb_model_full_path, model_dir)
+
+        # Skip non-directories and grid search files
+        if not os.path.isdir(model_path):
+            continue
+        if model_dir.startswith('grid_search') or model_dir.startswith('.'):
+            continue
+
+        # Check for required metadata file
+        metadata_path = os.path.join(model_path, "metadata.pkl")
+        if not os.path.exists(metadata_path):
+            print(f"Warning: Skipping {model_dir} - no metadata.pkl found")
+            continue
+
+        model_name = model_dir
+
+        # Determine dep_var from model name
+        if model_name.startswith("res"):
+            dep_var = "sqft_price_res"
+        elif model_name.startswith("nonres"):
+            dep_var = "sqft_price_nonres"
+        else:
+            print(f"Warning: Unknown model type {model_name}, skipping")
+            continue
+
+        # Create step function - pass the parent directory, model_name is the subfolder
+        make_xgb_repm_func(model_name, xgb_repm_dir, dep_var)
+        repm_step_names.append(model_name)
+
+    # Store model names
+    orca.add_injectable("_xgb_repm_model_names", repm_step_names)
+    orca.add_injectable("repm_step_names", repm_step_names)
+
+    # Add comparison step after REPM models
+    repm_step_names.append("repm_comparison_log")
+
+    print(f"Registered {len(repm_step_names) - 1} XGBoost REPM models + comparison step")
+else:
+    print("ERROR: XGBoost REPM directory not found at", xgb_model_full_path)
+    orca.add_injectable("repm_step_names", [])
 
 
 @orca.step()

@@ -703,3 +703,340 @@ def debug_log(file_path=None):
         force=True,
     )
 
+
+# ============================================================================
+# REPM Utilities for XGBoost Integration
+# ============================================================================
+
+# Building type aggregation mapping (must match variables_building.py)
+XGB_AGGREGATION_MAPPING = {
+    13: 11, 14: 11, 92: 11, 93: 11,  # Institutional -> 11
+    42: 41, 95: 41,                    # TCU -> 41
+    52: 51, 53: 51,                    # Medical -> 51
+    63: 61, 65: 61, 91: 61,            # Entertainment+Hospitality -> 61
+}
+XGB_ALL_BUILDING_BTYPES = [11, 32, 41, 51, 61, 71, 84, 94]
+
+# Store XGBoost predictions for comparison
+_xgb_predictions = {'res': {}, 'nonres': {}}
+
+# Cache for buildings features - load ALL features once per year
+_xgb_features_cache = {'year': None, 'df': None, 'all_features': None}
+
+
+def get_all_xgb_features():
+    """Get union of all features used by any XGBoost model."""
+    import joblib
+
+    model_dir = "configs/repm_xgb"
+    all_features = set()
+
+    if not os.path.exists(model_dir):
+        return all_features
+
+    for model_name in os.listdir(model_dir):
+        metadata_path = os.path.join(model_dir, model_name, "metadata.pkl")
+        if os.path.isdir(os.path.join(model_dir, model_name)) and os.path.exists(metadata_path):
+            meta = joblib.load(metadata_path)
+            all_features.update(meta['feature_names'])
+
+    return all_features
+
+
+def get_cached_buildings_df(buildings, needed_cols, year):
+    """
+    Get buildings dataframe with caching.
+
+    Strategy: Load ALL features once per year, then subset for each model.
+    This avoids 64 separate to_frame() calls with different column lists.
+    """
+    global _xgb_features_cache
+
+    # If year changed, invalidate cache
+    if _xgb_features_cache['year'] != year:
+        _xgb_features_cache['year'] = year
+        _xgb_features_cache['df'] = None
+
+    # Load all features if not cached
+    if _xgb_features_cache['df'] is None:
+        # Get all unique features across all models
+        all_features = get_all_xgb_features()
+
+        # Also add filter columns
+        filter_cols = {'hedonic_id', 'residential_units', 'non_residential_sqft',
+                      'sqft_price_res', 'sqft_price_nonres'}
+        all_features.update(filter_cols)
+
+        print(f"  Loading {len(all_features)} features for caching...")
+        _xgb_features_cache['df'] = buildings.to_frame(list(all_features))
+        _xgb_features_cache['all_features'] = all_features
+        print(f"  Cached buildings df: {len(_xgb_features_cache['df'])} rows")
+
+    # Return subset of cached dataframe
+    df = _xgb_features_cache['df']
+
+    # Check for missing features and fill with 0
+    missing = set(needed_cols) - set(df.columns)
+    if missing:
+        for feat in missing:
+            df[feat] = 0
+
+    return df[list(needed_cols)] if needed_cols else df
+
+
+def get_xgb_predictions():
+    """Get the stored XGBoost predictions for comparison."""
+    return _xgb_predictions
+
+
+def add_xgb_prediction(pred_key, hedonic_id, predictions, model_name, r2):
+    """Add an XGBoost prediction to the storage."""
+    global _xgb_predictions
+    _xgb_predictions[pred_key][hedonic_id] = {
+        'predictions': predictions,
+        'model_name': model_name,
+        'r2': r2
+    }
+
+
+def simulate_lasso_prices():
+    """
+    Run Lasso REPM predictions without updating building prices.
+    Returns dict of predictions by hedonic_id for comparison.
+    """
+    lasso_predictions = {'res': {}, 'nonres': {}}
+
+    repm_dir = os.path.join(misc.models_dir(), "repm_2050")
+    if not os.path.exists(repm_dir):
+        return lasso_predictions
+
+    buildings = orca.get_table("buildings")
+    nodes_walk = orca.get_table("nodes_walk")
+
+    for repm_config in sorted(os.listdir(repm_dir)):
+        if not repm_config.endswith('.yaml'):
+            continue
+
+        model_name = repm_config.split(".")[0]
+        yaml_file = "repm_2050/" + repm_config
+
+        if repm_config.startswith("res"):
+            pred_key = 'res'
+        elif repm_config.startswith("nonres"):
+            pred_key = 'nonres'
+        else:
+            continue
+
+        try:
+            import yaml
+            import re
+
+            cfg = misc.config(yaml_file)
+            cfg_data = yaml.load(open(cfg), Loader=yaml.FullLoader)
+
+            # Get hedonic_id from predict_filters
+            predict_filters = cfg_data.get('predict_filters', '')
+            hid = None
+            if 'hedonic_id' in predict_filters:
+                match = re.search(r'hedonic_id\s*==\s*(\d+)', predict_filters)
+                if match:
+                    hid = int(match.group(1))
+
+            # Run prediction without updating
+            df = to_frame([buildings, nodes_walk], cfg)
+            df = deal_with_nas(df)
+            price_or_rent, _ = yaml_to_class(cfg).predict_from_cfg(df, cfg)
+
+            # Clamp values (same as XGBoost)
+            price_or_rent = price_or_rent.clip(lower=1, upper=700)
+
+            if hid is not None:
+                lasso_predictions[pred_key][hid] = {
+                    'predictions': price_or_rent,
+                    'model_name': model_name
+                }
+
+        except Exception as e:
+            pass  # Skip failed models silently
+
+    return lasso_predictions
+
+
+def get_lasso_r2(yaml_file):
+    """Get R² value from Lasso YAML config file."""
+    import yaml
+    try:
+        cfg_path = misc.config(yaml_file)
+        with open(cfg_path, 'r') as f:
+            cfg_data = yaml.load(f, Loader=yaml.FullLoader)
+        return cfg_data.get('fit_rsquared', None)
+    except:
+        return None
+
+
+def repm_comparison_log():
+    """
+    Compare XGBoost vs Lasso predictions and log results.
+    Should be called as an orca step after all REPM steps complete.
+    """
+    from datetime import datetime
+
+    global _xgb_predictions
+
+    # Get year with proper fallback
+    year = orca.get_injectable("year") if orca.is_injectable("year") else None
+    if year is None:
+        return
+
+    print("\n" + "=" * 80)
+    print(f"REPM COMPARISON: XGBoost vs Lasso - Year {year}")
+    print("=" * 80)
+
+    # Run Lasso predictions for comparison
+    print("  Running Lasso predictions for comparison...")
+    lasso_predictions = simulate_lasso_prices()
+
+    # Prepare log content
+    log_lines = []
+    log_lines.append("=" * 80)
+    log_lines.append(f"REPM Model Comparison - Year {year}")
+    log_lines.append(f"Generated: {datetime.now().isoformat()}")
+    log_lines.append("=" * 80)
+
+    comparison_summary = {
+        'residential': {'count': 0, 'correlations': [], 'xgb_means': [], 'lasso_means': []},
+        'non_residential': {'count': 0, 'correlations': [], 'xgb_means': [], 'lasso_means': []}
+    }
+
+    # Compare residential
+    print("\n[Residential Comparison]")
+    log_lines.append("\n## Residential Prices ##")
+    print(f"  {'hedonic_id':<12} {'n':>10} {'Lasso $':>10} {'XGB $':>10} {'Diff $':>8} {'Diff %':>7} {'r(Lasso)':>9} {'r(XGB)':>8}")
+    print(f"  {'-'*80}")
+    log_lines.append(f"  {'hedonic_id':<12} {'n':>10} {'Lasso_mean':>10} {'XGB_mean':>10} {'Diff_$':>8} {'Diff_%':>7} {'R2_Lasso':>9} {'R2_XGB':>8}")
+
+    res_hids = set(_xgb_predictions['res'].keys()) & set(lasso_predictions['res'].keys())
+    for hid in sorted(res_hids):
+        xgb_data = _xgb_predictions['res'][hid]
+        lasso_data = lasso_predictions['res'][hid]
+        xgb_pred = xgb_data['predictions']
+        lasso_pred = lasso_data['predictions']
+
+        common_idx = xgb_pred.index.intersection(lasso_pred.index)
+        if len(common_idx) < 10:
+            continue
+
+        xgb_vals = xgb_pred.loc[common_idx]
+        lasso_vals = lasso_pred.loc[common_idx]
+
+        xgb_mean = xgb_vals.mean()
+        lasso_mean = lasso_vals.mean()
+        mean_diff = xgb_mean - lasso_mean
+        pct_diff = (mean_diff / lasso_mean * 100)
+        corr = xgb_vals.corr(lasso_vals)
+
+        # Get R² values
+        xgb_r2 = xgb_data.get('r2', None)
+        lasso_r2 = get_lasso_r2(f"repm_2050/res_repm{hid}.yaml")
+
+        comparison_summary['residential']['count'] += len(common_idx)
+        comparison_summary['residential']['correlations'].append(corr)
+        comparison_summary['residential']['xgb_means'].append(xgb_mean)
+        comparison_summary['residential']['lasso_means'].append(lasso_mean)
+
+        xgb_r2_str = f"{xgb_r2:.4f}" if xgb_r2 is not None else "N/A"
+        lasso_r2_str = f"{lasso_r2:.4f}" if lasso_r2 is not None else "N/A"
+
+        line = f"  {hid:<12} {len(common_idx):>10,} ${lasso_mean:>8.2f} ${xgb_mean:>8.2f} ${mean_diff:>+6.2f} {pct_diff:>+5.1f}% {lasso_r2_str:>9} {xgb_r2_str:>8}"
+        print(line)
+        log_lines.append(f"  {hid:<12} {len(common_idx):>10,} ${lasso_mean:>8.2f} ${xgb_mean:>8.2f} ${mean_diff:>+6.2f} {pct_diff:>+5.1f}% {lasso_r2_str:>9} {xgb_r2_str:>8}")
+
+    # Compare non-residential
+    print("\n[Non-Residential Comparison]")
+    log_lines.append("\n## Non-Residential Prices ##")
+    print(f"  {'hedonic_id':<12} {'n':>10} {'Lasso $':>10} {'XGB $':>10} {'Diff $':>8} {'Diff %':>7} {'r(Lasso)':>9} {'r(XGB)':>8}")
+    print(f"  {'-'*80}")
+    log_lines.append(f"  {'hedonic_id':<12} {'n':>10} {'Lasso_mean':>10} {'XGB_mean':>10} {'Diff_$':>8} {'Diff_%':>7} {'R2_Lasso':>9} {'R2_XGB':>8}")
+
+    nonres_hids = set(_xgb_predictions['nonres'].keys()) & set(lasso_predictions['nonres'].keys())
+    for hid in sorted(nonres_hids):
+        xgb_data = _xgb_predictions['nonres'][hid]
+        lasso_data = lasso_predictions['nonres'][hid]
+        xgb_pred = xgb_data['predictions']
+        lasso_pred = lasso_data['predictions']
+
+        common_idx = xgb_pred.index.intersection(lasso_pred.index)
+        if len(common_idx) < 10:
+            continue
+
+        xgb_vals = xgb_pred.loc[common_idx]
+        lasso_vals = lasso_pred.loc[common_idx]
+
+        xgb_mean = xgb_vals.mean()
+        lasso_mean = lasso_vals.mean()
+        mean_diff = xgb_mean - lasso_mean
+        pct_diff = (mean_diff / lasso_mean * 100)
+        corr = xgb_vals.corr(lasso_vals)
+
+        # Get R² values
+        xgb_r2 = xgb_data.get('r2', None)
+        lasso_r2 = get_lasso_r2(f"repm_2050/nonres_repm{hid}.yaml")
+
+        comparison_summary['non_residential']['count'] += len(common_idx)
+        comparison_summary['non_residential']['correlations'].append(corr)
+        comparison_summary['non_residential']['xgb_means'].append(xgb_mean)
+        comparison_summary['non_residential']['lasso_means'].append(lasso_mean)
+
+        xgb_r2_str = f"{xgb_r2:.4f}" if xgb_r2 is not None else "N/A"
+        lasso_r2_str = f"{lasso_r2:.4f}" if lasso_r2 is not None else "N/A"
+
+        line = f"  {hid:<12} {len(common_idx):>10,} ${lasso_mean:>8.2f} ${xgb_mean:>8.2f} ${mean_diff:>+6.2f} {pct_diff:>+5.1f}% {lasso_r2_str:>9} {xgb_r2_str:>8}"
+        print(line)
+        log_lines.append(f"  {hid:<12} {len(common_idx):>10,} ${lasso_mean:>8.2f} ${xgb_mean:>8.2f} ${mean_diff:>+6.2f} {pct_diff:>+5.1f}% {lasso_r2_str:>9} {xgb_r2_str:>8}")
+
+    # Summary statistics
+    print("\n[Summary]")
+    print(f"  {'-'*80}")
+    log_lines.append("\n## Summary ##")
+
+    if comparison_summary['residential']['correlations']:
+        res_avg_corr = np.mean(comparison_summary['residential']['correlations'])
+        res_avg_xgb = np.mean(comparison_summary['residential']['xgb_means'])
+        res_avg_lasso = np.mean(comparison_summary['residential']['lasso_means'])
+        res_count = comparison_summary['residential']['count']
+        res_diff = res_avg_xgb - res_avg_lasso
+        res_pct = (res_diff / res_avg_lasso * 100)
+        print(f"  Residential: {res_count:,} buildings")
+        print(f"    Lasso avg: ${res_avg_lasso:.2f}, XGB avg: ${res_avg_xgb:.2f}, Diff: ${res_diff:+.2f} ({res_pct:+.1f}%)")
+        print(f"    Avg correlation: {res_avg_corr:.3f}")
+        log_lines.append(f"Residential: {res_count:,} buildings")
+        log_lines.append(f"  Lasso avg: ${res_avg_lasso:.2f}, XGB avg: ${res_avg_xgb:.2f}, Diff: ${res_diff:+.2f} ({res_pct:+.1f}%)")
+        log_lines.append(f"  Avg correlation: {res_avg_corr:.3f}")
+
+    if comparison_summary['non_residential']['correlations']:
+        nonres_avg_corr = np.mean(comparison_summary['non_residential']['correlations'])
+        nonres_avg_xgb = np.mean(comparison_summary['non_residential']['xgb_means'])
+        nonres_avg_lasso = np.mean(comparison_summary['non_residential']['lasso_means'])
+        nonres_count = comparison_summary['non_residential']['count']
+        nonres_diff = nonres_avg_xgb - nonres_avg_lasso
+        nonres_pct = (nonres_diff / nonres_avg_lasso * 100)
+        print(f"  Non-residential: {nonres_count:,} buildings")
+        print(f"    Lasso avg: ${nonres_avg_lasso:.2f}, XGB avg: ${nonres_avg_xgb:.2f}, Diff: ${nonres_diff:+.2f} ({nonres_pct:+.1f}%)")
+        print(f"    Avg correlation: {nonres_avg_corr:.3f}")
+        log_lines.append(f"Non-residential: {nonres_count:,} buildings")
+        log_lines.append(f"  Lasso avg: ${nonres_avg_lasso:.2f}, XGB avg: ${nonres_avg_xgb:.2f}, Diff: ${nonres_diff:+.2f} ({nonres_pct:+.1f}%)")
+        log_lines.append(f"  Avg correlation: {nonres_avg_corr:.3f}")
+
+    print("=" * 80)
+    log_lines.append("=" * 80)
+
+    # Write log to file
+    log_dir = "runs/simulate_logs"
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, f"repm_comparison_{year}.log")
+
+    with open(log_file, 'w') as f:
+        f.write('\n'.join(log_lines))
+
+    print(f"\n  Comparison log saved to: {log_file}")
+
