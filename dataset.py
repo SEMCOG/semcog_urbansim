@@ -102,6 +102,9 @@ def bg_hh_increase():
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
+    # Skip recalculation when resuming from checkpoint - use checkpoint data as-is
+    if orca.get_injectable('use_checkpoint'):
+        return df
     pseudo_buildings = store["pseudo_building_2020"]
     pseudo_buildings = pseudo_buildings[
         [col for col in df.columns if col in pseudo_buildings]
@@ -169,6 +172,9 @@ def buildings(store):
 @orca.table(cache=True)
 def households(store, buildings):
     df = store["households"]
+    # Skip recalculation when resuming from checkpoint
+    if orca.get_injectable('use_checkpoint'):
+        return df
     b = buildings.to_frame(["large_area_id", "residential_units"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
@@ -217,6 +223,9 @@ def persons(store):
 @orca.table(cache=True)
 def jobs(store, buildings):
     df = store["jobs"]
+    # Skip recalculation when resuming from checkpoint
+    if orca.get_injectable('use_checkpoint'):
+        return df
     b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
@@ -233,6 +242,9 @@ def jobs(store, buildings):
 @orca.table(cache=True)
 def parcels(store, zoning):
     parcels_df = store["parcels"]
+    # Skip recalculation when resuming from checkpoint
+    if orca.get_injectable('use_checkpoint'):
+        return parcels_df
     # Added parcels from pseudo buildings
     pseudo_parcels = store["pseudo_parcel_2020"]
     if pseudo_parcels[pseudo_parcels.index.isin(parcels_df.index)].shape[0] == 0:
