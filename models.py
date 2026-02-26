@@ -936,10 +936,30 @@ def households_transition(
         return ct, hh, p, target, iter_var
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
+
+    # Retry wrapper to ensure all tasks complete successfully
+    def presses_trans_with_retry(args, max_retries=3):
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                return presses_trans(args)
+            except Exception as e:
+                last_error = e
+                print(f"Worker failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    print("Retrying...")
+        raise RuntimeError(f"Task failed after {max_retries} retries. Last error: {last_error}")
+
     pool = Pool(6)
-    cunks_per_la = pool.map(presses_trans, arg_per_la)
-    pool.close()
-    pool.join()
+    try:
+        cunks_per_la = pool.map(presses_trans_with_retry, arg_per_la)
+    except Exception as e:
+        print(f"Pool execution failed: {e}")
+        pool.terminate()
+        raise
+    finally:
+        pool.close()
+        pool.join()
     out = reduce(operator.concat, cunks_per_la)
 
     # Sync for testing
