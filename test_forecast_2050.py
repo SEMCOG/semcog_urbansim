@@ -68,6 +68,17 @@ import models
 from urbansim.utils import misc, networks
 import time
 import logging
+from datetime import datetime
+try:
+    from zoneinfo import ZoneInfo
+    _eastern = ZoneInfo("America/Detroit")
+    def _eastern_now():
+        return datetime.now(_eastern).strftime("%Y-%m-%d %H:%M:%S %Z")
+except ImportError:
+    import pytz
+    _eastern = pytz.timezone("America/Detroit")
+    def _eastern_now():
+        return datetime.now(_eastern).strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
 # check disk space, need at least 16GB
@@ -81,7 +92,7 @@ start_time = time.time()
 
 run_info = f"""data_out: {data_out} \
             \nRun number: {os.path.basename(data_out.replace('.h5', ''))} \
-            \nStart time: {time.ctime(start_time)}"""
+            \nStart time: {_eastern_now()}"""
 utils.run_log(run_info)
 
 if run_debug is True:
@@ -216,7 +227,7 @@ utils.run_log(
     f"Total run time: {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}"
 )
 
-print("Simulation started at %s, finished at %s. " % (start_time, time.ctime()))
+print("Simulation finished at %s. Total run time: %s" % (_eastern_now(), time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))))
 
 # dir_out = data_out.replace('.h5', '')
 # shutil.copytree(dir_out, '/mnt/hgfs/U/RDF2045/model_runs/' + os.path.basename(os.path.normpath(dir_out)))
