@@ -879,6 +879,20 @@ def presses_trans(xxx_todo_changeme1):
     return out
 
 
+def _retry_wrapper(args, max_retries=3):
+    """wrapper for pool.map - must be at module level to be picklable."""
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            return presses_trans(args)
+        except Exception as e:
+            last_error = e
+            print(f"Worker failed (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                print("Retrying...")
+    raise RuntimeError(f"Task failed after {max_retries} retries. Last error: {last_error}")
+
+
 @orca.step()
 def households_transition(
     households, persons, annual_household_control_totals, remi_pop_total, iter_var
@@ -937,22 +951,9 @@ def households_transition(
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
 
-    # Retry wrapper to ensure all tasks complete successfully
-    def presses_trans_with_retry(args, max_retries=3):
-        last_error = None
-        for attempt in range(max_retries):
-            try:
-                return presses_trans(args)
-            except Exception as e:
-                last_error = e
-                print(f"Worker failed (attempt {attempt + 1}/{max_retries}): {e}")
-                if attempt < max_retries - 1:
-                    print("Retrying...")
-        raise RuntimeError(f"Task failed after {max_retries} retries. Last error: {last_error}")
-
-    pool = Pool(6)
+    pool = Pool(2)
     try:
-        cunks_per_la = pool.map(presses_trans_with_retry, arg_per_la)
+        cunks_per_la = pool.map(_retry_wrapper, arg_per_la)
     except Exception as e:
         print(f"Pool execution failed: {e}")
         pool.terminate()
