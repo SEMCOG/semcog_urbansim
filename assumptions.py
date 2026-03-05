@@ -149,7 +149,12 @@ def update_store_from_checkpoint(store, checkpoint):
         if tb in store:
             cols = store[tb].columns
             dtypes = store[tb].dtypes
-            store[tb] = checkpoint[k][cols].astype(dtypes)
+            ckpt_df = checkpoint[k]
+            # Enforce base-store dtypes for common columns, but keep all
+            # columns from checkpoint (e.g. sqft_price_res computed at runtime)
+            common_cols = cols[cols.isin(ckpt_df.columns)]
+            ckpt_df[common_cols] = ckpt_df[common_cols].astype(dtypes[common_cols])
+            store[tb] = ckpt_df
         else:
             store[tb] = checkpoint[k]
     return store
