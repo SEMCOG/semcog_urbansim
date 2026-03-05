@@ -721,10 +721,10 @@ if os.path.exists(xgb_model_full_path):
     orca.add_injectable("_xgb_repm_model_names", repm_step_names)
     orca.add_injectable("repm_step_names", repm_step_names)
 
-    # Add comparison step after REPM models
-    repm_step_names.append("repm_comparison_log")
+    # Add comparison step after REPM models (disabled for speed)
+    # repm_step_names.append("repm_comparison_log")
 
-    print(f"Registered {len(repm_step_names) - 1} XGBoost REPM models + comparison step")
+    print(f"Registered {len(repm_step_names)} XGBoost REPM models (comparison step disabled)")
 else:
     print("ERROR: XGBoost REPM directory not found at", xgb_model_full_path)
     orca.add_injectable("repm_step_names", [])
