@@ -612,12 +612,11 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
         needed_cols = list(set(['hedonic_id', size_col, price_col] + feature_names))
         buildings_df = utils.get_cached_buildings_df(buildings, needed_cols, year)
 
-        # Apply filters (same as old system)
+        # Filter to this hedonic segment with valid space.
+        # Do NOT filter on price_col — new buildings start at 0 and need pricing.
         filter_mask = (
             (buildings_df['hedonic_id'] == hedonic_id) &
-            (buildings_df[size_col] > 0) &
-            (buildings_df[price_col] > 1) &
-            (buildings_df[price_col] < 650)
+            (buildings_df[size_col] > 0)
         )
 
         # Check for missing features and fill with 0
