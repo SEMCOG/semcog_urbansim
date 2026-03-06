@@ -716,17 +716,110 @@ if os.path.exists(xgb_model_full_path):
         make_xgb_repm_func(model_name, xgb_repm_dir, dep_var)
         repm_step_names.append(model_name)
 
-    # Store model names
-    orca.add_injectable("_xgb_repm_model_names", repm_step_names)
-    orca.add_injectable("repm_step_names", repm_step_names)
+    # Store individual model names (used by parallel runner)
+    orca.add_injectable("_xgb_repm_model_names", list(repm_step_names))
 
-    # Add comparison step after REPM models (disabled for speed)
-    # repm_step_names.append("repm_comparison_log")
+    # Replace sequential list with single parallel step
+    orca.add_injectable("repm_step_names", ["run_repm_parallel"])
 
-    print(f"Registered {len(repm_step_names)} XGBoost REPM models (comparison step disabled)")
+    print(f"Registered {len(repm_step_names)} XGBoost REPM models (will run res/nonres in parallel)")
 else:
     print("ERROR: XGBoost REPM directory not found at", xgb_model_full_path)
     orca.add_injectable("repm_step_names", [])
+
+
+@orca.step()
+def run_repm_parallel():
+    """
+    Run all REPM models in parallel threads — one thread per model.
+
+    Architecture:
+    1. Pre-warm the feature cache in the main thread (pandana is not thread-safe).
+    2. Each worker thread runs predict-only: reads from the shared cached DataFrame,
+       runs XGBoost inference, and returns (dep_var, price_series, model_name, r2).
+       No orca writes happen inside threads.
+    3. Main thread collects all results and applies update_col_from_series serially.
+
+    This avoids the res/nonres bottleneck where a slow nonres model (nonres_repm11)
+    serialised the entire nonres group.
+    """
+    import concurrent.futures
+    from repm_xgb_utils import load_repm_xgb_model
+
+    all_model_names = orca.get_injectable("_xgb_repm_model_names")
+    year = orca.get_injectable("year") if orca.is_injectable("year") else None
+
+    # Step 1: Pre-warm feature cache in main thread (pandana thread-safety requirement)
+    buildings = orca.get_table("buildings")
+    t_cache = time.time()
+    utils.get_cached_buildings_df(buildings, [], year)
+    print(f"  REPM cache warm: {time.time()-t_cache:.1f}s")
+
+    def predict_model(model_name):
+        """
+        Pure-predict worker: reads from cache, returns Series. No orca writes.
+        """
+        from repm_xgb_utils import load_repm_xgb_model as _load
+
+        model_wrapper = _load(model_name, model_dir=xgb_repm_dir)
+        dep_var   = model_wrapper.metadata['price_col']
+        hedonic_id = int(model_wrapper.metadata['hedonic_id'])
+        size_col   = model_wrapper.metadata['size_col']
+        feature_names = model_wrapper.feature_names
+        r2 = model_wrapper.metadata['metrics']['r2_val']
+
+        needed_cols = list(set(['hedonic_id', size_col] + feature_names))
+        buildings_df = utils.get_cached_buildings_df(buildings, needed_cols, year)
+
+        filter_mask = (
+            (buildings_df['hedonic_id'] == hedonic_id) &
+            (buildings_df[size_col] > 0)
+        )
+
+        # Slice first (small subset), then clean — avoids copying the full 1.8M-row cache
+        X = buildings_df.loc[filter_mask, feature_names].copy()
+
+        if len(X) == 0:
+            return dep_var, pd.Series(dtype=float), model_name, r2, hedonic_id
+
+        missing = set(feature_names) - set(X.columns)
+        for feat in missing:
+            X[feat] = 0
+
+        X = X.replace([np.inf, -np.inf], 0).fillna(0)
+
+        log_prices = model_wrapper.predict(X)
+        prices = np.expm1(log_prices)
+        price_series = pd.Series(prices, index=X.index).clip(lower=1, upper=700)
+
+        return dep_var, price_series, model_name, r2, hedonic_id
+
+    # Step 2: Run all model predictions in parallel (read-only from cache)
+    # Cap at 4: XGBoost GPU inference is not safely concurrent beyond a few threads
+    # (multiple CUDA kernel launches compete for GPU memory and can crash the driver)
+    max_workers = min(len(all_model_names), 4)
+    t_pred = time.time()
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(predict_model, name): name for name in all_model_names}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                results.append(future.result())
+            except Exception as exc:
+                print(f"  REPM {futures[future]} raised: {exc}")
+    print(f"  REPM predictions ({len(all_model_names)} models, {max_workers} threads): {time.time()-t_pred:.1f}s")
+
+    # Step 3: Apply all write-backs serially in main thread
+    t_write = time.time()
+    for dep_var, price_series, model_name, r2, hedonic_id in results:
+        if len(price_series) == 0:
+            print(f"  {model_name}: No buildings matched filter")
+            continue
+        pred_key = 'res' if dep_var == 'sqft_price_res' else 'nonres'
+        utils.add_xgb_prediction(pred_key, hedonic_id, price_series, model_name, r2)
+        buildings.update_col_from_series(dep_var, price_series, cast=True)
+        print(f"  {model_name}: Updated {len(price_series)} buildings (R²={r2:.4f})")
+    print(f"  REPM write-back: {time.time()-t_write:.1f}s")
 
 
 @orca.step()

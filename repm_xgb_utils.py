@@ -17,6 +17,12 @@ import joblib
 import xgboost as xgb
 from pathlib import Path
 
+# enable GPU inference for XGBoost models (set False if no GPU)
+USE_GPU_PREDICTION = True
+
+# cache loaded model objects across simulation years (avoids re-reading
+# JSON + pkl on every orca step call — 64 models × 30 years = 1,920 disk reads)
+_model_cache = {}
 
 class REPMXGBoostModel:
     """
@@ -67,6 +73,11 @@ class REPMXGBoostModel:
 
             self.model = xgb.XGBRegressor()
             self.model.load_model(xgb_model_path)
+            if USE_GPU_PREDICTION:
+                try:
+                    self.model.set_params(device='cuda')
+                except Exception as e:
+                    print(f"  GPU prediction unavailable for {model_name}: {e}")
         elif model_type == 'ridge':
             sklearn_model_path = os.path.join(model_path, "sklearn_model.pkl")
             if not os.path.exists(sklearn_model_path):
@@ -146,16 +157,13 @@ class REPMXGBoostModel:
 
 def load_repm_xgb_model(model_name, model_dir="./configs/repm_xgb/"):
     """
-    Load a trained REPM XGBoost model.
-
-    Parameters:
-    model_name (str): Name of the model (e.g., 'res_repm381')
-    model_dir (str): Directory containing the trained models
-
-    Returns:
-    REPMXGBoostModel: Loaded model wrapper
+    Load a trained REPM XGBoost model, with a module-level cache so each model
+    is only loaded from disk once per process lifetime.
     """
-    return REPMXGBoostModel(model_name, model_dir)
+    cache_key = (model_name, model_dir)
+    if cache_key not in _model_cache:
+        _model_cache[cache_key] = REPMXGBoostModel(model_name, model_dir)
+    return _model_cache[cache_key]
 
 
 def predict_repm_xgb(cfg, tbl, nodes, out_fname, model_dir="./configs/repm_xgb/"):

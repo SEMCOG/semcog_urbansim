@@ -721,13 +721,21 @@ XGB_ALL_BUILDING_BTYPES = [11, 32, 41, 51, 61, 71, 84, 94]
 _xgb_predictions = {'res': {}, 'nonres': {}}
 
 # Cache for buildings features - load ALL features once per year
+import threading
 _xgb_features_cache = {'year': None, 'df': None, 'all_features': None}
+_xgb_features_lock = threading.Lock()
+
+# Permanent cache for feature names (never changes across years)
+_xgb_all_features_permanent = None
 
 
 def get_all_xgb_features():
-    """Get union of all features used by any XGBoost model."""
-    import joblib
+    """Get union of all features used by any XGBoost model. Cached permanently."""
+    global _xgb_all_features_permanent
+    if _xgb_all_features_permanent is not None:
+        return _xgb_all_features_permanent
 
+    import joblib
     model_dir = "configs/repm_xgb"
     all_features = set()
 
@@ -740,6 +748,7 @@ def get_all_xgb_features():
             meta = joblib.load(metadata_path)
             all_features.update(meta['feature_names'])
 
+    _xgb_all_features_permanent = all_features
     return all_features
 
 
@@ -752,25 +761,23 @@ def get_cached_buildings_df(buildings, needed_cols, year):
     """
     global _xgb_features_cache
 
-    # If year changed, invalidate cache
-    if _xgb_features_cache['year'] != year:
-        _xgb_features_cache['year'] = year
-        _xgb_features_cache['df'] = None
+    with _xgb_features_lock:
+        # If year changed, invalidate cache
+        if _xgb_features_cache['year'] != year:
+            _xgb_features_cache['year'] = year
+            _xgb_features_cache['df'] = None
 
-    # Load all features if not cached
-    if _xgb_features_cache['df'] is None:
-        # Get all unique features across all models
-        all_features = get_all_xgb_features()
+        # Load all features if not cached
+        if _xgb_features_cache['df'] is None:
+            all_features = get_all_xgb_features()
+            filter_cols = {'hedonic_id', 'residential_units', 'non_residential_sqft',
+                          'sqft_price_res', 'sqft_price_nonres'}
+            all_features.update(filter_cols)
 
-        # Also add filter columns
-        filter_cols = {'hedonic_id', 'residential_units', 'non_residential_sqft',
-                      'sqft_price_res', 'sqft_price_nonres'}
-        all_features.update(filter_cols)
-
-        print(f"  Loading {len(all_features)} features for caching...")
-        _xgb_features_cache['df'] = buildings.to_frame(list(all_features))
-        _xgb_features_cache['all_features'] = all_features
-        print(f"  Cached buildings df: {len(_xgb_features_cache['df'])} rows")
+            print(f"  Loading {len(all_features)} features for REPM cache...")
+            _xgb_features_cache['df'] = buildings.to_frame(list(all_features))
+            _xgb_features_cache['all_features'] = all_features
+            print(f"  Cached {len(_xgb_features_cache['df'])} buildings × {len(all_features)} features")
 
     # Return subset of cached dataframe
     df = _xgb_features_cache['df']
