@@ -1,0 +1,23 @@
+model_name: res_repm11583
+model_type: xgboost
+hedonic_id: 11583
+type: residential
+sample_size: 531
+n_features: 185
+performance:
+  r2_train: '0.9859'
+  r2_val: '0.8620'
+  r2_adj_val: '0.8620'
+  rmse_val: '0.1582'
+  mae_val: '0.0992'
+top_features:
+  sqft_per_unit: 0.011628835462033749
+  stories: 0.09776785224676132
+  improvement_value: 0.013517570681869984
+  land_area: 0.009524945169687271
+  building_sqft: 0.028820592910051346
+  vacant_residential_units: 0.009712579660117626
+  parcel_sqft: 0.0017287598457187414
+  crime_ucr_rate: 0.007995803840458393
+  crime_other_rate: 0.03058345429599285
+  drv_nearest_hospital: 0.0047418116591870785
