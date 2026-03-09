@@ -34,7 +34,6 @@ def jobs_within_30_min(jobs, travel_data):
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def households(households):
-    print(type(households))
     return households.zone_id.groupby(households.zone_id).size()
 
 

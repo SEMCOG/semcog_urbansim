@@ -1,0 +1,109 @@
+best_params: &id001
+  learning_rate: 0.1
+  max_depth: 4
+  n_estimators: 500
+  subsample: 0.9
+best_score: 0.8644114280459986
+best_cv_mean: 0.8644114280459986
+best_cv_std: 0.02459016337106197
+model_name: nonres_repm61
+timestamp: '2026-02-11 21:11:39'
+sample_size: 8422
+n_features: 230
+all_results:
+  params:
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.9
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.7
+  - *id001
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.9
+  mean_test_score:
+  - 0.8494521405426886
+  - 0.8533574468686037
+  - 0.854964832339738
+  - 0.8597004008083354
+  - 0.8608823930086538
+  - 0.8545811687090369
+  - 0.8626936742950422
+  - 0.8545930510756073
+  - 0.8629530653515811
+  - 0.8578443370170173
+  - 0.8603493264250028
+  - 0.8644114280459986
+  - 0.8525120861725454
+  - 0.859757365827165
+  - 0.8549710980444262
+  - 0.8617960528704066
+  std_test_score:
+  - 0.030790994758423968
+  - 0.02472859113053255
+  - 0.041067411907874406
+  - 0.031145037499031563
+  - 0.023124128496443522
+  - 0.022840720325698966
+  - 0.02727582213865782
+  - 0.026794072051705194
+  - 0.018657429850817663
+  - 0.02651508174367328
+  - 0.024142203824892405
+  - 0.02459016337106197
+  - 0.02463813358924156
+  - 0.023004793360257604
+  - 0.022453482498460343
+  - 0.022049510340181287

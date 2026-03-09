@@ -116,7 +116,7 @@ def buildings(store):
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.market_value < 0, "market_value"] = 0
     df["sqft_price_nonres"] = df.market_value * 1.0 / 0.7 / df.non_residential_sqft
-    df.loc[df.sqft_price_nonres > 1000, "sqft_price_nonres"] = 0
+    df.loc[df.sqft_price_nonres > 1500, "sqft_price_nonres"] = 0
     df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
     df["sqft_price_res"] = (
         df.market_value
@@ -124,7 +124,7 @@ def buildings(store):
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
     )
-    df.loc[df.sqft_price_res > 1000, "sqft_price_res"] = 0
+    df.loc[df.sqft_price_res > 1500, "sqft_price_res"] = 0
     df.loc[df.sqft_price_res < 0, "sqft_price_res"] = 0
     df.fillna(0, inplace=True)
 

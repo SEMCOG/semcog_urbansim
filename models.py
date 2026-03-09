@@ -18,10 +18,23 @@ from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_var
 
 import utils
 import lcm_utils
+from functools import reduce
+
+# set configs if they are not set
+if not orca.is_injectable('hlcm_model_path'):
+    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+
+if not orca.is_injectable('elcm_model_path'):
+    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
+
+if not orca.is_injectable('yaml_configs'):
+    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
+
+if not orca.is_injectable('ENABLE_SCENARIO'):
+    orca.add_injectable('ENABLE_SCENARIO', False)
 
 import dataset
 import variables
-from functools import reduce
 
 # Setup Scenario controls
 if orca.get_injectable('ENABLE_SCENARIO'):
@@ -43,16 +56,6 @@ if orca.get_injectable('ENABLE_SCENARIO'):
 hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
-
-# get config paths
-if not orca.is_injectable('hlcm_model_path'):
-    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
-
-if not orca.is_injectable('elcm_model_path'):
-    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
-
-if not orca.is_injectable('yaml_configs'):
-    orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 hlcm_model_path = orca.get_injectable('hlcm_model_path')
 elcm_model_path = orca.get_injectable('elcm_model_path')
@@ -555,7 +558,8 @@ def diagnostic(parcels, buildings, jobs, households, nodes, iter_var):
 
 def make_repm_func(model_name, yaml_file, dep_var):
     """
-    Generator function for single-model REPMs.
+    Generator function for single-model REPMs (Lasso/YAML-based).
+    Kept for reference, not used in production.
     """
 
     @orca.step(model_name)
@@ -568,18 +572,161 @@ def make_repm_func(model_name, yaml_file, dep_var):
     return func
 
 
+def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
+    """
+    Generator function for XGBoost-based REPMs.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of the model step (e.g., "res_repm381")
+    xgb_model_dir : str
+        Path to XGBoost model directory (e.g., "configs/repm_xgb")
+    dep_var : str
+        Target variable name ("sqft_price_res" or "sqft_price_nonres")
+    """
+
+    @orca.step(model_name)
+    def func():
+        from repm_xgb_utils import load_repm_xgb_model
+
+        buildings = orca.get_table("buildings")
+
+        # Get year with fallback
+        year = orca.get_injectable("year") if orca.is_injectable("year") else None
+
+        # Load trained model
+        model_wrapper = load_repm_xgb_model(model_name, model_dir=xgb_model_dir)
+
+        # Get hedonic_id from model metadata for filtering
+        hedonic_id = int(model_wrapper.metadata['hedonic_id'])
+
+        # Get filter columns from metadata
+        size_col = model_wrapper.metadata['size_col']
+        price_col = model_wrapper.metadata['price_col']
+
+        # Get all feature names needed by model
+        feature_names = model_wrapper.feature_names
+
+        # Load all needed columns from buildings table (with caching via utils)
+        needed_cols = list(set(['hedonic_id', size_col, price_col] + feature_names))
+        buildings_df = utils.get_cached_buildings_df(buildings, needed_cols, year)
+
+        # Filter to this hedonic segment with valid space.
+        # Do NOT filter on price_col — new buildings start at 0 and need pricing.
+        filter_mask = (
+            (buildings_df['hedonic_id'] == hedonic_id) &
+            (buildings_df[size_col] > 0)
+        )
+
+        # Check for missing features and fill with 0
+        missing_features = set(feature_names) - set(buildings_df.columns)
+        if missing_features:
+            print(f"  Warning: {len(missing_features)} missing features, filling with 0")
+            for feat in missing_features:
+                buildings_df[feat] = 0
+
+        # Handle inf/nan values
+        buildings_df = buildings_df.replace([np.inf, -np.inf], 0)
+        buildings_df = buildings_df.fillna(0)
+
+        # Select features in correct order for filtered buildings only
+        X = buildings_df.loc[filter_mask, feature_names]
+
+        if len(X) == 0:
+            print(f"  {model_name}: No buildings match filter (hedonic_id={hedonic_id})")
+            return pd.Series(dtype=float)
+
+        # Make predictions (log-transformed prices)
+        log_prices = model_wrapper.predict(X)
+
+        # Inverse transform: expm1 is inverse of log1p
+        prices = np.expm1(log_prices)
+
+        # Create series for update (only for filtered buildings)
+        building_indices = buildings_df.index[filter_mask]
+        price_series = pd.Series(prices, index=building_indices)
+
+        # Clamp values (same as old system)
+        price_series = price_series.clip(lower=1, upper=700)
+
+        # Store predictions for comparison (via utils)
+        pred_key = 'res' if dep_var == 'sqft_price_res' else 'nonres'
+        utils.add_xgb_prediction(pred_key, hedonic_id, price_series, model_name,
+                                 model_wrapper.metadata['metrics']['r2_val'])
+
+        # Update buildings table
+        buildings.update_col_from_series(dep_var, price_series, cast=True)
+
+        print(f"  {model_name}: Updated {len(price_series)} buildings (R²={model_wrapper.metadata['metrics']['r2_val']:.4f})")
+
+        return price_series
+
+    return func
+
+
+@orca.step()
+def repm_comparison_log():
+    """
+    Compare XGBoost vs Lasso predictions and log results.
+    Calls the implementation in utils.py.
+    """
+    utils.repm_comparison_log()
+
+
+# Register XGBoost REPM steps
 repm_step_names = []
-for repm_config in os.listdir(os.path.join(misc.models_dir(), "repm_2050")):
-    model_name = repm_config.split(".")[0]
+xgb_repm_dir = "configs/repm_xgb"
 
-    if repm_config.startswith("res"):
-        dep_var = "sqft_price_res"
-    elif repm_config.startswith("nonres"):
-        dep_var = "sqft_price_nonres"
+# Use absolute path for checking existence
+xgb_model_full_path = os.path.abspath(xgb_repm_dir)
+if not os.path.exists(xgb_model_full_path):
+    # Try relative to models directory
+    xgb_model_full_path = os.path.join(misc.models_dir(), "repm_xgb")
+    xgb_repm_dir = os.path.join(misc.models_dir(), "repm_xgb")
 
-    make_repm_func(model_name, "repm_2050/" + repm_config, dep_var)
-    repm_step_names.append(model_name)
-orca.add_injectable("repm_step_names", repm_step_names)
+if os.path.exists(xgb_model_full_path):
+    for model_dir in sorted(os.listdir(xgb_model_full_path)):
+        model_path = os.path.join(xgb_model_full_path, model_dir)
+
+        # Skip non-directories and grid search files
+        if not os.path.isdir(model_path):
+            continue
+        if model_dir.startswith('grid_search') or model_dir.startswith('.'):
+            continue
+
+        # Check for required metadata file
+        metadata_path = os.path.join(model_path, "metadata.pkl")
+        if not os.path.exists(metadata_path):
+            print(f"Warning: Skipping {model_dir} - no metadata.pkl found")
+            continue
+
+        model_name = model_dir
+
+        # Determine dep_var from model name
+        if model_name.startswith("res"):
+            dep_var = "sqft_price_res"
+        elif model_name.startswith("nonres"):
+            dep_var = "sqft_price_nonres"
+        else:
+            print(f"Warning: Unknown model type {model_name}, skipping")
+            continue
+
+        # Create step function - pass the parent directory, model_name is the subfolder
+        make_xgb_repm_func(model_name, xgb_repm_dir, dep_var)
+        repm_step_names.append(model_name)
+
+    # Store model names
+    orca.add_injectable("_xgb_repm_model_names", repm_step_names)
+    orca.add_injectable("repm_step_names", repm_step_names)
+
+    # Add comparison step after REPM models (disabled for speed)
+    # repm_step_names.append("repm_comparison_log")
+
+    print(f"Registered {len(repm_step_names)} XGBoost REPM models (comparison step disabled)")
+else:
+    print("ERROR: XGBoost REPM directory not found at", xgb_model_full_path)
+    orca.add_injectable("repm_step_names", [])
 
 
 @orca.step()
@@ -1974,6 +2121,15 @@ def parcel_average_price(use):
 def shifters():
     with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
+        if False:
+            ##### Warnining #####
+            print("WARNING: Overwriting cost shifters to be all ones for testing baseline calibration.")
+            ## Overwrite cost_shifters with constants 1 to test baseline calibration
+            shifters = cfg['calibration']['proforma_cost_shifters']
+            # Iterate through categories (residential/non_residential) and update values
+            for category in shifters:
+                for key in shifters[category]:
+                    shifters[category][key] = 1
         return cfg
 
 
@@ -2189,9 +2345,15 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
+    # calculate spaces_added
+    if supply_fname == 'job_spaces':
+        spaces_added = new_buildings.job_spaces.sum() - new_buildings.current_units.sum()
+    else:
+        # default to residential units
+        spaces_added = new_buildings.residential_units.sum() - new_buildings.current_units.sum()
     # return the number of units added and the list of parcel_id for updating pct_undev
     return (
-        new_buildings.residential_units.sum() - new_buildings.current_units.sum(),
+        spaces_added,
         pid_need_updates,
     )
 
@@ -2268,6 +2430,9 @@ def residential_developer(
 
     # get target vacancies by mcd for current year
     target_vacancies = target_vacancies_mcd.to_frame()
+    # ## TEST without MCD control: set vacancy rate to baseyear 2020
+    # target_vacancies = target_vacancies[str(2020)]
+
     target_vacancies = target_vacancies[str(year)]
 
     # get original buildings
@@ -2385,6 +2550,9 @@ def non_residential_developer(jobs, parcels, target_vacancies):
         ["job_spaces", "large_area_id", "building_type_id"]
     )
 
+    orig_jobs = jobs.to_frame(['building_id', 'home_based_status', 'large_area_id'])
+    orig_jobs = orig_jobs[orig_jobs.home_based_status == 0]
+
     # loop through large area
     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
         # get large area buildings
@@ -2397,44 +2565,54 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             ].non_res_target_vacancy_rate
         )
 
-        # number of non-homebased jobs in the large area
-        num_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+        # #90
+        # loop through building form
+        for form in ["office", "retail", "industrial", "medical", "entertainment"]:
+            # calculate num_agents
+            # form_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+            form_btype_ids = orca.get_injectable("form_to_btype")[form]
+            form_blds = la_orig_buildings[la_orig_buildings.building_type_id.isin(form_btype_ids)]
+            # number of non-homebased jobs in the large area
+            num_agents = (
+                    (orig_jobs.large_area_id == lid) & 
+                    (orig_jobs.building_id.isin(form_blds.index))
+                ).sum()
+            # number of total job spaces for LA
+            num_units = form_blds.job_spaces.sum()
 
-        # number of total job spaces for LA
-        num_units = la_orig_buildings.job_spaces.sum()
-
-        print("Number of agents: {:,}".format(num_agents))
-        print("Number of agent spaces: {:,}".format(int(num_units)))
-        assert target_vacancy < 1.0
-        target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-        print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
-        print(
-            "Target vacancy = {:.2f}, target of new units = {:,}".format(
-                target_vacancy, target_units
+            print(f"Developing {form} spaces for large area {lid}:")
+            print("Number of agents: {:,}".format(num_agents))
+            print("Number of agent spaces: {:,}".format(int(num_units)))
+            assert target_vacancy < 1.0
+            target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+            print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
+            print(
+                "Target vacancy = {:.2f}, target of new units = {:,}".format(
+                    target_vacancy, target_units
+                )
             )
-        )
 
-        # calculate prior form_btype_distributions
-        register_btype_distributions(la_orig_buildings)
+            # calculate prior form_btype_distributions
+            register_btype_distributions(la_orig_buildings)
 
-        # run nonres developer step
-        spaces_added, parcels_idx_to_update = run_developer(
-            target_units,
-            lid,
-            ["office", "retail", "industrial", "medical", "entertainment"],
-            orca.get_table("buildings"),
-            "job_spaces",
-            parcels.parcel_size,
-            parcels.ave_unit_size,
-            parcels.total_job_spaces,
-            "nonres_developer.yaml",
-            add_more_columns_callback=add_extra_columns_nonres,
-        )
+            # run nonres developer step
+            spaces_added, parcels_idx_to_update = run_developer(
+                target_units,
+                lid,
+                [form],
+                orca.get_table("buildings"),
+                "job_spaces",
+                parcels.parcel_size,
+                parcels.ave_unit_size,
+                parcels.total_job_spaces,
+                "nonres_developer.yaml",
+                add_more_columns_callback=add_extra_columns_nonres,
+            )
 
-        # update pct_undev to 100 if theres only one building in the parcel
-        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-        # update parcels table
-        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+            # update pct_undev to 100 if theres only one building in the parcel
+            pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
+            # update parcels table
+            parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
 @orca.step()

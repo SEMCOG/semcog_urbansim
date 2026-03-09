@@ -1,0 +1,23 @@
+model_name: nonres_repm14733
+model_type: xgboost
+hedonic_id: 14733
+type: non-residential
+sample_size: 414
+n_features: 150
+performance:
+  r2_train: '0.7880'
+  r2_val: '0.3458'
+  r2_adj_val: '0.3458'
+  rmse_val: '0.4359'
+  mae_val: '0.2697'
+top_features:
+  schools_k8_drive_near_max150: 0.00601196987554431
+  all_healthcare_drive_near_max150: 0.004299508407711983
+  health_centers_drive_near_max150: 0.006870274897664785
+  fixed_route_bus_bike_near_max120: 0.011406458914279938
+  fire_stations_bike_near_max120: 0.0071015809662640095
+  childcare_bike_near_max120: 0.005159412510693073
+  pharmacies_bike_near_max120: 0.004689860623329878
+  schools_k8_bike_near_max120: 0.02030695416033268
+  parks_school_bike_near_max120: 0.01811848394572735
+  nodes_walk_sector4_jobs: 0.025092588737607002
