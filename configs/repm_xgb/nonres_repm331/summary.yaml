@@ -1,0 +1,23 @@
+model_name: nonres_repm331
+model_type: xgboost
+hedonic_id: 331
+type: non-residential
+sample_size: 2131
+n_features: 216
+performance:
+  r2_train: '0.9765'
+  r2_val: '0.7997'
+  r2_adj_val: '0.7997'
+  rmse_val: '0.3064'
+  mae_val: '0.1944'
+top_features:
+  stories: 0.009321803227066994
+  improvement_value: 0.01835092343389988
+  building_sqft: 0.018926504999399185
+  vacant_job_spaces: 0.031339775770902634
+  parcel_sqft: 0.007259885314851999
+  crime_ucr_rate: 0.09240622818470001
+  crime_other_rate: 0.013232819736003876
+  drv_nearest_hospital: 0.025984512642025948
+  drv_nearest_healthcenter: 0.0015502561582252383
+  drv_nearest_grocery: 0.001013822271488607

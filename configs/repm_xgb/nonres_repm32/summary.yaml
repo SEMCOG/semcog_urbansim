@@ -1,0 +1,23 @@
+model_name: nonres_repm32
+model_type: xgboost
+hedonic_id: 32
+type: non-residential
+sample_size: 274
+n_features: 150
+performance:
+  r2_train: '0.9973'
+  r2_val: '0.5893'
+  r2_adj_val: '0.5893'
+  rmse_val: '0.4416'
+  mae_val: '0.3246'
+top_features:
+  zones_a_ln_retail_emp_15min_drive_alone: 0.0005745827802456915
+  zones_a_ln_emp_50min_transit: 0.0020902049727737904
+  nodes_walk_percent_large_hhs: 0.001634922344237566
+  zones_transit_jobs_30min: 0.0
+  zones_transit_jobs_50min: 0.008388820104300976
+  nodes_walk_percent_young_hhs: 0.0006517398287542164
+  nodes_walk_vacancy_750m: 0.0004394282877910882
+  walk_nearest_library: 0.00011133795487694442
+  nodes_drv_log_sum_10min_pop: 0.0062346993945539
+  nodes_walk_percent_low_income: 0.0018899698043242097

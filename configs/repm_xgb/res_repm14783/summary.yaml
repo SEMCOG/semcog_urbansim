@@ -1,0 +1,23 @@
+model_name: res_repm14783
+model_type: xgboost
+hedonic_id: 14783
+type: residential
+sample_size: 475
+n_features: 150
+performance:
+  r2_train: '0.9910'
+  r2_val: '0.7579'
+  r2_adj_val: '0.7579'
+  rmse_val: '0.1981'
+  mae_val: '0.0965'
+top_features:
+  hospitals_bike_near_max120: 0.007669028826057911
+  passenger_train_stations_walk_near_max90: 0.0
+  american_job_centers_walk_near_max90: 0.0015019564889371395
+  fixed_route_bus_walk_near_max90: 0.0030200364999473095
+  schools_k8_walk_near_max90: 0.009135722182691097
+  parks_local_school_walk_near_max90: 0.007115611340850592
+  nodes_walk_percent_mid_income: 0.0012731800088658929
+  nodes_walk_sector18_jobs: 0.007217634469270706
+  nodes_walk_sector16_jobs: 0.013905832543969154
+  nodes_walk_sector15_jobs: 0.0777401253581047

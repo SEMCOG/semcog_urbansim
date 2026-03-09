@@ -1,0 +1,109 @@
+best_params: &id001
+  learning_rate: 0.05
+  max_depth: 4
+  n_estimators: 500
+  subsample: 0.7
+best_score: 0.8932885857544131
+best_cv_mean: 0.8932885857544131
+best_cv_std: 0.0062331850656908395
+model_name: nonres_repm51
+timestamp: '2026-02-11 21:10:35'
+sample_size: 3813
+n_features: 227
+all_results:
+  params:
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.9
+  - *id001
+  - learning_rate: 0.05
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.9
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.05
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 500
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 200
+    subsample: 0.9
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.7
+  - learning_rate: 0.1
+    max_depth: 6
+    n_estimators: 500
+    subsample: 0.9
+  mean_test_score:
+  - 0.8748364246778987
+  - 0.8712787981230831
+  - 0.8932885857544131
+  - 0.890482835742843
+  - 0.8723458187543676
+  - 0.8721241765010502
+  - 0.8765160678466809
+  - 0.8767292769491428
+  - 0.8822740008137874
+  - 0.8879936286315454
+  - 0.887548591126841
+  - 0.8931725359798971
+  - 0.8704147740035267
+  - 0.875979209382892
+  - 0.8713772083707894
+  - 0.8768775905384919
+  std_test_score:
+  - 0.009629733229653176
+  - 0.013277521634477919
+  - 0.0062331850656908395
+  - 0.01050328213211961
+  - 0.010835457981910612
+  - 0.015186750307979625
+  - 0.010176413972526591
+  - 0.01440956265340412
+  - 0.010173267029363529
+  - 0.009626586613550132
+  - 0.00832130687512411
+  - 0.008242466292640999
+  - 0.008291847465659755
+  - 0.017939355425354186
+  - 0.008247378242859198
+  - 0.017843210217048138

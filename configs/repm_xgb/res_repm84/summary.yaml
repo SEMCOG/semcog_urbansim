@@ -1,0 +1,23 @@
+model_name: res_repm84
+model_type: xgboost
+hedonic_id: 84
+type: residential
+sample_size: 63363
+n_features: 207
+performance:
+  r2_train: '0.9994'
+  r2_val: '0.9991'
+  r2_adj_val: '0.9991'
+  rmse_val: '0.0172'
+  mae_val: '0.0050'
+top_features:
+  stories: 0.0
+  improvement_value: 0.026440955698490143
+  market_value: 0.08576717227697372
+  building_sqft: 0.06649190932512283
+  job_spaces: 0.0
+  vacant_residential_units: 0.0
+  parcel_sqft: 0.009958918206393719
+  crime_ucr_rate: 0.00011775435996241868
+  crime_other_rate: 0.00013082860095892102
+  drv_nearest_hospital: 0.00023661708110012114
