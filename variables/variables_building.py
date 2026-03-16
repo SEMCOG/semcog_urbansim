@@ -902,3 +902,27 @@ for mode, config in CUMULATIVE_VARS.items():
             indicator_table_name=indicator_table,
             fillna_value=fillna_val,
         )
+
+#####################
+# TRAVEL SURVEY VARIABLES (buildings)
+# Inherited from parcel-level BG aggregates via parcel_id.
+# Static — cache_scope='forever'.
+#####################
+
+from variables.variables_parcel import SURVEY_VARS as _SURVEY_VARS, SURVEY_PARCEL_VARS as _SURVEY_PARCEL_VARS
+
+
+def _make_building_survey_var(var_name):
+    """Register one building-level travel survey column via parcel broadcast."""
+
+    @orca.column("buildings", var_name, cache=True, cache_scope="forever")
+    def _col(buildings, parcels):
+        if var_name not in parcels.columns:
+            return pd.Series(np.nan, index=buildings.index)
+        return misc.reindex(parcels[var_name], buildings.parcel_id).fillna(0)
+
+    return _col
+
+
+for _sv in _SURVEY_VARS + _SURVEY_PARCEL_VARS:
+    _make_building_survey_var(_sv)
