@@ -1,0 +1,25 @@
+# .claudeignore
+# Files and directories listed here will not be read by Claude Code.
+# Syntax is identical to .gitignore.
+
+# ── Sensitive input data ──────────────────────────────────────────────────────
+# HDF5 simulation data stores containing household/person/job-level records
+data/
+
+# ── Simulation run outputs ────────────────────────────────────────────────────
+# Run HDF5 files and per-run indicator folders (can be large and contain PII)
+runs/*.h5
+
+# ── Trained model artifacts ───────────────────────────────────────────────────
+
+# ── Credentials & secrets ─────────────────────────────────────────────────────
+carto_cred.json
+db_cred.txt
+*.env
+.env*
+*_secret*
+*_credentials*
+
+# ── OS / editor artifacts ─────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

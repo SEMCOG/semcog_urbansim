@@ -1,5 +1,6 @@
 import orca
 import pandas as pd
+import numpy as np
 from urbansim.utils import misc
 
 
@@ -545,3 +546,52 @@ for mode, config in CUMULATIVE_VARS.items():
             indicator_table_name=indicator_table,
             fillna_value=fillna_val,
         )
+
+#####################
+# TRAVEL SURVEY VARIABLES (parcels)
+# Base-year behavioral variables from SEMCOG Regional Travel Survey.
+# Aggregated to block group, joined via parcels.census_bg_id.
+# Static — never change during simulation (cache_scope='forever').
+#####################
+
+# Shared across all geographies (BG → parcel → building → zone/tract via survey tables)
+SURVEY_VARS = [
+    "transit_monthly_rate",  # % persons using transit >= monthly
+    "walk_choice_rate",      # % of all trips made on foot
+    "bike_weekly_rate",      # % persons biking >= weekly
+    "zero_veh_rate",         # % households with 0 vehicles
+    "avg_vehicles_per_hh",   # mean vehicles per household
+    "wfh_rate",              # % workers WFH 3+ days/week
+    "years_at_residence",    # mean years at current residence
+    "recent_mover_rate",     # % HHs that moved in <= 10 years
+    "ev_hybrid_rate",        # % vehicles that are EV/PHEV/HEV
+]
+
+# Parcel/building only — zones/tracts aggregate from buildings instead of survey tables
+SURVEY_PARCEL_VARS = [
+    "median_commute_dist",   # mean work-trip distance in miles
+]
+
+
+def _make_parcel_survey_var(var_name):
+    """Register one parcel-level travel survey column via BG crosswalk."""
+
+    @orca.column("parcels", var_name, cache=True, cache_scope="forever")
+    def _col(parcels, travel_survey_bg_vars):
+        bg_vals = travel_survey_bg_vars.to_frame([var_name])
+        if bg_vals.empty or var_name not in bg_vals.columns:
+            return pd.Series(np.nan, index=parcels.index)
+        # survey index is full 12-digit Census FIPS BG; parcels store only
+        # the 7-digit internal ID, so reconstruct: state(26) + county*1e7 + bg_id
+        full_bg_id = (
+            26 * 10_000_000_000
+            + parcels.county_id.astype(np.int64) * 10_000_000
+            + parcels.census_bg_id.astype(np.int64)
+        )
+        return misc.reindex(bg_vals[var_name], full_bg_id).fillna(0)
+
+    return _col
+
+
+for _sv in SURVEY_VARS + SURVEY_PARCEL_VARS:
+    _make_parcel_survey_var(_sv)
