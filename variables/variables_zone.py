@@ -395,7 +395,7 @@ for var in orca.get_table("parcels").columns:
 # Static — cache_scope='forever'.
 #####################
 
-from variables.variables_parcel import SURVEY_VARS as _SURVEY_VARS, SURVEY_PARCEL_VARS as _SURVEY_PARCEL_VARS
+from variables.variables_parcel import SURVEY_VARS as _SURVEY_VARS
 
 
 def _make_zone_survey_var(var_name):
@@ -409,5 +409,5 @@ def _make_zone_survey_var(var_name):
     return _col
 
 
-for _sv in _SURVEY_VARS + _SURVEY_PARCEL_VARS:
+for _sv in _SURVEY_VARS:
     _make_zone_survey_var(_sv)
