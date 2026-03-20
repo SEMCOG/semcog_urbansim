@@ -554,7 +554,6 @@ for mode, config in CUMULATIVE_VARS.items():
 # Static — never change during simulation (cache_scope='forever').
 #####################
 
-# Shared across all geographies (BG → parcel → building → zone/tract via survey tables)
 SURVEY_VARS = [
     "transit_monthly_rate",  # % persons using transit >= monthly
     "walk_choice_rate",      # % of all trips made on foot
@@ -565,10 +564,6 @@ SURVEY_VARS = [
     "years_at_residence",    # mean years at current residence
     "recent_mover_rate",     # % HHs that moved in <= 10 years
     "ev_hybrid_rate",        # % vehicles that are EV/PHEV/HEV
-]
-
-# Parcel/building only — zones/tracts aggregate from buildings instead of survey tables
-SURVEY_PARCEL_VARS = [
     "median_commute_dist",   # mean work-trip distance in miles
 ]
 
@@ -593,5 +588,5 @@ def _make_parcel_survey_var(var_name):
     return _col
 
 
-for _sv in SURVEY_VARS + SURVEY_PARCEL_VARS:
+for _sv in SURVEY_VARS:
     _make_parcel_survey_var(_sv)
