@@ -270,6 +270,10 @@ CUMULATIVE_VARS = {
 orca.add_injectable("NEAR_MAX_VARS", NEAR_MAX_VARS)
 orca.add_injectable("CUMULATIVE_VARS", CUMULATIVE_VARS)
 
+# Travel survey data folder — update path before use
+# Expected files: hh.csv, person.csv, trip.csv, linked_trip.csv, vehicle.csv, day.csv, tour.csv
+orca.add_injectable("travel_survey_path", "/mnt/D/RDF2055/input_data/travel_survey/Full_Interim_Dataset_2026-03-04")
+
 def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
