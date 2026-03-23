@@ -5,3 +5,5 @@ from .variables_employment import *
 from .variables_zone import *
 from .variables_building import *
 from .variables_tract import *
+# Travel survey behavioral variables
+import travel_survey_vars  # noqa: F401
