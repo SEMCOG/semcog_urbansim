@@ -386,3 +386,28 @@ def register_standardized_variable(table_name, column_to_s):
 for var in orca.get_table("parcels").columns:
     register_standardized_variable("parcels", var)
 
+
+
+#####################
+# TRAVEL SURVEY VARIABLES (zones)
+# Base-year behavioral variables from SEMCOG Regional Travel Survey.
+# Aggregated from block groups via parcel-count-weighted crosswalk.
+# Static — cache_scope='forever'.
+#####################
+
+from variables.variables_parcel import SURVEY_VARS as _SURVEY_VARS
+
+
+def _make_zone_survey_var(var_name):
+    """Aggregate one survey variable from all buildings to zones (simple mean)."""
+
+    @orca.column("zones", var_name, cache=True, cache_scope="forever")
+    def _col(buildings, zones):
+        b = buildings.to_frame(["zone_id", var_name])
+        return b.groupby("zone_id")[var_name].mean().reindex(zones.index).fillna(0)
+
+    return _col
+
+
+for _sv in _SURVEY_VARS:
+    _make_zone_survey_var(_sv)
