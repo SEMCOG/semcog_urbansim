@@ -77,7 +77,10 @@ building_efficiency: 0.85
 
 parcel_coverage: 0.85
 
-cap_rate: 0.01
+cap_rate: 1.0   # sqft_price_res/nonres is a total sale value per sqft (from market_value),
+                # NOT annual rent. Setting cap_rate=1.0 makes revenue = sqft * price directly.
+                # The formula building_revenue = sqft * price / cap_rate only makes sense
+                # when price is annual rent; here it is already a capitalised value.
 
 parking_rates:
     industrial: 0.6
@@ -222,7 +225,11 @@ only_built: true
 
 loan_to_cost_ratio: 0.7
 
-parcel_filter: null
+# Exclude very large parcels from feasibility calculation.
+# 2,000,000 sqft (~46 acres) is the upper bound for a realistic single residential
+# development site in SE Michigan. Larger parcels (airports, farmland, golf courses)
+# produce unrealistic unit counts and distort the developer model.
+parcel_filter: parcel_sqft < 1100000
 
 interest_rate: 0.05
 
