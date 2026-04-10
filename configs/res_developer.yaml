@@ -2,7 +2,7 @@ bldg_sqft_per_job: 400.0
 
 min_unit_size: 1000
 
-max_parcel_size: 10000000
+max_parcel_size: 1100000
 
 drop_after_build: True
 
@@ -11,3 +11,9 @@ residential: True
 keep_suboptimal: True
 
 noise_scale: 100000
+
+target_weight_vacancy_gap: 0.5
+target_weight_recent_rate: 0.5
+target_weight_demand: 0.5
+
+la_float_range: 0.1
