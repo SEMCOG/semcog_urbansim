@@ -252,11 +252,102 @@ def _output(lines, save_path):
         print(f"\nSummary saved to: {save_path}")
 
 
+def export_bg_summary(out_path="data/travel_survey_bg_summary.csv"):
+    """Export BG-level summary CSV: geographic IDs, weighted counts, and all survey variables."""
+    bg = orca.get_table("travel_survey_bg_vars").to_frame()
+    sp = orca.get_injectable("travel_survey_path")
+
+    # weighted hh_count / person_count
+    hh = pd.read_csv(os.path.join(sp, "hh.csv"),
+                     usecols=["hh_id", "home_bg_2020", "hh_weight", "is_complete"],
+                     low_memory=False)
+    hh = hh[hh["is_complete"] == 1].copy()
+    hh["home_bg_2020"] = pd.to_numeric(hh["home_bg_2020"], errors="coerce")
+    hh = hh.dropna(subset=["home_bg_2020", "hh_weight"])
+    hh["home_bg_2020"] = hh["home_bg_2020"].astype(np.int64)
+    hh = hh[hh["home_bg_2020"] // 10_000_000_000 == 26]
+
+    per = pd.read_csv(os.path.join(sp, "person.csv"),
+                      usecols=["hh_id", "person_weight", "is_complete"],
+                      low_memory=False)
+    per = (per[per["is_complete"] == 1]
+           .merge(hh[["hh_id", "home_bg_2020"]], on="hh_id", how="inner")
+           .dropna(subset=["person_weight"]))
+
+    hh_cnt  = hh.groupby("home_bg_2020")["hh_weight"].sum()
+    per_cnt = per.groupby("home_bg_2020")["person_weight"].sum()
+
+    # large_area_id crosswalk: parcels use a local census_bg_id (short code), so
+    # reconstruct full 12-digit BG FIPS = 26*10^10 + county_id*10^7 + census_bg_id
+    pcl = orca.get_table("parcels").to_frame(["census_bg_id", "county_id", "large_area_id"])
+    pcl = pcl[pcl["census_bg_id"] > 0].copy()
+    pcl["full_bg_id"] = (
+        np.int64(26) * np.int64(10_000_000_000)
+        + pcl["county_id"].astype(np.int64) * np.int64(10_000_000)
+        + pcl["census_bg_id"].astype(np.int64)
+    )
+    la_map  = pcl.groupby("full_bg_id")["large_area_id"].first()
+    # county/tract from parcels crosswalk (local codes matching rest of orca tables)
+    cty_map = pcl.groupby("full_bg_id")["county_id"].first()
+    # tract_id uses same formula as variables_parcel.py: bg//1000 + county*10000
+    pcl["tract_id"] = pcl["census_bg_id"].astype(np.int64) // 1000 + pcl["county_id"].astype(np.int64) * 10_000
+    trt_map = pcl.groupby("full_bg_id")["tract_id"].first()
+
+    # filter to SEMCOG region BGs only (those present in parcels)
+    idx = bg.index.astype(np.int64)
+    bg  = bg[idx.isin(pcl["full_bg_id"])]
+    idx = bg.index.astype(np.int64)
+    out = pd.DataFrame({
+        "bg_id":         idx.to_numpy(),
+        "large_area_id": idx.map(la_map).to_numpy(),
+        "county_id":     idx.map(cty_map).to_numpy(),
+        "tract_id":      idx.map(trt_map).to_numpy(),
+        "hh_count":      np.nan_to_num(idx.map(hh_cnt).to_numpy(), nan=0.0).round().astype(int),
+        "person_count":  np.nan_to_num(idx.map(per_cnt).to_numpy(), nan=0.0).round().astype(int),
+    }, index=bg.index)
+    out = out.join(bg)
+
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    out.to_csv(out_path, index=False)
+    print(f"\nBG summary saved → {out_path}  ({len(out):,} rows × {len(out.columns)} cols)")
+
+    # MCD summary — allocate BG counts to MCDs proportionally by residential units
+    pcl2 = orca.get_table("parcels").to_frame(["census_bg_id", "county_id", "semmcd"])
+    pcl2 = pcl2[pcl2["census_bg_id"] > 0].copy()
+    pcl2["full_bg_id"] = (
+        np.int64(26) * np.int64(10_000_000_000)
+        + pcl2["county_id"].astype(np.int64) * np.int64(10_000_000)
+        + pcl2["census_bg_id"].astype(np.int64)
+    )
+    bld = orca.get_table("buildings").to_frame(["parcel_id", "residential_units"])
+    res_by_pcl = bld.groupby("parcel_id")["residential_units"].sum()
+    pcl2["residential_units"] = pcl2.index.map(res_by_pcl).fillna(0)
+    bg_tot = pcl2.groupby("full_bg_id")["residential_units"].sum()
+    pcl2["share"] = pcl2["residential_units"] / pcl2["full_bg_id"].map(bg_tot).clip(lower=1)
+
+    bg_idx = out.set_index("bg_id")
+    pcl2["hh_alloc"]  = pcl2["full_bg_id"].map(bg_idx["hh_count"].astype(float))  * pcl2["share"]
+    pcl2["per_alloc"] = pcl2["full_bg_id"].map(bg_idx["person_count"].astype(float)) * pcl2["share"]
+
+    mcd = pcl2.groupby("semmcd")[["hh_alloc", "per_alloc"]].sum()
+    mcd.columns = ["hh_count", "person_count"]
+    mcd[["hh_count", "person_count"]] = mcd[["hh_count", "person_count"]].fillna(0).round().astype(int)
+
+    mcd_path = os.path.join(os.path.dirname(out_path) or ".", "travel_survey_mcd_summary_EXPERIMENTAL.csv")
+    mcd.to_csv(mcd_path)
+    print(f"MCD summary saved → {mcd_path}  ({len(mcd):,} MCDs)")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test travel survey variable definitions")
     parser.add_argument("--save", action="store_true",
                         help="Save summary to runs/run_stdout/travel_survey_vars_summary.txt")
+    parser.add_argument("--export", action="store_true",
+                        help="Export BG summary CSV to data/travel_survey_bg_summary.csv")
     args = parser.parse_args()
 
     save_path = "runs/run_stdout/travel_survey_vars_summary.txt" if args.save else None
     run_tests(save_path=save_path)
+
+    # if args.export:
+    export_bg_summary()
