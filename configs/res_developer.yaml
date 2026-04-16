@@ -12,8 +12,17 @@ keep_suboptimal: True
 
 noise_scale: 100000
 
-target_weight_vacancy_gap: 0.5
-target_weight_recent_rate: 0.5
-target_weight_demand: 0.5
+target_weight_vacancy_gap: 1.0
+target_weight_recent_rate: 1.0
+target_weight_demand: 1.0
 
-la_float_range: 0.1
+la_max_ratio: 1.2
+
+# recent mover rate decay factor
+mover_decay_final: 0.6
+
+base_rate_anchor_end_year: 2050
+
+# Historical minimum build floor
+hist_floor_factor: 0.5
+hist_floor_min_rate: 30
