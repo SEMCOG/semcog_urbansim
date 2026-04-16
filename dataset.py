@@ -124,8 +124,17 @@ def buildings(store):
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
     )
-    df.loc[df.sqft_price_res > 1500, "sqft_price_res"] = 0
-    df.loc[df.sqft_price_res < 0, "sqft_price_res"] = 0
+    # fill out-of-bound sqft_price_res with la avg
+    oob = (df.sqft_price_res > 1500) | (df.sqft_price_res < 0) | df.sqft_price_res.isna()
+    df.loc[oob, "sqft_price_res"] = np.nan
+    la_id = store["parcels"]["large_area_id"].reindex(df["parcel_id"].values).values
+    df["_la"] = la_id
+    la_avg = df[~oob].groupby("_la")["sqft_price_res"].mean()
+    region_avg = df.loc[~oob, "sqft_price_res"].mean()
+    df["sqft_price_res"] = df["sqft_price_res"].fillna(
+        df["_la"].map(la_avg).fillna(region_avg)
+    )
+    df.drop(columns=["_la"], inplace=True)
     df.fillna(0, inplace=True)
 
     df["mcd_model_quota"] = 0

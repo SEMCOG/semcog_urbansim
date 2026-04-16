@@ -2139,9 +2139,34 @@ def cost_shifter_callback(self, form, df, costs):
 
 @orca.step("feasibility")
 def feasibility(parcels):
+    # setup price floor for parcels below their LA avg get floored to LA avg
+    bld_res = orca.get_table("buildings").to_frame(["large_area_id", "sqft_price_res"])
+    bld_res = bld_res[bld_res["sqft_price_res"] > 0]
+    la_avg  = bld_res.groupby("large_area_id")["sqft_price_res"].mean()
+    reg_avg = float(bld_res["sqft_price_res"].mean())
+
+    pcl_la_s    = parcels.to_frame(["large_area_id"])["large_area_id"]
+    parcel_thr  = pcl_la_s.map(la_avg)
+    parcel_rep  = pcl_la_s.map(la_avg.clip(lower=reg_avg * 0.8)).fillna(reg_avg)
+
+    # log
+    raw_prices = parcel_average_price("residential")
+    n_below = (raw_prices < parcel_thr.reindex(raw_prices.index)).sum()
+    print(f"  [feasibility] {n_below:,} parcels below LA avg → floored; "
+          f"distressed LAs (<80% reg ${reg_avg:.0f}): {la_avg[la_avg < reg_avg * 0.8].index.tolist()}")
+
+    def _price_with_floor(use):
+        prices = parcel_average_price(use)
+        if use == "residential":
+            prices = prices.where(
+                prices >= parcel_thr.reindex(prices.index),
+                parcel_rep.reindex(prices.index, fill_value=reg_avg)
+            )
+        return prices
+
     parcel_utils.run_feasibility(
         parcels,
-        parcel_average_price,
+        _price_with_floor,
         variables.parcel_is_allowed_2050,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
@@ -2478,13 +2503,13 @@ def run_developer(
         str_or_buffer=cfg,
     )
 
-    print(
-        (
-            "{:,} feasible buildings before running developer".format(
-                len(dev.feasibility)
-            )
-        )
-    )
+    print("{:,} feasible buildings before running developer".format(len(dev.feasibility)))
+
+    # weighted_random_choice uses max_profit as probability weights (replace=False).
+    # Negative or zero entries reduce the non-zero pool below target_units → crash.
+    # Filter to profitable-only when using default profit-rank selection (non-residential).
+    if profit_to_prob_func is None and custom_selection_func is None:
+        dev.feasibility = dev.feasibility[dev.feasibility["max_profit"] > 0]
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
     orca.add_table("feasibility_" + str(geoid), dev.feasibility)
@@ -2540,14 +2565,15 @@ def residential_developer(
     """
     Simulate residential development per MCD in three steps:
 
-    1. Target units (per MCD): blend three signals in housing units
+    1. Target units for MCD: blend three signals in housing units
          target_raw = w_gap*A + w_recent*B + w_demand*C
-         A = vacancy_gap, B = recent_rate (7-yr), C = mover_index × recent_rate
+         A = vacancy_gap, B = recent_rate (7-yr), C = mover_index × decay(year)
+         decay: 1.0 in base_year → mover_decay_final in final_year, linear
        Clamp: recent_rate >= 30 → ±10% of recent_rate; < 30 → [0, 50]
        Hard ceiling: feasible_units from pro-forma feasibility.
 
-    2. LA alignment: scale each large_area's MCD targets proportionally
-       to within ±la_float_range of its own 7-yr historical rate.
+    2. LA alignment: scale each large_area's MCD targets so total built
+       does not exceed la_max_ratio × LA 7-yr rolling rate.
 
     3. Site selection: using per-LUT logistic site selection.
     """
@@ -2567,8 +2593,24 @@ def residential_developer(
     w_gap    = _res_cfg.get("target_weight_vacancy_gap", 0.5)
     w_recent = _res_cfg.get("target_weight_recent_rate", 0.5)
     w_demand = _res_cfg.get("target_weight_demand",      0.5)
-    la_range = _res_cfg.get("la_float_range", 0.10)
+    la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
+    hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
+    hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
     lookback_year = year - 7
+
+    mover_decay_final = _res_cfg.get("mover_decay_final", 0.5)
+    base_year  = orca.get_injectable("base_year")
+    # C signal decays linearly from full weight in base year to mover_decay_final by final year
+    mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
+
+    # blend of base trend and recent 7-yr rate, with linear decay
+    anchor_end = _res_cfg.get("base_rate_anchor_end_year", 2050)
+    alpha = float(np.clip(1.0 - (year - base_year) / max(anchor_end - base_year, 1), 0.0, 1.0))
+
+    # compute 2014-2020 per-MCD build rates inline (7 yrs, floor + B anchor)
+    _hist = orig_buildings[orig_buildings.year_built.between(2014, 2020)]
+    mcd_hist_rate = (_hist.groupby("semmcd")["residential_units"].sum() / 7.0).to_dict()
+    print(f"  B anchor: alpha={alpha:.2f} (year={year}, anchor_end={anchor_end})")
 
     # build site-selection func from estimated coefs; fall back to profit-rank if missing
     _coefs = orca.get_injectable("res_developer_selection_coefs")
@@ -2603,7 +2645,7 @@ def residential_developer(
     mcd_to_la = pcl_la.groupby("semmcd")["large_area_id"].first()
     orig_buildings_la = orig_buildings.copy()
     orig_buildings_la["large_area_id"] = orig_buildings_la["semmcd"].map(mcd_to_la)
-    la_recent_units = (
+    la_sim_rate = (
         orig_buildings_la[orig_buildings_la.year_built >= lookback_year]
         .groupby("large_area_id")["residential_units"].sum() / 7.0
     )
@@ -2624,15 +2666,15 @@ def residential_developer(
 
         vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
         recent_b    = mcd_orig_buildings[mcd_orig_buildings.year_built >= lookback_year]
-        recent_rate = recent_b.residential_units.sum() / 7.0
-        mover_index = (
-            (mcd_orig_buildings.recent_mover_rate * mcd_orig_buildings.residential_units).sum()
-            / max(num_units, 1)
-        )
+        sim_rate    = recent_b.residential_units.sum() / 7.0
+        base_rate   = mcd_hist_rate.get(mcdid, sim_rate)
+        recent_rate = alpha * base_rate + (1.0 - alpha) * sim_rate
+        mover_index = (mcd_orig_buildings.recent_mover_rate * mcd_orig_buildings.residential_units).sum()
+        mover_index /= 10 # 10yr avg
 
         A_units = vacancy_gap_signed
         B_units = recent_rate
-        C_units = mover_index * recent_rate
+        C_units = max(0.0, mover_index) * mover_decay
         target_units_raw = w_gap * A_units + w_recent * B_units + w_demand * C_units
 
         feas_df   = orca.get_table("feasibility_" + str(mcdid)).to_frame()
@@ -2645,16 +2687,21 @@ def residential_developer(
             )
         else:
             feasible_units = 0
-
-        # clamp: low-growth [0,50]; normal ±10% of recent_rate; hard ceiling = feasible
-        if recent_rate < 30:
-            target_units = int(np.clip(target_units_raw, 0, 50))
+        # all_feasible: includes suboptimal proposals (keep_suboptimal=True)
+        # used by historical floor to allow distressed-market builds
+        if len(res_feas) > 0:
+            ave_unit_sz_all = parcels.ave_unit_size.reindex(res_feas.index).fillna(1000)
+            all_feasible_units = int(
+                (res_feas["residential_sqft"] / ave_unit_sz_all).clip(lower=0).sum()
+            )
         else:
-            target_units = int(np.clip(target_units_raw, recent_rate * 0.9, recent_rate * 1.1))
-        target_units = min(target_units, feasible_units)
+            all_feasible_units = 0
+
+        target_units = int(np.clip(target_units_raw, 0, feasible_units))
 
         mcd_data[mcdid] = {
             "target_units": target_units, "feasible_units": feasible_units,
+            "all_feasible_units": all_feasible_units,
             "recent_rate": recent_rate, "cur_agents": cur_agents,
             "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
             "mover_index": mover_index, "A_units": A_units,
@@ -2668,10 +2715,10 @@ def residential_developer(
         if not active:
             continue
         la_sum  = sum(mcd_data[m]["target_units"] for m in active)
-        la_rate = float(la_recent_units.get(la_id, la_sum))
+        la_rate = float(la_sim_rate.get(la_id, 0))
         if la_sum <= 0 or la_rate <= 0:
             continue
-        scale = float(np.clip(la_rate / la_sum, 1.0 - la_range, 1.0 + la_range))
+        scale = float(min(la_rate * la_max_ratio / la_sum, la_max_ratio))
         if abs(scale - 1.0) < 1e-4:
             continue
         print("  LA {}: raw_sum={:,} la_rate={:.0f} → scale={:.3f}".format(
@@ -2679,13 +2726,30 @@ def residential_developer(
         for m in active:
             d = mcd_data[m]
             scaled_raw = d["target_units"] * scale
-            r_rate = d["recent_rate"]
-            if r_rate < 30:
-                d["target_units"] = int(np.clip(scaled_raw, 0, 50))
-            else:
-                d["target_units"] = int(np.clip(scaled_raw, r_rate * 0.9, r_rate * 1.1))
-            d["target_units"] = min(d["target_units"], d["feasible_units"])
+            d["target_units"] = int(np.clip(scaled_raw, 0, d["feasible_units"]))
             d["la_scale"] = round(scale, 4)
+
+    # historical minimum floor — after LA alignment
+    n_floored = 0
+    for mcdid, d in mcd_data.items():
+        hist_rate = mcd_hist_rate.get(mcdid, 0.0)
+        if hist_rate < hist_floor_min_rate:
+            continue
+        floor = int(hist_rate * hist_floor_factor)
+        if d["target_units"] < floor:
+            prev = d["target_units"]
+            # use all_feasible_units (incl. suboptimal) so distressed markets aren't
+            # blocked by the profitable-only cap
+            d["target_units"] = min(floor, d["all_feasible_units"])
+            if d["target_units"] > prev:
+                n_floored += 1
+    if n_floored:
+        print(f"  Historical floor applied to {n_floored} MCDs "
+              f"(factor={hist_floor_factor}, min_rate={hist_floor_min_rate})")
+
+    # snapshot units before developer loop to isolate developer additions from refiner
+    _units_before = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
+    _units_before = int(_units_before[_units_before["year_built"] == year]["residential_units"].sum())
 
     # start building
     for mcdid, d in mcd_data.items():
@@ -2750,6 +2814,20 @@ def residential_developer(
                 " ***  Not enough housing units built for MCD %s, target: %s, built: %s"
                 % (mcdid, target_units, int(units_added))
             )
+
+    # ── annual log ────────────────────────────────────────────────────────────
+    nb = orca.get_table("buildings").to_frame(["year_built", "residential_units", "building_type_id", "parcel_id"])
+    nb = nb[nb["year_built"] == year].copy()
+    nb["large_area_id"] = nb["parcel_id"].map(pcl_la["large_area_id"])
+
+    # reg_7yr excludes current-year builds so the ratio reflects developer output vs prior trend
+    reg_7yr   = orig_buildings[
+        (orig_buildings.year_built >= lookback_year) & (orig_buildings.year_built < year)
+    ].residential_units.sum() / 7.0
+    reg_built = int(nb["residential_units"].sum()) - _units_before  # developer only
+    la_built  = nb.groupby("large_area_id")["residential_units"].sum()
+    run_name  = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
+    utils.log_res_developer_year(year, reg_7yr, reg_built, la_sim_rate, la_built, nb, run_name)
 
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)

@@ -1040,3 +1040,23 @@ def repm_comparison_log():
 
     print(f"\n  Comparison log saved to: {log_file}")
 
+
+def log_res_developer_year(year, reg_7yr, reg_built, la_sim_rate, la_built, nb, run_name):
+    la_rows = "\n".join(
+        f"  {la:<6} {float(la_sim_rate.get(la, 0)):>10,.0f} {int(la_built.get(la, 0)):>8,}"
+        for la in sorted(set(la_sim_rate.index) | set(la_built.index))
+    )
+    bt = (nb.groupby(["large_area_id", "building_type_id"])["residential_units"]
+            .sum().unstack(fill_value=0).to_string()) if len(nb) else "  (none)"
+    log_dir  = os.path.join("runs", "simulate_logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, f"res_developer_{run_name}.log")
+    with open(log_path, "a") as _f:
+        _f.write(
+            f"=== Residential Developer | year {year} ===\n"
+            f"  region: 7yr_rate={reg_7yr:,.0f}  built={reg_built:,}  ratio={reg_built/max(reg_7yr,1):.2f}x\n"
+            f"  {'LA':<6} {'7yr_rate':>10} {'built':>8}\n{la_rows}\n"
+            f"  btype×LA:\n{bt}\n\n"
+        )
+    print(f"  res_developer log → {log_path}")
+
