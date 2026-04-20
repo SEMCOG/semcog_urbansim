@@ -35,23 +35,23 @@ import assumptions, dataset, variables, models
 
 # ── Test year config ───────────────────────────────────────────────────────────
 # Set YR=2021 for base-year test; set YR=2050 + CHECKPOINT to load late-sim state
-YR              = 2028
-CHECKPOINT_H5   = "runs/run1380.h5"   # HDF to load state from (set None for base year)
-CHECKPOINT_YEAR = 2027                 # year snapshot to load (YR - 1)
+YR              = 2030
+CHECKPOINT_H5   = "runs/run1385.h5"   # HDF to load state from (set None for base year)
+CHECKPOINT_YEAR = 2029                 # year snapshot to load (YR - 1)
 
 # ── run1380 reference data (from res_developer_run1380.log) ────────────────────
 RUN1380_REF = {
-    2028: {
-        "region": {"built": 11_367, "rate_7yr": 21_830},
+    2030: {
+        "region": {"built": 5_753, "rate_7yr": 17_108},
         "la": {
-            3:   {"built": 1_474, "rate_7yr": 3_106},
-            5:   {"built": 1_052, "rate_7yr": 1_013},
-            93:  {"built": 2_141, "rate_7yr": 2_549},
-            99:  {"built": 1_840, "rate_7yr": 4_084},
-            115: {"built":   330, "rate_7yr":   855},
-            125: {"built": 2_223, "rate_7yr": 6_658},
-            147: {"built":   239, "rate_7yr":   510},
-            161: {"built": 2_068, "rate_7yr": 3_055},
+            3:   {"built": 1_221, "rate_7yr": 2_300},
+            5:   {"built":   160, "rate_7yr":   952},
+            93:  {"built":   974, "rate_7yr": 2_494},
+            99:  {"built":   748, "rate_7yr": 2_841},
+            115: {"built":   140, "rate_7yr":   721},
+            125: {"built":   717, "rate_7yr": 4_628},
+            147: {"built":    26, "rate_7yr":   377},
+            161: {"built": 1_767, "rate_7yr": 2_796},
         },
     },
 }
@@ -174,7 +174,6 @@ with open("configs/res_developer.yaml") as _f:
     cfg = yaml.safe_load(_f)
 for k, lbl in [
     ("target_weight_vacancy_gap",  "w_gap"),
-    ("target_weight_recent_rate",  "w_recent"),
     ("target_weight_demand",       "w_demand"),
     ("la_max_ratio",               "la_max_ratio"),
     ("min_unit_size",              "min_unit_size"),
@@ -184,7 +183,7 @@ for k, lbl in [
     ("noise_scale",                "noise_scale"),
 ]:
     print(f"  {lbl}: {cfg.get(k, 'NOT SET')}")
-ws = sum(cfg.get(k, 0) for k in ["target_weight_vacancy_gap", "target_weight_recent_rate", "target_weight_demand"])
+ws = sum(cfg.get(k, 0) for k in ["target_weight_vacancy_gap", "target_weight_demand"])
 print(f"  weight sum: {ws:.2f}{'  (need not sum to 1 — signals in HU)' if abs(ws-1)>0.01 else ''}")
 
 # ── Step 4: run developer ──────────────────────────────────────────────────────
@@ -257,22 +256,15 @@ else:
     d = dbg[dbg["year"] == YR].copy()
     print(f"  MCDs: {len(d):,}  target: {d['target_units'].sum():,.0f}  added: {d['units_added'].sum():,.0f}")
 
-    lo  = d[d["recent_rate"] < 30]
-    hi  = d[d["recent_rate"] >= 30]
-    c_hi = hi[hi["target_units"] >= hi["recent_rate"] * 1.09]
-    c_lo = hi[hi["target_units"] <= hi["recent_rate"] * 0.91]
-    print(f"\n── MCD cap: low-growth (<30): {len(lo):,} | normal: {len(hi):,} | upper-capped: {len(c_hi):,} | lower-capped: {len(c_lo):,} | in-band: {len(hi)-len(c_hi)-len(c_lo):,}")
-
     pcl_la  = orca.get_table("parcels").to_frame(["semmcd", "large_area_id"])
     d["la"] = d["mcd"].map(pcl_la.groupby("semmcd")["large_area_id"].first())
     lac = (d.groupby("la").agg(
         tgt=("target_units","sum"), added=("units_added","sum"),
-        rate=("recent_rate","sum"), scale=("la_scale","first")
+        scale=("la_scale","first")
     ).round(1))
-    lac["tgt_vs_rate%"] = ((lac["tgt"].astype(float) / lac["rate"].astype(float).clip(lower=1) - 1)*100).round(1)
     print(f"\n── LA alignment\n{lac.to_string()}")
 
-    print(f"\n── Signals (region): A={d['A_units'].sum():+,.0f}  B={d['B_units'].sum():,.0f}  C={d['C_units'].sum():,.0f}  raw={d['target_raw'].sum():,.0f}  capped={d['target_units'].sum():,.0f}  built={d['units_added'].sum():,.0f}")
+    print(f"\n── Signals (region): V={d['V_units'].sum():+,.0f}  R={d['R_units'].sum():,.0f}  raw={d['target_raw'].sum():,.0f}  capped={d['target_units'].sum():,.0f}  built={d['units_added'].sum():,.0f}")
 
     bh = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
     rr = bh[bh["year_built"] >= YR - 7]["residential_units"].sum() / 7.0
@@ -282,8 +274,8 @@ else:
     det_mcds = d[d["la"] == 5]
     if not det_mcds.empty:
         print(f"\n── Detroit (LA 5) MCD detail ──")
-        cols = ["mcd", "A_units", "B_units", "C_units", "target_raw",
-                "recent_rate", "target_units", "units_added"]
+        cols = ["mcd", "V_units", "R_units", "target_raw",
+                "target_units", "units_added"]
         cols = [c for c in cols if c in det_mcds.columns]
         print(det_mcds[cols].to_string(index=False))
         # feasibility price check for LA 5 parcels
