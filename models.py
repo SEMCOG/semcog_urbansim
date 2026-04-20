@@ -2147,13 +2147,17 @@ def feasibility(parcels):
 
     pcl_la_s    = parcels.to_frame(["large_area_id"])["large_area_id"]
     parcel_thr  = pcl_la_s.map(la_avg)
-    parcel_rep  = pcl_la_s.map(la_avg.clip(lower=reg_avg * 0.8)).fillna(reg_avg)
+    # Detroit uses Wayne County avg as replacement; other distressed LAs use 80% of region avg
+    la_replacement = la_avg.clip(lower=reg_avg * 0.8).copy()
+    la_replacement[5] = float(la_avg.get(3, reg_avg))
+    parcel_rep  = pcl_la_s.map(la_replacement).fillna(reg_avg)
 
     # log
     raw_prices = parcel_average_price("residential")
     n_below = (raw_prices < parcel_thr.reindex(raw_prices.index)).sum()
     print(f"  [feasibility] {n_below:,} parcels below LA avg → floored; "
-          f"distressed LAs (<80% reg ${reg_avg:.0f}): {la_avg[la_avg < reg_avg * 0.8].index.tolist()}")
+          f"LA5 replacement=${la_replacement.get(5, reg_avg):.0f} (LA3 avg); "
+          f"other distressed LAs (<80% reg ${reg_avg:.0f}): {la_avg[(la_avg < reg_avg * 0.8) & (la_avg.index != 5)].index.tolist()}")
 
     def _price_with_floor(use):
         prices = parcel_average_price(use)
@@ -2565,11 +2569,10 @@ def residential_developer(
     """
     Simulate residential development per MCD in three steps:
 
-    1. Target units for MCD: blend three signals in housing units
-         target_raw = w_gap*A + w_recent*B + w_demand*C
-         A = vacancy_gap, B = recent_rate (7-yr), C = mover_index × decay(year)
+    1. Target units for MCD: blend two signals in housing units
+         target_raw = w_gap*V + w_demand*R
+         V = vacancy_gap_signed, R = mover_index × decay(year)
          decay: 1.0 in base_year → mover_decay_final in final_year, linear
-       Clamp: recent_rate >= 30 → ±10% of recent_rate; < 30 → [0, 50]
        Hard ceiling: feasible_units from pro-forma feasibility.
 
     2. LA alignment: scale each large_area's MCD targets so total built
@@ -2591,7 +2594,6 @@ def residential_developer(
     with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
         _res_cfg = yaml.load(f, Loader=yaml.FullLoader)
     w_gap    = _res_cfg.get("target_weight_vacancy_gap", 0.5)
-    w_recent = _res_cfg.get("target_weight_recent_rate", 0.5)
     w_demand = _res_cfg.get("target_weight_demand",      0.5)
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
@@ -2603,14 +2605,9 @@ def residential_developer(
     # C signal decays linearly from full weight in base year to mover_decay_final by final year
     mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
 
-    # blend of base trend and recent 7-yr rate, with linear decay
-    anchor_end = _res_cfg.get("base_rate_anchor_end_year", 2050)
-    alpha = float(np.clip(1.0 - (year - base_year) / max(anchor_end - base_year, 1), 0.0, 1.0))
-
-    # compute 2014-2020 per-MCD build rates inline (7 yrs, floor + B anchor)
+    # compute 2014-2020 per-MCD build rates for hist_floor
     _hist = orig_buildings[orig_buildings.year_built.between(2014, 2020)]
     mcd_hist_rate = (_hist.groupby("semmcd")["residential_units"].sum() / 7.0).to_dict()
-    print(f"  B anchor: alpha={alpha:.2f} (year={year}, anchor_end={anchor_end})")
 
     # build site-selection func from estimated coefs; fall back to profit-rank if missing
     _coefs = orca.get_injectable("res_developer_selection_coefs")
@@ -2640,14 +2637,25 @@ def residential_developer(
 
     debug_res_developer = debug_res_developer.to_frame()
 
-    # LA 7-yr historical rates for step 2 alignment
+    # LA rates for step 2 alignment
     pcl_la = orca.get_table("parcels").to_frame(["semmcd", "large_area_id"])
     mcd_to_la = pcl_la.groupby("semmcd")["large_area_id"].first()
     orig_buildings_la = orig_buildings.copy()
     orig_buildings_la["large_area_id"] = orig_buildings_la["semmcd"].map(mcd_to_la)
+    # rolling rate excludes current year (events/refiner are not yet "history")
     la_sim_rate = (
-        orig_buildings_la[orig_buildings_la.year_built >= lookback_year]
+        orig_buildings_la[orig_buildings_la.year_built.between(lookback_year, year - 1)]
         .groupby("large_area_id")["residential_units"].sum() / 7.0
+    )
+    # 2014–2020 historical baseline — floor for LA cap so it can't self-deflate to zero
+    la_hist_rate = (
+        orig_buildings_la[orig_buildings_la.year_built.between(2014, 2020)]
+        .groupby("large_area_id")["residential_units"].sum() / 7.0
+    )
+    # units already added this year by events/refiner before developer runs
+    la_events = (
+        orig_buildings_la[orig_buildings_la.year_built == year]
+        .groupby("large_area_id")["residential_units"].sum()
     )
 
     # compute per-MCD target_units
@@ -2665,17 +2673,12 @@ def residential_developer(
         assert target_vacancy < 1.0
 
         vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
-        recent_b    = mcd_orig_buildings[mcd_orig_buildings.year_built >= lookback_year]
-        sim_rate    = recent_b.residential_units.sum() / 7.0
-        base_rate   = mcd_hist_rate.get(mcdid, sim_rate)
-        recent_rate = alpha * base_rate + (1.0 - alpha) * sim_rate
         mover_index = (mcd_orig_buildings.recent_mover_rate * mcd_orig_buildings.residential_units).sum()
         mover_index /= 10 # 10yr avg
 
-        A_units = vacancy_gap_signed
-        B_units = recent_rate
-        C_units = max(0.0, mover_index) * mover_decay
-        target_units_raw = w_gap * A_units + w_recent * B_units + w_demand * C_units
+        V_units = vacancy_gap_signed
+        R_units = max(0, mover_index) * mover_decay
+        target_units_raw = w_gap * V_units + w_demand * R_units
 
         feas_df   = orca.get_table("feasibility_" + str(mcdid)).to_frame()
         res_feas  = feas_df[feas_df["form"] == "residential"]
@@ -2702,37 +2705,17 @@ def residential_developer(
         mcd_data[mcdid] = {
             "target_units": target_units, "feasible_units": feasible_units,
             "all_feasible_units": all_feasible_units,
-            "recent_rate": recent_rate, "cur_agents": cur_agents,
+            "cur_agents": cur_agents,
             "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
-            "mover_index": mover_index, "A_units": A_units,
-            "B_units": B_units, "C_units": C_units,
+            "mover_index": mover_index, "V_units": V_units,
+            "R_units": R_units,
             "target_raw": target_units_raw, "la_scale": 1.0,
         }
 
-    # LA alignment
-    for la_id, la_mcd_ids in mcd_to_la.groupby(mcd_to_la).groups.items():
-        active = [m for m in la_mcd_ids if m in mcd_data]
-        if not active:
-            continue
-        la_sum  = sum(mcd_data[m]["target_units"] for m in active)
-        la_rate = float(la_sim_rate.get(la_id, 0))
-        if la_sum <= 0 or la_rate <= 0:
-            continue
-        scale = float(min(la_rate * la_max_ratio / la_sum, la_max_ratio))
-        if abs(scale - 1.0) < 1e-4:
-            continue
-        print("  LA {}: raw_sum={:,} la_rate={:.0f} → scale={:.3f}".format(
-            la_id, la_sum, la_rate, scale))
-        for m in active:
-            d = mcd_data[m]
-            scaled_raw = d["target_units"] * scale
-            d["target_units"] = int(np.clip(scaled_raw, 0, d["feasible_units"]))
-            d["la_scale"] = round(scale, 4)
-
-    # historical minimum floor — after LA alignment
+    # historical minimum floor — before LA alignment so LA cap is the hard ceiling
     n_floored = 0
     for mcdid, d in mcd_data.items():
-        hist_rate = mcd_hist_rate.get(mcdid, 0.0)
+        hist_rate = mcd_hist_rate.get(mcdid, 0)
         if hist_rate < hist_floor_min_rate:
             continue
         floor = int(hist_rate * hist_floor_factor)
@@ -2747,6 +2730,30 @@ def residential_developer(
         print(f"  Historical floor applied to {n_floored} MCDs "
               f"(factor={hist_floor_factor}, min_rate={hist_floor_min_rate})")
 
+    # LA alignment — hard ceiling applied after hist_floor
+    for la_id, la_mcd_ids in mcd_to_la.groupby(mcd_to_la).groups.items():
+        active = [m for m in la_mcd_ids if m in mcd_data]
+        if not active:
+            continue
+        la_sum    = sum(mcd_data[m]["target_units"] for m in active)
+        # floor la_rate at hist_floor_factor × historical baseline (Fix 2: prevents cap collapse)
+        la_rate   = max(float(la_sim_rate.get(la_id, 0)),
+                        float(la_hist_rate.get(la_id, 0)) * hist_floor_factor)
+        # subtract units already built by events/refiner this year (Fix 1: no double-count)
+        la_ev     = float(la_events.get(la_id, 0))
+        la_allowed = max(0, la_rate * la_max_ratio - la_ev)
+        if la_sum <= 0 or la_allowed <= 0:
+            continue
+        scale = float(min(la_allowed / la_sum, la_max_ratio))
+        if abs(scale - 1.0) < 1e-4:
+            continue
+        print("  LA {}: raw_sum={:,} la_rate={:.0f} la_ev={:.0f} → scale={:.3f}".format(
+            la_id, la_sum, la_rate, la_ev, scale))
+        for m in active:
+            d = mcd_data[m]
+            d["target_units"] = int(np.clip(d["target_units"] * scale, 0, d["feasible_units"]))
+            d["la_scale"] = round(scale, 4)
+
     # snapshot units before developer loop to isolate developer additions from refiner
     _units_before = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
     _units_before = int(_units_before[_units_before["year_built"] == year]["residential_units"].sum())
@@ -2755,17 +2762,16 @@ def residential_developer(
     for mcdid, d in mcd_data.items():
         target_units  = d["target_units"]
         feasible_units = d["feasible_units"]
-        recent_rate   = d["recent_rate"]
 
         print(
             "developing residential for MCD {} | "
             "agents={:,} units={:,} vac_gap={:+,} | "
-            "A={:+.0f} B={:.0f} C={:.0f} raw={:.0f} | "
-            "recent_rate={:.1f} feasible={:,} la_scale={:.3f} target={:,}\n".format(
+            "V={:+.0f} R={:.0f} raw={:.0f} | "
+            "feasible={:,} la_scale={:.3f} target={:,}\n".format(
                 mcdid,
                 d["cur_agents"], d["num_units"], d["vacancy_gap"],
-                d["A_units"], d["B_units"], d["C_units"], d["target_raw"],
-                recent_rate, feasible_units, d["la_scale"], target_units,
+                d["V_units"], d["R_units"], d["target_raw"],
+                feasible_units, d["la_scale"], target_units,
             )
         )
 
@@ -2796,11 +2802,9 @@ def residential_developer(
                 "cur_agents":    d["cur_agents"],
                 "num_units":     d["num_units"],
                 "vacancy_gap":   d["vacancy_gap"],
-                "recent_rate":   round(recent_rate, 1),
                 "mover_index":   round(d["mover_index"], 3),
-                "A_units":       round(d["A_units"], 1),
-                "B_units":       round(d["B_units"], 1),
-                "C_units":       round(d["C_units"], 1),
+                "V_units":       round(d["V_units"], 1),
+                "R_units":       round(d["R_units"], 1),
                 "target_raw":    round(d["target_raw"], 1),
                 "la_scale":      d["la_scale"],
                 "feasible_units": feasible_units,
