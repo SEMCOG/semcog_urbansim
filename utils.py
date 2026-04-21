@@ -1041,11 +1041,23 @@ def repm_comparison_log():
     print(f"\n  Comparison log saved to: {log_file}")
 
 
-def log_res_developer_year(year, reg_7yr, reg_built, la_sim_rate, la_built, nb, run_name):
+def log_res_developer_year(year, reg_7yr, reg_dev, la_hist_rate, la_dev, la_events, nb, run_name):
+    # total = developer + events/refiner; ratio vs 2014-2020 historical baseline
+    las = sorted(set(la_hist_rate.index) | set(la_dev.index) | set(la_events.index))
     la_rows = "\n".join(
-        f"  {la:<6} {float(la_sim_rate.get(la, 0)):>10,.0f} {int(la_built.get(la, 0)):>8,}"
-        for la in sorted(set(la_sim_rate.index) | set(la_built.index))
+        "  {:<6} {:>10,.0f} {:>8,} {:>8,} {:>8,}  {:.2f}x".format(
+            la,
+            float(la_hist_rate.get(la, 0)),
+            int(la_events.get(la, 0) or 0),
+            int(la_dev.get(la, 0) or 0),
+            int(la_events.get(la, 0) or 0) + int(la_dev.get(la, 0) or 0),
+            (int(la_events.get(la, 0) or 0) + int(la_dev.get(la, 0) or 0)) / max(float(la_hist_rate.get(la, 0)), 1),
+        )
+        for la in las
     )
+    reg_events = int(la_events.sum()) if len(la_events) else 0
+    reg_total  = reg_dev + reg_events
+    reg_base   = float(la_hist_rate.sum()) if len(la_hist_rate) else max(reg_7yr, 1)
     bt = (nb.groupby(["large_area_id", "building_type_id"])["residential_units"]
             .sum().unstack(fill_value=0).to_string()) if len(nb) else "  (none)"
     log_dir  = os.path.join("runs", "simulate_logs")
@@ -1054,8 +1066,10 @@ def log_res_developer_year(year, reg_7yr, reg_built, la_sim_rate, la_built, nb, 
     with open(log_path, "a") as _f:
         _f.write(
             f"=== Residential Developer | year {year} ===\n"
-            f"  region: 7yr_rate={reg_7yr:,.0f}  built={reg_built:,}  ratio={reg_built/max(reg_7yr,1):.2f}x\n"
-            f"  {'LA':<6} {'7yr_rate':>10} {'built':>8}\n{la_rows}\n"
+            f"  region: base_rate={reg_base:,.0f}  events={reg_events:,}  dev={reg_dev:,}"
+            f"  total={reg_total:,}  ratio={reg_total/reg_base:.2f}x\n"
+            f"  {'LA':<6} {'base_rate':>10} {'events':>8} {'dev':>8} {'total':>8}  ratio\n"
+            f"{la_rows}\n"
             f"  btype×LA:\n{bt}\n\n"
         )
     print(f"  res_developer log → {log_path}")
