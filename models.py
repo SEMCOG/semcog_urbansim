@@ -2147,16 +2147,17 @@ def feasibility(parcels):
 
     pcl_la_s    = parcels.to_frame(["large_area_id"])["large_area_id"]
     parcel_thr  = pcl_la_s.map(la_avg)
-    # Detroit uses Wayne County avg as replacement; other distressed LAs use 80% of region avg
+    # Detroit (LA5) uses 70% of Wayne County (LA3) avg as replacement price floor
+    # Other distressed LAs (<80% of region avg) use 80% of region avg
     la_replacement = la_avg.clip(lower=reg_avg * 0.8).copy()
-    la_replacement[5] = float(la_avg.get(3, reg_avg))
+    la_replacement[5] = float(la_avg.get(3, reg_avg)) * 0.7
     parcel_rep  = pcl_la_s.map(la_replacement).fillna(reg_avg)
 
     # log
     raw_prices = parcel_average_price("residential")
     n_below = (raw_prices < parcel_thr.reindex(raw_prices.index)).sum()
     print(f"  [feasibility] {n_below:,} parcels below LA avg → floored; "
-          f"LA5 replacement=${la_replacement.get(5, reg_avg):.0f} (LA3 avg); "
+          f"LA5 replacement=${la_replacement.get(5, reg_avg):.0f} (70% of LA3 avg=${la_avg.get(3, reg_avg):.0f}); "
           f"other distressed LAs (<80% reg ${reg_avg:.0f}): {la_avg[(la_avg < reg_avg * 0.8) & (la_avg.index != 5)].index.tolist()}")
 
     def _price_with_floor(use):
@@ -2824,14 +2825,16 @@ def residential_developer(
     nb = nb[nb["year_built"] == year].copy()
     nb["large_area_id"] = nb["parcel_id"].map(pcl_la["large_area_id"])
 
-    # reg_7yr excludes current-year builds so the ratio reflects developer output vs prior trend
-    reg_7yr   = orig_buildings[
+    # reg_7yr = rolling 7yr average of all prior-year builds (developer + events)
+    reg_7yr  = orig_buildings[
         (orig_buildings.year_built >= lookback_year) & (orig_buildings.year_built < year)
     ].residential_units.sum() / 7.0
-    reg_built = int(nb["residential_units"].sum()) - _units_before  # developer only
-    la_built  = nb.groupby("large_area_id")["residential_units"].sum()
-    run_name  = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
-    utils.log_res_developer_year(year, reg_7yr, reg_built, la_sim_rate, la_built, nb, run_name)
+    la_total = nb.groupby("large_area_id")["residential_units"].sum()
+    # la_events already computed above (units added by events/refiner before developer ran)
+    la_dev   = (la_total.subtract(la_events, fill_value=0)).clip(lower=0)
+    reg_dev  = int(la_dev.sum())
+    run_name = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
+    utils.log_res_developer_year(year, reg_7yr, reg_dev, la_hist_rate, la_dev, la_events, nb, run_name)
 
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
