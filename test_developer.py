@@ -36,7 +36,7 @@ import assumptions, dataset, variables, models
 # ── Test year config ───────────────────────────────────────────────────────────
 # Set YR=2021 for base-year test; set YR=2050 + CHECKPOINT to load late-sim state
 YR              = 2030
-CHECKPOINT_H5   = "runs/run1385.h5"   # HDF to load state from (set None for base year)
+CHECKPOINT_H5   = "runs/run1386.h5"   # HDF to load state from (set None for base year)
 CHECKPOINT_YEAR = 2029                 # year snapshot to load (YR - 1)
 
 # ── run1380 reference data (from res_developer_run1380.log) ────────────────────
