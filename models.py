@@ -2109,12 +2109,13 @@ def random_demolition_events(
 
 
 def parcel_average_price(use):
-    # Copied from variables.py
     parcels_wrapper = orca.get_table("parcels")
     if len(orca.get_table("nodes_walk")) == 0:
-        # if nodes isn't generated yet
         return pd.Series(index=parcels_wrapper.index)
-    return misc.reindex(orca.get_table("nodes_walk")[use], parcels_wrapper.nodeid_walk)
+    cfg = orca.get_injectable("btype_form_map")
+    form_to_col = {f: col for col, v in cfg.items() for f in v["forms"]}
+    col = form_to_col.get(use, use)
+    return misc.reindex(orca.get_table("nodes_walk")[col], parcels_wrapper.nodeid_walk)
 
 
 @orca.injectable("cost_shifters")
@@ -2125,7 +2126,7 @@ def shifters():
 
 
 def cost_shifter_callback(self, form, df, costs):
-    if form == "residential":
+    if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
     geography = shifter_cfg["calibration_geography_id"]
@@ -2138,35 +2139,52 @@ def cost_shifter_callback(self, form, df, costs):
 
 
 @orca.step("feasibility")
-def feasibility(parcels):
-    # setup price floor for parcels below their LA avg get floored to LA avg
-    bld_res = orca.get_table("buildings").to_frame(["large_area_id", "sqft_price_res"])
-    bld_res = bld_res[bld_res["sqft_price_res"] > 0]
-    la_avg  = bld_res.groupby("large_area_id")["sqft_price_res"].mean()
-    reg_avg = float(bld_res["sqft_price_res"].mean())
+def feasibility(parcels, buildings, btype_form_map):
+    bldgs = buildings.to_frame(
+        ["large_area_id", "sqft_price_res", "sqft_price_nonres", "building_type_id"]
+    )
+    pcl_la_s = parcels.to_frame(["large_area_id"])["large_area_id"]
 
-    pcl_la_s    = parcels.to_frame(["large_area_id"])["large_area_id"]
-    parcel_thr  = pcl_la_s.map(la_avg)
-    # Detroit (LA5) uses 70% of Wayne County (LA3) avg as replacement price floor
-    # Other distressed LAs (<80% of region avg) use 80% of region avg
-    la_replacement = la_avg.clip(lower=reg_avg * 0.8).copy()
-    la_replacement[5] = float(la_avg.get(3, reg_avg)) * 0.7
-    parcel_rep  = pcl_la_s.map(la_replacement).fillna(reg_avg)
+    # Build per-nodes-column floor data: {col: (parcel_thr, parcel_rep, reg_avg)}
+    form_to_col = {f: col for col, v in btype_form_map.items() for f in v["forms"]}
+    _floor = {}
+    for col, v in btype_form_map.items():
+        bld = bldgs[bldgs["building_type_id"].isin(v["btypes"]) & (bldgs[v["price_col"]] > 0)]
+        la_avg = bld.groupby("large_area_id")[v["price_col"]].mean()
+        reg_avg = float(bld[v["price_col"]].mean()) if len(bld) else 0.0
+        if col == "residential":
+            # distressed-market treatment: floor LAs below 80% of regional avg;
+            # Detroit (LA5) uses Wayne County (LA3) avg as replacement
+            la_rep = la_avg.clip(lower=reg_avg * 0.8).copy()
+            la_rep[5] = float(la_avg.get(3, reg_avg))
+        else:
+            la_rep = la_avg.copy()
+        _floor[col] = (
+            pcl_la_s.map(la_avg),
+            pcl_la_s.map(la_rep).fillna(reg_avg),
+            reg_avg,
+        )
 
-    # log
-    raw_prices = parcel_average_price("residential")
-    n_below = (raw_prices < parcel_thr.reindex(raw_prices.index)).sum()
-    print(f"  [feasibility] {n_below:,} parcels below LA avg → floored; "
-          f"LA5 replacement=${la_replacement.get(5, reg_avg):.0f} (70% of LA3 avg=${la_avg.get(3, reg_avg):.0f}); "
-          f"other distressed LAs (<80% reg ${reg_avg:.0f}): {la_avg[(la_avg < reg_avg * 0.8) & (la_avg.index != 5)].index.tolist()}")
+    # log residential floor summary
+    thr_res, _, reg_avg_res = _floor["residential"]
+    raw_res = parcel_average_price("apartment")
+    n_below = (raw_res < thr_res.reindex(raw_res.index)).sum()
+    bld_res = bldgs[bldgs["building_type_id"].isin(btype_form_map["residential"]["btypes"]) & (bldgs["sqft_price_res"] > 0)]
+    la_avg_res = bld_res.groupby("large_area_id")["sqft_price_res"].mean()
+    print(f"  [feasibility] res: {n_below:,} parcels below LA avg → floored; "
+          f"LA5 replacement=${la_avg_res.get(3, reg_avg_res):.0f} (=LA3 avg); "
+          f"reg avg=${reg_avg_res:.0f}")
 
     def _price_with_floor(use):
         prices = parcel_average_price(use)
-        if use == "residential":
-            prices = prices.where(
-                prices >= parcel_thr.reindex(prices.index),
-                parcel_rep.reindex(prices.index, fill_value=reg_avg)
-            )
+        col = form_to_col.get(use, use)
+        if col not in _floor:
+            return prices
+        thr, rep, reg_avg = _floor[col]
+        prices = prices.where(
+            prices >= thr.reindex(prices.index),
+            rep.reindex(prices.index, fill_value=reg_avg)
+        )
         return prices
 
     parcel_utils.run_feasibility(
@@ -2247,57 +2265,11 @@ def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
     return df.fillna(0)
 
 
+# Each proforma form maps 1:1 to a building_type_id — no stochastic sampling needed.
 def probable_type(row):
-    """
-    Function to pass to form_to_btype_callback in parcels_utils.add_buildings.
-    Reads form for the given row in new buildings DataFrame, gets the
-    building type probabilities from the form_btype_distributions injectable,
-    and chooses a building type based on those probabilities.
-
-    Parameters
-    ----------
-    row : Series
-
-    Returns
-    -------
-    btype : int
-    """
+    """Return building_type_id for a new building — direct lookup from form_to_btype."""
     form = row["form"]
-    form_to_btype_dists = orca.get_injectable("form_btype_distributions")
-    btype_dists = form_to_btype_dists[form]
-    # keys() and values() guaranteed to be in same order
-    btype = np.random.choice(a=list(btype_dists.keys()), p=list(btype_dists.values()))
-    return btype
-
-
-def register_btype_distributions(buildings: pd.DataFrame):
-    """
-    Prior to adding new buildings selected by the developer model, this
-    function registers a dictionary where keys are forms, and values are
-    dictionaries of building types. In each sub-dictionary, the keys are
-    building type IDs, and values are probabilities. These probabilities are
-    generated from distributions of building types for each form in each
-    large area.
-
-    Parameters
-    ----------
-    buildings : DataFrame
-        Buildings DataFrame (not wrapper) at the time of registration. Must
-        include building_type_id column.
-
-    Returns
-    -------
-    None
-    """
-    form_to_btype = orca.get_injectable("form_to_btype")
-    form_btype_dists = {}
-    for form in list(form_to_btype.keys()):
-        bldgs = buildings.loc[buildings.building_type_id.isin(form_to_btype[form])]
-        bldgs_by_type = bldgs.groupby("building_type_id").size()
-        normed = bldgs_by_type / sum(bldgs_by_type)
-        form_btype_dists[form] = normed.to_dict()
-
-    orca.add_injectable("form_btype_distributions", form_btype_dists)
+    return orca.get_injectable("form_to_btype")[form][0]
 
 
 def build_parcel_selection_features(parcels_df, buildings_df, zones_df, year,
@@ -2510,11 +2482,14 @@ def run_developer(
 
     print("{:,} feasible buildings before running developer".format(len(dev.feasibility)))
 
-    # weighted_random_choice uses max_profit as probability weights (replace=False).
-    # Negative or zero entries reduce the non-zero pool below target_units → crash.
-    # Filter to profitable-only when using default profit-rank selection (non-residential).
+    # weighted_random_choice uses max_profit/parcel_size as probability weights.
+    # Zero parcel_size → inf weight; multiple inf → NaN probabilities → crash.
+    # Negative/zero max_profit also invalid. Filter both before pick().
     if profit_to_prob_func is None and custom_selection_func is None:
-        dev.feasibility = dev.feasibility[dev.feasibility["max_profit"] > 0]
+        ps = parcel_size.reindex(dev.feasibility.index).fillna(0)
+        dev.feasibility = dev.feasibility[
+            (dev.feasibility["max_profit"] > 0) & (ps > 0)
+        ]
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
     orca.add_table("feasibility_" + str(geoid), dev.feasibility)
@@ -2565,7 +2540,7 @@ def res_developer_selection_coefs():
 
 @orca.step("residential_developer")
 def residential_developer(
-    households, parcels, target_vacancies_mcd, debug_res_developer
+    households, parcels, target_vacancies_mcd, debug_res_developer, res_forms
 ):
     """
     Simulate residential development per MCD in three steps:
@@ -2682,7 +2657,7 @@ def residential_developer(
         target_units_raw = w_gap * V_units + w_demand * R_units
 
         feas_df   = orca.get_table("feasibility_" + str(mcdid)).to_frame()
-        res_feas  = feas_df[feas_df["form"] == "residential"]
+        res_feas  = feas_df[feas_df["form"].isin(res_forms)]
         profitable = res_feas[res_feas["max_profit"] > 0]
         if len(profitable) > 0:
             ave_unit_sz = parcels.ave_unit_size.reindex(profitable.index).fillna(1000)
@@ -2776,13 +2751,10 @@ def residential_developer(
             )
         )
 
-        mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
-        register_btype_distributions(mcd_orig_buildings)
-
         units_added, parcels_idx_to_update = run_developer(
             target_units,
             mcdid,
-            "residential",
+            res_forms,
             orca.get_table("buildings"),
             "residential_units",
             parcels.parcel_size,
@@ -2841,7 +2813,7 @@ def residential_developer(
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies):
+def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
     """
     Non-residential space developer step.
 
@@ -2883,11 +2855,8 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             ].non_res_target_vacancy_rate
         )
 
-        # #90
-        # loop through building form
-        for form in ["office", "retail", "industrial", "medical", "entertainment"]:
-            # calculate num_agents
-            # form_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+        # loop through non-residential building forms (1:1 with building_type_id)
+        for form in nonres_forms:
             form_btype_ids = orca.get_injectable("form_to_btype")[form]
             form_blds = la_orig_buildings[la_orig_buildings.building_type_id.isin(form_btype_ids)]
             # number of non-homebased jobs in the large area
@@ -2909,9 +2878,6 @@ def non_residential_developer(jobs, parcels, target_vacancies):
                     target_vacancy, target_units
                 )
             )
-
-            # calculate prior form_btype_distributions
-            register_btype_distributions(la_orig_buildings)
 
             # run nonres developer step
             spaces_added, parcels_idx_to_update = run_developer(

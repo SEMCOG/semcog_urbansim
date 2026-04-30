@@ -45,9 +45,9 @@ orca.add_injectable(
         52: "Medical",
         53: "Medical",
         61: "Entertainment",
-        63: "Entertainment",
+        63: "Hospitality",
         65: "Hospitality",
-        71: "Others",
+        71: "Agricultural",
         81: "Residential",
         82: "Residential",
         83: "Residential",
@@ -55,8 +55,9 @@ orca.add_injectable(
         91: "Entertainment",
         92: "Institutional",
         93: "Institutional",
-        94: "othercommercial",
+        94: "Institutional",
         95: "TCU",
+        96: "Industrial",
     },
 )
 
@@ -80,16 +81,75 @@ orca.add_injectable(
 orca.add_injectable(
     "form_to_btype",
     {
-        "residential": [81, 82, 83],
-        "industrial": [31, 32, 33],
-        "retail": [21, 65],
-        "office": [23],
-        "medical": [51, 52, 53],
-        "entertainment": [61, 63, 91],
-        # "mixedresidential": [21, 81, 82, 83],
-        # "mixedoffice": [23, 81, 82, 83],
+        "retail":           [21],
+        "office":            [23],
+        "manufacturing":    [31],
+        "wholesale":        [32],
+        "warehouse":        [33],
+        "health-care":      [51],
+        "hospital":         [52],
+        "residential-care": [53],
+        "leisure":          [61],
+        "hotel":            [63],
+        "restaurant":       [65],
+        "single-family":    [81],
+        "condo":            [82],
+        "apartment":        [83],
+        "theater":          [91],
     },
 )
+
+#proforma forms → nodes_walk price column → buildings table btypes & price field
+orca.add_injectable(
+    "btype_form_map",
+    {
+        "residential": {
+            "btypes":     [81, 82, 83, 84],
+            "price_col":  "sqft_price_res",
+            "forms":      ["apartment", "condo", "single-family"],
+        },
+        "retail": {
+            "btypes":     [21],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["retail"],
+        },
+        "office": {
+            "btypes":     [23],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["office"],
+        },
+        "industrial": {
+            "btypes":     [31, 32, 33, 96],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["manufacturing", "wholesale", "warehouse"],
+        },
+        "medical": {
+            "btypes":     [51, 52, 53],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["health-care", "hospital", "residential-care"],
+        },
+        "entertainment": {
+            "btypes":     [61, 91],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["leisure", "theater"],
+        },
+        "hospitality": {
+            "btypes":     [63, 65],
+            "price_col":  "sqft_price_nonres",
+            "forms":      ["hotel", "restaurant"],
+        },
+    },
+)
+
+@orca.injectable("res_forms")
+def res_forms(btype_form_map):
+    return btype_form_map["residential"]["forms"]
+
+
+@orca.injectable("nonres_forms")
+def nonres_forms(btype_form_map):
+    return [f for col, v in btype_form_map.items() if col != "residential" for f in v["forms"]]
+
 
 seed = 271828
 # seed = 79

@@ -99,7 +99,7 @@ _hv = _la5.bldgimprval > (_la5.landvalue / 10)
 print(f"  NOT highval:         {(~_hv).sum():,}")
 
 # parcel_is_allowed_2050("residential") for LA5
-_allowed_res = variables.parcel_is_allowed_2050("residential")
+_allowed_res = variables.parcel_is_allowed_2050("apartment")
 _la5_allowed = _allowed_res.reindex(_la5.index, fill_value=False)
 print(f"  parcel_is_allowed:   {_la5_allowed.sum():,}")
 
@@ -268,7 +268,7 @@ else:
 
     bh = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
     rr = bh[bh["year_built"] >= YR - 7]["residential_units"].sum() / 7.0
-    print(f"\n── Regional: 7yr trend={rr:,.0f}/yr  built={d['units_added'].sum():,.0f}  ratio={d['units_added'].sum()/max(rr,1):.2f}x")
+    print(f"\n── Regional: baseline trend={rr:,.0f}/yr  built={d['units_added'].sum():,.0f}  ratio={d['units_added'].sum()/max(rr,1):.2f}x")
 
     # ── Detroit / LA 5 deep dive ───────────────────────────────────────────────
     det_mcds = d[d["la"] == 5]
@@ -286,3 +286,73 @@ else:
             print(f"  LA 5 sqft_price_res: n={len(la5_prices):,}  "
                   f"mean=${la5_prices.mean():.0f}  median=${la5_prices.median():.0f}  "
                   f"p10=${la5_prices.quantile(0.1):.0f}  p90=${la5_prices.quantile(0.9):.0f}")
+
+# ── Non-residential diagnostics ────────────────────────────────────────────────
+print(f"\n{SEP}\nNONRES DIAGNOSTICS\n{SEP}")
+NONRES_FORMS = orca.get_injectable("nonres_forms")
+
+feas   = orca.get_table("feasibility").to_frame()
+bldgs  = orca.get_table("buildings").to_frame(["job_spaces", "large_area_id", "building_type_id"])
+jobs_  = orca.get_table("jobs").to_frame(["building_id", "home_based_status", "large_area_id"])
+nonhb  = jobs_[jobs_["home_based_status"] == 0]
+f2b    = orca.get_injectable("form_to_btype")
+
+nrf = feas[feas["form"].isin(NONRES_FORMS)].copy()
+print(f"\n── Feasibility: {len(nrf):,} nonres proposals across {nrf['form'].nunique()} forms")
+nrf_prof = nrf[nrf["max_profit"] > 0]
+form_feas = nrf_prof.groupby("form").agg(parcels=("max_profit","count"), avg_profit=("max_profit","mean")).round(0)
+print(form_feas.to_string())
+
+print(f"\n── Nonres vacancy by form × LA (target_vacancy=0.10 assumed for display)")
+rows = []
+for form in NONRES_FORMS:
+    btypes = f2b[form]
+    form_blds = bldgs[bldgs["building_type_id"].isin(btypes)]
+    form_jobs  = nonhb[nonhb["building_id"].isin(form_blds.index)]
+    for la_id in sorted(bldgs["large_area_id"].dropna().unique()):
+        spaces = int(form_blds[form_blds["large_area_id"] == la_id]["job_spaces"].sum())
+        agents = int((form_jobs["large_area_id"] == la_id).sum())
+        vac    = round(1 - agents / max(spaces, 1), 3)
+        target = int(max(agents / 0.9 - spaces, 0))
+        rows.append({"form": form, "la": int(la_id), "spaces": spaces, "jobs": agents, "vacancy": vac, "target_spaces": target})
+
+nrdf = pd.DataFrame(rows)
+# show only forms/LAs with any spaces or target > 0
+nrdf_active = nrdf[(nrdf["spaces"] > 0) | (nrdf["target_spaces"] > 0)]
+print(nrdf_active.to_string(index=False))
+
+# ── Step 5: run nonres developer ───────────────────────────────────────────────
+print(f"\n{SEP}\nSTEP 5 — Non-residential developer\n{SEP}")
+js0 = orca.get_table("buildings").to_frame(["job_spaces", "building_type_id", "year_built", "parcel_id"])
+jt0 = js0["job_spaces"].sum()
+
+orca.run(["non_residential_developer"], iter_vars=[YR])
+
+js1  = orca.get_table("buildings").to_frame(["job_spaces", "building_type_id", "year_built", "parcel_id"])
+nbnr = js1[js1["year_built"] == YR]
+# exclude residential buildings added by res developer earlier
+nbnr = nbnr[nbnr["building_type_id"].isin([bt for f in NONRES_FORMS for bt in f2b[f]])]
+jt1  = js1["job_spaces"].sum()
+
+print(f"\n{SEP}\nNONRES RESULTS\n{SEP}")
+print(f"  Job spaces before: {jt0:,.0f}  →  after: {jt1:,.0f}  added: {jt1-jt0:,.0f}")
+print(f"  New nonres buildings: {len(nbnr):,}")
+
+if len(nbnr) > 0:
+    pcl = orca.get_table("parcels").to_frame(["semmcd", "large_area_id", "land_use_type_id"])
+    nbnr = nbnr.join(pcl, on="parcel_id", how="left")
+
+    print(f"\n── by form (building_type_id)")
+    btype_to_form = {v[0]: k for k, v in f2b.items() if k in NONRES_FORMS}
+    nbnr["form"] = nbnr["building_type_id"].map(btype_to_form)
+    print(nbnr.groupby("form")[["job_spaces"]].agg(buildings=("job_spaces","count"), spaces=("job_spaces","sum"))
+              .sort_values("spaces", ascending=False).to_string())
+
+    print(f"\n── by large_area")
+    print(nbnr.groupby("large_area_id")[["job_spaces"]].agg(buildings=("job_spaces","count"), spaces=("job_spaces","sum"))
+              .sort_values("spaces", ascending=False).to_string())
+
+    print(f"\n── by form × large_area")
+    print(nbnr.groupby(["form","large_area_id"])["job_spaces"].sum().unstack(fill_value=0).to_string())
+else:
+    print("  No nonres buildings added.")

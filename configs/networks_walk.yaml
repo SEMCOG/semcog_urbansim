@@ -371,7 +371,7 @@ variable_definitions:
     filters:
     - general_type == "Retail"
     name: retail
-    radius: 6560
+    radius: 10560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -382,7 +382,7 @@ variable_definitions:
     filters:
     - general_type == "Office"
     name: office
-    radius: 6560
+    radius: 10560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -393,7 +393,7 @@ variable_definitions:
     filters:
     - general_type == "Industrial"
     name: industrial
-    radius: 6560
+    radius: 10560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -404,7 +404,7 @@ variable_definitions:
     filters:
     - general_type == "Medical"
     name: medical
-    radius: 6560
+    radius: 10560
     varname: sqft_price_nonres
 
   - aggregation: ave
@@ -415,7 +415,18 @@ variable_definitions:
     filters:
     - general_type == "Entertainment"
     name: entertainment
-    radius: 6560
+    radius: 10560
+    varname: sqft_price_nonres
+
+  - aggregation: ave
+    dataframe: buildings
+    decay: flat
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Hospitality"
+    name: hospitality
+    radius: 10560
     varname: sqft_price_nonres
 
   - aggregation: count
