@@ -2,7 +2,7 @@ bldg_sqft_per_job: 400.0
 
 min_unit_size: 1000
 
-max_parcel_size: 10000000
+max_parcel_size: 1100000
 
 drop_after_build: True
 
@@ -11,3 +11,15 @@ residential: True
 keep_suboptimal: True
 
 noise_scale: 100000
+
+target_weight_vacancy_gap: 1.0
+target_weight_demand: 2.0
+
+la_max_ratio: 1.2
+
+# recent mover rate decay factor
+mover_decay_final: 0.9
+
+# Historical minimum build floor
+hist_floor_factor: 0.7
+hist_floor_min_rate: 30

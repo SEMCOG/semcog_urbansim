@@ -2109,47 +2109,87 @@ def random_demolition_events(
 
 
 def parcel_average_price(use):
-    # Copied from variables.py
     parcels_wrapper = orca.get_table("parcels")
     if len(orca.get_table("nodes_walk")) == 0:
-        # if nodes isn't generated yet
         return pd.Series(index=parcels_wrapper.index)
-    return misc.reindex(orca.get_table("nodes_walk")[use], parcels_wrapper.nodeid_walk)
+    cfg = orca.get_injectable("btype_form_map")
+    form_to_col = {f: col for col, v in cfg.items() for f in v["forms"]}
+    col = form_to_col.get(use, use)
+    return misc.reindex(orca.get_table("nodes_walk")[col], parcels_wrapper.nodeid_walk)
 
 
 @orca.injectable("cost_shifters")
 def shifters():
     with open(os.path.join(misc.configs_dir(), "cost_shifters.yaml")) as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
-        if False:
-            ##### Warnining #####
-            print("WARNING: Overwriting cost shifters to be all ones for testing baseline calibration.")
-            ## Overwrite cost_shifters with constants 1 to test baseline calibration
-            shifters = cfg['calibration']['proforma_cost_shifters']
-            # Iterate through categories (residential/non_residential) and update values
-            for category in shifters:
-                for key in shifters[category]:
-                    shifters[category][key] = 1
         return cfg
 
 
 def cost_shifter_callback(self, form, df, costs):
+    if form in orca.get_injectable("res_forms"):
+        return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
     geography = shifter_cfg["calibration_geography_id"]
-    shift_type = "residential" if form == "residential" else "non_residential"
-    shifters = shifter_cfg["proforma_cost_shifters"][shift_type]
+    shifters = shifter_cfg["proforma_cost_shifters"]["non_residential"]
 
     for geo, geo_df in df.reset_index().groupby(geography):
-        shifter = shifters[geo]
+        shifter = shifters.get(geo, 1.0)
         costs[:, geo_df.index] *= shifter
     return costs
 
 
 @orca.step("feasibility")
-def feasibility(parcels):
+def feasibility(parcels, buildings, btype_form_map):
+    bldgs = buildings.to_frame(
+        ["large_area_id", "sqft_price_res", "sqft_price_nonres", "building_type_id"]
+    )
+    pcl_la_s = parcels.to_frame(["large_area_id"])["large_area_id"]
+
+    # Build per-nodes-column floor data: {col: (parcel_thr, parcel_rep, reg_avg)}
+    form_to_col = {f: col for col, v in btype_form_map.items() for f in v["forms"]}
+    _floor = {}
+    for col, v in btype_form_map.items():
+        bld = bldgs[bldgs["building_type_id"].isin(v["btypes"]) & (bldgs[v["price_col"]] > 0)]
+        la_avg = bld.groupby("large_area_id")[v["price_col"]].mean()
+        reg_avg = float(bld[v["price_col"]].mean()) if len(bld) else 0.0
+        if col == "residential":
+            # distressed-market treatment: floor LAs below 80% of regional avg;
+            # Detroit (LA5) uses Wayne County (LA3) avg as replacement
+            la_rep = la_avg.clip(lower=reg_avg * 0.8).copy()
+            la_rep[5] = float(la_avg.get(3, reg_avg))
+        else:
+            la_rep = la_avg.copy()
+        _floor[col] = (
+            pcl_la_s.map(la_avg),
+            pcl_la_s.map(la_rep).fillna(reg_avg),
+            reg_avg,
+        )
+
+    # log residential floor summary
+    thr_res, _, reg_avg_res = _floor["residential"]
+    raw_res = parcel_average_price("apartment")
+    n_below = (raw_res < thr_res.reindex(raw_res.index)).sum()
+    bld_res = bldgs[bldgs["building_type_id"].isin(btype_form_map["residential"]["btypes"]) & (bldgs["sqft_price_res"] > 0)]
+    la_avg_res = bld_res.groupby("large_area_id")["sqft_price_res"].mean()
+    print(f"  [feasibility] res: {n_below:,} parcels below LA avg → floored; "
+          f"LA5 replacement=${la_avg_res.get(3, reg_avg_res):.0f} (=LA3 avg); "
+          f"reg avg=${reg_avg_res:.0f}")
+
+    def _price_with_floor(use):
+        prices = parcel_average_price(use)
+        col = form_to_col.get(use, use)
+        if col not in _floor:
+            return prices
+        thr, rep, reg_avg = _floor[col]
+        prices = prices.where(
+            prices >= thr.reindex(prices.index),
+            rep.reindex(prices.index, fill_value=reg_avg)
+        )
+        return prices
+
     parcel_utils.run_feasibility(
         parcels,
-        parcel_average_price,
+        _price_with_floor,
         variables.parcel_is_allowed_2050,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
@@ -2225,57 +2265,185 @@ def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
     return df.fillna(0)
 
 
+# Each proforma form maps 1:1 to a building_type_id — no stochastic sampling needed.
 def probable_type(row):
-    """
-    Function to pass to form_to_btype_callback in parcels_utils.add_buildings.
-    Reads form for the given row in new buildings DataFrame, gets the
-    building type probabilities from the form_btype_distributions injectable,
-    and chooses a building type based on those probabilities.
-
-    Parameters
-    ----------
-    row : Series
-
-    Returns
-    -------
-    btype : int
-    """
+    """Return building_type_id for a new building — direct lookup from form_to_btype."""
     form = row["form"]
-    form_to_btype_dists = orca.get_injectable("form_btype_distributions")
-    btype_dists = form_to_btype_dists[form]
-    # keys() and values() guaranteed to be in same order
-    btype = np.random.choice(a=list(btype_dists.keys()), p=list(btype_dists.values()))
-    return btype
+    return orca.get_injectable("form_to_btype")[form][0]
 
 
-def register_btype_distributions(buildings: pd.DataFrame):
-    """
-    Prior to adding new buildings selected by the developer model, this
-    function registers a dictionary where keys are forms, and values are
-    dictionaries of building types. In each sub-dictionary, the keys are
-    building type IDs, and values are probabilities. These probabilities are
-    generated from distributions of building types for each form in each
-    large area.
+def build_parcel_selection_features(parcels_df, buildings_df, zones_df, year,
+                                    lookback_years=7):
+    """Compute derived parcel-level features for developer site selection scoring.
+
+    Matches the feature engineering in estimate_developer_selection.py so that
+    simulation-time scoring is consistent with estimation.
 
     Parameters
     ----------
-    buildings : DataFrame
-        Buildings DataFrame (not wrapper) at the time of registration. Must
-        include building_type_id column.
+    parcels_df   : parcel DataFrame with zone_id, census_bg_id, recent_mover_rate,
+                   and walk-distance amenity columns
+    buildings_df : buildings DataFrame with parcel_id, year_built, residential_units
+    zones_df     : zones DataFrame with percent_vacant_residential_units,
+                   jobs_within_30_min, transit_jobs_30min
+    year         : current simulation year (used for lookback window)
 
     Returns
     -------
-    None
+    DataFrame indexed by parcel_id with columns:
+        local_vacancy, development_momentum, accessibility_composite, recent_mover_rate
     """
-    form_to_btype = orca.get_injectable("form_to_btype")
-    form_btype_dists = {}
-    for form in list(form_to_btype.keys()):
-        bldgs = buildings.loc[buildings.building_type_id.isin(form_to_btype[form])]
-        bldgs_by_type = bldgs.groupby("building_type_id").size()
-        normed = bldgs_by_type / sum(bldgs_by_type)
-        form_btype_dists[form] = normed.to_dict()
+    def _get(df, col):
+        return df[col] if col in df.columns else pd.Series(np.nan, index=df.index)
 
-    orca.add_injectable("form_btype_distributions", form_btype_dists)
+    def _norm(s):
+        s = s.fillna(s.median() if not s.isna().all() else 0.0)
+        mn, mx = s.min(), s.max()
+        if mx == mn:
+            return pd.Series(0.0, index=s.index)
+        return (s - mn) / (mx - mn)
+
+    feat = pd.DataFrame(index=parcels_df.index)
+
+    # local_vacancy: zone-level pct vacant residential units
+    if "zone_id" in parcels_df.columns and "percent_vacant_residential_units" in zones_df.columns:
+        feat["local_vacancy"] = parcels_df["zone_id"].map(
+            zones_df["percent_vacant_residential_units"]
+        )
+    else:
+        feat["local_vacancy"] = np.nan
+
+    # development_momentum: annualised recent residential units per block group
+    lookback_year = year - lookback_years
+    recent_res = buildings_df[
+        (buildings_df["year_built"] >= lookback_year) &
+        (buildings_df["residential_units"] > 0)
+    ]
+    if "census_bg_id" in parcels_df.columns:
+        recent_with_bg = recent_res.join(
+            parcels_df[["census_bg_id"]], on="parcel_id", how="left"
+        )
+        bg_rate = (
+            recent_with_bg.groupby("census_bg_id")["residential_units"].sum()
+            / max(lookback_years, 1)
+        )
+        feat["development_momentum"] = (
+            parcels_df["census_bg_id"].map(bg_rate).fillna(0)
+        )
+    else:
+        feat["development_momentum"] = np.nan
+
+    # accessibility_composite: weighted combo of drive/transit jobs and walk distances
+    if "zone_id" in parcels_df.columns:
+        drive_jobs   = parcels_df["zone_id"].map(_get(zones_df, "jobs_within_30_min"))
+        transit_jobs = parcels_df["zone_id"].map(_get(zones_df, "transit_jobs_30min"))
+    else:
+        drive_jobs   = pd.Series(np.nan, index=parcels_df.index)
+        transit_jobs = pd.Series(np.nan, index=parcels_df.index)
+
+    feat["accessibility_composite"] = (
+        0.35 * _norm(drive_jobs)
+      + 0.20 * _norm(transit_jobs)
+      - 0.20 * _norm(_get(parcels_df, "grocery_stores_walk_near_max90"))
+      - 0.15 * _norm(_get(parcels_df, "fixed_route_bus_walk_near_max90"))
+      - 0.10 * _norm(_get(parcels_df, "schools_k8_walk_near_max90"))
+    )
+
+    # recent_mover_rate
+    feat["recent_mover_rate"] = _get(parcels_df, "recent_mover_rate")
+
+    # log_parcel_sqft
+    if "parcel_sqft" in parcels_df.columns:
+        feat["log_parcel_sqft"] = np.log1p(parcels_df["parcel_sqft"].clip(lower=0))
+    else:
+        feat["log_parcel_sqft"] = np.nan
+
+    # bldg_impr_land_ratio: improvement value / land value (low → underutilised)
+    if "bldgimprval" in parcels_df.columns and "landvalue" in parcels_df.columns:
+        land = parcels_df["landvalue"].clip(lower=1)
+        feat["bldg_impr_land_ratio"] = (parcels_df["bldgimprval"] / land).clip(upper=20)
+    else:
+        feat["bldg_impr_land_ratio"] = np.nan
+
+    # land_use_type_id: pass-through for per-LUT model dispatch
+    feat["land_use_type_id"] = _get(parcels_df, "land_use_type_id")
+
+    return feat
+
+
+def _score_with_model(feasibility, model_entry, parcel_features_df):
+    """Score a feasibility slice using one serialised logistic regression model.
+
+    Returns a pd.Series of selection probabilities (softmax of linear utility).
+    """
+    feature_cols = model_entry["features"]
+    coef_arr     = np.array(model_entry["coef"])
+    intercept    = float(model_entry["intercept"])
+    mean_arr     = np.array(model_entry["scaler_mean"])
+    std_arr      = np.array(model_entry["scaler_std"])
+
+    feat = pd.DataFrame(index=feasibility.index)
+
+    avail = [c for c in feature_cols if c in parcel_features_df.columns]
+    if avail:
+        feat = feat.join(parcel_features_df[avail], how="left")
+
+    feat = feat.reindex(columns=feature_cols).fillna(0.0)
+    X_sc = (feat.values.astype(float) - mean_arr) / np.where(std_arr > 0, std_arr, 1.0)
+    utility = X_sc.dot(coef_arr) + intercept
+    u_shifted = utility - utility.max()
+    exp_u = np.exp(u_shifted)
+    return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
+
+
+def make_res_selection_func(lut_models, parcel_features_df):
+    """Return a custom_selection_func closure for residential developer site selection.
+
+    Uses per-LUT logistic regression coefficients estimated from revealed developer
+    choices.  Each parcel is scored by the model trained on its land_use_type_id;
+    LUTs without a dedicated model fall back to the pooled model.
+
+    Parameters
+    ----------
+    lut_models : dict
+        Content of the "residential" key from developer_selection_coefs.yaml.
+        Keys: "fallback" (always present) and integer LUT IDs for active LUTs.
+    parcel_features_df : pd.DataFrame
+        Pre-loaded parcel-level feature columns (index = parcel_id).
+        Must include "land_use_type_id" for per-LUT dispatch.
+    """
+    fallback = lut_models["fallback"]
+    per_lut  = {k: v for k, v in lut_models.items() if k != "fallback"}
+
+    def score(dev, df, p, target_units):
+        """custom_selection_func signature: (Developer, df, p, target_units) → build_idx."""
+        from developer import proposal_select
+
+        probs = pd.Series(0.0, index=df.index)
+
+        if "land_use_type_id" in parcel_features_df.columns and per_lut:
+            lut_col = parcel_features_df["land_use_type_id"].reindex(df.index)
+            for lut_id, grp_idx in lut_col.groupby(lut_col).groups.items():
+                model_entry = per_lut.get(int(lut_id), fallback)
+                slice_probs = _score_with_model(df.loc[grp_idx], model_entry, parcel_features_df)
+                probs.loc[grp_idx] = slice_probs.values
+        else:
+            probs = _score_with_model(df, fallback, parcel_features_df)
+
+        # Re-normalise to a numpy array that sums to exactly 1.0
+        p_arr = probs.values.astype(float)
+        p_arr = np.clip(p_arr, 0.0, None)
+        total = p_arr.sum()
+        if total > 0:
+            p_arr /= total
+        else:
+            p_arr = np.ones(len(p_arr)) / len(p_arr)
+        # Correct any floating-point residual so np.random.choice is satisfied
+        p_arr[-1] += 1.0 - p_arr.sum()
+
+        return proposal_select.weighted_random_choice(df, p_arr, target_units)
+
+    return score
 
 
 def run_developer(
@@ -2312,13 +2480,16 @@ def run_developer(
         str_or_buffer=cfg,
     )
 
-    print(
-        (
-            "{:,} feasible buildings before running developer".format(
-                len(dev.feasibility)
-            )
-        )
-    )
+    print("{:,} feasible buildings before running developer".format(len(dev.feasibility)))
+
+    # weighted_random_choice uses max_profit/parcel_size as probability weights.
+    # Zero parcel_size → inf weight; multiple inf → NaN probabilities → crash.
+    # Negative/zero max_profit also invalid. Filter both before pick().
+    if profit_to_prob_func is None and custom_selection_func is None:
+        ps = parcel_size.reindex(dev.feasibility.index).fillna(0)
+        dev.feasibility = dev.feasibility[
+            (dev.feasibility["max_profit"] > 0) & (ps > 0)
+        ]
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
     orca.add_table("feasibility_" + str(geoid), dev.feasibility)
@@ -2358,137 +2529,232 @@ def run_developer(
     )
 
 
-# @orca.step("residential_developer")
-# def residential_developer(households, parcels, target_vacancies):
-#     target_vacancies = target_vacancies.to_frame()
-#     target_vacancies = target_vacancies[
-#         target_vacancies.year == orca.get_injectable("year")
-#     ]
-#     orig_buildings = orca.get_table("buildings").to_frame(
-#         ["residential_units", "large_area_id", "building_type_id"]
-#     )
-#     for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
-#         la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
-#         target_vacancy = float(
-#             target_vacancies[
-#                 target_vacancies.large_area_id == lid
-#             ].res_target_vacancy_rate
-#         )
-#         num_agents = (households.large_area_id == lid).sum()
-#         num_units = la_orig_buildings.residential_units.sum()
-
-#         print("Number of agents: {:,}".format(num_agents))
-#         print("Number of agent spaces: {:,}".format(int(num_units)))
-#         assert target_vacancy < 1.0
-#         target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
-#         print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
-#         print(
-#             "Target vacancy = {:.2f}, target of new units = {:,}".format(
-#                 target_vacancy, target_units
-#             )
-#         )
-
-#         register_btype_distributions(la_orig_buildings)
-#         run_developer(
-#             target_units,
-#             lid,
-#             "residential",
-#             orca.get_table("buildings"),
-#             "residential_units",
-#             parcels.parcel_size,
-#             parcels.ave_unit_size,
-#             parcels.total_units,
-#             "res_developer.yaml",
-#             add_more_columns_callback=add_extra_columns_res,
-#         )
+@orca.injectable("res_developer_selection_coefs", cache=True)
+def res_developer_selection_coefs():
+    coef_path = os.path.join(misc.configs_dir(), "developer_selection_coefs.yaml")
+    if not os.path.exists(coef_path):
+        return None
+    with open(coef_path) as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 
 @orca.step("residential_developer")
 def residential_developer(
-    households, parcels, target_vacancies_mcd, mcd_total, debug_res_developer
+    households, parcels, target_vacancies_mcd, debug_res_developer, res_forms
 ):
     """
-    Simulate residential property development process
+    Simulate residential development per MCD in three steps:
 
-    This function simulates the process of residential property development for MCDs.
-    It calculates the target number of new residential units to be developed based on target vacancies,
-    existing units, and desired occupancy rates. The function also updates the parcel and building tables
-    to reflect the new developments and their occupancy.
+    1. Target units for MCD: blend two signals in housing units
+         target_raw = w_gap*V + w_demand*R
+         V = vacancy_gap_signed, R = mover_index × decay(year)
+         decay: 1.0 in base_year → mover_decay_final in final_year, linear
+       Hard ceiling: feasible_units from pro-forma feasibility.
 
-    Parameters:
-    households (orca.DataFrameWrapper): Household data table.
-    parcels (orca.DataFrameWrapper): Parcels data table.
-    target_vacancies_mcd (orca.DataFrameWrapper): Target vacancies by MCD.
-    mcd_total (orca.DataFrameWrapper): MCD households targets
-    debug_res_developer (orca.DataFrameWrapper): Debugging table
+    2. LA alignment: scale each large_area's MCD targets so total built
+       does not exceed la_max_ratio × LA 7-yr rolling rate.
 
-    Returns:
-    None
+    3. Site selection: using per-LUT logistic site selection.
     """
     # get current year
     year = orca.get_injectable("year")
 
     # get target vacancies by mcd for current year
-    target_vacancies = target_vacancies_mcd.to_frame()
-    # ## TEST without MCD control: set vacancy rate to baseyear 2020
-    # target_vacancies = target_vacancies[str(2020)]
+    target_vacancies = target_vacancies_mcd.to_frame()[str(year)]
 
-    target_vacancies = target_vacancies[str(year)]
-
-    # get original buildings
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "semmcd", "building_type_id"]
+        ["residential_units", "semmcd", "building_type_id",
+         "year_built", "recent_mover_rate"]
     )
 
-    # the mcd_total for year
-    mcd_total = mcd_total.to_frame([str(year)])[str(year)]
+    with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
+        _res_cfg = yaml.load(f, Loader=yaml.FullLoader)
+    w_gap    = _res_cfg.get("target_weight_vacancy_gap", 0.5)
+    w_demand = _res_cfg.get("target_weight_demand",      0.5)
+    la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
+    hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
+    hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
+    lookback_year = year - 7
 
-    # load debugger df
+    mover_decay_final = _res_cfg.get("mover_decay_final", 0.5)
+    base_year  = orca.get_injectable("base_year")
+    # C signal decays linearly from full weight in base year to mover_decay_final by final year
+    mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
+
+    # compute 2014-2020 per-MCD build rates for hist_floor
+    _hist = orig_buildings[orig_buildings.year_built.between(2014, 2020)]
+    mcd_hist_rate = (_hist.groupby("semmcd")["residential_units"].sum() / 7.0).to_dict()
+
+    # build site-selection func from estimated coefs; fall back to profit-rank if missing
+    _coefs = orca.get_injectable("res_developer_selection_coefs")
+    custom_sel_func = None
+    if _coefs and "residential" in _coefs:
+        _rawp = orca.get_table("parcels").to_frame([
+            "zone_id", "census_bg_id", "recent_mover_rate",
+            "grocery_stores_walk_near_max90", "fixed_route_bus_walk_near_max90",
+            "schools_k8_walk_near_max90", "parcel_sqft", "bldgimprval",
+            "landvalue", "land_use_type_id",
+        ])
+        _rawb = orca.get_table("buildings").to_frame(
+            ["parcel_id", "year_built", "residential_units"]
+        )
+        _z = orca.get_table("zones").to_frame([
+            "percent_vacant_residential_units", "jobs_within_30_min", "transit_jobs_30min",
+        ])
+        _p = build_parcel_selection_features(
+            _rawp, _rawb, _z, year
+        )
+        _lut_models = _coefs["residential"]
+        custom_sel_func = make_res_selection_func(_lut_models, _p)
+        n_lut = len([k for k in _lut_models if k != "fallback"])
+        print(f"  Using estimated site-selection model (fallback + {n_lut} per-LUT models)")
+    else:
+        print("  No site-selection coefs found — using profit-rank fallback")
+
     debug_res_developer = debug_res_developer.to_frame()
 
-    # loop through mcd id
-    for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
-        print(f"developing residential units for {mcdid}")
+    # LA rates for step 2 alignment
+    pcl_la = orca.get_table("parcels").to_frame(["semmcd", "large_area_id"])
+    mcd_to_la = pcl_la.groupby("semmcd")["large_area_id"].first()
+    orig_buildings_la = orig_buildings.copy()
+    orig_buildings_la["large_area_id"] = orig_buildings_la["semmcd"].map(mcd_to_la)
+    # rolling rate excludes current year (events/refiner are not yet "history")
+    la_sim_rate = (
+        orig_buildings_la[orig_buildings_la.year_built.between(lookback_year, year - 1)]
+        .groupby("large_area_id")["residential_units"].sum() / 7.0
+    )
+    # 2014–2020 historical baseline — floor for LA cap so it can't self-deflate to zero
+    la_hist_rate = (
+        orig_buildings_la[orig_buildings_la.year_built.between(2014, 2020)]
+        .groupby("large_area_id")["residential_units"].sum() / 7.0
+    )
+    # units already added this year by events/refiner before developer runs
+    la_events = (
+        orig_buildings_la[orig_buildings_la.year_built == year]
+        .groupby("large_area_id")["residential_units"].sum()
+    )
 
-        # get original buildings in current mcd
+    # compute per-MCD target_units
+    mcd_data = {}
+    for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
+
         mcd_orig_buildings = orig_buildings[orig_buildings.semmcd == mcdid]
 
-        # handle missing mcdid
-        if mcdid not in mcd_total.index:
+        if mcdid not in target_vacancies.index:
             continue
-
-        # get target vacancy
         target_vacancy = float(target_vacancies[mcdid])
 
-        # current hh from hh table
-        cur_agents = (households.semmcd == mcdid).sum()
-
-        # target hh from mcd_total table
-        target_agents = mcd_total.loc[mcdid]
-
-        # number of current total housing units
-        num_units = mcd_orig_buildings.residential_units.sum()
-
-        print("Number of current agents: {:,}".format(cur_agents))
-        print("Number of target agents: {:,}".format(target_agents))
-        print("Number of agent spaces: {:,}".format(int(num_units)))
-        print("Current vacancy = {:.2f}".format(1.0 - cur_agents / float(num_units)))
+        cur_agents = int((households.semmcd == mcdid).sum())
+        num_units  = int(mcd_orig_buildings.residential_units.sum())
         assert target_vacancy < 1.0
-        target_units = int(max((target_agents / (1.0 - target_vacancy) - num_units), 0))
+
+        vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
+        mover_index = (mcd_orig_buildings.recent_mover_rate * mcd_orig_buildings.residential_units).sum()
+        mover_index /= 10 # 10yr avg
+
+        V_units = vacancy_gap_signed
+        R_units = max(0, mover_index) * mover_decay
+        target_units_raw = w_gap * V_units + w_demand * R_units
+
+        feas_df   = orca.get_table("feasibility_" + str(mcdid)).to_frame()
+        res_feas  = feas_df[feas_df["form"].isin(res_forms)]
+        profitable = res_feas[res_feas["max_profit"] > 0]
+        if len(profitable) > 0:
+            ave_unit_sz = parcels.ave_unit_size.reindex(profitable.index).fillna(1000)
+            feasible_units = int(
+                (profitable["residential_sqft"] / ave_unit_sz).clip(lower=0).sum()
+            )
+        else:
+            feasible_units = 0
+        # all_feasible: includes suboptimal proposals (keep_suboptimal=True)
+        # used by historical floor to allow distressed-market builds
+        if len(res_feas) > 0:
+            ave_unit_sz_all = parcels.ave_unit_size.reindex(res_feas.index).fillna(1000)
+            all_feasible_units = int(
+                (res_feas["residential_sqft"] / ave_unit_sz_all).clip(lower=0).sum()
+            )
+        else:
+            all_feasible_units = 0
+
+        target_units = int(np.clip(target_units_raw, 0, feasible_units))
+
+        mcd_data[mcdid] = {
+            "target_units": target_units, "feasible_units": feasible_units,
+            "all_feasible_units": all_feasible_units,
+            "cur_agents": cur_agents,
+            "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
+            "mover_index": mover_index, "V_units": V_units,
+            "R_units": R_units,
+            "target_raw": target_units_raw, "la_scale": 1.0,
+        }
+
+    # historical minimum floor — before LA alignment so LA cap is the hard ceiling
+    n_floored = 0
+    for mcdid, d in mcd_data.items():
+        hist_rate = mcd_hist_rate.get(mcdid, 0)
+        if hist_rate < hist_floor_min_rate:
+            continue
+        floor = int(hist_rate * hist_floor_factor)
+        if d["target_units"] < floor:
+            prev = d["target_units"]
+            # use all_feasible_units (incl. suboptimal) so distressed markets aren't
+            # blocked by the profitable-only cap
+            d["target_units"] = min(floor, d["all_feasible_units"])
+            if d["target_units"] > prev:
+                n_floored += 1
+    if n_floored:
+        print(f"  Historical floor applied to {n_floored} MCDs "
+              f"(factor={hist_floor_factor}, min_rate={hist_floor_min_rate})")
+
+    # LA alignment — hard ceiling applied after hist_floor
+    for la_id, la_mcd_ids in mcd_to_la.groupby(mcd_to_la).groups.items():
+        active = [m for m in la_mcd_ids if m in mcd_data]
+        if not active:
+            continue
+        la_sum    = sum(mcd_data[m]["target_units"] for m in active)
+        # floor la_rate at hist_floor_factor × historical baseline (Fix 2: prevents cap collapse)
+        la_rate   = max(float(la_sim_rate.get(la_id, 0)),
+                        float(la_hist_rate.get(la_id, 0)) * hist_floor_factor)
+        # subtract units already built by events/refiner this year (Fix 1: no double-count)
+        la_ev     = float(la_events.get(la_id, 0))
+        la_allowed = max(0, la_rate * la_max_ratio - la_ev)
+        if la_sum <= 0 or la_allowed <= 0:
+            continue
+        scale = float(min(la_allowed / la_sum, la_max_ratio))
+        if abs(scale - 1.0) < 1e-4:
+            continue
+        print("  LA {}: raw_sum={:,} la_rate={:.0f} la_ev={:.0f} → scale={:.3f}".format(
+            la_id, la_sum, la_rate, la_ev, scale))
+        for m in active:
+            d = mcd_data[m]
+            d["target_units"] = int(np.clip(d["target_units"] * scale, 0, d["feasible_units"]))
+            d["la_scale"] = round(scale, 4)
+
+    # snapshot units before developer loop to isolate developer additions from refiner
+    _units_before = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
+    _units_before = int(_units_before[_units_before["year_built"] == year]["residential_units"].sum())
+
+    # start building
+    for mcdid, d in mcd_data.items():
+        target_units  = d["target_units"]
+        feasible_units = d["feasible_units"]
+
         print(
-            "Target vacancy = {:.2f}, target of new units = {:,}\n".format(
-                target_vacancy, target_units
+            "developing residential for MCD {} | "
+            "agents={:,} units={:,} vac_gap={:+,} | "
+            "V={:+.0f} R={:.0f} raw={:.0f} | "
+            "feasible={:,} la_scale={:.3f} target={:,}\n".format(
+                mcdid,
+                d["cur_agents"], d["num_units"], d["vacancy_gap"],
+                d["V_units"], d["R_units"], d["target_raw"],
+                feasible_units, d["la_scale"], target_units,
             )
         )
 
-        # calculate prior form_btype_distributions
-        register_btype_distributions(mcd_orig_buildings)
-
-        # run developer step
         units_added, parcels_idx_to_update = run_developer(
             target_units,
             mcdid,
-            "residential",
+            res_forms,
             orca.get_table("buildings"),
             "residential_units",
             parcels.parcel_size,
@@ -2496,34 +2762,58 @@ def residential_developer(
             parcels.total_units,
             "res_developer.yaml",
             add_more_columns_callback=add_extra_columns_res,
+            custom_selection_func=custom_sel_func,
         )
 
-        # update pct_undev to 100 if theres only one building in the parcel
         pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-
-        # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
         debug_res_developer = pd.concat(
             [debug_res_developer, pd.DataFrame([{
-                "year": year,
-                "mcd": mcdid,
-                "target_units": target_units,
-                "units_added": units_added,
+                "year":          year,
+                "mcd":           mcdid,
+                "cur_agents":    d["cur_agents"],
+                "num_units":     d["num_units"],
+                "vacancy_gap":   d["vacancy_gap"],
+                "mover_index":   round(d["mover_index"], 3),
+                "V_units":       round(d["V_units"], 1),
+                "R_units":       round(d["R_units"], 1),
+                "target_raw":    round(d["target_raw"], 1),
+                "la_scale":      d["la_scale"],
+                "feasible_units": feasible_units,
+                "target_units":  target_units,
+                "units_added":   units_added,
             }])],
             ignore_index=True,
         )
         if units_added < target_units:
             print(
-                " ***  Not enough housing units have been built by the developer model for mcd %s, target: %s, built: %s"
+                " ***  Not enough housing units built for MCD %s, target: %s, built: %s"
                 % (mcdid, target_units, int(units_added))
             )
+
+    # ── annual log ────────────────────────────────────────────────────────────
+    nb = orca.get_table("buildings").to_frame(["year_built", "residential_units", "building_type_id", "parcel_id"])
+    nb = nb[nb["year_built"] == year].copy()
+    nb["large_area_id"] = nb["parcel_id"].map(pcl_la["large_area_id"])
+
+    # reg_7yr = rolling 7yr average of all prior-year builds (developer + events)
+    reg_7yr  = orig_buildings[
+        (orig_buildings.year_built >= lookback_year) & (orig_buildings.year_built < year)
+    ].residential_units.sum() / 7.0
+    la_total = nb.groupby("large_area_id")["residential_units"].sum()
+    # la_events already computed above (units added by events/refiner before developer ran)
+    la_dev   = (la_total.subtract(la_events, fill_value=0)).clip(lower=0)
+    reg_dev  = int(la_dev.sum())
+    run_name = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
+    utils.log_res_developer_year(year, reg_7yr, reg_dev, la_hist_rate, la_dev, la_events, nb, run_name)
+
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies):
+def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
     """
     Non-residential space developer step.
 
@@ -2565,11 +2855,8 @@ def non_residential_developer(jobs, parcels, target_vacancies):
             ].non_res_target_vacancy_rate
         )
 
-        # #90
-        # loop through building form
-        for form in ["office", "retail", "industrial", "medical", "entertainment"]:
-            # calculate num_agents
-            # form_agents = ((jobs.large_area_id == lid) & (jobs.home_based_status == 0)).sum()
+        # loop through non-residential building forms (1:1 with building_type_id)
+        for form in nonres_forms:
             form_btype_ids = orca.get_injectable("form_to_btype")[form]
             form_blds = la_orig_buildings[la_orig_buildings.building_type_id.isin(form_btype_ids)]
             # number of non-homebased jobs in the large area
@@ -2591,9 +2878,6 @@ def non_residential_developer(jobs, parcels, target_vacancies):
                     target_vacancy, target_units
                 )
             )
-
-            # calculate prior form_btype_distributions
-            register_btype_distributions(la_orig_buildings)
 
             # run nonres developer step
             spaces_added, parcels_idx_to_update = run_developer(
