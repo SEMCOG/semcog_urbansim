@@ -1937,9 +1937,7 @@ def scheduled_demolition_events(
     jobs,
     iter_var,
     events_deletion,
-    multi_parcel_buildings,
 ):
-    multi_parcel_buildings = multi_parcel_buildings.to_frame()
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     buildings_columns = buildings.local_columns
@@ -1974,19 +1972,9 @@ def scheduled_demolition_events(
         jobs = jobs.to_frame(jobs.local_columns)
         jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
-        # Todo: parcel use need to be updated
-        # Todo: parcel use need to be updated
-        # get parcel_id if theres only one building in the parcel
-        b_with_multi_parcels = multi_parcel_buildings[
-            multi_parcel_buildings.building_id.isin(drop_buildings.index)
-        ]
         parcels_idx_to_update = [
             pid
-            # for pid in drop_buildings.parcel_id
-            for pid in set(
-                drop_buildings.parcel_id.values.tolist()
-                + b_with_multi_parcels.parcel_id.values.tolist()
-            )
+            for pid in drop_buildings.parcel_id.values.tolist()
             if pid not in new_buildings_table.parcel_id
         ]
         # update pct_undev to 0 if theres only one building in the parcel
@@ -1997,7 +1985,7 @@ def scheduled_demolition_events(
 
 @orca.step()
 def random_demolition_events(
-    buildings, parcels, households, jobs, year, demolition_rates, multi_parcel_buildings
+    buildings, parcels, households, jobs, year, demolition_rates
 ):
     demolition_rates = demolition_rates.to_frame()
     demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2020)
@@ -2005,7 +1993,6 @@ def random_demolition_events(
     buildings = buildings.to_frame(
         buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
     )
-    multi_parcel_buildings = multi_parcel_buildings.to_frame()
 
     b = buildings.copy()
     allowed = variables.parcel_is_allowed_2050()
@@ -2089,20 +2076,11 @@ def random_demolition_events(
     jobs = jobs.to_frame(jobs.local_columns)
     jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
     orca.add_table("jobs", jobs)
-    # Todo: parcel use need to be updated
-    # get parcel_id if theres only one building in the parcel
-    b_with_multi_parcels = multi_parcel_buildings[
-        multi_parcel_buildings.building_id.isin(drop_buildings.index)
-    ]
     parcels_idx_to_update = [
         pid
-        for pid in set(
-            drop_buildings.parcel_id.values.tolist()
-            + b_with_multi_parcels.parcel_id.values.tolist()
-        )
+        for pid in drop_buildings.parcel_id.values.tolist()
         if pid not in new_buildings_table.parcel_id
     ]
-    # update pct_undev to 0 if theres only one building in the parcel
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     # update parcels table
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
@@ -2718,7 +2696,15 @@ def residential_developer(
         # subtract units already built by events/refiner this year (Fix 1: no double-count)
         la_ev     = float(la_events.get(la_id, 0))
         la_allowed = max(0, la_rate * la_max_ratio - la_ev)
-        if la_sum <= 0 or la_allowed <= 0:
+        if la_sum <= 0:
+            continue
+        if la_allowed <= 0:
+            # events already met or exceeded LA cap — zero out all dev targets
+            for m in active:
+                mcd_data[m]["target_units"] = 0
+                mcd_data[m]["la_scale"] = 0.0
+            print("  LA {}: events={:.0f} ≥ cap={:.0f} → dev=0 (all MCD targets zeroed)".format(
+                la_id, la_ev, la_rate * la_max_ratio))
             continue
         scale = float(min(la_allowed / la_sum, la_max_ratio))
         if abs(scale - 1.0) < 1e-4:
