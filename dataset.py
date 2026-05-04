@@ -50,7 +50,6 @@ for name in [
     "target_vacancies_mcd",
     "demolition_rates",
     "landmark_worksites",
-    "multi_parcel_buildings",
     "mcd_total",
     "dropped_buildings",
     "bg_hh_increase",
