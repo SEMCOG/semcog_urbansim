@@ -1,0 +1,48 @@
+site_name: SEMCOG Forecast Input Data Wiki
+site_description: Data developer reference for UrbanSim model input tables
+site_author: SEMCOG
+docs_dir: data_wiki
+site_dir: data_wiki_site
+
+theme:
+  name: material
+  palette:
+    primary: teal
+    accent: green
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.integrate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Data Domains:
+    - Land Use: domains/land-use.md
+    - Geography: domains/geography.md
+    - Demographics: domains/demographics.md
+    - Employment: domains/employment.md
+    - Development & Context: domains/development-context.md
+    - Street Networks: domains/networks.md
+    - Accessibility: domains/accessibility.md
+    - Travel Data: domains/travel.md
+  - Reference:
+    - Table Catalog: reference/table-catalog.md
+  - Validation:
+    - How to Validate: validation/how-to-validate.md

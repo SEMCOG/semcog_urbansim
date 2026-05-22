@@ -9,6 +9,11 @@ SEMCOG
 [SEMCOG]: http://www.semcog.org/
 [SEMCOG 2050 forecast]: https://maps.semcog.org/forecast/
 
+### Documentation
+
+- [Model Wiki](docs/index.md) — simulation architecture, model components, configuration, and how to run
+- [Input Data Wiki](data_wiki/index.md) — reference for data developers: all input tables, schemas, validation, and update procedures
+
 ### Locate `semcog_urbansim` project folder
 #### Project folder and data
 Make sure folder `D:\projects\semcog_urbansim` has both repo and `data` in it.
