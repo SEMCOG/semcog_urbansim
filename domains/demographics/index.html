@@ -1,0 +1,1599 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data developer reference for UrbanSim model input tables">
+      
+      
+        <meta name="author" content="SEMCOG">
+      
+      
+      
+        <link rel="prev" href="../geography/">
+      
+      
+        <link rel="next" href="../employment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Demographics - SEMCOG Forecast Input Data Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#demographics" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SEMCOG Forecast Input Data Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Demographics
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../land-use/" class="md-tabs__link">
+          
+  
+  
+  Data Domains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/table-catalog/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SEMCOG Forecast Input Data Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Domains
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Domains
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-use/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land Use
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geography/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demographics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demographics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tables-in-this-domain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tables in This Domain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#households-persons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Households &amp; Persons
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Households &amp; Persons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#households" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        households
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        persons
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-totals-population-forecasts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Totals &amp; Population Forecasts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Control Totals &amp; Population Forecasts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annual_household_control_totals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        annual_household_control_totals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remi_pop_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remi_pop_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcd_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mcd_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-target-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate &amp; Target Tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rate &amp; Target Tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annual_relocation_rates_for_households" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        annual_relocation_rates_for_households
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#income_growth_rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        income_growth_rates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#target_vacancies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        target_vacancies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#target_vacancies_mcd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        target_vacancies_mcd
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group_quarters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        group_quarters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group_quarters_households" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        group_quarters_households
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group_quarters_control_totals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        group_quarters_control_totals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-checklist-new-forecast-cycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Checklist (New Forecast Cycle)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../employment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Employment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development & Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Street Networks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../accessibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../travel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Travel Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/table-catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="demographics">Demographics<a class="headerlink" href="#demographics" title="Permanent link">&para;</a></h1>
+<p><strong>Primary sources:</strong> Population synthesis outputs, REMI model exports, rate tables (CSV/Excel)<br />
+<strong>Build scripts:</strong> <code>forecast_controls/</code> pipeline (Steps 1–7), <code>group_quarters/gq_synth.py</code></p>
+<p>This domain covers the base-year synthetic population (households, persons, group quarters), annual household growth control totals from REMI, and supporting rate and target tables.</p>
+<hr />
+<h2 id="tables-in-this-domain">Tables in This Domain<a class="headerlink" href="#tables-in-this-domain" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Description</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>households</code></td>
+<td>Base-year synthetic households, placed in buildings</td>
+<td>Population synthesis + placement</td>
+</tr>
+<tr>
+<td><code>persons</code></td>
+<td>All individuals linked to households</td>
+<td>Population synthesis</td>
+</tr>
+<tr>
+<td><code>annual_household_control_totals</code></td>
+<td>Target HH counts by segment × year</td>
+<td>Forecast controls pipeline</td>
+</tr>
+<tr>
+<td><code>remi_pop_total</code></td>
+<td>Total population by large area × year</td>
+<td>REMI export</td>
+</tr>
+<tr>
+<td><code>annual_relocation_rates_for_households</code></td>
+<td>Household relocation probability by age/income</td>
+<td>Excel rate table</td>
+</tr>
+<tr>
+<td><code>income_growth_rates</code></td>
+<td>Annual income growth by large area</td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>target_vacancies</code></td>
+<td>Target residential vacancy rates by large area × year</td>
+<td>Excel</td>
+</tr>
+<tr>
+<td><code>target_vacancies_mcd</code></td>
+<td>City-level residential vacancy targets</td>
+<td>Excel</td>
+</tr>
+<tr>
+<td><code>mcd_total</code></td>
+<td>Target household counts by MCD × year</td>
+<td>Forecast controls pipeline</td>
+</tr>
+<tr>
+<td><code>group_quarters</code></td>
+<td>Group quarters persons, assigned to GQ buildings</td>
+<td>GQ synthesis</td>
+</tr>
+<tr>
+<td><code>group_quarters_households</code></td>
+<td>GQ facility-level aggregate</td>
+<td>GQ synthesis</td>
+</tr>
+<tr>
+<td><code>group_quarters_control_totals</code></td>
+<td>Target GQ population by city × year</td>
+<td>Excel</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="households-persons">Households &amp; Persons<a class="headerlink" href="#households-persons" title="Permanent link">&para;</a></h2>
+<h3 id="households"><code>households</code><a class="headerlink" href="#households" title="Permanent link">&para;</a></h3>
+<p>Base-year synthetic household table. Generated by PopulationSim and placed into buildings using voter registration data as a placement guide.</p>
+<p><strong>Index:</strong> <code>household_id</code> (unique)</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>household_id</code></td>
+<td>int32</td>
+<td>unique, no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>building_id</code></td>
+<td>int32</td>
+<td>join → <code>buildings</code>, no null</td>
+<td>Placement result; -1 = unplaced</td>
+</tr>
+<tr>
+<td><code>persons</code></td>
+<td>int8</td>
+<td>range [1–20], no null</td>
+<td>Household size</td>
+</tr>
+<tr>
+<td><code>workers</code></td>
+<td>int8</td>
+<td>range [0–18], no null</td>
+<td>Employed workers</td>
+</tr>
+<tr>
+<td><code>age_of_head</code></td>
+<td>int8</td>
+<td>range [15–100], no null</td>
+<td>Age of head</td>
+</tr>
+<tr>
+<td><code>income</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>Annual income ($); negatives set to 0</td>
+</tr>
+<tr>
+<td><code>children</code></td>
+<td>int8</td>
+<td>range [0–14], no null</td>
+<td>Children under 18</td>
+</tr>
+<tr>
+<td><code>cars</code></td>
+<td>int8</td>
+<td>values: 0–6</td>
+<td>Vehicle count</td>
+</tr>
+<tr>
+<td><code>race_id</code></td>
+<td>int8</td>
+<td>values: 1,2,3,4</td>
+<td>1=White, 2=Black, 3=Asian, 4=Other</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common issues:</strong>
+- <code>workers &gt; persons</code> — invalid combination; flag in synthesis output
+- <code>building_id = -1</code> — unplaced households are assigned to pseudo-buildings at startup, then placed by the HLCM
+- Negative income — set to 0 in the build pipeline (intentional)</p>
+<h3 id="persons"><code>persons</code><a class="headerlink" href="#persons" title="Permanent link">&para;</a></h3>
+<p>All individuals in base-year synthetic households. One row per person.</p>
+<p><strong>Index:</strong> <code>person_id</code> (unique)</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>person_id</code></td>
+<td>int32</td>
+<td>unique, no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>household_id</code></td>
+<td>int32</td>
+<td>join → <code>households</code>, no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>age</code></td>
+<td>int8</td>
+<td>range [0–94], no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sex</code></td>
+<td>int8</td>
+<td>values: 1, 2</td>
+<td>1=male, 2=female</td>
+</tr>
+<tr>
+<td><code>race_id</code></td>
+<td>int8</td>
+<td>values: 1,2,3,4</td>
+<td></td>
+</tr>
+<tr>
+<td><code>worker</code></td>
+<td>int8</td>
+<td>values: 0, 1</td>
+<td>1=employed</td>
+</tr>
+<tr>
+<td><code>relate</code></td>
+<td>int8</td>
+<td>values: 0–15</td>
+<td>Relationship to head (ACS codes); 0=head</td>
+</tr>
+<tr>
+<td><code>member_id</code></td>
+<td>int8</td>
+<td>range [1–20], no null</td>
+<td>Position in household (1=head)</td>
+</tr>
+<tr>
+<td><code>industry</code></td>
+<td>int8</td>
+<td>no null</td>
+<td>Aggregated NAICS industry</td>
+</tr>
+<tr>
+<td><code>school_grade</code></td>
+<td>int8</td>
+<td>no null</td>
+<td>Enrolled grade; -1=not enrolled</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common issues:</strong>
+- Persons with <code>household_id</code> not in <code>households</code> — orphaned persons; drop or investigate
+- Each household should have exactly one <code>relate = 0</code> (the head)</p>
+<hr />
+<h2 id="control-totals-population-forecasts">Control Totals &amp; Population Forecasts<a class="headerlink" href="#control-totals-population-forecasts" title="Permanent link">&para;</a></h2>
+<h3 id="annual_household_control_totals"><code>annual_household_control_totals</code><a class="headerlink" href="#annual_household_control_totals" title="Permanent link">&para;</a></h3>
+<p>Drives how many households exist in each large area × demographic segment each year. The most critical table for forecast outcomes.</p>
+<p><strong>Index:</strong> <code>year</code><br />
+<strong>Generated by:</strong> <code>forecast_controls/</code> pipeline (Steps 1–7), which converts REMI population exports into segmented household targets</p>
+<p><strong>Columns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Allowed Values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>year</code></td>
+<td>int16</td>
+<td>must cover all forecast years</td>
+<td>Index</td>
+</tr>
+<tr>
+<td><code>large_area_id</code></td>
+<td>int16</td>
+<td>8 valid codes</td>
+<td>One of the 8 modeling zones</td>
+</tr>
+<tr>
+<td><code>age_of_head_min/max</code></td>
+<td>int8</td>
+<td>bracket bounds</td>
+<td><code>-1</code> = open-ended upper bound</td>
+</tr>
+<tr>
+<td><code>persons_min/max</code></td>
+<td>int8</td>
+<td>bracket bounds</td>
+<td></td>
+</tr>
+<tr>
+<td><code>workers_min/max</code></td>
+<td>int8</td>
+<td>bracket bounds</td>
+<td></td>
+</tr>
+<tr>
+<td><code>income_min/max</code></td>
+<td>int32</td>
+<td>bracket bounds</td>
+<td></td>
+</tr>
+<tr>
+<td><code>children_min/max</code></td>
+<td>int8</td>
+<td>bracket bounds</td>
+<td></td>
+</tr>
+<tr>
+<td><code>cars_min/max</code></td>
+<td>int8</td>
+<td>bracket bounds</td>
+<td></td>
+</tr>
+<tr>
+<td><code>race_id</code></td>
+<td>int8</td>
+<td>1,2,3,4</td>
+<td></td>
+</tr>
+<tr>
+<td><code>total_number_of_households</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>Target HH count for this segment × year</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The <code>-1</code> sentinel</strong> in <code>_max</code> columns means "no upper bound" (open-ended category).</p>
+<p><strong>Common issues:</strong>
+- Missing years — all forecast years must be present; run the pipeline for any missing years
+- Segment totals should sum to plausible regional totals — cross-check against <code>remi_pop_total</code></p>
+<h3 id="remi_pop_total"><code>remi_pop_total</code><a class="headerlink" href="#remi_pop_total" title="Permanent link">&para;</a></h3>
+<p>Total population by large area × year, directly from REMI. Used to calibrate HH controls and as a model input for population scaling.</p>
+<p><strong>Index:</strong> <code>large_area_id</code> (unique)<br />
+<strong>Structure:</strong> 8 rows × year columns (one column per simulation year)</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>large_area_id</code></td>
+<td>int16</td>
+<td>Row index</td>
+</tr>
+<tr>
+<td>one column per year</td>
+<td>int32</td>
+<td>Total population including group quarters</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Update procedure:</strong> Export regional population totals from REMI by large area × year. Save with <code>large_area_id</code> as index and one column per year.</p>
+<h3 id="mcd_total"><code>mcd_total</code><a class="headerlink" href="#mcd_total" title="Permanent link">&para;</a></h3>
+<p>Target household counts by MCD × year. Used by <code>mcd_hu_sampling</code> to control city-level household growth.</p>
+<p><strong>Index:</strong> <code>mcd</code> (MCD code)<br />
+<strong>Structure:</strong> One row per MCD × year columns<br />
+<strong>Derived from:</strong> <code>annual_household_control_totals</code> aggregated to MCD level; see <code>forecast_controls/step3_mcd_interpolate.py</code></p>
+<hr />
+<h2 id="rate-target-tables">Rate &amp; Target Tables<a class="headerlink" href="#rate-target-tables" title="Permanent link">&para;</a></h2>
+<h3 id="annual_relocation_rates_for_households"><code>annual_relocation_rates_for_households</code><a class="headerlink" href="#annual_relocation_rates_for_households" title="Permanent link">&para;</a></h3>
+<p>Probability of a household relocating in a given year, by age of head and income.</p>
+<p><strong>Source:</strong> Excel rate table — path in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Allowed Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>age_min/max</code></td>
+<td>int8</td>
+<td>age bracket bounds; -1=open-ended</td>
+</tr>
+<tr>
+<td><code>income_min/max</code></td>
+<td>int32</td>
+<td>income bracket bounds; -1=open-ended</td>
+</tr>
+<tr>
+<td><code>probability_of_relocating</code></td>
+<td>float32</td>
+<td>no null</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> In the simulation this rate is scaled by 0.2 (20% of raw rate). Households in event/landmark buildings are protected from relocation.</p>
+<h3 id="income_growth_rates"><code>income_growth_rates</code><a class="headerlink" href="#income_growth_rates" title="Permanent link">&para;</a></h3>
+<p>Annual income growth multiplier by large area. One row per year, one column per large area.</p>
+<p><strong>Index:</strong> <code>year</code><br />
+<strong>Source:</strong> CSV — path in <code>config/files.yaml</code></p>
+<h3 id="target_vacancies"><code>target_vacancies</code><a class="headerlink" href="#target_vacancies" title="Permanent link">&para;</a></h3>
+<p>Target residential and non-residential vacancy rates by large area × year. Used by the developer model to determine how much new construction to generate.</p>
+<p><strong>Source:</strong> Excel — path in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>large_area_id</code></td>
+<td>—</td>
+<td>8 valid codes</td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>—</td>
+<td>All forecast years</td>
+</tr>
+<tr>
+<td><code>res_target_vacancy_rate</code></td>
+<td>float32</td>
+<td>e.g., 0.05 = 5%</td>
+</tr>
+<tr>
+<td><code>non_res_target_vacancy_rate</code></td>
+<td>float32</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="target_vacancies_mcd"><code>target_vacancies_mcd</code><a class="headerlink" href="#target_vacancies_mcd" title="Permanent link">&para;</a></h3>
+<p>City-level residential vacancy targets. Takes precedence over large area targets when present.</p>
+<p><strong>Index:</strong> <code>cityid</code><br />
+<strong>Source:</strong> Excel — path in <code>config/files.yaml</code></p>
+<hr />
+<h2 id="group_quarters"><code>group_quarters</code><a class="headerlink" href="#group_quarters" title="Permanent link">&para;</a></h2>
+<p>Group quarters persons — one row per person living in a non-household arrangement (dormitory, nursing home, prison, military barracks). Tracked separately from regular households; not subject to HLCM.</p>
+<p>One row per group quarters <strong>person</strong>. Assigned to a building that is a known GQ facility.</p>
+<p><strong>Index:</strong> <code>personid</code> (unique)<br />
+<strong>Generated by:</strong> <code>group_quarters/gq_synth.py</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Allowed Values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>personid</code></td>
+<td>int32</td>
+<td>unique, no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>building_id</code></td>
+<td>int32</td>
+<td>join → <code>buildings</code>, no null</td>
+<td>GQ facility building</td>
+</tr>
+<tr>
+<td><code>gq_code</code></td>
+<td>int16</td>
+<td>101,201,301,401,501,701,789</td>
+<td>GQ type (see below)</td>
+</tr>
+<tr>
+<td><code>age</code></td>
+<td>int8</td>
+<td>no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>race_id</code></td>
+<td>int8</td>
+<td>1,2,3,4</td>
+<td></td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>object</td>
+<td>—</td>
+<td>GQ type label</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GQ type codes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>101</td>
+<td>College/University dormitory</td>
+</tr>
+<tr>
+<td>201</td>
+<td>Military quarters</td>
+</tr>
+<tr>
+<td>301</td>
+<td>Correctional facilities</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Nursing/assisted living</td>
+</tr>
+<tr>
+<td>501</td>
+<td>Other institutional</td>
+</tr>
+<tr>
+<td>701</td>
+<td>Other non-institutional</td>
+</tr>
+<tr>
+<td>789</td>
+<td>Other/unknown</td>
+</tr>
+</tbody>
+</table>
+<h2 id="group_quarters_households"><code>group_quarters_households</code><a class="headerlink" href="#group_quarters_households" title="Permanent link">&para;</a></h2>
+<p>Facility-level GQ aggregate — one row per GQ building.</p>
+<p><strong>Source:</strong> CSV — path in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_id</code></td>
+<td>GQ facility building</td>
+</tr>
+<tr>
+<td><code>persons</code></td>
+<td>Total GQ persons in this facility</td>
+</tr>
+<tr>
+<td><code>gq_code</code></td>
+<td>GQ type</td>
+</tr>
+<tr>
+<td><code>city_id</code></td>
+<td>MCD</td>
+</tr>
+<tr>
+<td><code>large_area_id</code></td>
+<td>Large area</td>
+</tr>
+</tbody>
+</table>
+<h2 id="group_quarters_control_totals"><code>group_quarters_control_totals</code><a class="headerlink" href="#group_quarters_control_totals" title="Permanent link">&para;</a></h2>
+<p>Target GQ population counts by city × year. Used by <code>gq_pop_scaling_model</code> to scale GQ population each simulation year.</p>
+<p><strong>Index:</strong> <code>cityid</code><br />
+<strong>Source:</strong> CSV derived from Excel source — paths in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>city_id</code></td>
+<td>int32</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td>int32</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>int16</td>
+<td>range covers all forecast years, no null</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Get new REMI population export by large area × age × gender; run <code>forecast_controls/step1_scale_remi_pop.py</code></li>
+<li>[ ] Run the full HH control total pipeline (Steps 1–7 in <code>forecast_controls/</code>)</li>
+<li>[ ] Update <code>remi_pop_total</code> with new REMI population totals</li>
+<li>[ ] Update <code>mcd_total</code> from MCD interpolation step</li>
+<li>[ ] Review and update vacancy rate tables if market conditions warrant</li>
+<li>[ ] Update GQ control totals and re-run <code>gq_synth.py</code> if base year changes</li>
+<li>[ ] Validate: all forecast years must have rows in <code>annual_household_control_totals</code></li>
+<li>[ ] Run validation: <code>python -m input_validation.cli --hdf &lt;output hdf&gt;</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

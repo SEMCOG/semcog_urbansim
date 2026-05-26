@@ -1,0 +1,1449 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data developer reference for UrbanSim model input tables">
+      
+      
+        <meta name="author" content="SEMCOG">
+      
+      
+      
+        <link rel="prev" href="../..">
+      
+      
+        <link rel="next" href="../geography/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Land Use - SEMCOG Forecast Input Data Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#land-use" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SEMCOG Forecast Input Data Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Land Use
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Data Domains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/table-catalog/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SEMCOG Forecast Input Data Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Domains
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Domains
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land Use
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land Use
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tables-in-this-domain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tables in This Domain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parcels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parcels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buildings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        buildings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zoning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        zoning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#land_use_types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        land_use_types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building_types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        building_types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi_parcel_buildings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        multi_parcel_buildings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pseudo_building_2020-pseudo_parcel_2020" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pseudo_building_2020 / pseudo_parcel_2020
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-checklist-new-forecast-cycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Checklist (New Forecast Cycle)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geography/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demographics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demographics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../employment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Employment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development & Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Street Networks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../accessibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../travel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Travel Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/table-catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="land-use">Land Use<a class="headerlink" href="#land-use" title="Permanent link">&para;</a></h1>
+<p><strong>Primary source:</strong> PostgreSQL parcel and building database<br />
+<strong>SQL config:</strong> <code>config/sql.yaml</code></p>
+<p>This domain covers the spatial foundation of the model — every parcel, every building, the zoning overlay, land use and building type definitions, and pseudo-structures used for initial agent placement.</p>
+<hr />
+<h2 id="tables-in-this-domain">Tables in This Domain<a class="headerlink" href="#tables-in-this-domain" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Description</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parcels</code></td>
+<td>~1.9M parcels — the finest spatial unit</td>
+<td>SQL</td>
+</tr>
+<tr>
+<td><code>buildings</code></td>
+<td>~900K buildings</td>
+<td>SQL</td>
+</tr>
+<tr>
+<td><code>zoning</code></td>
+<td>Parcel-level zoning (one row per parcel)</td>
+<td>SQL</td>
+</tr>
+<tr>
+<td><code>land_use_types</code></td>
+<td>Land use type definitions</td>
+<td>SQL</td>
+</tr>
+<tr>
+<td><code>building_types</code></td>
+<td>Building type code definitions</td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>multi_parcel_buildings</code></td>
+<td>Buildings spanning multiple parcels</td>
+<td>SQL</td>
+</tr>
+<tr>
+<td><code>pseudo_building_2020</code></td>
+<td>Temporary placeholder buildings (IDs &gt; 90M)</td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>pseudo_parcel_2020</code></td>
+<td>Temporary placeholder parcels</td>
+<td>CSV</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="parcels"><code>parcels</code><a class="headerlink" href="#parcels" title="Permanent link">&para;</a></h2>
+<p>The foundational spatial table. Every building must have a <code>parcel_id</code> that exists here. Used for all spatial joins in the model.</p>
+<p><strong>Index:</strong> <code>parcel_id</code> (unique)<br />
+<strong>SQL table:</strong> configured in <code>config/sql.yaml</code></p>
+<p><strong>Columns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parcel_id</code></td>
+<td>int32</td>
+<td>unique, no null</td>
+<td>Primary key</td>
+</tr>
+<tr>
+<td><code>census_bg_id</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>Census block group GEOID</td>
+</tr>
+<tr>
+<td><code>centroid_x</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane X coordinate</td>
+</tr>
+<tr>
+<td><code>centroid_y</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane Y coordinate</td>
+</tr>
+<tr>
+<td><code>city_id</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>MCD code (matches <code>semmcds</code>)</td>
+</tr>
+<tr>
+<td><code>county_id</code></td>
+<td>int16</td>
+<td>7 valid county codes</td>
+<td>Must be one of the 7 SE Michigan counties</td>
+</tr>
+<tr>
+<td><code>land_use_type_id</code></td>
+<td>int16</td>
+<td>join → <code>land_use_types</code></td>
+<td>Must reference a valid land use type</td>
+</tr>
+<tr>
+<td><code>large_area_id</code></td>
+<td>int16</td>
+<td>8 valid codes</td>
+<td>One of the 8 modeling zones</td>
+</tr>
+<tr>
+<td><code>parcel_sqft</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>Parcel area in sq ft</td>
+</tr>
+<tr>
+<td><code>pptytax</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>Property tax millage rate</td>
+</tr>
+<tr>
+<td><code>school_id</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>School district reference</td>
+</tr>
+<tr>
+<td><code>semmcd</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>SEMCOG MCD code</td>
+</tr>
+<tr>
+<td><code>sev_value</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>State Equalized Value</td>
+</tr>
+<tr>
+<td><code>landvalue</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>Assessed land value</td>
+</tr>
+<tr>
+<td><code>zone_id</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>TAZ zone reference</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common issues:</strong>
+- Parcels with <code>zone_id = null</code> after join — no TAZ match; check that the parcel's zone code exists in the TAZ boundary table
+- <code>large_area_id</code> outside the 8 allowed values — usually out-of-region parcels; filter them out
+- Coordinate outliers — verify projection (state plane) and check for misplaced records</p>
+<hr />
+<h2 id="buildings"><code>buildings</code><a class="headerlink" href="#buildings" title="Permanent link">&para;</a></h2>
+<p>Every residential unit and job must be assigned to a building. This is the most-used table in the simulation.</p>
+<p><strong>Index:</strong> <code>building_id</code> (unique)<br />
+<strong>SQL table:</strong> configured in <code>config/sql.yaml</code></p>
+<p><strong>Columns exported to HDF:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_id</code></td>
+<td>int32</td>
+<td>unique, no null</td>
+<td>Primary key</td>
+</tr>
+<tr>
+<td><code>parcel_id</code></td>
+<td>int32</td>
+<td>join → <code>parcels</code>, no null</td>
+<td>Every building must have a valid parcel</td>
+</tr>
+<tr>
+<td><code>building_type_id</code></td>
+<td>int8</td>
+<td>join → <code>building_types</code>, no null</td>
+<td>See building type codes below</td>
+</tr>
+<tr>
+<td><code>year_built</code></td>
+<td>int16</td>
+<td>range [1760 – base year], no null</td>
+<td>Cap at base year</td>
+</tr>
+<tr>
+<td><code>residential_units</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>0 for non-residential</td>
+</tr>
+<tr>
+<td><code>non_residential_sqft</code></td>
+<td>int64</td>
+<td>no null</td>
+<td>0 for residential</td>
+</tr>
+<tr>
+<td><code>sqft_per_unit</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>0 for non-residential</td>
+</tr>
+<tr>
+<td><code>stories</code></td>
+<td>float64</td>
+<td>no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>improvement_value</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>Derived: <code>market_value − land_value</code></td>
+</tr>
+<tr>
+<td><code>land_area</code></td>
+<td>int32</td>
+<td>no null</td>
+<td>Building footprint</td>
+</tr>
+<tr>
+<td><code>market_value</code></td>
+<td>float64</td>
+<td>—</td>
+<td>Total assessed value</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Building type codes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>ID Range</th>
+<th>General Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11, 13, 14</td>
+<td>Institutional</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Retail</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Office</td>
+</tr>
+<tr>
+<td>31, 32, 33</td>
+<td>Industrial</td>
+</tr>
+<tr>
+<td>41, 42</td>
+<td>TCU</td>
+</tr>
+<tr>
+<td>51, 52, 53</td>
+<td>Medical</td>
+</tr>
+<tr>
+<td>61, 63, 91</td>
+<td>Entertainment</td>
+</tr>
+<tr>
+<td>65</td>
+<td>Hospitality</td>
+</tr>
+<tr>
+<td>71</td>
+<td>Other</td>
+</tr>
+<tr>
+<td>81, 82, 83, 84</td>
+<td>Residential</td>
+</tr>
+<tr>
+<td>92, 93</td>
+<td>Institutional (education)</td>
+</tr>
+<tr>
+<td>94</td>
+<td>Other commercial</td>
+</tr>
+<tr>
+<td>95</td>
+<td>TCU</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common issues:</strong>
+- <code>parcel_id</code> not found in <code>parcels</code> — orphaned buildings; these break the spatial join chain
+- <code>year_built</code> after base year — cap to base year
+- Buildings with both <code>residential_units &gt; 0</code> AND <code>non_residential_sqft &gt; 0</code> — mixed-use is valid; verify intentional
+- <code>residential_units &gt; 0</code> but <code>sqft_per_unit = 0</code> — the model uses <code>sqft_per_unit</code> for feasibility; assign a reasonable default</p>
+<hr />
+<h2 id="zoning"><code>zoning</code><a class="headerlink" href="#zoning" title="Permanent link">&para;</a></h2>
+<p>Controls what can be built on each parcel. Directly drives the developer/feasibility model.</p>
+<p><strong>Index:</strong> <code>parcel_id</code> (unique)<br />
+<strong>SQL table:</strong> configured in <code>config/sql.yaml</code></p>
+<p><strong>Columns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parcel_id</code></td>
+<td>int32</td>
+<td>join → <code>parcels</code>, no null</td>
+<td></td>
+</tr>
+<tr>
+<td><code>future_use</code></td>
+<td>object</td>
+<td>no null</td>
+<td>Future land use designation</td>
+</tr>
+<tr>
+<td><code>max_dua</code></td>
+<td>float64</td>
+<td>range [0 – 126], no null</td>
+<td>Max dwelling units per acre</td>
+</tr>
+<tr>
+<td><code>max_far</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>Max floor area ratio</td>
+</tr>
+<tr>
+<td><code>max_height</code></td>
+<td>int16</td>
+<td>no null</td>
+<td>Max building height (ft)</td>
+</tr>
+<tr>
+<td><code>max_stories</code></td>
+<td>float16</td>
+<td>range [1 – 73], no null</td>
+<td>Max number of stories</td>
+</tr>
+<tr>
+<td><code>pct_undev</code></td>
+<td>float64</td>
+<td>range [0 – 100], no null</td>
+<td>Percent of parcel undeveloped</td>
+</tr>
+<tr>
+<td><code>is_developable</code></td>
+<td>int</td>
+<td>—</td>
+<td>0=no, 1=yes, 2=yes (UST present)</td>
+</tr>
+<tr>
+<td><code>type81</code> – <code>type95</code></td>
+<td>int</td>
+<td>—</td>
+<td>1 = building type allowed on this parcel</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Common issues:</strong>
+- <code>pct_undev = null</code> — treated as 0% developable in the model; fill with 0 or actual value
+- Missing <code>is_developable</code> — defaults to not developable; verify coverage</p>
+<hr />
+<h2 id="land_use_types"><code>land_use_types</code><a class="headerlink" href="#land_use_types" title="Permanent link">&para;</a></h2>
+<p>Reference table of land use type definitions.</p>
+<p><strong>Index:</strong> <code>land_use_type_id</code> (unique)<br />
+<strong>SQL table:</strong> configured in <code>config/sql.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>land_use_type_id</code></td>
+<td>int8</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>land_use_name</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>is_residential</code></td>
+<td>int8</td>
+<td>values: 0, 1</td>
+</tr>
+<tr>
+<td><code>home_based_status</code></td>
+<td>int8</td>
+<td>values: 0, 1</td>
+</tr>
+<tr>
+<td><code>generic_land_use_type_id</code></td>
+<td>int8</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>unit_name</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="building_types"><code>building_types</code><a class="headerlink" href="#building_types" title="Permanent link">&para;</a></h2>
+<p>Maps numeric <code>building_type_id</code> codes to names and general categories. Rarely changes.</p>
+<p><strong>Index:</strong> <code>building_type_id</code> (unique)<br />
+<strong>Source:</strong> CSV file — path configured in <code>config/files.yaml</code></p>
+<p><strong>Required IDs:</strong> All 23 building type codes must be present (11, 13, 14, 21, 23, 31–33, 41–42, 51–53, 61, 63, 65, 71, 81–84, 91–95).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_type_id</code></td>
+<td>int8</td>
+<td>all 23 codes required, no null</td>
+</tr>
+<tr>
+<td><code>building_type_name</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>building_type_description</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>generic_building_type_id</code></td>
+<td>int8</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>generic_building_type_name</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>is_residential</code></td>
+<td>int8</td>
+<td>values: 0, 1</td>
+</tr>
+<tr>
+<td><code>naics</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+<tr>
+<td><code>unit_name</code></td>
+<td>object</td>
+<td>no null</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="multi_parcel_buildings"><code>multi_parcel_buildings</code><a class="headerlink" href="#multi_parcel_buildings" title="Permanent link">&para;</a></h2>
+<p>Buildings that span multiple parcels (large industrial complexes, campuses). Only update when new multi-parcel projects are added or removed.</p>
+<p><strong>SQL table:</strong> configured in <code>config/sql.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_id</code></td>
+<td>join → <code>buildings</code></td>
+</tr>
+<tr>
+<td><code>parcel_id</code></td>
+<td>join → <code>parcels</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pseudo_building_2020-pseudo_parcel_2020"><code>pseudo_building_2020</code> / <code>pseudo_parcel_2020</code><a class="headerlink" href="#pseudo_building_2020-pseudo_parcel_2020" title="Permanent link">&para;</a></h2>
+<p>Placeholder buildings and parcels (IDs &gt; 90,000,000) for households and jobs with no valid base-year building assignment. Created once for the base year; do not update unless the base year changes.</p>
+<p><strong>Source:</strong> CSV files — paths in <code>config/files.yaml</code></p>
+<p>These are dropped by the simulation after the first year's location choice models place agents in real buildings.</p>
+<hr />
+<h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Verify parcel and building tables are updated to the new base year in PostgreSQL</li>
+<li>[ ] Confirm zoning layer reflects the latest approved zoning</li>
+<li>[ ] Re-run SQL extraction via <code>main.py</code> or direct query; verify row counts are plausible</li>
+<li>[ ] Check <code>building_type_id</code> values — all must be in the 23 allowed codes</li>
+<li>[ ] Check <code>year_built</code> — cap anything beyond the new base year</li>
+<li>[ ] Check <code>parcel_id</code> referential integrity: every building's parcel must exist in <code>parcels</code></li>
+<li>[ ] Run validation: <code>python -m input_validation.cli --hdf &lt;output hdf&gt;</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

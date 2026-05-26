@@ -1,0 +1,1068 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data developer reference for UrbanSim model input tables">
+      
+      
+        <meta name="author" content="SEMCOG">
+      
+      
+      
+        <link rel="prev" href="../development-context/">
+      
+      
+        <link rel="next" href="../accessibility/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Street Networks - SEMCOG Forecast Input Data Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#street-networks" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SEMCOG Forecast Input Data Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Street Networks
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../land-use/" class="md-tabs__link">
+          
+  
+  
+  Data Domains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/table-catalog/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SEMCOG Forecast Input Data Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Domains
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Domains
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-use/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land Use
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geography/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demographics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demographics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../employment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Employment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development & Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Street Networks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Street Networks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networks-in-production-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Networks in Production Use
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Networks in Production Use">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#walk-network-osm_roads_walk_2020" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walk Network — osm_roads_walk_2020
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drive-networks-highway_ext_2020-and-highway_ext_2030" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drive Networks — highway_ext_2020 and highway_ext_2030
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-networks-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the Networks Compute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-parcels-and-buildings-connect-to-the-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Parcels and Buildings Connect to the Network
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Procedure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../accessibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../travel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Travel Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/table-catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="street-networks">Street Networks<a class="headerlink" href="#street-networks" title="Permanent link">&para;</a></h1>
+<p><strong>Primary source:</strong> OpenStreetMap (walk network), SEMCOG highway/TDM network (drive network)<br />
+<strong>File:</strong> <code>semcog_2050_networks.h5</code> — a separate HDF5 from the main model input file<br />
+<strong>Config:</strong> <code>semcog_urbansim/configs/available_networks_2050.yaml</code></p>
+<p>The street network file provides the road and path geometry used by <a href="https://udst.github.io/pandana/">Pandana</a> to compute dynamic neighborhood accessibility variables during the simulation. Each year, the <code>build_networks_2050</code> step loads these networks, snaps parcels and buildings to the nearest node, and aggregates nearby jobs, households, and amenities into building-level variables used by the location choice models.</p>
+<p>This file is distinct from the <a href="../accessibility/">pre-computed accessibility indicators</a> — those are static parcel-level outputs. The network file enables the simulation to recompute dynamic, year-varying accessibility each year as the distribution of jobs and households shifts.</p>
+<hr />
+<h2 id="file-structure">File Structure<a class="headerlink" href="#file-structure" title="Permanent link">&para;</a></h2>
+<p>The HDF5 contains one set of tables per named network. Each network has:</p>
+<table>
+<thead>
+<tr>
+<th>Table type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodes_*</code></td>
+<td>Network node locations (x, y coordinates + node ID)</td>
+</tr>
+<tr>
+<td><code>edges_*</code></td>
+<td>Connections between nodes with travel cost attributes</td>
+</tr>
+<tr>
+<td><code>local_nodes_*</code></td>
+<td>Subset of nodes for neighborhood-level queries (drive networks only)</td>
+</tr>
+<tr>
+<td><code>local_edges_*</code></td>
+<td>Corresponding subset of edges (drive networks only)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="networks-in-production-use">Networks in Production Use<a class="headerlink" href="#networks-in-production-use" title="Permanent link">&para;</a></h2>
+<p>The production simulation uses two networks, defined in <code>configs/available_networks_2050.yaml</code>:</p>
+<h3 id="walk-network-osm_roads_walk_2020">Walk Network — <code>osm_roads_walk_2020</code><a class="headerlink" href="#walk-network-osm_roads_walk_2020" title="Permanent link">&para;</a></h3>
+<p>Based on <strong>OpenStreetMap</strong> road and path data for the 2020 base year.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Columns</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodes_osm_roads_walk_2020</code></td>
+<td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
+<td>Node coordinates (state plane)</td>
+</tr>
+<tr>
+<td><code>edges_osm_roads_walk_2020</code></td>
+<td><code>from</code>, <code>to</code>, <code>feet</code>, <code>minutes</code>, <code>meters</code></td>
+<td>Edge cost in feet, travel minutes, and meters</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cost used for queries:</strong> <code>feet</code> (distance-based queries) or <code>minutes</code> (time-based)<br />
+<strong>Typical query radius:</strong> 500 m (neighborhood density), 1,500 m (local population/jobs)</p>
+<h3 id="drive-networks-highway_ext_2020-and-highway_ext_2030">Drive Networks — <code>highway_ext_2020</code> and <code>highway_ext_2030</code><a class="headerlink" href="#drive-networks-highway_ext_2020-and-highway_ext_2030" title="Permanent link">&para;</a></h3>
+<p>Based on the <strong>SEMCOG highway / TDM road network</strong>. Two vintages are provided — base year (2020) and a future year (2030) reflecting planned road improvements.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Columns</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodes_highway_ext_2020</code></td>
+<td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>edges_highway_ext_2020</code></td>
+<td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
+<td>AM peak and off-peak travel times</td>
+</tr>
+<tr>
+<td><code>nodes_highway_ext_2020_local</code></td>
+<td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
+<td>Local subset for neighborhood queries</td>
+</tr>
+<tr>
+<td><code>edges_highway_ext_2020_local</code></td>
+<td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>nodes_highway_ext_2030</code></td>
+<td>same schema</td>
+<td>Future network (planned improvements)</td>
+</tr>
+<tr>
+<td><code>edges_highway_ext_2030</code></td>
+<td>same schema</td>
+<td></td>
+</tr>
+<tr>
+<td><code>nodes_highway_ext_2030_local</code></td>
+<td>same schema</td>
+<td></td>
+</tr>
+<tr>
+<td><code>edges_highway_ext_2030_local</code></td>
+<td>same schema</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cost used for queries:</strong> <code>peak_mins</code> (commute accessibility) or <code>nonpk_mins</code> (off-peak)<br />
+<strong>Typical query radius:</strong> 15–60 minutes (job access, retail proximity)</p>
+<hr />
+<h2 id="what-the-networks-compute">What the Networks Compute<a class="headerlink" href="#what-the-networks-compute" title="Permanent link">&para;</a></h2>
+<p>Each simulation year, Pandana uses these networks to produce <strong>node-level</strong> aggregations. These are then broadcast to buildings and parcels via the <code>nodeid_walk</code> and <code>nodeid_drv</code> columns. Key variables computed:</p>
+<p><strong>Walk-based (neighborhood density):</strong>
+- Residential and non-residential density within 500 m
+- Population and households within 1,500 m
+- Income mix, household demographics within 1,500 m
+- Retail and service job counts within 500–2,000 m
+- Average residential and non-residential prices nearby
+- Transit stops within quarter mile</p>
+<p><strong>Drive-based (regional access):</strong>
+- Jobs within 30, 45, and 60 minutes
+- Population within 10 and 20 minutes
+- Retail and shopping jobs within 15 and 30 minutes
+- Nearby school achievement scores</p>
+<hr />
+<h2 id="how-parcels-and-buildings-connect-to-the-network">How Parcels and Buildings Connect to the Network<a class="headerlink" href="#how-parcels-and-buildings-connect-to-the-network" title="Permanent link">&para;</a></h2>
+<p>Each parcel has a <code>nodeid_walk</code> and <code>nodeid_drv</code> column — the ID of the nearest walk or drive network node. These are pre-computed and stored in the parcels table. Buildings inherit them via the parcel broadcast.</p>
+<p>If a parcel's <code>nodeid_walk</code> or <code>nodeid_drv</code> is missing or invalid, that building will have null network-based variables, which can affect location choice model predictions.</p>
+<hr />
+<h2 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h2>
+<p>The network file should be regenerated when:
+- Road network geometry changes significantly (new highways, removed roads)
+- A new forecast cycle uses a different base year
+- Walk network coverage needs updating (OSM data vintage)</p>
+<p><strong>Walk network update:</strong>
+1. Download updated OSM data for SE Michigan
+2. Process into Pandana-compatible nodes/edges (feet, minutes, meters cost columns)
+3. Snap parcel centroids to nearest walk node → update <code>parcels.nodeid_walk</code>
+4. Write new tables into <code>semcog_2050_networks.h5</code></p>
+<p><strong>Drive network update:</strong>
+1. Export node/edge tables from the SEMCOG TDM (TransCAD) network
+2. Ensure cost columns are <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code>
+3. Generate "local" subsets (nodes/edges within the 7-county region)
+4. Snap parcel centroids to nearest drive node → update <code>parcels.nodeid_drv</code>
+5. Write new tables into <code>semcog_2050_networks.h5</code>
+6. Update <code>configs/available_networks_2050.yaml</code> if table names change</p>
+<p><strong>After updating the network file:</strong>
+- Verify <code>nodeid_walk</code> and <code>nodeid_drv</code> coverage in <code>parcels</code> — count nulls and parcels with no node match
+- Run a test simulation year and check that neighborhood variables are non-null for most buildings
+- If node IDs change, the parcel columns must be recomputed — new node IDs won't match old parcel assignments</p>
+<hr />
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Parcels not snapping to network</strong> — parcel coordinates outside the network coverage area; check for projection mismatches (all data should be in state plane)</li>
+<li><strong>Missing local edges</strong> — the local network subset must fully cover the 7-county region; edges that cross county boundaries may be clipped</li>
+<li><strong>Future network not reflecting planned projects</strong> — confirm that the 2030 network includes committed highway improvements from the TDM</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

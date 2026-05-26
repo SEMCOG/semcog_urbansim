@@ -1,0 +1,1373 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data developer reference for UrbanSim model input tables">
+      
+      
+        <meta name="author" content="SEMCOG">
+      
+      
+      
+        <link rel="prev" href="../networks/">
+      
+      
+        <link rel="next" href="../travel/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Accessibility - SEMCOG Forecast Input Data Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#accessibility" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SEMCOG Forecast Input Data Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Accessibility
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../land-use/" class="md-tabs__link">
+          
+  
+  
+  Data Domains
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/table-catalog/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SEMCOG Forecast Input Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SEMCOG Forecast Input Data Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Domains
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data Domains
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../land-use/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Land Use
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geography/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Geography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demographics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demographics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../employment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Employment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development & Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Street Networks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessibility
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tables-in-this-domain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tables in This Domain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#destination-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Destination Inputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Destination Inputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transit_stops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        transit_stops
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        poi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessibility-indicator-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibility Indicator Tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessibility Indicator Tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_walk_indicator_by_parcel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_walk_indicator_by_parcel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="accessibility_walk_indicator_by_parcel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#near-max-walk-variables-90-min-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Near-Max Walk Variables (90 min threshold)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cumulative-walk-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cumulative Walk Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_bike_indicator_by_parcel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_bike_indicator_by_parcel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="accessibility_bike_indicator_by_parcel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#near-max-bike-variables-120-min-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Near-Max Bike Variables (120 min threshold)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cumulative-bike-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cumulative Bike Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_drive_indicator_by_parcel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_drive_indicator_by_parcel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="accessibility_drive_indicator_by_parcel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#near-max-drive-variables-150-min-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Near-Max Drive Variables (150 min threshold)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cumulative-drive-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cumulative Drive Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-indicators-join-to-buildings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Indicators Join to Buildings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Procedure
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../travel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Travel Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/table-catalog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="accessibility">Accessibility<a class="headerlink" href="#accessibility" title="Permanent link">&para;</a></h1>
+<p><strong>Primary sources:</strong> Pre-computed accessibility indicator CSVs; transit stop and POI datasets  </p>
+<p>Accessibility tables measure how easily each parcel can reach destinations by walking, biking, or driving. Transit stops and points of interest are the <strong>destination inputs</strong> that drive accessibility analysis; the indicator tables are the <strong>outputs</strong> used directly as model features.</p>
+<hr />
+<h2 id="tables-in-this-domain">Tables in This Domain<a class="headerlink" href="#tables-in-this-domain" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Description</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>transit_stops</code></td>
+<td>Fixed-route bus and rail stop locations</td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>poi</code></td>
+<td>Points of interest by category and location</td>
+<td>CSV</td>
+</tr>
+<tr>
+<td><code>accessibility_walk_indicator_by_parcel</code></td>
+<td>Walk-mode accessibility metrics by parcel</td>
+<td>Accessibility analysis output</td>
+</tr>
+<tr>
+<td><code>accessibility_bike_indicator_by_parcel</code></td>
+<td>Bike-mode accessibility metrics by parcel</td>
+<td>Accessibility analysis output</td>
+</tr>
+<tr>
+<td><code>accessibility_drive_indicator_by_parcel</code></td>
+<td>Drive-mode accessibility metrics by parcel</td>
+<td>Accessibility analysis output</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Important:</strong> The indicator tables are pre-computed externally and held <strong>constant throughout the simulation</strong>. When the network, transit service, or POI data changes significantly, a new accessibility analysis must be run and the indicators regenerated.</p>
+</blockquote>
+<hr />
+<h2 id="destination-inputs">Destination Inputs<a class="headerlink" href="#destination-inputs" title="Permanent link">&para;</a></h2>
+<h3 id="transit_stops"><code>transit_stops</code><a class="headerlink" href="#transit_stops" title="Permanent link">&para;</a></h3>
+<p>Fixed-route bus and rail stop locations used in accessibility computation and as HLCM/ELCM features.</p>
+<p><strong>Index:</strong> <code>stop_id</code> (unique)<br />
+<strong>Source:</strong> CSV — path in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stop_id</code></td>
+<td>object</td>
+<td>unique, no null</td>
+<td>Transit agency stop ID</td>
+</tr>
+<tr>
+<td><code>point_x</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane X coordinate</td>
+</tr>
+<tr>
+<td><code>point_y</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane Y coordinate</td>
+</tr>
+</tbody>
+</table>
+<p>Only <code>point_x</code> and <code>point_y</code> are retained in the exported HDF — any additional source columns are dropped.</p>
+<p><strong>Update:</strong> Get updated stop locations from SEMCOG transit database or GTFS feeds. Reproject to state plane if needed. Include all fixed-route bus and rail stops in the 7-county region.</p>
+<p><strong>Common issues:</strong>
+- Stops outside the region — verify coordinates
+- Duplicate <code>stop_id</code> values — append agency prefix to ensure uniqueness</p>
+<h3 id="poi"><code>poi</code><a class="headerlink" href="#poi" title="Permanent link">&para;</a></h3>
+<p>Points of interest used as accessibility destinations — grocery stores, hospitals, parks, pharmacies, childcare, schools, etc.</p>
+<p><strong>Index:</strong> Row index (integer)<br />
+<strong>Source:</strong> CSV — path in <code>config/files.yaml</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Rules</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>category</code></td>
+<td>object</td>
+<td>no null</td>
+<td>POI type (e.g., <code>"grocery_store"</code>, <code>"hospital"</code>)</td>
+</tr>
+<tr>
+<td><code>point_x</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane X</td>
+</tr>
+<tr>
+<td><code>point_y</code></td>
+<td>float64</td>
+<td>no null</td>
+<td>State plane Y</td>
+</tr>
+</tbody>
+</table>
+<p>POI categories must match the destination names used in the accessibility analysis. If category names change, the analysis must be rerun and the indicator variable names in <code>config/accessibility.yaml</code> updated accordingly.</p>
+<p><strong>Update:</strong> Refresh from the latest accessibility analysis POI dataset. Coordinate with the accessibility analysis team when updating — any change to categories or coverage triggers a full re-analysis.</p>
+<hr />
+<h2 id="accessibility-indicator-tables">Accessibility Indicator Tables<a class="headerlink" href="#accessibility-indicator-tables" title="Permanent link">&para;</a></h2>
+<p>All three indicator tables share the same structure — indexed by <code>parcel_id</code>, with one row per parcel. They contain two variable types:</p>
+<p><strong>Near-max variables</strong> — travel time to the nearest facility (90th-percentile of distances). Lower = better access. Fill value when no route exists: 95 min (walk), 125 min (bike), 155 min (drive).</p>
+<p><strong>Cumulative variables</strong> — count of jobs or transit stops reachable within a time threshold. Higher = better access. Fill value when none reachable: 0.</p>
+<p>File names include a date stamp (e.g., <code>_20251111</code>). Update the file paths in <code>config/files.yaml</code> and <code>config/accessibility.yaml</code> when new files are produced.</p>
+<hr />
+<h3 id="accessibility_walk_indicator_by_parcel"><code>accessibility_walk_indicator_by_parcel</code><a class="headerlink" href="#accessibility_walk_indicator_by_parcel" title="Permanent link">&para;</a></h3>
+<p><strong>Source:</strong> Walk indicators CSV — path in <code>config/files.yaml</code><br />
+<strong>Index:</strong> <code>parcel_id</code></p>
+<h4 id="near-max-walk-variables-90-min-threshold">Near-Max Walk Variables (90 min threshold)<a class="headerlink" href="#near-max-walk-variables-90-min-threshold" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hospitals_walk_near_max90</code></td>
+<td>Hospitals</td>
+</tr>
+<tr>
+<td><code>urgent_cares_walk_near_max90</code></td>
+<td>Urgent care centers</td>
+</tr>
+<tr>
+<td><code>health_centers_walk_near_max90</code></td>
+<td>Community health centers</td>
+</tr>
+<tr>
+<td><code>all_healthcare_walk_near_max90</code></td>
+<td>All healthcare combined</td>
+</tr>
+<tr>
+<td><code>grocery_stores_walk_near_max90</code></td>
+<td>Grocery stores</td>
+</tr>
+<tr>
+<td><code>libraries_walk_near_max90</code></td>
+<td>Public libraries</td>
+</tr>
+<tr>
+<td><code>parks_local_walk_near_max90</code></td>
+<td>Local parks</td>
+</tr>
+<tr>
+<td><code>parks_bike_walk_near_max90</code></td>
+<td>Bike-friendly parks</td>
+</tr>
+<tr>
+<td><code>parks_school_walk_near_max90</code></td>
+<td>School parks</td>
+</tr>
+<tr>
+<td><code>parks_local_school_walk_near_max90</code></td>
+<td>Combined local/school parks</td>
+</tr>
+<tr>
+<td><code>schools_k8_walk_near_max90</code></td>
+<td>K-8 schools</td>
+</tr>
+<tr>
+<td><code>schools_912_walk_near_max90</code></td>
+<td>High schools</td>
+</tr>
+<tr>
+<td><code>pharmacies_walk_near_max90</code></td>
+<td>Pharmacies</td>
+</tr>
+<tr>
+<td><code>childcare_walk_near_max90</code></td>
+<td>Childcare</td>
+</tr>
+<tr>
+<td><code>fire_stations_walk_near_max90</code></td>
+<td>Fire stations</td>
+</tr>
+<tr>
+<td><code>fixed_route_bus_walk_near_max90</code></td>
+<td>Fixed-route bus stops</td>
+</tr>
+<tr>
+<td><code>american_job_centers_walk_near_max90</code></td>
+<td>American Job Centers</td>
+</tr>
+<tr>
+<td><code>community_colleges_walk_near_max90</code></td>
+<td>Community colleges</td>
+</tr>
+<tr>
+<td><code>passenger_train_stations_walk_near_max90</code></td>
+<td>Passenger rail</td>
+</tr>
+</tbody>
+</table>
+<h4 id="cumulative-walk-variables">Cumulative Walk Variables<a class="headerlink" href="#cumulative-walk-variables" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jobs_walk_cumulative_5min</code></td>
+<td>Jobs within 5 min walk</td>
+</tr>
+<tr>
+<td><code>jobs_walk_cumulative_10min</code></td>
+<td>Jobs within 10 min walk</td>
+</tr>
+<tr>
+<td><code>jobs_walk_cumulative_15min</code></td>
+<td>Jobs within 15 min walk</td>
+</tr>
+<tr>
+<td><code>jobs_walk_cumulative_30min</code></td>
+<td>Jobs within 30 min walk</td>
+</tr>
+<tr>
+<td><code>fixed_route_bus_weekday_walk_10min</code></td>
+<td>Bus stops within 10 min walk (weekday)</td>
+</tr>
+<tr>
+<td><code>fixed_route_bus_weekend_walk_10min</code></td>
+<td>Bus stops within 10 min walk (weekend)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="accessibility_bike_indicator_by_parcel"><code>accessibility_bike_indicator_by_parcel</code><a class="headerlink" href="#accessibility_bike_indicator_by_parcel" title="Permanent link">&para;</a></h3>
+<p><strong>Source:</strong> Bike indicators CSV — path in <code>config/files.yaml</code><br />
+<strong>Index:</strong> <code>parcel_id</code></p>
+<h4 id="near-max-bike-variables-120-min-threshold">Near-Max Bike Variables (120 min threshold)<a class="headerlink" href="#near-max-bike-variables-120-min-threshold" title="Permanent link">&para;</a></h4>
+<p>Same destination set as walk, plus <code>passenger_airports_bike_near_max120</code>. All variable names follow the pattern <code>{destination}_bike_near_max120</code>.</p>
+<h4 id="cumulative-bike-variables">Cumulative Bike Variables<a class="headerlink" href="#cumulative-bike-variables" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jobs_bike_cumulative_5min</code></td>
+<td>Jobs within 5 min bike</td>
+</tr>
+<tr>
+<td><code>jobs_bike_cumulative_10min</code></td>
+<td>Jobs within 10 min bike</td>
+</tr>
+<tr>
+<td><code>jobs_bike_cumulative_15min</code></td>
+<td>Jobs within 15 min bike</td>
+</tr>
+<tr>
+<td><code>jobs_bike_cumulative_30min</code></td>
+<td>Jobs within 30 min bike</td>
+</tr>
+<tr>
+<td><code>fixed_route_bus_weekday_bike_10min</code></td>
+<td>Bus stops within 10 min bike (weekday)</td>
+</tr>
+<tr>
+<td><code>fixed_route_bus_weekend_bike_10min</code></td>
+<td>Bus stops within 10 min bike (weekend)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="accessibility_drive_indicator_by_parcel"><code>accessibility_drive_indicator_by_parcel</code><a class="headerlink" href="#accessibility_drive_indicator_by_parcel" title="Permanent link">&para;</a></h3>
+<p><strong>Source:</strong> Drive indicators CSV — path in <code>config/files.yaml</code><br />
+<strong>Index:</strong> <code>parcel_id</code></p>
+<h4 id="near-max-drive-variables-150-min-threshold">Near-Max Drive Variables (150 min threshold)<a class="headerlink" href="#near-max-drive-variables-150-min-threshold" title="Permanent link">&para;</a></h4>
+<p>Subset of destinations (vehicle-accessible only). Pattern: <code>{destination}_drive_near_max150</code>.</p>
+<p>Destinations include: hospitals, urgent care, health centers, all healthcare, grocery stores, libraries, vehicle-accessible parks, K-8 schools, high schools, pharmacies, childcare, fire stations, American Job Centers, community colleges, passenger airports, passenger train stations.</p>
+<h4 id="cumulative-drive-variables">Cumulative Drive Variables<a class="headerlink" href="#cumulative-drive-variables" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jobs_drive_cumulative_10min</code></td>
+<td>Jobs within 10 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_cumulative_15min</code></td>
+<td>Jobs within 15 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_cumulative_20min</code></td>
+<td>Jobs within 20 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_cumulative_25min</code></td>
+<td>Jobs within 25 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_cumulative_30min</code></td>
+<td>Jobs within 30 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_cumulative_45min</code></td>
+<td>Jobs within 45 min drive</td>
+</tr>
+<tr>
+<td><code>jobs_drive_gravity_90min</code></td>
+<td>Gravity-weighted job access (90 min max)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="how-indicators-join-to-buildings">How Indicators Join to Buildings<a class="headerlink" href="#how-indicators-join-to-buildings" title="Permanent link">&para;</a></h2>
+<p>All three tables are indexed by <code>parcel_id</code>. The simulation joins them to buildings via <code>buildings.parcel_id</code>. This join is handled automatically by the <code>variables_access.py</code> module, which registers the accessibility values as building-level columns.</p>
+<hr />
+<h2 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h2>
+<p>Accessibility indicators should be regenerated when:
+- The street or transit network changes significantly
+- The POI or transit stop dataset is refreshed
+- A new forecast cycle requires updated base-year accessibility</p>
+<p><strong>Steps:</strong>
+1. Update <code>poi</code> and <code>transit_stops</code> CSVs with current data
+2. Run the accessibility analysis (Pandana-based pipeline in the <code>accessibility/</code> module)
+3. Export new indicator CSVs with a date stamp in the filename
+4. Update file paths in <code>config/files.yaml</code> and <code>config/accessibility.yaml</code>
+5. Re-run <code>main.py</code> to incorporate the new indicators into the HDF
+6. If variable names or columns changed, update the variable lists in the simulation's <code>assumptions.py</code> (<code>NEAR_MAX_VARS</code>, <code>CUMULATIVE_VARS</code>) and re-estimate HLCM/ELCM models</p>
+<p><strong>Common issues:</strong>
+- Parcels with all values at fill value (95/125/155 min) — parcel has no network connection; check coordinates
+- Column name mismatch between CSV and <code>config/accessibility.yaml</code> — causes errors at simulation startup</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
