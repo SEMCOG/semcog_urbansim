@@ -950,7 +950,7 @@ def households_transition(
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
 
-    pool = Pool(2)
+    pool = Pool(8)
     try:
         cunks_per_la = pool.map(_retry_wrapper, arg_per_la)
     except Exception as e:
@@ -2424,6 +2424,37 @@ def make_res_selection_func(lut_models, parcel_features_df):
     return score
 
 
+def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
+    """
+    get realistic pct_undev coverage
+    """
+    if not parcels_idx_to_update:
+        return
+    bldgs = orca.get_table("buildings").to_frame(
+        ["parcel_id", "residential_units", "sqft_per_unit",
+         "non_residential_sqft", "stories", "year_built"]
+    )
+    new_b = bldgs[
+        (bldgs["year_built"] == year) &
+        (bldgs["parcel_id"].isin(parcels_idx_to_update))
+    ].copy()
+    if len(new_b) == 0:
+        return
+    new_b["building_sqft"] = (
+        new_b["residential_units"] * new_b["sqft_per_unit"]
+        + new_b["non_residential_sqft"]
+    )
+    new_b["footprint"] = new_b["building_sqft"] / new_b["stories"].clip(lower=1)
+    coverage = (
+        new_b.groupby("parcel_id")["footprint"].sum()
+        / parcels.parcel_sqft.reindex(new_b["parcel_id"].unique())
+        * 100
+    ).clip(0, 100)
+    current_pct = parcels.pct_undev.reindex(coverage.index)
+    new_pct = (current_pct + coverage).clip(0, 100).astype("int16")
+    parcels.update_col_from_series("pct_undev", new_pct, cast=True)
+
+
 def run_developer(
     target_units,
     geoid,
@@ -2751,8 +2782,7 @@ def residential_developer(
             custom_selection_func=custom_sel_func,
         )
 
-        pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-        parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+        _calculate_pct_undev(parcels, parcels_idx_to_update, year)
 
         debug_res_developer = pd.concat(
             [debug_res_developer, pd.DataFrame([{
@@ -2815,10 +2845,11 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
     Returns:
     None
     """
+    year = orca.get_injectable("year")
     # get target vacancies
     target_vacancies = target_vacancies.to_frame()
     target_vacancies = target_vacancies[
-        target_vacancies.year == orca.get_injectable("year")
+        target_vacancies.year == year
     ]
 
     # get original buildings table
@@ -2879,10 +2910,7 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
                 add_more_columns_callback=add_extra_columns_nonres,
             )
 
-            # update pct_undev to 100 if theres only one building in the parcel
-            pct_undev_update = pd.Series(100, index=parcels_idx_to_update)
-            # update parcels table
-            parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+            _calculate_pct_undev(parcels, parcels_idx_to_update, year)
 
 
 @orca.step()

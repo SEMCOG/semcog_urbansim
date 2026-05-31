@@ -659,7 +659,7 @@ only_built: true
 loan_to_cost_ratio: 0.7
 
 # Exclude very large parcels from feasibility calculation.
-parcel_filter: parcel_sqft < 1100000
+parcel_filter: parcel_sqft < 2000000
 
 interest_rate: 0.05
 
@@ -694,4 +694,4 @@ pass_through: []
 
 simple_zoning: false
 
-proposals_to_keep: 3
+proposals_to_keep: 5
