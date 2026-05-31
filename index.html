@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Data developer reference for UrbanSim model input tables">
+        <meta name="description" content="Data developer reference for SEMCOG UrbanSim forecast data">
       
       
         <meta name="author" content="SEMCOG">
@@ -14,7 +14,7 @@
       
       
       
-        <link rel="next" href="domains/land-use/">
+        <link rel="next" href="domains/land-use.html">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>SEMCOG Forecast Input Data Wiki</title>
+        <title>SEMCOG Forecast Data Wiki</title>
       
     
     
@@ -51,6 +51,8 @@
       
     
     
+      <link rel="stylesheet" href="stylesheets/extra.css">
+    
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#semcog-forecast-input-data-wiki" class="md-skip">
+        <a href="#semcog-forecast-data-wiki" class="md-skip">
           Skip to content
         </a>
       
@@ -88,7 +90,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="SEMCOG Forecast Input Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+    <a href="index.html" title="SEMCOG Forecast Data Wiki" class="md-header__button md-logo" aria-label="SEMCOG Forecast Data Wiki" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +104,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            SEMCOG Forecast Input Data Wiki
+            SEMCOG Forecast Data Wiki
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -185,7 +187,7 @@
   
   
     <li class="md-tabs__item md-tabs__item--active">
-      <a href="." class="md-tabs__link">
+      <a href="index.html" class="md-tabs__link">
         
   
   
@@ -206,7 +208,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="domains/land-use/" class="md-tabs__link">
+        <a href="domains/land-use.html" class="md-tabs__link">
           
   
   
@@ -226,7 +228,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="reference/table-catalog/" class="md-tabs__link">
+        <a href="reference/table-catalog.html" class="md-tabs__link">
           
   
   
@@ -262,13 +264,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="SEMCOG Forecast Input Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Input Data Wiki" data-md-component="logo">
+    <a href="index.html" title="SEMCOG Forecast Data Wiki" class="md-nav__button md-logo" aria-label="SEMCOG Forecast Data Wiki" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    SEMCOG Forecast Input Data Wiki
+    SEMCOG Forecast Data Wiki
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -307,7 +309,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="index.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -351,6 +353,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-inputs-are-assembled-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Inputs Are Assembled — Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-dependency-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Dependency Chain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#data-domain-map" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -362,10 +397,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-the-hdf5-is-assembled" class="md-nav__link">
+  <a href="#how-inputs-are-assembled" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the HDF5 Is Assembled
+        How Inputs Are Assembled
       
     </span>
   </a>
@@ -411,9 +446,7 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -452,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/land-use/" class="md-nav__link">
+      <a href="domains/land-use.html" class="md-nav__link">
         
   
   
@@ -480,7 +513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/geography/" class="md-nav__link">
+      <a href="domains/geography.html" class="md-nav__link">
         
   
   
@@ -508,7 +541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/demographics/" class="md-nav__link">
+      <a href="domains/demographics.html" class="md-nav__link">
         
   
   
@@ -536,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/employment/" class="md-nav__link">
+      <a href="domains/employment.html" class="md-nav__link">
         
   
   
@@ -564,7 +597,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/development-context/" class="md-nav__link">
+      <a href="domains/development-context.html" class="md-nav__link">
         
   
   
@@ -592,7 +625,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/networks/" class="md-nav__link">
+      <a href="domains/networks.html" class="md-nav__link">
         
   
   
@@ -620,7 +653,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/accessibility/" class="md-nav__link">
+      <a href="domains/accessibility.html" class="md-nav__link">
         
   
   
@@ -648,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="domains/travel/" class="md-nav__link">
+      <a href="domains/travel.html" class="md-nav__link">
         
   
   
@@ -696,9 +729,7 @@
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -737,7 +768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/table-catalog/" class="md-nav__link">
+      <a href="reference/table-catalog.html" class="md-nav__link">
         
   
   
@@ -782,14 +813,133 @@
 
 
 
-<h1 id="semcog-forecast-input-data-wiki">SEMCOG Forecast Input Data Wiki<a class="headerlink" href="#semcog-forecast-input-data-wiki" title="Permanent link">&para;</a></h1>
+<h1 id="semcog-forecast-data-wiki">SEMCOG Forecast Data Wiki<a class="headerlink" href="#semcog-forecast-data-wiki" title="Permanent link">&para;</a></h1>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>This wiki is the reference guide for data developers who produce and maintain the input data for the SEMCOG UrbanSim land use simulation model. It documents every table in the <strong>model input HDF5 file</strong>, organized by the team or data domain responsible for it.</p>
-<p>The HDF5 is assembled by <code>forecast_data_input/main.py</code>, which draws from three sources:
-- <strong>PostgreSQL</strong> — parcels, buildings, zoning, events, demolitions, crime rates
-- <strong>CSV / Excel files</strong> — control totals, rate tables, synthetic population, jobs, amenities
-- <strong>Accessibility CSVs</strong> — pre-computed walk/bike/drive indicators by parcel</p>
-<p>File paths for each source are configured in <code>config/files.yaml</code> (CSV/Excel) and <code>config/sql.yaml</code> (SQL queries). Update these configs when paths change — do not hard-code paths in scripts.</p>
+<p>This wiki is the reference guide for data developers who produce and maintain the base year model inputs for the SEMCOG UrbanSim land use simulation. It documents every required data table, organized by the team or data domain responsible for it.</p>
+<p>Each domain page describes the expected structure, column definitions, and quality requirements for that domain's data. The final assembly step — combining all inputs into the model input file — is handled by a separate procedure.</p>
+<blockquote>
+<p><strong>Forecast context:</strong> This wiki was originally developed based on the RDF2050 forecast inputs (base year 2020) and has been updated to reflect data development for the RDF2055 forecast. For the 2055 forecast, the base year is expected to be 2024 or 2025 rather than 2020. Where this wiki refers to the "base year," readers should substitute the actual base year for the forecast cycle they are working on.</p>
+</blockquote>
+<hr />
+<h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UrbanSim</strong></td>
+<td>Agent-based land use simulation model that forecasts household, employment, and building changes year by year</td>
+</tr>
+<tr>
+<td><strong>Base year</strong></td>
+<td>The starting year of the simulation. All input tables represent conditions as of this year. The base year is 2020 for the RDF2050 forecast and is expected to be 2024 or 2025 for the RDF2055 forecast</td>
+</tr>
+<tr>
+<td><strong>HDF5 / HDF</strong></td>
+<td>A binary data file format used to store all model input tables in one file. Can be opened and inspected with <code>pandas.HDFStore</code> in Python or the free <a href="https://www.hdfgroup.org/downloads/hdfview/">HDFView</a> application</td>
+</tr>
+<tr>
+<td><strong>HLCM</strong></td>
+<td>Household Location Choice Model — statistical model that determines where simulated households choose to live each year</td>
+</tr>
+<tr>
+<td><strong>ELCM</strong></td>
+<td>Employment Location Choice Model — statistical model that determines where simulated jobs locate each year</td>
+</tr>
+<tr>
+<td><strong>TAZ</strong></td>
+<td>Traffic Analysis Zone — the unit of geography used by the travel demand model; parcels are assigned to TAZs</td>
+</tr>
+<tr>
+<td><strong>MCD</strong></td>
+<td>Minor Civil Division — cities, townships, and villages. The official geographic unit for municipal-level control</td>
+</tr>
+<tr>
+<td><strong>SEMMCD / semmcd</strong></td>
+<td>SEMCOG's internal MCD identifier. This is the primary geography code used throughout the model</td>
+</tr>
+<tr>
+<td><strong>city_id</strong></td>
+<td>A column that appears in many tables. <strong>Outside the City of Detroit</strong>, <code>city_id</code> equals <code>semmcd</code> and refers to a municipality. <strong>Inside the City of Detroit</strong>, <code>city_id</code> is a neighborhood identifier, not a municipal code. This is a legacy naming choice — treat <code>city_id</code> as "semmcd or Detroit neighborhood id" depending on context</td>
+</tr>
+<tr>
+<td><strong>large_area</strong></td>
+<td>One of 8 modeling zones used for forecast segmentation and control totals. Corresponds to Michigan counties by FIPS code, except Wayne County is split into two zones: City of Detroit (code 5) and Wayne County excluding Detroit (code 3)</td>
+</tr>
+<tr>
+<td><strong>REMI</strong></td>
+<td>Regional Economic Models, Inc. — the economic forecasting model that produces the population and employment projections used as control totals</td>
+</tr>
+<tr>
+<td><strong>PopulationSim</strong></td>
+<td>Open-source population synthesis tool that generates a synthetic base-year population of households and persons matching census distributions</td>
+</tr>
+<tr>
+<td><strong>Pandana</strong></td>
+<td>Python library used to compute network-based accessibility indicators (walk/bike/drive travel times and cumulative destination counts)</td>
+</tr>
+<tr>
+<td><strong>Proforma</strong></td>
+<td>The developer model's financial feasibility analysis — estimates construction cost vs. expected revenue to determine whether new buildings are profitable to build</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="how-inputs-are-assembled-overview">How Inputs Are Assembled — Overview<a class="headerlink" href="#how-inputs-are-assembled-overview" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    PG["🗄 PostgreSQL\nParcels · Buildings · Zoning\nEvents · Crime · Demolition"]
+    CSV["📄 CSV / Excel\nControl Totals · Rate Tables\nSynthetic Population · Jobs"]
+    PHDF["📦 HDFs\nAccessibility Indicators by Parcel\nGeographic constants\n(counties, large_areas, employment_sectors)"]
+    NET["📦 Network HDF\nsemcog_2050_networks.h5\n(used directly by simulation)"]
+
+    PG   --&gt; ASSM[Data Assembly]
+    CSV  --&gt; ASSM
+    PHDF --&gt; ASSM
+    ASSM --&gt; HDF[Model Input File]
+    HDF  --&gt; SIM[UrbanSim Simulation]
+    NET  --&gt; SIM
+
+    style PG   fill:#E3F2FD,stroke:#1E88E5
+    style CSV  fill:#E8F5E9,stroke:#43A047
+    style PHDF fill:#FFF3E0,stroke:#FB8C00
+    style NET  fill:#FFF3E0,stroke:#FB8C00
+    style HDF  fill:#00897B,color:#fff,stroke:#00897B
+    style SIM  fill:#1E88E5,color:#fff,stroke:#1E88E5</code></pre>
+<hr />
+<h2 id="data-dependency-chain">Data Dependency Chain<a class="headerlink" href="#data-dependency-chain" title="Permanent link">&para;</a></h2>
+<p>The most important structural rule in the model is: <strong>every agent (household or job) must be in a building, and every building must be in a parcel.</strong> This three-level chain is the spatial backbone of the simulation. Referential integrity breaks anywhere in this chain will cause model errors.</p>
+<pre class="mermaid"><code>flowchart TD
+    R[SEMCOG Region] --&gt; CO[7 Counties]
+    CO --&gt; LA["8 Large Areas\n(Wayne split into Detroit + suburbs)"]
+    LA --&gt; MCD[238 MCDs]
+    LA --&gt; TAZ[2,811 TAZs]
+
+    MCD --&gt; P["~2M Parcels"]
+    TAZ --&gt; P
+
+    P --&gt; B["~1.8M Buildings"]
+    B --&gt; HH[Households]
+    B --&gt; J[Jobs]
+
+    style HH fill:#00897B,color:#fff
+    style J  fill:#1E88E5,color:#fff
+    style B  fill:#43A047,color:#fff
+    style P  fill:#43A047,color:#fff
+    style LA fill:#e0f2f1,stroke:#00897B</code></pre>
+<blockquote>
+<p><strong>Real-world alignment note</strong></p>
+<p>The hierarchy above is the intended clean structure. In practice, real-world data introduces boundary complications that data developers should keep in mind:</p>
+<ul>
+<li><strong>TAZ–parcel boundary mismatch</strong> — TAZ boundaries are designed for travel modeling and do not always align with parcel boundaries. A parcel that physically straddles two TAZ zones is assigned to one TAZ based on its centroid location.</li>
+<li><strong>MCD–parcel boundary mismatch</strong> — A small number of parcels may physically cross a municipal boundary. These are assigned to the MCD containing their centroid, which may not reflect the parcel's full extent.</li>
+<li><strong>Multi-parcel buildings</strong> — A single building can span multiple parcels (large campuses, industrial complexes). These are tracked separately in the <code>multi_parcel_buildings</code> table.</li>
+</ul>
+<p>These edge cases are small in number but can affect spatial aggregation and model outputs. <strong>Follow the centroid-based assignment scheme as the standard approach.</strong> When exceptions or unusual cases are encountered during data preparation, document them with a note so the modeling team can assess the impact and develop targeted solutions if needed.</p>
+</blockquote>
 <hr />
 <h2 id="data-domain-map">Data Domain Map<a class="headerlink" href="#data-domain-map" title="Permanent link">&para;</a></h2>
 <p>Each domain is owned by a different team. Use this table to find who to contact and where to go for each piece of data.</p>
@@ -803,70 +953,62 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="domains/land-use/">Land Use</a></td>
-<td><code>parcels</code>, <code>buildings</code>, <code>zoning</code>, <code>land_use_types</code>, <code>building_types</code>, <code>multi_parcel_buildings</code>, <code>pseudo_building_2020</code></td>
+<td><a href="domains/land-use.html">Land Use</a></td>
+<td><code>parcels</code>, <code>buildings</code>, <code>zoning</code>, <code>land_use_types</code>, <code>building_types</code>, <code>multi_parcel_buildings</code></td>
 <td>PostgreSQL (parcel/building database)</td>
 </tr>
 <tr>
-<td><a href="domains/geography/">Geography</a></td>
+<td><a href="domains/geography.html">Geography</a></td>
 <td><code>zones</code>, <code>semmcds</code>, <code>counties</code>, <code>large_areas</code></td>
 <td>PostgreSQL (boundary tables) / constant</td>
 </tr>
 <tr>
-<td><a href="domains/demographics/">Demographics</a></td>
-<td><code>households</code>, <code>persons</code>, <code>annual_household_control_totals</code>, <code>remi_pop_total</code>, relocation rates, <code>target_vacancies</code>, <code>mcd_total</code>, group quarters tables</td>
-<td>Population synthesis, REMI, CSV files</td>
+<td><a href="domains/demographics.html">Demographics</a></td>
+<td><code>households</code>, <code>persons</code>, <code>annual_household_control_totals</code>, <code>remi_pop_total</code>, relocation rates, <code>target_vacancies</code>, <code>mcd_total</code>, <code>bg_hh_increase</code>, group quarters tables</td>
+<td>Population synthesis, REMI, ACS, CSV files</td>
 </tr>
 <tr>
-<td><a href="domains/employment/">Employment</a></td>
+<td><a href="domains/employment.html">Employment</a></td>
 <td><code>jobs</code>, <code>annual_employment_control_totals</code>, <code>annual_relocation_rates_for_jobs</code>, <code>building_sqft_per_job</code>, <code>employment_sectors</code>, <code>employed_workers_rate</code></td>
 <td>CSV files, REMI</td>
 </tr>
 <tr>
-<td><a href="domains/development-context/">Development &amp; Context</a></td>
-<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code></td>
-<td>PostgreSQL (event/demo tables), CSV</td>
+<td><a href="domains/development-context.html">Development &amp; Context</a></td>
+<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code>, building construction costs</td>
+<td>PostgreSQL (event/demo tables), CSV, RS Means</td>
 </tr>
 <tr>
-<td><a href="domains/networks/">Street Networks</a></td>
+<td><a href="domains/networks.html">Street Networks</a></td>
 <td>Walk and drive node/edge tables</td>
 <td><code>semcog_2050_networks.h5</code> (separate file)</td>
 </tr>
 <tr>
-<td><a href="domains/accessibility/">Accessibility</a></td>
+<td><a href="domains/accessibility.html">Accessibility</a></td>
 <td><code>accessibility_walk/bike/drive_indicator_by_parcel</code>, <code>transit_stops</code>, <code>poi</code></td>
 <td>Accessibility analysis CSVs</td>
 </tr>
 <tr>
-<td><a href="domains/travel/">Travel Data</a></td>
+<td><a href="domains/travel.html">Travel Data</a></td>
 <td><code>travel_data</code>, <code>travel_data_2030</code></td>
 <td>TransCAD OMX → CSV</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="how-the-hdf5-is-assembled">How the HDF5 Is Assembled<a class="headerlink" href="#how-the-hdf5-is-assembled" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>PostgreSQL database
-    parcels, buildings, zoning, zones, events, demolitions, crime rates, ...
-         │
-CSV / Excel files (paths in config/files.yaml)
-    control totals, rates, jobs, GQ data, amenities, accessibility
-         │
-         ▼
-    forecast_data_input/main.py
-    load  →  transform  →  validate  →  export
-         │
-         ▼
-    output HDF5  →  deployed to model input directory
-</code></pre></div>
-<p>Key config files:
-- <code>config/sql.yaml</code> — SQL queries for PostgreSQL tables
-- <code>config/files.yaml</code> — paths to CSV/Excel inputs
-- <code>config/transform.yaml</code> — column rename mappings
-- <code>config/data_structure.yaml</code> — dtype casting rules</p>
+<h2 id="how-inputs-are-assembled">How Inputs Are Assembled<a class="headerlink" href="#how-inputs-are-assembled" title="Permanent link">&para;</a></h2>
+<p>Data from all domains is collected and assembled into a single model input file by a separate data assembly procedure. That procedure draws from four source types:</p>
+<ul>
+<li><strong>PostgreSQL</strong> — parcels, buildings, zoning, events, demolitions, crime rates</li>
+<li><strong>CSV / Excel files</strong> — control totals, rate tables, synthetic population, jobs, amenities</li>
+<li><strong>Prior / Reference HDF</strong> — stable tables that do not change between forecast cycles and are carried forward from a previous model input file, plus accessibility indicators by parcel. Includes: <code>counties</code>, <code>large_areas</code>, <code>employment_sectors</code>, and walk/bike/drive indicator tables</li>
+<li><strong>Network HDF</strong> (<code>semcog_2050_networks.h5</code>) — street network geometry used directly by the simulation at runtime; not included in the model input file</li>
+</ul>
+<p>Each domain's data developer is responsible for producing their data to the specifications in this wiki. The assembly and final validation steps are handled outside individual domain procedures.</p>
 <hr />
 <h2 id="table-count">Table Count<a class="headerlink" href="#table-count" title="Permanent link">&para;</a></h2>
-<p>The model input HDF contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog/">Table Catalog</a> for a complete alphabetical list.</p>
+<p>The model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
+<hr />
+<p><small>Last updated: June 2026</small></p>
 
 
 
@@ -922,10 +1064,12 @@ CSV / Excel files (paths in config/files.yaml)
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "search.suggest", "toc.integrate", "toc.follow"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="js/nav-toggle.js"></script>
       
     
   </body>

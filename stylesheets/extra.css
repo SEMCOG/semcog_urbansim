@@ -1,0 +1,13 @@
+/* Force-close a nav section regardless of Material's active-state CSS */
+.md-nav__item--nested.nav-collapsed > .md-nav {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Let the active page table of contents collapse like the other nav sections. */
+.md-nav__item--active.toc-collapsed > .md-nav--secondary {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
