@@ -1,9 +1,8 @@
 # Land Use
 
-**Primary source:** PostgreSQL parcel and building database  
-**SQL config:** `config/sql.yaml`
+**Primary source:** PostgreSQL parcel and building database
 
-This domain covers the spatial foundation of the model — every parcel, every building, the zoning overlay, land use and building type definitions, and pseudo-structures used for initial agent placement.
+This domain covers the spatial foundation of the model — every parcel, every building, the zoning overlay, and land use and building type definitions.
 
 ---
 
@@ -12,13 +11,11 @@ This domain covers the spatial foundation of the model — every parcel, every b
 | Table | Description | Source |
 |---|---|---|
 | `parcels` | ~1.9M parcels — the finest spatial unit | SQL |
-| `buildings` | ~900K buildings | SQL |
+| `buildings` | ~1.8M buildings | SQL |
 | `zoning` | Parcel-level zoning (one row per parcel) | SQL |
 | `land_use_types` | Land use type definitions | SQL |
 | `building_types` | Building type code definitions | CSV |
 | `multi_parcel_buildings` | Buildings spanning multiple parcels | SQL |
-| `pseudo_building_2020` | Temporary placeholder buildings (IDs > 90M) | CSV |
-| `pseudo_parcel_2020` | Temporary placeholder parcels | CSV |
 
 ---
 
@@ -26,8 +23,7 @@ This domain covers the spatial foundation of the model — every parcel, every b
 
 The foundational spatial table. Every building must have a `parcel_id` that exists here. Used for all spatial joins in the model.
 
-**Index:** `parcel_id` (unique)  
-**SQL table:** configured in `config/sql.yaml`
+**Index:** `parcel_id` (unique)
 
 **Columns:**
 
@@ -35,9 +31,9 @@ The foundational spatial table. Every building must have a `parcel_id` that exis
 |---|---|---|---|
 | `parcel_id` | int32 | unique, no null | Primary key |
 | `census_bg_id` | int32 | no null | Census block group GEOID |
-| `centroid_x` | float64 | no null | State plane X coordinate |
+| `centroid_x` | float64 | no null | State plane X coordinate (Michigan GeoRef / NAD83) |
 | `centroid_y` | float64 | no null | State plane Y coordinate |
-| `city_id` | int16 | no null | MCD code (matches `semmcds`) |
+| `city_id` | int16 | no null | Municipality code (= `semmcd` outside Detroit; neighborhood id inside Detroit — see [Glossary](../index.md#glossary)) |
 | `county_id` | int16 | 7 valid county codes | Must be one of the 7 SE Michigan counties |
 | `land_use_type_id` | int16 | join → `land_use_types` | Must reference a valid land use type |
 | `large_area_id` | int16 | 8 valid codes | One of the 8 modeling zones |
@@ -47,23 +43,23 @@ The foundational spatial table. Every building must have a `parcel_id` that exis
 | `semmcd` | int16 | no null | SEMCOG MCD code |
 | `sev_value` | int32 | no null | State Equalized Value |
 | `landvalue` | int32 | no null | Assessed land value |
+| `bldgimprval` | int32 | no null | Total building improvement value for the parcel (all buildings combined); used to compute `buildings.improvement_value` and the `bldg_impr_land_ratio` feature in the developer model |
 | `zone_id` | int16 | no null | TAZ zone reference |
 
 **Common issues:**
 - Parcels with `zone_id = null` after join — no TAZ match; check that the parcel's zone code exists in the TAZ boundary table
 - `large_area_id` outside the 8 allowed values — usually out-of-region parcels; filter them out
-- Coordinate outliers — verify projection (state plane) and check for misplaced records
+- Coordinate outliers — verify projection (Michigan GeoRef state plane) and check for misplaced records
 
 ---
 
 ## `buildings`
 
-Every residential unit and job must be assigned to a building. This is the most-used table in the simulation.
+Every residential unit and job must be assigned to a building. This is the most-used table in the simulation. Building count is close to parcel count — most parcels have one building.
 
-**Index:** `building_id` (unique)  
-**SQL table:** configured in `config/sql.yaml`
+**Index:** `building_id` (unique)
 
-**Columns exported to HDF:**
+**Columns exported to model input:**
 
 | Column | Type | Rules | Notes |
 |---|---|---|---|
@@ -75,7 +71,7 @@ Every residential unit and job must be assigned to a building. This is the most-
 | `non_residential_sqft` | int64 | no null | 0 for residential |
 | `sqft_per_unit` | int16 | no null | 0 for non-residential |
 | `stories` | float64 | no null | |
-| `improvement_value` | float64 | no null | Derived: `market_value − land_value` |
+| `improvement_value` | float64 | no null | Derived during assembly: parcel's `bldgimprval` allocated to each building proportionally by its share of total building sqft on the parcel |
 | `land_area` | int32 | no null | Building footprint |
 | `market_value` | float64 | — | Total assessed value |
 
@@ -101,7 +97,7 @@ Every residential unit and job must be assigned to a building. This is the most-
 - `parcel_id` not found in `parcels` — orphaned buildings; these break the spatial join chain
 - `year_built` after base year — cap to base year
 - Buildings with both `residential_units > 0` AND `non_residential_sqft > 0` — mixed-use is valid; verify intentional
-- `residential_units > 0` but `sqft_per_unit = 0` — the model uses `sqft_per_unit` for feasibility; assign a reasonable default
+- `residential_units > 0` but `sqft_per_unit = 0` — the model uses `sqft_per_unit` for feasibility analysis; assign a reasonable default
 
 ---
 
@@ -109,8 +105,7 @@ Every residential unit and job must be assigned to a building. This is the most-
 
 Controls what can be built on each parcel. Directly drives the developer/feasibility model.
 
-**Index:** `parcel_id` (unique)  
-**SQL table:** configured in `config/sql.yaml`
+**Index:** `parcel_id` (unique)
 
 **Columns:**
 
@@ -123,12 +118,13 @@ Controls what can be built on each parcel. Directly drives the developer/feasibi
 | `max_height` | int16 | no null | Max building height (ft) |
 | `max_stories` | float16 | range [1 – 73], no null | Max number of stories |
 | `pct_undev` | float64 | range [0 – 100], no null | Percent of parcel undeveloped |
-| `is_developable` | int | — | 0=no, 1=yes, 2=yes (UST present) |
+| `is_developable` | int | — | 0=not developable, 1=developable, 2=developable with Underground Storage Tank (UST) present. Value 2 parcels are treated as developable but have 10 percentage points added to `pct_undev`, making them slightly less competitive for new development. |
 | `type81` – `type95` | int | — | 1 = building type allowed on this parcel |
 
 **Common issues:**
 - `pct_undev = null` — treated as 0% developable in the model; fill with 0 or actual value
 - Missing `is_developable` — defaults to not developable; verify coverage
+- Any parcel in `zoning` must have a matching `parcel_id` in `parcels`
 
 ---
 
@@ -136,8 +132,7 @@ Controls what can be built on each parcel. Directly drives the developer/feasibi
 
 Reference table of land use type definitions.
 
-**Index:** `land_use_type_id` (unique)  
-**SQL table:** configured in `config/sql.yaml`
+**Index:** `land_use_type_id` (unique)
 
 | Column | Type | Rules |
 |---|---|---|
@@ -155,14 +150,13 @@ Reference table of land use type definitions.
 
 Maps numeric `building_type_id` codes to names and general categories. Rarely changes.
 
-**Index:** `building_type_id` (unique)  
-**Source:** CSV file — path configured in `config/files.yaml`
+**Index:** `building_type_id` (unique)
 
-**Required IDs:** All 23 building type codes must be present (11, 13, 14, 21, 23, 31–33, 41–42, 51–53, 61, 63, 65, 71, 81–84, 91–95).
+**Required IDs:** All 26 building type codes must be present (11, 13, 14, 21, 23, 31–33, 41–42, 51–53, 61, 63, 65, 71, 81–84, 91–95).
 
 | Column | Type | Rules |
 |---|---|---|
-| `building_type_id` | int8 | all 23 codes required, no null |
+| `building_type_id` | int8 | all 26 codes required, no null |
 | `building_type_name` | object | no null |
 | `building_type_description` | object | no null |
 | `generic_building_type_id` | int8 | no null |
@@ -177,8 +171,6 @@ Maps numeric `building_type_id` codes to names and general categories. Rarely ch
 
 Buildings that span multiple parcels (large industrial complexes, campuses). Only update when new multi-parcel projects are added or removed.
 
-**SQL table:** configured in `config/sql.yaml`
-
 | Column | Rules |
 |---|---|
 | `building_id` | join → `buildings` |
@@ -186,22 +178,14 @@ Buildings that span multiple parcels (large industrial complexes, campuses). Onl
 
 ---
 
-## `pseudo_building_2020` / `pseudo_parcel_2020`
-
-Placeholder buildings and parcels (IDs > 90,000,000) for households and jobs with no valid base-year building assignment. Created once for the base year; do not update unless the base year changes.
-
-**Source:** CSV files — paths in `config/files.yaml`
-
-These are dropped by the simulation after the first year's location choice models place agents in real buildings.
-
----
-
 ## Update Checklist (New Forecast Cycle)
 
 - [ ] Verify parcel and building tables are updated to the new base year in PostgreSQL
 - [ ] Confirm zoning layer reflects the latest approved zoning
-- [ ] Re-run SQL extraction via `main.py` or direct query; verify row counts are plausible
+- [ ] Re-run SQL extraction; verify row counts are plausible
 - [ ] Check `building_type_id` values — all must be in the 23 allowed codes
 - [ ] Check `year_built` — cap anything beyond the new base year
 - [ ] Check `parcel_id` referential integrity: every building's parcel must exist in `parcels`
-- [ ] Run validation: `python -m input_validation.cli --hdf <output hdf>`
+- [ ] Check for null `zone_id` values in parcels — every parcel needs a TAZ assignment
+- [ ] Check for null `large_area_id` or values outside the 8 valid codes
+- [ ] Check `pct_undev` in zoning — nulls default to 0% developable

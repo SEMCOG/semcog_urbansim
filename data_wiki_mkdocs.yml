@@ -1,5 +1,5 @@
-site_name: SEMCOG Forecast Input Data Wiki
-site_description: Data developer reference for UrbanSim model input tables
+site_name: SEMCOG Forecast Data Wiki
+site_description: Data developer reference for SEMCOG UrbanSim forecast data
 site_author: SEMCOG
 docs_dir: data_wiki
 site_dir: data_wiki_site
@@ -12,11 +12,19 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - search.highlight
     - search.suggest
     - toc.integrate
+    - toc.follow
+
+use_directory_urls: false
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - js/nav-toggle.js
 
 plugins:
   - search
@@ -24,7 +32,11 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - tables
