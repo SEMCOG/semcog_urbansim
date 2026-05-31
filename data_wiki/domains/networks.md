@@ -1,8 +1,7 @@
 # Street Networks
 
 **Primary source:** OpenStreetMap (walk network), SEMCOG highway/TDM network (drive network)  
-**File:** `semcog_2050_networks.h5` — a separate HDF5 from the main model input file  
-**Config:** `semcog_urbansim/configs/available_networks_2050.yaml`
+**File:** `semcog_2050_networks.h5` — a separate HDF5 from the main model input file (filename may need to be updated for the RDF2055 forecast)
 
 The street network file provides the road and path geometry used by [Pandana](https://udst.github.io/pandana/) to compute dynamic neighborhood accessibility variables during the simulation. Each year, the `build_networks_2050` step loads these networks, snaps parcels and buildings to the nearest node, and aggregates nearby jobs, households, and amenities into building-level variables used by the location choice models.
 
@@ -25,7 +24,7 @@ The HDF5 contains one set of tables per named network. Each network has:
 
 ## Networks in Production Use
 
-The production simulation uses two networks, defined in `configs/available_networks_2050.yaml`:
+The production simulation uses two networks:
 
 ### Walk Network — `osm_roads_walk_2020`
 
@@ -36,7 +35,7 @@ Based on **OpenStreetMap** road and path data for the 2020 base year.
 | `nodes_osm_roads_walk_2020` | `x`, `y`, `nodeid` | Node coordinates (state plane) |
 | `edges_osm_roads_walk_2020` | `from`, `to`, `feet`, `minutes`, `meters` | Edge cost in feet, travel minutes, and meters |
 
-**Cost used for queries:** `feet` (distance-based queries) or `minutes` (time-based)  
+**Cost used for queries:** `feet` (distance-based) or `minutes` (time-based)  
 **Typical query radius:** 500 m (neighborhood density), 1,500 m (local population/jobs)
 
 ### Drive Networks — `highway_ext_2020` and `highway_ext_2030`
@@ -61,7 +60,7 @@ Based on the **SEMCOG highway / TDM road network**. Two vintages are provided �
 
 ## What the Networks Compute
 
-Each simulation year, Pandana uses these networks to produce **node-level** aggregations. These are then broadcast to buildings and parcels via the `nodeid_walk` and `nodeid_drv` columns. Key variables computed:
+Each simulation year, Pandana uses these networks to produce **node-level** aggregations. These are then broadcast to buildings and parcels. Key variables computed:
 
 **Walk-based (neighborhood density):**
 - Residential and non-residential density within 500 m
@@ -79,11 +78,11 @@ Each simulation year, Pandana uses these networks to produce **node-level** aggr
 
 ---
 
-## How Parcels and Buildings Connect to the Network
+## How Parcels Connect to the Network
 
-Each parcel has a `nodeid_walk` and `nodeid_drv` column — the ID of the nearest walk or drive network node. These are pre-computed and stored in the parcels table. Buildings inherit them via the parcel broadcast.
+Each parcel has a `nodeid_walk` and `nodeid_drv` column — the ID of the nearest walk or drive network node. These are pre-computed and stored in the parcels table. Buildings inherit them via the parcel. These columns are generated during model setup and do not need to be manually prepared.
 
-If a parcel's `nodeid_walk` or `nodeid_drv` is missing or invalid, that building will have null network-based variables, which can affect location choice model predictions.
+If a parcel's node ID is missing or invalid, that building will have null network-based variables, which can affect location choice model predictions.
 
 ---
 
@@ -96,7 +95,7 @@ The network file should be regenerated when:
 
 **Walk network update:**
 1. Download updated OSM data for SE Michigan
-2. Process into Pandana-compatible nodes/edges (feet, minutes, meters cost columns)
+2. Process into Pandana-compatible nodes/edges (`feet`, `minutes`, `meters` cost columns)
 3. Snap parcel centroids to nearest walk node → update `parcels.nodeid_walk`
 4. Write new tables into `semcog_2050_networks.h5`
 
@@ -106,7 +105,7 @@ The network file should be regenerated when:
 3. Generate "local" subsets (nodes/edges within the 7-county region)
 4. Snap parcel centroids to nearest drive node → update `parcels.nodeid_drv`
 5. Write new tables into `semcog_2050_networks.h5`
-6. Update `configs/available_networks_2050.yaml` if table names change
+6. Update the network configuration file if table names change
 
 **After updating the network file:**
 - Verify `nodeid_walk` and `nodeid_drv` coverage in `parcels` — count nulls and parcels with no node match
@@ -117,6 +116,6 @@ The network file should be regenerated when:
 
 ## Common Issues
 
-- **Parcels not snapping to network** — parcel coordinates outside the network coverage area; check for projection mismatches (all data should be in state plane)
+- **Parcels not snapping to network** — parcel coordinates outside the network coverage area; check for projection mismatches (all data should be in Michigan state plane)
 - **Missing local edges** — the local network subset must fully cover the 7-county region; edges that cross county boundaries may be clipped
 - **Future network not reflecting planned projects** — confirm that the 2030 network includes committed highway improvements from the TDM

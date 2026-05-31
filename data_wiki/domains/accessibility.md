@@ -1,6 +1,6 @@
 # Accessibility
 
-**Primary sources:** Pre-computed accessibility indicator CSVs; transit stop and POI datasets  
+**Primary sources:** Pre-computed accessibility indicator CSVs; transit stop and POI datasets
 
 Accessibility tables measure how easily each parcel can reach destinations by walking, biking, or driving. Transit stops and points of interest are the **destination inputs** that drive accessibility analysis; the indicator tables are the **outputs** used directly as model features.
 
@@ -16,6 +16,24 @@ Accessibility tables measure how easily each parcel can reach destinations by wa
 | `accessibility_bike_indicator_by_parcel` | Bike-mode accessibility metrics by parcel | Accessibility analysis output |
 | `accessibility_drive_indicator_by_parcel` | Drive-mode accessibility metrics by parcel | Accessibility analysis output |
 
+```mermaid
+flowchart LR
+    subgraph Static["Pre-computed (constant throughout simulation)"]
+        POI[poi\nPoints of interest] --> AA[Accessibility Analysis\nPandana offline run]
+        TS[transit_stops] --> AA
+        AA --> WI[walk_indicator_by_parcel]
+        AA --> BI[bike_indicator_by_parcel]
+        AA --> DI[drive_indicator_by_parcel]
+    end
+    subgraph Dynamic["Dynamic (recomputed each simulation year)"]
+        NET[semcog_2050_networks.h5] --> PN[Pandana\nbuild_networks step]
+        HH[Current Households\n& Jobs] --> PN
+        PN --> NV[Neighborhood Variables\nper building]
+    end
+    WI & BI & DI --> HLCM[HLCM / ELCM\nLocation Choice]
+    NV --> HLCM
+```
+
 > **Important:** The indicator tables are pre-computed externally and held **constant throughout the simulation**. When the network, transit service, or POI data changes significantly, a new accessibility analysis must be run and the indicators regenerated.
 
 ---
@@ -26,8 +44,7 @@ Accessibility tables measure how easily each parcel can reach destinations by wa
 
 Fixed-route bus and rail stop locations used in accessibility computation and as HLCM/ELCM features.
 
-**Index:** `stop_id` (unique)  
-**Source:** CSV — path in `config/files.yaml`
+**Index:** `stop_id` (unique)
 
 | Column | Type | Rules | Notes |
 |---|---|---|---|
@@ -35,7 +52,7 @@ Fixed-route bus and rail stop locations used in accessibility computation and as
 | `point_x` | float64 | no null | State plane X coordinate |
 | `point_y` | float64 | no null | State plane Y coordinate |
 
-Only `point_x` and `point_y` are retained in the exported HDF — any additional source columns are dropped.
+Only `point_x` and `point_y` are retained in the exported model input — any additional source columns are dropped.
 
 **Update:** Get updated stop locations from SEMCOG transit database or GTFS feeds. Reproject to state plane if needed. Include all fixed-route bus and rail stops in the 7-county region.
 
@@ -47,8 +64,7 @@ Only `point_x` and `point_y` are retained in the exported HDF — any additional
 
 Points of interest used as accessibility destinations — grocery stores, hospitals, parks, pharmacies, childcare, schools, etc.
 
-**Index:** Row index (integer)  
-**Source:** CSV — path in `config/files.yaml`
+**Index:** Row index (integer)
 
 | Column | Type | Rules | Notes |
 |---|---|---|---|
@@ -56,7 +72,7 @@ Points of interest used as accessibility destinations — grocery stores, hospit
 | `point_x` | float64 | no null | State plane X |
 | `point_y` | float64 | no null | State plane Y |
 
-POI categories must match the destination names used in the accessibility analysis. If category names change, the analysis must be rerun and the indicator variable names in `config/accessibility.yaml` updated accordingly.
+POI categories must match the destination names used in the accessibility analysis. If category names change, the analysis must be rerun and the indicator variable names in the model's accessibility configuration updated accordingly.
 
 **Update:** Refresh from the latest accessibility analysis POI dataset. Coordinate with the accessibility analysis team when updating — any change to categories or coverage triggers a full re-analysis.
 
@@ -70,13 +86,12 @@ All three indicator tables share the same structure — indexed by `parcel_id`, 
 
 **Cumulative variables** — count of jobs or transit stops reachable within a time threshold. Higher = better access. Fill value when none reachable: 0.
 
-File names include a date stamp (e.g., `_20251111`). Update the file paths in `config/files.yaml` and `config/accessibility.yaml` when new files are produced.
+File names include a date stamp (e.g., `_20251111`). Update the relevant configuration when new files are produced.
 
 ---
 
 ### `accessibility_walk_indicator_by_parcel`
 
-**Source:** Walk indicators CSV — path in `config/files.yaml`  
 **Index:** `parcel_id`
 
 #### Near-Max Walk Variables (90 min threshold)
@@ -118,7 +133,6 @@ File names include a date stamp (e.g., `_20251111`). Update the file paths in `c
 
 ### `accessibility_bike_indicator_by_parcel`
 
-**Source:** Bike indicators CSV — path in `config/files.yaml`  
 **Index:** `parcel_id`
 
 #### Near-Max Bike Variables (120 min threshold)
@@ -140,7 +154,6 @@ Same destination set as walk, plus `passenger_airports_bike_near_max120`. All va
 
 ### `accessibility_drive_indicator_by_parcel`
 
-**Source:** Drive indicators CSV — path in `config/files.yaml`  
 **Index:** `parcel_id`
 
 #### Near-Max Drive Variables (150 min threshold)
@@ -165,7 +178,7 @@ Destinations include: hospitals, urgent care, health centers, all healthcare, gr
 
 ## How Indicators Join to Buildings
 
-All three tables are indexed by `parcel_id`. The simulation joins them to buildings via `buildings.parcel_id`. This join is handled automatically by the `variables_access.py` module, which registers the accessibility values as building-level columns.
+All three tables are indexed by `parcel_id`. The simulation joins them to buildings via `buildings.parcel_id`. This join is handled automatically during model variable computation.
 
 ---
 
@@ -178,12 +191,13 @@ Accessibility indicators should be regenerated when:
 
 **Steps:**
 1. Update `poi` and `transit_stops` CSVs with current data
-2. Run the accessibility analysis (Pandana-based pipeline in the `accessibility/` module)
+2. Run the accessibility analysis (Pandana-based pipeline)
 3. Export new indicator CSVs with a date stamp in the filename
-4. Update file paths in `config/files.yaml` and `config/accessibility.yaml`
-5. Re-run `main.py` to incorporate the new indicators into the HDF
-6. If variable names or columns changed, update the variable lists in the simulation's `assumptions.py` (`NEAR_MAX_VARS`, `CUMULATIVE_VARS`) and re-estimate HLCM/ELCM models
+4. Update the relevant file path references in the model configuration
+5. Re-assemble the model input file to incorporate the new indicators
+6. If variable names or columns changed, coordinate with the modeling team — model coefficients are estimated on specific variable names; renaming requires re-estimation
 
 **Common issues:**
 - Parcels with all values at fill value (95/125/155 min) — parcel has no network connection; check coordinates
-- Column name mismatch between CSV and `config/accessibility.yaml` — causes errors at simulation startup
+- Column name mismatch between CSV and model configuration — causes errors at simulation startup
+- `parcel_id` values in indicator CSVs that don't match the current `parcels` table — verify the accessibility analysis used the same parcel dataset
