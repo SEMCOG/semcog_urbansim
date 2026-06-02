@@ -156,7 +156,7 @@ Total population by large area × year, directly from REMI. Used to calibrate ho
 | `large_area_id` | int16 | Row index — 8 valid codes |
 | one column per year | int32 | Total population including group quarters |
 
-**Update procedure:** This table is prepared separately from the household controls pipeline. The forecast controls pipeline (Step 1) produces a more detailed file with age group, race, and gender breakdowns used to generate `annual_household_control_totals`. `remi_pop_total` is a simpler aggregate — total population by large area × year — summarized from the same REMI county-level forecasts and saved as a standalone CSV. Update it alongside the controls pipeline using the same REMI run.
+**Update procedure:** This table is prepared separately from the household controls pipeline. The forecast controls pipeline produces a more detailed file with age group, race, and gender breakdowns used to generate `annual_household_control_totals`. `remi_pop_total` is a simpler aggregate — total population by large area × year — summarized from the same REMI county-level forecasts and saved as a standalone CSV. Update it alongside the controls pipeline using the same REMI run.
 
 ![Population forecast by large area](../images/remi_pop_forecast.png)
 
