@@ -30,6 +30,7 @@ upload_to_carto = True
 run_debug = False
 add_2019 = True
 # data_out = './runs/run2120_TAZ_refinement_090823_school_legis.h5'
+# data_out = '/mnt/hgfs/urbansim/RDF2050/model_runs/run2120_TAZ_refinement_101823/run2120_TAZ_refinement_101823.h5'
 data_out = 'runs/run1362.h5'
 
 output_indicators.main(
