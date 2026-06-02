@@ -1,0 +1,65 @@
+site_name: SEMCOG UrbanSim Model Wiki
+site_description: Technical documentation for the SEMCOG land use simulation model
+site_author: SEMCOG
+docs_dir: docs
+site_dir: wiki_site
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.integrate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - System Overview: architecture/overview.md
+    - Annual Simulation Pipeline: architecture/annual-pipeline.md
+    - Data Flow: architecture/data-flow.md
+  - Model Components:
+    - Overview: models/overview.md
+    - Household Location Choice (HLCM): models/hlcm.md
+    - Employment Location Choice (ELCM): models/elcm.md
+    - Real Estate Price Model (REPM): models/repm.md
+    - Developer & Feasibility: models/developer.md
+    - Demographic Transitions: models/transitions.md
+    - Policy Interventions (Refiner): models/refiner.md
+  - Data:
+    - Input Data: data/inputs.md
+    - Data Schema: data/schema.md
+    - Outputs: data/outputs.md
+  - Configuration:
+    - Simulation Config: configuration/simulation-config.md
+    - Model Config Files: configuration/model-configs.md
+    - Scenario Controls: configuration/scenarios.md
+    - Checkpoints & Resume: configuration/checkpoints.md
+  - Running the Model:
+    - Environment Setup: running/environment.md
+    - Running a Simulation: running/run-simulation.md
+    - Re-estimating Models: running/estimation.md
+  - Reference:
+    - Variable Definitions: reference/variables.md
+    - Accessibility System: reference/accessibility.md
+    - All Orca Steps: reference/step-reference.md
+    - Glossary: reference/glossary.md

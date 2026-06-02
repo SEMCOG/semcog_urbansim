@@ -14,6 +14,32 @@ micromamba activate forecast
 
 All Python commands should be run in this environment from `/mnt/semcog_urbansim`.
 
+### Docker Setup
+
+Load the image (from `D:\docker` on host):
+```bash
+docker load -i forecast-sim-image.tar
+```
+
+Run the container (mounts local project and network drives):
+```bash
+docker run \
+  --gpus all \
+  --name forecast-sim \
+  --dns 192.168.182.10 \
+  --dns-search semcogdom.local \
+  --privileged \
+  --cap-add SYS_ADMIN \
+  --device /dev/fuse \
+  -v D:\:/mnt/D \
+  -v D:\RDF2050:/mnt/hgfs/RDF2050 \
+  -v "U:\:/mnt/hgfs/urbansim" \
+  -v D:\projects\semcog_urbansim:/mnt/semcog_urbansim \
+  -itd forecast_simulation
+```
+
+After container start, mount network drives: `sudo mount -a`
+
 ## Running the Simulation
 
 Primary simulation entry point:
@@ -76,14 +102,30 @@ Each simulated year runs these steps in sequence (see `test_forecast_2050.py`):
 - `hlcm_constraints.yaml`, `elcm_constraints.yaml` — LCM simulation constraints
 - `res_repm_constraints.yaml`, `nonres_repm_constraints.yaml` — REPM constraints
 - `mcd_hu_sampling.yaml` — MCD-level housing unit sampling config
-- `configs/repm_2050/`, `configs/hlcm_2050/`, `configs/elcm_2050/` — Per-segment YAML model configs
+- `configs/repm_xgb/` — Trained XGBoost REPM model joblib files + grid search metadata (per segment)
+- `configs/hlcm_2050/`, `configs/elcm_2050/` — Per-segment YAML model configs
 
 ### Data
 
-- **HDF5 store**: primary data in `data/` (loaded as orca injectable `store`). Tables include `households`, `buildings`, `parcels`, `jobs`, `persons`, `zones`, `semmcds`, etc.
+- **HDF5 store**: primary data loaded from `/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5`. Tables include `households`, `buildings`, `parcels`, `jobs`, `persons`, `zones`, `semmcds`, etc.
 - **Run outputs**: `runs/runNNN.h5` — HDF5 files with year-by-year snapshots of `out_run_tables`
 - **Indicator outputs**: per-run subdirectories adjacent to the HDF5 run file
-- **External model files**: mounted at `/mnt/hgfs/RDF2050/estimation/models/` (PyTorch `.pt` files and associated metadata)
+- **External model files**: mounted at `/mnt/hgfs/RDF2050/estimation/models/`
+  - HLCM: `models_survey_finetune/pts/` — PyTorch `.pt` files (survey-finetuned)
+  - ELCM: `elcm_models_25May30/pts/` — PyTorch `.pt` files by sector
+- **Accessibility data**: `/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/` (Pandana walk/bike/drive indicators)
+- **Travel survey data**: `/mnt/D/RDF2055/input_data/travel_survey/`
+- **Scenario controls**: `/mnt/hgfs/urbansim/RDF2050/scenarios/controls/` (optional low-immigration scenario)
+
+### Output Destinations
+
+- **HDF5**: `runs/runNNN.h5` with structure `/base/`, `/2021/`, ..., `/2050/`
+- **PostgreSQL**: `plannerprojection:5432/land` — whatnots indicator table
+- **CartoDB**: public interactive map at `maps.semcog.org/forecast/`
+
+### Pseudo-Buildings
+
+Households and jobs with invalid `building_id` values are assigned to temporary pseudo-buildings at simulation start. These are removed by `drop_pseudo_buildings()` after location choice models have placed them in real buildings.
 
 ### Checkpoint / Resume
 

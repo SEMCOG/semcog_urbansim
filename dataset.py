@@ -102,7 +102,7 @@ def bg_hh_increase():
 def buildings(store):
     df = store["buildings"]
     # Skip recalculation when resuming from checkpoint - use checkpoint data as-is
-    if orca.get_injectable('use_checkpoint'):
+    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return df
     pseudo_buildings = store["pseudo_building_2020"]
     pseudo_buildings = pseudo_buildings[
@@ -181,7 +181,7 @@ def buildings(store):
 def households(store, buildings):
     df = store["households"]
     # Skip recalculation when resuming from checkpoint
-    if orca.get_injectable('use_checkpoint'):
+    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return df
     b = buildings.to_frame(["large_area_id", "residential_units"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
@@ -232,7 +232,7 @@ def persons(store):
 def jobs(store, buildings):
     df = store["jobs"]
     # Skip recalculation when resuming from checkpoint
-    if orca.get_injectable('use_checkpoint'):
+    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return df
     b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
@@ -251,7 +251,7 @@ def jobs(store, buildings):
 def parcels(store, zoning):
     parcels_df = store["parcels"]
     # Skip recalculation when resuming from checkpoint
-    if orca.get_injectable('use_checkpoint'):
+    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return parcels_df
     # Added parcels from pseudo buildings
     pseudo_parcels = store["pseudo_parcel_2020"]
