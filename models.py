@@ -2082,6 +2082,160 @@ def random_demolition_events(
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
+# ── Demolition scoring helpers ────────────────────────────────────────────────
+
+_DEMO_CFG_CACHE = {}   # avoids re-reading YAML every simulation year
+
+def _load_demolition_cfg():
+    path = os.path.join(misc.configs_dir(), "demolition_model.yaml")
+    mtime = os.path.getmtime(path)
+    if _DEMO_CFG_CACHE.get("mtime") != mtime:
+        with open(path) as f:
+            _DEMO_CFG_CACHE["cfg"]   = yaml.load(f, Loader=yaml.FullLoader)
+            _DEMO_CFG_CACHE["mtime"] = mtime
+    return _DEMO_CFG_CACHE["cfg"]
+
+
+def _logistic_score(df, section, features):
+    """Return a Series of logistic probabilities for rows in df."""
+    means     = section["feature_mean"]
+    stds      = section["feature_std"]
+    coefs     = section["coef"]
+    intercept = section["intercept"]
+    score     = np.full(len(df), intercept, dtype=float)
+    for feat in features:
+        if feat not in df.columns:
+            continue
+        x = (df[feat].fillna(means.get(feat, 0.0)) - means.get(feat, 0.0)) \
+            / max(stds.get(feat, 1.0), 1e-8)
+        score += coefs.get(feat, 0.0) * x
+    prob = 1.0 / (1.0 + np.exp(-np.clip(score, -15.0, 15.0)))
+    return pd.Series(prob, index=df.index)
+
+
+@orca.step()
+def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates):
+    """
+    Scored replacement for random_demolition_events.
+
+    Buildings are ranked by a logistic regression score (age, improvement value
+    per sqft, land-to-improvement ratio, tax-exempt status, Wayne County flag)
+    and sampled to hit city-level control totals from demolition_rates.
+
+    When configs/demolition_model.yaml has is_calibrated=false the function
+    falls back to the original inverse-log-occupancy weights so the simulation
+    runs unchanged until calibration_demolition.py has been executed.
+    """
+    cfg              = _load_demolition_cfg()
+    is_calibrated    = cfg.get("residential", {}).get("is_calibrated", False)
+    rate_mult        = cfg.get("scenario_rate_multiplier", 1.0)
+    min_age          = cfg.get("min_age_eligible", 10)
+
+    demolition_rates = demolition_rates.to_frame() * rate_mult
+    buildings_columns = buildings.local_columns
+
+    b = buildings.to_frame(
+        buildings_columns + [
+            "city_id", "b_total_jobs", "b_total_households",
+            "building_age", "vacant_residential_units",
+            "impr_value_per_sqft", "land_to_impr_ratio",
+        ]
+    )
+
+    # Wayne County flag needed by logistic model (large_area_id is on parcels)
+    pcl = parcels.to_frame(["large_area_id"])
+    b["is_wayne"]  = b.parcel_id.map(pcl.large_area_id).eq(5).astype(float)
+    b["is_exempt"] = 0.0   # not available at sim-time; set neutral value
+
+    # ── Eligibility ──────────────────────────────────────────────────────────
+    not_eligible = (b.building_age < min_age) | (b.sp_filter < 0) | (b.event_id > 0)
+
+    # ── Demolition scores ────────────────────────────────────────────────────
+    if is_calibrated:
+        res_score    = _logistic_score(b, cfg["residential"],    ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+        nonres_score = _logistic_score(b, cfg["nonresidential"], ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+    else:
+        # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
+        res_score    = 1.0 / (1.0 + np.log1p(b["b_total_households"]))
+        nonres_score = 1.0 / (1.0 + np.log1p(b["b_total_jobs"]))
+
+    b["res_score"]    = res_score.where(~not_eligible, 0.0).clip(lower=1e-6)
+    b["nonres_score"] = nonres_score.where(~not_eligible, 0.0).clip(lower=1e-6)
+
+    # ── Sampling ─────────────────────────────────────────────────────────────
+    allowed   = variables.parcel_is_allowed_2050()
+    allowed_b = b.parcel_id.isin(allowed[allowed].index)
+
+    buildings_idx = []
+
+    def sample(targets, type_b, accounting, score_col):
+        for city_id, target in targets[targets > 0].items():
+            rel_b = type_b[type_b.city_id == city_id]
+            if len(rel_b) == 0:
+                continue
+            w    = rel_b[score_col].clip(lower=1e-6)
+            size = min(len(rel_b), int(target))
+            if size > 0:
+                sampled = rel_b.sample(size, weights=w)
+                sampled = sampled[sampled[accounting].cumsum() <= int(target)]
+                buildings_idx.append(sampled)
+
+    nonres_eligible = b.loc[allowed_b]
+    sample(
+        demolition_rates.typenonsqft,
+        nonres_eligible[nonres_eligible.non_residential_sqft > 0],
+        "non_residential_sqft",
+        "nonres_score",
+    )
+    res_eligible = b.loc[allowed_b & (b.non_residential_sqft == 0)]
+    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score")
+    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score")
+    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score")
+
+    if not buildings_idx:
+        return
+
+    drop_buildings = pd.concat(buildings_idx).copy()
+    drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
+    buildings_idx  = drop_buildings.index
+    drop_buildings["year_demo"]           = year
+    drop_buildings["demolition_pathway"]  = "scored" if is_calibrated else "legacy"
+    drop_buildings["step"]                = "scored_demolition_events"
+
+    if orca.is_table("dropped_buildings"):
+        prev_drops = orca.get_table("dropped_buildings").to_frame()
+        orca.add_table("dropped_buildings", pd.concat([drop_buildings, prev_drops]))
+    else:
+        orca.add_table("dropped_buildings", drop_buildings)
+
+    new_buildings_table = buildings[buildings_columns].drop(buildings_idx)
+    orca.add_table("buildings", new_buildings_table)
+
+    households = households.to_frame(households.local_columns)
+    households.loc[households.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("households", households)
+
+    jobs = jobs.to_frame(jobs.local_columns)
+    jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("jobs", jobs)
+
+    parcels_idx_to_update = [
+        pid
+        for pid in drop_buildings.parcel_id.values.tolist()
+        if pid not in new_buildings_table.parcel_id.values
+    ]
+    pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+    parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+    print(
+        f"scored_demolition_events {year}: dropped {len(buildings_idx):,} buildings "
+        f"({'calibrated' if is_calibrated else 'legacy weights'})"
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 def parcel_average_price(use):
     parcels_wrapper = orca.get_table("parcels")
     if len(orca.get_table("nodes_walk")) == 0:

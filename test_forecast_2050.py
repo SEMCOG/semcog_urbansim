@@ -112,7 +112,7 @@ orca.run(
         "update_taz_hlcm_trend",
         "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
-        "random_demolition_events",
+        "scored_demolition_events",
         "scheduled_development_events",
         "refiner",
         "households_transition",
