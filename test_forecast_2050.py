@@ -127,7 +127,7 @@ orca.run(
         "update_sp_filter",
     ]
     + orca.get_injectable("repm_step_names")
-    # + ["increase_property_values"]  # on hold
+    + ["increase_property_values"]
     + ["refine_housing_units"]
     + ["mcd_hu_sampling"]
     + orca.get_injectable("hlcm_step_names")

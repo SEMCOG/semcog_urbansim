@@ -730,22 +730,18 @@ else:
 
 
 @orca.step()
-def increase_property_values(buildings, income_growth_rates):
-    # Hack to make more feasibility
-    # dfinc = pd.read_csv("income_growth_rates.csv", index_col=['year'])
-    dfinc = income_growth_rates.to_frame().loc[: orca.get_injectable("year")]
-    dfrates = (
-        dfinc.prod().to_frame(name="cumu_rates").fillna(1.0)
-    )  # get cumulative increase from base to current year
-    dfrates.index = dfrates.index.astype(float)
-    bd = buildings.to_frame(["large_area_id", "sqft_price_res", "sqft_price_nonres"])
-    bd = pd.merge(bd, dfrates, left_on="large_area_id", right_index=True, how="left")
-    buildings.update_col_from_series(
-        "sqft_price_res", bd.sqft_price_res * bd.cumu_rates
-    )
-    buildings.update_col_from_series(
-        "sqft_price_nonres", bd.sqft_price_nonres * bd.cumu_rates
-    )
+def increase_property_values(buildings, year):
+    pi_rates = orca.get_injectable("remi_pi_growth_rates")
+    if year not in pi_rates:
+        return
+    la_rates = pi_rates[year]
+    bd = buildings.to_frame(["large_area_id", "sqft_price_res"])
+    bd = bd[bd["sqft_price_res"] > 0]
+    bd["rate"] = bd["large_area_id"].map(la_rates).fillna(0.0) + 1.0
+    scaled = (bd["sqft_price_res"] * bd["rate"]).clip(upper=700)
+    buildings.update_col_from_series("sqft_price_res", scaled, cast=True)
+    summary = {la: f"{r:.2%}" for la, r in la_rates.items()}
+    print(f"  [increase_property_values] year={year} PI rates: {summary}")
 
 
 @orca.step()
@@ -2104,12 +2100,19 @@ def shifters():
 
 
 def cost_shifter_callback(self, form, df, costs):
+    # Cumulative PCE cost inflation from 2022 base year
+    year = orca.get_injectable("year")
+    pce_rates = orca.get_injectable("remi_pce_growth_rates")
+    cost_multiplier = 1.0
+    for y in range(2023, year + 1):
+        cost_multiplier *= 1.0 + pce_rates.get(y, 0.020)
+    costs = costs * cost_multiplier
+
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
     geography = shifter_cfg["calibration_geography_id"]
     shifters = shifter_cfg["proforma_cost_shifters"]["non_residential"]
-
     for geo, geo_df in df.reset_index().groupby(geography):
         shifter = shifters.get(geo, 1.0)
         costs[:, geo_df.index] *= shifter
