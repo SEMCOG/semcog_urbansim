@@ -1,0 +1,61 @@
+# Demolition scoring model configuration
+# Populated by demolition_calibration.py — do not edit coefficients by hand.
+#
+# is_calibrated: false  → scored_demolition_events falls back to
+#                         inverse-occupancy weights (same as old random_demolition_events)
+# is_calibrated: true   → uses logistic regression scores below
+
+residential:
+  is_calibrated: false
+  # Standardization params (StandardScaler mean / scale from training data)
+  feature_mean:
+    building_age:        0.0
+    impr_value_per_sqft: 0.0
+    land_to_impr_ratio:  0.0
+    is_exempt:           0.0
+    is_wayne:            0.0
+  feature_std:
+    building_age:        1.0
+    impr_value_per_sqft: 1.0
+    land_to_impr_ratio:  1.0
+    is_exempt:           1.0
+    is_wayne:            1.0
+  intercept: 0.0
+  coef:
+    building_age:        0.0
+    impr_value_per_sqft: 0.0
+    land_to_impr_ratio:  0.0
+    is_exempt:           0.0
+    is_wayne:            0.0
+
+nonresidential:
+  is_calibrated: false
+  feature_mean:
+    building_age:        0.0
+    impr_value_per_sqft: 0.0
+    land_to_impr_ratio:  0.0
+    is_exempt:           0.0
+    is_wayne:            0.0
+  feature_std:
+    building_age:        1.0
+    impr_value_per_sqft: 1.0
+    land_to_impr_ratio:  1.0
+    is_exempt:           1.0
+    is_wayne:            1.0
+  intercept: 0.0
+  coef:
+    building_age:        0.0
+    impr_value_per_sqft: 0.0
+    land_to_impr_ratio:  0.0
+    is_exempt:           0.0
+    is_wayne:            0.0
+
+# --- Eligibility rules ---
+min_age_eligible: 10           # buildings younger than this are never sampled
+max_res_occupancy_eligible: 0.85   # skip if >85% of units are occupied
+max_nonres_occupancy_eligible: 0.85
+
+# --- Scenario rate multiplier ---
+# Scales the demolition_rates control totals for scenario analysis.
+# 1.0 = baseline; 1.5 = high blight removal; 0.5 = reduced demolition funding
+scenario_rate_multiplier: 1.0
