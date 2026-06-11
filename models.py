@@ -842,7 +842,7 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
 #
 # Order rationale:
 #   cars     - not an HLCM segment, no person edit -> drop first (synth everywhere)
-#   workers  - recomputed from persons by fix_lpr each year anyway, so its value
+#   workers  - recomputed from persons by workers_adjustment_model each year, so its value
 #              here is downstream-reconciled -> cheap to synthesize, drop early
 #   income   - HLCM segments on it, but the override samples WITHIN the target
 #              income bin so the income segment is preserved regardless -> drop
@@ -1014,7 +1014,7 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             # before workers: re-age members, then assign worker flags over the
             # final working-age set. The persons table is the source of truth for
             # whichever count was edited, so the two stay consistent (and survive
-            # fix_lpr, which recomputes workers from persons). Counts NOT dropped
+            # workers_adjustment_model, which recomputes workers from persons). Counts NOT dropped
             # keep the donor's matching value.
             if "persons" in dropped:
                 dp = _gap_sync_persons(
@@ -1152,38 +1152,18 @@ def households_transition(
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
-    # issue #56
-    # append hh_seeds and p_seeds to the end 
-    hh_seeds = orca.get_table('hh_seeds').to_frame().reset_index()[region_hh.columns]
-    p_seeds = orca.get_table('p_seeds').to_frame().reset_index()#[region_p.columns]
-    max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
-    hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
-    hh_seeds.index.name = 'household_id'
-    # set hh_seeds building_id to -1
-    hh_seeds['building_id'] = -1
 
-    p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
-    p_seeds.index.name = 'person_id'
-    # map hh_id back to p_seeds
-    p_seeds['household_id'] = p_seeds['seed_id'].map(hh_seeds.reset_index().set_index('seed_id')['household_id'])
-    # append
-    region_hh = pd.concat((region_hh, hh_seeds), axis=0)
-    region_p = pd.concat((region_p, p_seeds), axis=0)
-
-    if "changed_hhs" in orca.list_tables():
-        ## add changed hhs and persons from previous year back (ensure transition sample availability )
-        changed_hhs = orca.get_table("changed_hhs").local
-        changed_hhs.index += region_hh.index.max()
-
-        changed_ps = orca.get_table("changed_ps").local
-        changed_ps.index += region_p.index.max()
-        changed_ps["household_id"] = changed_ps["household_id"] + region_hh.index.max()
-
-        region_hh = pd.concat([region_hh, changed_hhs])
-        region_p = pd.concat([region_p, changed_ps])
-
-    region_hh.index = region_hh.index.astype(int)
-    region_p.index = region_p.index.astype(int)
+    # NOTE (2026-06): the blanket donor injections that used to live here —
+    # appending the full hh_seeds/p_seeds set (issue #56) and the previous
+    # year's LPR-changed households — were removed. They guaranteed donor
+    # availability by flooding the pool (~64k seed households/year), which the
+    # totals transition offset by randomly removing real, placed households
+    # (hidden churn + drift toward base-year composition). fill_control_gaps
+    # (called in presses_trans) now guarantees donor availability surgically,
+    # injecting donors only for control cells that would otherwise be empty.
+    # Validated: zero unfilled control cells across all large areas without
+    # the blanket appends. hh_seeds/p_seeds tables themselves are still
+    # maintained by cache_hh_seeds for the labor-participation swaps.
 
     region_target = remi_pop_total.to_frame()
 
@@ -1286,7 +1266,7 @@ def households_transition(
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
 
-def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
+def get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds):
     # get hh swapping mapping
     # 2hr runtime
     # recommend using cached result
@@ -1398,19 +1378,26 @@ def cache_hh_seeds(households, persons, iter_var):
     orca.add_table('hh_seeds', hh_seeds)
     orca.add_table('p_seeds', p_seeds)
 
-# TODO:
-# - Add worker by swapping hh with 1 worker more hh
-# - try to limit the impact to other variables
-# - same persons, children, income within range(?), car(?), race with worker + 1
-# - update persons table(optional) and households table
 @orca.step()
-def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
+def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
+    """Adjust household/person worker counts to employed-worker rate targets.
+
+    For each large area and age band, compares the current number of employed
+    workers against the target implied by the `employed_workers_rate` table and
+    closes the gap by swapping households with a counterpart seed household
+    that has one more (or one fewer) worker and matched persons / race /
+    age-bin / children. Household `workers` is then recomputed from the person
+    `worker` flags, and income/cars of changed households are resampled from
+    peers with the same composition and new worker count.
+
+    Formerly named `fix_lpr`; renamed 2026-06. Note the rates are employed-
+    worker rates (employment), not labor-force participation rates.
+    """
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh_seeds = hh_seeds.to_frame()
     p_seeds = p_seeds.to_frame()
-    changed_hhs = hh.copy()
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
     hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
@@ -1422,7 +1409,6 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     p['age_bin'] = p['age_bin'].fillna(0).astype(int)
 
     p = p.join(hh.seed_id, on='household_id')
-    changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
 
     colls = [
@@ -1438,26 +1424,30 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     hh_seeds = hh_seeds.reset_index()
     p_seeds = p_seeds.reset_index()
 
+    # Worker-swap seed mappings are expensive to build (~2h); cache as CSV and
+    # reuse. (Previously the existence check looked for .pkl files that were
+    # never written, and the drop-worker table overwrote the add-worker file,
+    # so the cache could never activate.)
     USE_SWAPPING_SEED_MAPPING = True
-    aw_path = 'data/add_worker_dict.pkl'
-    dw_path = 'data/drop_worker_dict.pkl'
+    aw_path = 'data/add_worker_dict.csv'
+    dw_path = 'data/drop_worker_dict.csv'
     if not os.path.exists(aw_path):
         USE_SWAPPING_SEED_MAPPING = False
-        print(aw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+        print(aw_path, ' not found. running get_worker_swap_seed_mapping')
     if not os.path.exists(dw_path):
         USE_SWAPPING_SEED_MAPPING = False
-        print(dw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+        print(dw_path, ' not found. running get_worker_swap_seed_mapping')
     if USE_SWAPPING_SEED_MAPPING:
-        add_worker_df = pd.read_csv('data/add_worker_dict.csv', index_col=0)
+        add_worker_df = pd.read_csv(aw_path, index_col=0)
         add_worker_df.columns = add_worker_df.columns.astype(int)
-        drop_worker_df = pd.read_csv('data/drop_worker_dict.csv', index_col=0)
+        drop_worker_df = pd.read_csv(dw_path, index_col=0)
         drop_worker_df.columns = drop_worker_df.columns.astype(int)
     else:
-        add_worker_dict, drop_worker_dict = get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds)
+        add_worker_dict, drop_worker_dict = get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds)
         add_worker_df = pd.DataFrame(add_worker_dict)
         add_worker_df.to_csv(aw_path, index=True)
         drop_worker_df = pd.DataFrame(drop_worker_dict)
-        drop_worker_df.to_csv(aw_path, index=True)
+        drop_worker_df.to_csv(dw_path, index=True)
 
     hh_seeds = hh_seeds.set_index('seed_id')
     p_seeds = p_seeds.set_index('seed_id')
@@ -1552,42 +1542,17 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
     changed = hh.workers != hh.old_workers
-    print(f"changed number of HHs from LPR is {len(changed)})")
+    print(f"worker counts changed for {int(changed.sum())} of {len(changed)} households")
 
-    # TODO: using hh controls to test out each segment number
+    # NOTE (2026-06): the changed_hhs/changed_ps tables that were saved here as
+    # extra transition donors were removed together with the blanket seed
+    # append in households_transition — fill_control_gaps now guarantees donor
+    # availability in the transition directly.
 
-    # save changed HHs and persons as valid samples for future transition model
-
-    if len(changed[changed == True]) > 0:
-        changed_hhs = changed_hhs[changed]
-        changed_hhs["old_hhid"] = changed_hhs.index
-        changed_hhs.index = range(1, 1 + len(changed_hhs))
-        changed_hhs.index.name = "household_id"
-        changed_hhs = changed_hhs.reset_index().set_index("old_hhid")
-
-        changed_ps = changed_ps.loc[
-            changed_ps.household_id.isin(changed_hhs[changed].index)
-        ]
-        changed_ps = changed_ps.rename(columns={"household_id": "old_hhid"})
-        changed_ps = changed_ps.merge(
-            changed_hhs[["household_id"]],
-            left_on="old_hhid",
-            right_index=True,
-            how="left",
-        )
-        changed_ps.index = range(1, 1 + len(changed_ps))
-        changed_ps = changed_ps.drop("old_hhid", axis=1)
-
-        changed_hhs = changed_hhs.set_index("household_id")
-        changed_hhs["building_id"] = -1
-
-        print(f"saved {len(changed_hhs)} households for future samples")
-    else:
-        changed_hhs = hh.iloc[0:0]
-        changed_ps = changed_ps.iloc[0:0]
-    orca.add_table("changed_hhs", changed_hhs[households.local_columns])
-    orca.add_table("changed_ps", changed_ps[persons.local_columns])
-
+    # Resample income/cars for changed households from peers with the same
+    # (persons, race, NEW worker count, children, large area), so household
+    # economics stay consistent with the adjusted worker count.
+    resample_missed = 0
     for match_colls, chh in hh[changed].groupby(colls):
         try:
             match = same[tuple(match_colls)]
@@ -1596,8 +1561,11 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
                 new_workers, ["income", "cars"]
             ].values
         except KeyError:
-            pass
-            # todo: something better!?
+            # no peer group with this combination — income/cars kept as-is
+            resample_missed += len(chh)
+    if resample_missed:
+        print(f"income/cars resample: no peer group for {resample_missed} "
+              "changed households (values left unchanged)")
 
     orca.add_table("households", hh[households.local_columns])
     orca.add_table("persons", p[persons.local_columns])
