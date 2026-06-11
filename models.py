@@ -820,10 +820,261 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     _print_number_unplaced(jobs, "building_id")
 
 
+# ---------------------------------------------------------------------------
+# Zero-cell donor gap-filling for the household transition model
+# ---------------------------------------------------------------------------
+# A control row whose 8-dim category matches no household is silently skipped
+# by urbansim's TabularTotalsTransition (its `if len(subset) == 0: continue`),
+# so its households — and their population — never appear. The control-total
+# script now emits nonzero rows for categories absent in the synthesized base
+# year, so the simulation must be able to fill them.
+#
+# Strategy (mirrors the control-side fallback): for each empty control row,
+# find the nearest donor by relaxing the least-structural dimensions, clone it,
+# then OVERRIDE the relaxed attributes back to the control row's target bin
+# (syncing person records). The donor lends only its retained attributes plus
+# its person structure; every dropped dimension is restored to the target.
+#
+# Relax order = most expendable first. The FIRST dim dropped is synthesized in
+# every filled cell (it sits in every non-empty prefix), so it must be the
+# lowest-stakes attribute. age_of_head and persons are NEVER relaxed (they fix
+# headship and population); large_area_id is never relaxed (same-LA donors only).
+#
+# Order rationale:
+#   cars     - not an HLCM segment, no person edit -> drop first (synth everywhere)
+#   workers  - recomputed from persons by fix_lpr each year anyway, so its value
+#              here is downstream-reconciled -> cheap to synthesize, drop early
+#   income   - HLCM segments on it, but the override samples WITHIN the target
+#              income bin so the income segment is preserved regardless -> drop
+#              after workers to better keep the income<->workers joint realism
+#   race_id  - CONDITIONAL: only relaxed when the (LA, age, race) cell is empty
+#              (a genuine demographic gap, e.g. LA 93/115 Black 18-24). For an
+#              ordinary fine-combo gap the race is already correct and is never
+#              relabeled.
+#   children - HLCM segments on has_children AND it is the heaviest person
+#              rewrite (re-aging members) -> drop late
+#   persons  - last-resort catch-all: resize the donor household to the target
+#              size (add/drop members). Only reached when no same-LA, same-age
+#              household of any race/structure of that size exists at all. Keeps
+#              age_of_head (the sole never-relaxed dim besides large_area), so a
+#              same-age head is always retained; population stays correct because
+#              the resized size matches the control row's persons bin.
+# age_of_head and large_area_id are never relaxed.
+# This generalises (and replaces) the hand-maintained step7_fix_zero_samples.
+GAP_RELAX_ORDER = ["cars", "workers", "income", "race_id", "children", "persons"]
+GAP_RELAX_COLS = {
+    "income": ["income_min", "income_max"],
+    "cars": ["cars_min", "cars_max"],
+    "race_id": ["race_id"],
+    "workers": ["workers_min", "workers_max"],
+    "children": ["children_min", "children_max"],
+    "persons": ["persons_min", "persons_max"],
+}
+GAP_DONORS_PER_CELL = 25   # distinct donors injected per empty cell, for variety
+WORKING_AGE_MIN = 16
+
+
+def _gap_rand_int(lo, hi, rng):
+    """Random int in [lo, hi) where hi is the already-+1'd exclusive max
+    (np.inf for open-ended bins, in which case lo is used)."""
+    lo = int(lo)
+    if not np.isfinite(hi):
+        return lo
+    hi = int(hi)
+    return lo if hi <= lo + 1 else int(rng.integers(lo, hi))
+
+
+def _gap_rand_income(lo, hi, rng):
+    """Random income within the target quartile bin (open top bin -> 1.5x lo)."""
+    lo = float(lo)
+    if not np.isfinite(hi):
+        return lo * 1.5 if lo > 0 else 1000.0
+    return float(rng.uniform(lo, float(hi)))
+
+
+def _gap_sync_workers(pers, target_workers):
+    """Set exactly min(target, working-age members) members to worker=1."""
+    cand = pers.index[pers["age"] >= WORKING_AGE_MIN]
+    target = min(int(target_workers), len(cand))
+    pers["worker"] = 0
+    if target > 0:
+        pers.loc[cand[:target], "worker"] = 1
+    pers.loc[pers["worker"] == 0, "industry"] = 0
+    return target
+
+
+def _gap_sync_children(pers, target_children, rng):
+    """Adjust ages of non-head members so own-children (<18) == target, holding
+    total persons fixed. Head (relate==0) untouched. Heaviest edit (logged)."""
+    age_dt = pers["age"].dtype
+    non_head = pers.index[pers["relate"] != 0]
+    n_child = min(int(target_children), len(non_head))
+    child_idx = non_head[:n_child]
+    adult_idx = non_head[n_child:]
+    if len(child_idx):
+        pers.loc[child_idx, "age"] = rng.integers(0, 18, size=len(child_idx)).astype(age_dt)
+        pers.loc[child_idx, "worker"] = 0
+    young = adult_idx[pers.loc[adult_idx, "age"] < 18]
+    if len(young):
+        pers.loc[young, "age"] = rng.integers(18, 65, size=len(young)).astype(age_dt)
+    return n_child
+
+
+def _gap_sync_persons(pers, target_persons, rng):
+    """Resize a household's person rows to exactly target_persons, keeping the
+    single head (relate==0). Drops random non-head members when shrinking, or
+    clones existing members (marked non-head) when growing. member_id is
+    renumbered. children/workers are re-synced by the caller afterwards."""
+    target = int(target_persons)
+    cur = len(pers)
+    if cur != target:
+        rs = int(rng.integers(0, 2**31))
+        head = pers[pers["relate"] == 0]
+        non_head = pers[pers["relate"] != 0]
+        if cur > target:
+            keep = max(target - len(head), 0)
+            non_head = non_head.sample(min(keep, len(non_head)), random_state=rs) \
+                if keep and len(non_head) else non_head.iloc[:0]
+            pers = pd.concat([head, non_head])
+        else:
+            pool = non_head if len(non_head) else head
+            add = pool.sample(target - cur, replace=True, random_state=rs).copy()
+            add["relate"] = (pers["relate"].dtype.type(2))  # mark as non-head members
+            pers = pd.concat([pers, add])
+        # cloning with replacement duplicates index labels; reset to a unique
+        # index so the downstream children/workers .loc edits are well-defined
+        # (the caller reassigns final person_ids anyway).
+        pers = pers.reset_index(drop=True)
+    pers["member_id"] = np.arange(1, len(pers) + 1, dtype=pers["member_id"].dtype)
+    return pers
+
+
+def fill_control_gaps(ct, hh, p, iter_var, seed=0):
+    """Inject attribute-overridden donor households for empty control rows so
+    TabularTotalsTransition can fill them. Returns (hh, p, diagnostics)."""
+    rng = np.random.default_rng(seed)
+    la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    next_hid = int(hh.index.max()) + 1
+    next_pid = int(p.index.max()) + 1
+
+    hh_records, hh_ids, p_chunks, diags = [], [], [], []
+
+    for ridx, row in ct.iterrows():
+        if row["total_number_of_households"] <= 0:
+            continue
+        if len(utils.filter_table(hh, row, ignore={"total_number_of_households"})) > 0:
+            continue  # already fillable
+
+        # Relax race only for a genuine demographic gap: the whole
+        # (LA, age_of_head, race) cell empty. For a populated cell the race is
+        # already correct and must not be relabeled.
+        race_cell_empty = len(hh[
+            (hh["race_id"] == row["race_id"])
+            & (hh["age_of_head"] >= row["age_of_head_min"])
+            & (hh["age_of_head"] < row["age_of_head_max"])
+        ]) == 0
+
+        dropped, donors, ignore = [], None, {"total_number_of_households"}
+        for attr in GAP_RELAX_ORDER:
+            if attr == "race_id" and not race_cell_empty:
+                continue  # don't relabel race for a populated (LA, age, race) cell
+            dropped.append(attr)
+            ignore |= set(GAP_RELAX_COLS[attr])
+            cand = utils.filter_table(hh, row, ignore=ignore)
+            if len(cand) > 0:
+                donors = cand
+                break
+
+        if donors is None or len(donors) == 0:
+            # Empty even after relaxing every dim except large_area and
+            # age_of_head -> no same-LA household of this head-age exists at all
+            # (would need a cross-LA donor or relaxing age). Surfaced below.
+            cat = {c: row[c] for c in
+                   ["race_id", "age_of_head_min", "age_of_head_max",
+                    "persons_min", "persons_max"] if c in row}
+            diags.append({"row": ridx, "rung": "NO_DONOR", "cat": cat,
+                          "target": int(row["total_number_of_households"]), "donors": 0})
+            continue
+
+        k = min(GAP_DONORS_PER_CELL, len(donors), int(row["total_number_of_households"]))
+        donor_sample = donors.sample(k, random_state=int(rng.integers(0, 2**31)))
+
+        for old_hid, donor in donor_sample.iterrows():
+            clone = donor.to_dict()
+            dp = p[p["household_id"] == old_hid].copy()
+
+            if "income" in dropped:
+                clone["income"] = _gap_rand_income(row["income_min"], row["income_max"], rng)
+            if "cars" in dropped:
+                clone["cars"] = _gap_rand_int(row["cars_min"], row["cars_max"], rng)
+            if "race_id" in dropped:
+                clone["race_id"] = int(row["race_id"])
+                dp["race_id"] = int(row["race_id"])
+            # persons resize first (changes the member set), then children
+            # before workers: re-age members, then assign worker flags over the
+            # final working-age set. The persons table is the source of truth for
+            # whichever count was edited, so the two stay consistent (and survive
+            # fix_lpr, which recomputes workers from persons). Counts NOT dropped
+            # keep the donor's matching value.
+            if "persons" in dropped:
+                dp = _gap_sync_persons(
+                    dp, _gap_rand_int(row["persons_min"], row["persons_max"], rng), rng)
+                clone["persons"] = int(len(dp))
+            if "children" in dropped:
+                _gap_sync_children(
+                    dp, _gap_rand_int(row["children_min"], row["children_max"], rng), rng)
+                n_child = int((dp["age"] < 18).sum())
+                clone["children"] = n_child
+                if "noc" in clone:
+                    clone["noc"] = n_child
+            if "workers" in dropped:
+                _gap_sync_workers(
+                    dp, _gap_rand_int(row["workers_min"], row["workers_max"], rng))
+                clone["workers"] = int(dp["worker"].sum())
+
+            clone["building_id"] = -1
+            new_hid = next_hid
+            next_hid += 1
+            dp["household_id"] = new_hid
+            dp.index = range(next_pid, next_pid + len(dp))
+            dp.index.name = "person_id"
+            next_pid += len(dp)
+            hh_records.append(clone)
+            hh_ids.append(new_hid)
+            p_chunks.append(dp)
+
+        diags.append({"row": ridx, "rung": "+".join(dropped),
+                      "target": int(row["total_number_of_households"]), "donors": k})
+
+    if hh_records:
+        add_hh = pd.DataFrame(hh_records, index=pd.Index(hh_ids, name=hh.index.name))
+        add_hh = add_hh[hh.columns].astype(hh.dtypes.to_dict())
+        add_p = pd.concat(p_chunks).astype(p.dtypes.to_dict())
+        hh = pd.concat([hh, add_hh])
+        p = pd.concat([p, add_p])
+
+    filled = [d for d in diags if d["rung"] != "NO_DONOR"]
+    nodonor = [d for d in diags if d["rung"] == "NO_DONOR"]
+    if filled or nodonor:
+        rungs = {}
+        for d in filled:
+            rungs[d["rung"]] = rungs.get(d["rung"], 0) + 1
+        resid_hh = sum(d["target"] for d in nodonor)
+        print(f"[gap-fill] LA {la} yr {iter_var}: filled {len(filled)} empty control "
+              f"cell(s), injected {sum(d['donors'] for d in filled)} donor(s); "
+              f"rungs {rungs}; unfillable {len(nodonor)} cell(s) / {resid_hh} hh")
+        for d in nodonor:
+            print(f"[gap-fill]   NO DONOR (target {d['target']} hh): {d['cat']}")
+    return hh, p, diags
+
+
 def presses_trans(xxx_todo_changeme1):
     (ct, hh, p, target, iter_var) = xxx_todo_changeme1
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
+    # Inject donor households for any finite control cell with no match, so the
+    # transition below can realise it instead of silently skipping it.
+    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var)[:2]
     tran = transition.TabularTotalsTransition(ct_finite, "total_number_of_households")
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = model.transition(
