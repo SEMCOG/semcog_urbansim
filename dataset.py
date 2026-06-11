@@ -359,6 +359,8 @@ def _load_remi_pi_growth_rates():
     years = list(range(2020, 2051))
     pi_rates = {}   # {year: {la_id: rate}}
 
+    pi_vals_by_la = {}
+    pce_vals = None
     for geo, la in geo_to_la.items():
         fpath = path.join(base, f"lfpr income {geo}.xlsx")
         df = pd.read_excel(fpath, header=None, sheet_name=0)
