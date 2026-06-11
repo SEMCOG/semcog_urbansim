@@ -1429,6 +1429,45 @@ def _assert_control_coverage(region_hh, region_ct, iter_var):
     print("WARNING " + msg)
 
 
+def _resolve_hh_pop_target():
+    """Resolve the household-population target table used to size the open-ended
+    10+-person bin in households_transition.
+
+    Prefers `remi_hh_pop` — household population (TOTAL population minus group
+    quarters), the correct quantity. Falls back to the legacy `remi_pop_total`
+    (TOTAL population, including group quarters) only while the
+    `allow_total_pop_fallback` injectable is true (the default). TOTAL population
+    over-states the household-person target by each large area's GQ population,
+    which biases 10+-person household sizes upward; set
+    `allow_total_pop_fallback = False` once the model input provides
+    `remi_hh_pop`, so a wrong (total-pop) file can never silently feed the model.
+    """
+    if orca.is_table("remi_hh_pop"):
+        return orca.get_table("remi_hh_pop")
+
+    allow = (orca.get_injectable("allow_total_pop_fallback")
+             if orca.is_injectable("allow_total_pop_fallback") else True)
+    if orca.is_table("remi_pop_total"):
+        if not allow:
+            raise RuntimeError(
+                "households_transition: 'remi_hh_pop' not found and "
+                "allow_total_pop_fallback is False. The legacy 'remi_pop_total' "
+                "holds TOTAL population (incl. group quarters), which over-sizes "
+                "10+-person households. Regenerate the model input with a "
+                "'remi_hh_pop' table (household population = total - GQ)."
+            )
+        print("WARNING households_transition: 'remi_hh_pop' not found — falling "
+              "back to legacy 'remi_pop_total' (TOTAL population incl. group "
+              "quarters). This over-sizes 10+-person households. Provide "
+              "'remi_hh_pop' and set allow_total_pop_fallback=False.")
+        return orca.get_table("remi_pop_total")
+
+    raise RuntimeError(
+        "households_transition: neither 'remi_hh_pop' nor 'remi_pop_total' is "
+        "available for the household-population target."
+    )
+
+
 @orca.step()
 def households_transition(
     households, persons, annual_household_control_totals, iter_var
