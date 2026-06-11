@@ -736,18 +736,85 @@ else:
 
 
 @orca.step()
-def increase_property_values(buildings, year):
-    pi_rates = orca.get_injectable("remi_pi_growth_rates")
-    if year not in pi_rates:
+def real_estate_adjustment(buildings, parcels, year):
+    if year < 2022:
         return
-    la_rates = pi_rates[year]
-    bd = buildings.to_frame(["large_area_id", "sqft_price_res"])
-    bd = bd[bd["sqft_price_res"] > 0]
-    bd["rate"] = bd["large_area_id"].map(la_rates).fillna(0.0) + 1.0
-    scaled = (bd["sqft_price_res"] * bd["rate"]).clip(upper=700)
-    buildings.update_col_from_series("sqft_price_res", scaled, cast=True)
-    summary = {la: f"{r:.2%}" for la, r in la_rates.items()}
-    print(f"  [increase_property_values] year={year} PI rates: {summary}")
+    income_ratios = orca.get_injectable("remi_income_ratios")
+    la_ratios = income_ratios.get(year, {})
+    if not la_ratios:
+        return
+
+    # Capture LA-average base prices on first call (after 2022 REPM)
+    if not orca.is_injectable("remi_base_la_prices"):
+        bd0 = buildings.to_frame(["large_area_id", "sqft_price_res"])
+        base = (bd0[bd0["sqft_price_res"] > 0]
+                .groupby("large_area_id")["sqft_price_res"].mean()
+                .to_dict())
+        orca.add_injectable("remi_base_la_prices", base)
+        print(f"  [real_estate_adjustment] base LA prices captured at year {year}: "
+              + str({la: f"${v:.1f}" for la, v in sorted(base.items())}))
+
+    base_la_prices = orca.get_injectable("remi_base_la_prices")
+    bd = buildings.to_frame(["large_area_id", "sqft_price_res", "year_built",
+                              "residential_units", "sqft_per_unit", "parcel_id",
+                              "building_type_id"])
+    bd_pos = bd[bd["sqft_price_res"] > 0]
+    updated = bd_pos["sqft_price_res"].copy()
+    new_build_idx = []
+
+    for la, ratio in la_ratios.items():
+        base_avg = base_la_prices.get(la, 0.0)
+        if base_avg <= 0:
+            continue
+        target_avg = base_avg * ratio
+
+        mask_la    = bd_pos["large_area_id"] == la
+        mask_exist = mask_la & (bd_pos["year_built"] < year)
+        mask_new   = mask_la & (bd_pos["year_built"] == year)
+
+        # Scale existing buildings: anchor LA avg to income-ratio target
+        exist_bldgs = bd_pos[mask_exist]
+        if len(exist_bldgs) == 0:
+            continue
+        exist_avg = exist_bldgs["sqft_price_res"].mean()
+        if exist_avg <= 0:
+            continue
+        scale = target_avg / exist_avg
+        updated.loc[mask_exist] = (exist_bldgs["sqft_price_res"] * scale).clip(upper=1000)
+
+        # New builds: use the same parcel-level price the feasibility pro-forma used
+        # (nodes_walk["residential"] mapped through parcels.nodeid_walk), scaled to
+        # current year. Falls back to exist_avg if walk node unavailable.
+        if mask_new.any():
+            new_bldgs = bd_pos[mask_new]
+            nw_res = orca.get_table("nodes_walk")["residential"]
+            pcl_node = parcels.to_frame(["nodeid_walk"])["nodeid_walk"]
+            parcel_prices = new_bldgs["parcel_id"].map(pcl_node).map(nw_res)
+            prices = (parcel_prices.fillna(exist_avg) * scale).clip(upper=1000)
+            updated.loc[mask_new] = prices
+            new_build_idx.extend(new_bldgs.index.tolist())
+
+    buildings.update_col_from_series("sqft_price_res", updated, cast=True)
+
+    # Backfill missing attributes for new builds so future REPM predictions are valid.
+    # market_value = 0.70 × price×units×sqft_per_unit  (observed ratio in base buildings)
+    # improvement_value = 0.70 × market_value           (building = 70% of total, land = 30%)
+    # land_area = parcel_sqft from parcels table        (new builds are placed on existing parcels)
+    if new_build_idx:
+        nb = bd.loc[new_build_idx]
+        total_val = (updated.loc[new_build_idx]
+                     * nb["residential_units"].clip(lower=1)
+                     * nb["sqft_per_unit"].clip(lower=1))
+        market_val = (total_val * 0.70).astype(int)
+        buildings.update_col_from_series("market_value",      market_val, cast=True)
+        buildings.update_col_from_series("improvement_value", (market_val * 0.70).astype(int), cast=True)
+        parcel_sqft = parcels.to_frame(["parcel_sqft"])["parcel_sqft"]
+        land_area = nb["parcel_id"].map(parcel_sqft).fillna(0).astype(int)
+        buildings.update_col_from_series("land_area", land_area, cast=True)
+
+    summary = {la: f"{r:.3f}x" for la, r in la_ratios.items() if la in base_la_prices}
+    print(f"  [real_estate_adjustment] year={year} income ratios: {summary}"
+          + (f"  new builds assessed: {len(new_build_idx)}" if new_build_idx else ""))
 
 
 @orca.step()
@@ -2839,14 +2906,9 @@ def shifters():
 
 
 def cost_shifter_callback(self, form, df, costs):
-    # Cumulative PCE cost inflation from 2022 base year
-    year = orca.get_injectable("year")
-    pce_rates = orca.get_injectable("remi_pce_growth_rates")
-    cost_multiplier = 1.0
-    for y in range(2023, year + 1):
-        cost_multiplier *= 1.0 + pce_rates.get(y, 0.020)
-    costs = costs * cost_multiplier
-
+    yr = orca.get_injectable("year")
+    pce_ratios = orca.get_injectable("remi_pce_ratios")
+    costs = costs * pce_ratios.get(yr, 1.0)
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
