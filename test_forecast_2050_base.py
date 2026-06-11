@@ -978,7 +978,7 @@ time.ctime()
 #         # "scheduled_development_events",
 #         # "refiner",
 #         # "households_transition",
-#         # "fix_lpr",  # await data
+#         # "workers_adjustment_model",  # await data
 #         # "households_relocation_2050",
 #         # "jobs_transition",
 #         # "jobs_relocation_2050",
