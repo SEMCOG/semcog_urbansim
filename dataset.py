@@ -353,33 +353,31 @@ def _load_remi_growth_rates():
         "washtenaw":     161,
     }
     years = list(range(2020, 2051))
-    pi_rates = {}   # {year: {la_id: rate}}
-    pce_rates = {}  # {year: rate}
-    pce_loaded = False
+    base_idx = years.index(2022)  # 2022 calibration year = index 2
 
+    pi_vals_by_la = {}
+    pce_vals = None
     for geo, la in geo_to_la.items():
         fpath = path.join(base, f"lfpr income {geo}.xlsx")
         df = pd.read_excel(fpath, header=None, sheet_name=0)
-        pi_vals  = df.iloc[24, 9:40].values.astype(float)  # row 25: Personal Income
-        pce_vals = df.iloc[34, 9:40].values.astype(float)  # row 35: PCE-Price Index
-        pi_series = dict(zip(years, pi_vals))
-        if not pce_loaded:
-            pce_series = dict(zip(years, pce_vals))
-            pce_loaded = True
-        for i in range(1, len(years)):
-            y = years[i]
-            rate = max(pi_series[y] / pi_series[years[i - 1]] - 1, 0.0)
-            pi_rates.setdefault(y, {})[la] = rate
+        pi_vals_by_la[la] = df.iloc[24, 9:40].values.astype(float)  # Personal Income
+        if pce_vals is None:
+            pce_vals = df.iloc[34, 9:40].values.astype(float)       # PCE-Price Index
 
-    for i in range(1, len(years)):
-        y = years[i]
-        pce_rates[y] = pce_series[y] / pce_series[years[i - 1]] - 1
+    pi_base  = {la: pi_vals_by_la[la][base_idx] for la in geo_to_la.values()}
+    pce_base = pce_vals[base_idx]
 
-    return pi_rates, pce_rates
+    # Cumulative ratios relative to 2022 calibration year
+    income_ratios = {
+        years[i]: {la: pi_vals_by_la[la][i] / pi_base[la] for la in geo_to_la.values()}
+        for i in range(len(years))
+    }
+    pce_ratios = {years[i]: pce_vals[i] / pce_base for i in range(len(years))}
+
+    return income_ratios, pce_ratios
 
 
-_remi_pi, _remi_pce = _load_remi_growth_rates()
-orca.add_injectable("remi_pi_growth_rates", _remi_pi)
-orca.add_injectable("remi_pce_growth_rates", _remi_pce)
-print(f"REMI growth rates loaded: {len(_remi_pi)} years, "
-      f"PCE range {min(_remi_pce.values()):.2%}–{max(_remi_pce.values()):.2%}")
+_remi_income, _remi_pce = _load_remi_growth_rates()
+orca.add_injectable("remi_income_ratios", _remi_income)
+orca.add_injectable("remi_pce_ratios", _remi_pce)
+print(f"REMI growth rates loaded: {len(_remi_income)} years")
