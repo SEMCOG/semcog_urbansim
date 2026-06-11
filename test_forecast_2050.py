@@ -61,6 +61,14 @@ if RANDOM_SEED is None:
 orca.add_injectable('random_seed', RANDOM_SEED)
 print('using random_seed', RANDOM_SEED)
 
+# Household-population target for the transition's 10+-person size draw.
+# True (default): if the model input lacks `remi_hh_pop` (household population),
+# fall back to the legacy `remi_pop_total` (TOTAL population incl. group
+# quarters) with a warning — temporary back-compat for older inputs.
+# Set False once inputs provide `remi_hh_pop`, so a wrong (total-pop) file can
+# never silently feed the model (the transition will raise instead).
+orca.add_injectable('allow_total_pop_fallback', True)
+
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
