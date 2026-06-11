@@ -13,7 +13,8 @@ warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 table_dir = "data"
 
 for name in [
-    "remi_pop_total",
+    "remi_hh_pop",     # household population target (total - GQ); preferred
+    "remi_pop_total",  # legacy TOTAL population — fallback only (see households_transition)
     "persons",
     "parcels",
     "pseudo_building_2020",
