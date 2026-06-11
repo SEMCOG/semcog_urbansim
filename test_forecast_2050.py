@@ -38,6 +38,14 @@ orca.add_injectable('scenario_remi_total_pop',
 orca.add_injectable('scenario_emp_control_path',
     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_employment_control_totals.csv')
 
+# Household-population target for the transition's 10+-person size draw.
+# True (default): if the model input lacks `remi_hh_pop` (household population),
+# fall back to the legacy `remi_pop_total` (TOTAL population incl. group
+# quarters) with a warning — temporary back-compat for older inputs.
+# Set False once inputs provide `remi_hh_pop`, so a wrong (total-pop) file can
+# never silently feed the model (the transition will raise instead).
+orca.add_injectable('allow_total_pop_fallback', True)
+
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
@@ -175,11 +183,13 @@ orca.run(
         "group_quarters_households",
         "group_quarters_control_totals",
         "annual_household_control_totals",
-        "remi_pop_total",
         "events_addition",
         "events_deletion",
         "refiner_events",
-    ],
+    ]
+    # snapshot whichever HH-population target table is present (prefer
+    # remi_hh_pop; remi_pop_total is the legacy fallback)
+    + [t for t in ("remi_hh_pop", "remi_pop_total") if orca.is_table(t)],
     out_run_tables=[
         "buildings",
         "jobs",
