@@ -39,7 +39,7 @@ Complete alphabetical list of all tables in the model input file. Each entry sho
 | `persons` | `person_id` | Population synthesis | [Demographics](../domains/demographics.md) |
 | `poi` | row index | CSV | [Accessibility](../domains/accessibility.md) |
 | `refiner_events` | `refinement_id` | CSV (merged) | [Development & Context](../domains/development-context.md) |
-| `remi_pop_total` | `large_area_id` | CSV (derived from REMI, prepared separately) | [Demographics](../domains/demographics.md) |
+| `remi_hh_pop` | `large_area_id` | CSV from `HH_controls.py` (household population = total − GQ; replaces `remi_pop_total`) | [Demographics](../domains/demographics.md) |
 | `schools` | `bcode` | Excel | [Development & Context](../domains/development-context.md) |
 | `semmcds` | `semmcd_id` | SQL | [Geography](../domains/geography.md) |
 | `target_vacancies` | — | Excel | [Demographics](../domains/demographics.md) |

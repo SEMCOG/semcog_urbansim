@@ -13,7 +13,7 @@ This domain covers the base-year synthetic population (households, persons, grou
 | `households` | Base-year synthetic households, placed in buildings | Population synthesis + placement |
 | `persons` | All individuals linked to households | Population synthesis |
 | `annual_household_control_totals` | Target HH counts by segment × year | Forecast controls pipeline |
-| `remi_pop_total` | Total population by large area × year | Derived from REMI data (prepared separately from the controls pipeline) |
+| `remi_hh_pop` | Household population (total − group quarters) by large area × year | Produced by `HH_controls.py` (replaces the legacy total-population `remi_pop_total`) |
 | `annual_relocation_rates_for_households` | Household relocation probability by age/income | Excel rate table |
 | `income_growth_rates` | Annual income growth by large area | CSV |
 | `target_vacancies` | Target residential vacancy rates by large area × year | Excel |
@@ -86,7 +86,7 @@ All individuals in base-year synthetic households. One row per person.
 flowchart LR
     REMI[REMI Population\nForecast] --> FCP[Forecast Controls\nPipeline]
     FCP --> HHC[annual_household_\ncontrol_totals]
-    REMI --> RT[remi_pop_total]
+    REMI --> RT[remi_hh_pop]
     HHC --> T1[households_transition\nstep]
     RT  --> T2[gq_pop_scaling\nstep]
 ```
@@ -141,12 +141,12 @@ The model matches households to segments by checking that all bracket columns ar
 
 **Common issues:**
 - Missing years — all forecast years must be present; the simulation skips growth for any missing year
-- Segment totals should sum to plausible regional totals — cross-check against `remi_pop_total`
+- Segment totals should sum to plausible regional totals — cross-check household population against `remi_hh_pop`
 - All 8 large areas must have rows for every forecast year
 
-### `remi_pop_total`
+### `remi_hh_pop`
 
-Total population by large area × year, directly from REMI. Used to calibrate household control totals and as a model input for population scaling.
+Household population (TOTAL population **minus group quarters**) by large area × year. Used by the household transition model to size the open-ended 10+-person household bin to a population target.
 
 **Index:** `large_area_id`  
 **Structure:** 8 rows × year columns (one column per simulation year)
@@ -154,9 +154,11 @@ Total population by large area × year, directly from REMI. Used to calibrate ho
 | Column | Type | Notes |
 |---|---|---|
 | `large_area_id` | int16 | Row index — 8 valid codes |
-| one column per year | int32 | Total population including group quarters |
+| one column per year | int32 | Household population (**excludes** group quarters) |
 
-**Update procedure:** This table is prepared separately from the household controls pipeline. The forecast controls pipeline produces a more detailed file with age group, race, and gender breakdowns used to generate `annual_household_control_totals`. `remi_pop_total` is a simpler aggregate — total population by large area × year — summarized from the same REMI county-level forecasts and saved as a standalone CSV. Update it alongside the controls pipeline using the same REMI run.
+**Produced by:** `HH_controls.py` writes `remi_hh_pop.csv` from the reviewed household-population series (total − GQ) it already uses to scale household counts — so it comes out of the same control-totals run, not a separate step.
+
+**Replaces `remi_pop_total`.** The legacy table held *total* population including group quarters; the transition's 10+-person size target excludes GQ, so total population over-stated the target by each large area's GQ population and biased 10+-person household sizes upward. The simulation now prefers `remi_hh_pop` and falls back to `remi_pop_total` only as a temporary back-compat measure (behind the `allow_total_pop_fallback` switch). Update it from the same REMI run as the household controls; retire `remi_pop_total` once inputs carry `remi_hh_pop`.
 
 ![Population forecast by large area](../images/remi_pop_forecast.png)
 
@@ -164,14 +166,14 @@ Total population by large area × year, directly from REMI. Used to calibrate ho
 
 | large_area_id | 2020 | 2025 | 2030 | 2040 | 2050 |
 |---|---|---|---|---|---|
-| 3 (Wayne excl. Detroit) | 1,145,697 | 1,141,715 | 1,142,739 | 1,154,307 | 1,157,605 |
-| 5 (City of Detroit) | 626,338 | 613,978 | 607,963 | 599,633 | 599,456 |
-| 93 (Livingston) | 191,852 | 196,993 | 208,812 | 229,535 | 235,618 |
-| 99 (Macomb) | 872,060 | 873,599 | 889,572 | 940,134 | 959,494 |
-| 115 (Monroe) | 153,348 | 153,972 | 154,923 | 158,680 | 158,339 |
-| 125 (Oakland) | 1,258,094 | 1,262,139 | 1,298,338 | 1,359,254 | 1,380,592 |
-| 147 (St. Clair) | 158,786 | 157,594 | 157,401 | 160,230 | 158,960 |
-| 161 (Washtenaw) | 349,733 | 350,159 | 358,807 | 383,115 | 394,662 |
+| 3 (Wayne excl. Detroit) | 1,144,751 | 1,141,266 | 1,142,225 | 1,157,438 | 1,161,491 |
+| 5 (City of Detroit) | 627,271 | 616,225 | 609,372 | 609,281 | 617,016 |
+| 93 (Livingston) | 191,851 | 196,915 | 208,718 | 229,925 | 235,504 |
+| 99 (Macomb) | 872,057 | 873,255 | 889,172 | 936,570 | 951,081 |
+| 115 (Monroe) | 153,349 | 153,912 | 154,853 | 158,597 | 158,665 |
+| 125 (Oakland) | 1,258,093 | 1,261,644 | 1,297,755 | 1,348,260 | 1,365,804 |
+| 147 (St. Clair) | 158,786 | 157,532 | 157,330 | 162,874 | 161,103 |
+| 161 (Washtenaw) | 349,747 | 349,397 | 359,430 | 382,243 | 394,364 |
 
 **Common issues:**
 - Missing large areas — all 8 must be present
@@ -352,12 +354,12 @@ Target GQ population counts by city × year. Used by `gq_pop_scaling_model` to s
 ## Update Checklist (New Forecast Cycle)
 
 - [ ] Get new REMI population export by large area × age × gender; run forecast controls pipeline to produce `annual_household_control_totals`
-- [ ] Update `remi_pop_total` with new REMI population totals by large area × year
+- [ ] Update `remi_hh_pop` with new REMI household population (total − GQ) by large area × year
 - [ ] Update `mcd_total` via the separate MCD projection process (historical growth trends + REMI county forecasts → 5-year benchmarks → annual interpolation)
 - [ ] Review and update vacancy rate tables if market conditions warrant
 - [ ] Update GQ control totals and re-run GQ synthesis if base year changes
 - [ ] Update `bg_hh_increase` with fresh ACS occupied housing unit data for the new base period
 - [ ] Confirm all forecast years have rows in `annual_household_control_totals` for all 8 large areas
 - [ ] Confirm `mcd_total` covers all 238 MCDs × all forecast years
-- [ ] Confirm `remi_pop_total` has all 8 large area rows and all forecast year columns
+- [ ] Confirm `remi_hh_pop` has all 8 large area rows and all forecast year columns
 - [ ] Confirm GQ `building_id` values exist in `buildings`
