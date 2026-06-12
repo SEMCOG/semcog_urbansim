@@ -46,6 +46,11 @@ orca.add_injectable('scenario_emp_control_path',
 # never silently feed the model (the transition will raise instead).
 orca.add_injectable('allow_total_pop_fallback', True)
 
+# P2 guard: households_transition warns if any household matches no control
+# category (it would be silently dropped by the totals transition). Set True to
+# raise instead of warn.
+orca.add_injectable('require_full_control_coverage', False)
+
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
