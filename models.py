@@ -954,6 +954,53 @@ def _gap_sync_persons(pers, target_persons, rng):
     return pers
 
 
+GAP_RANGED_ATTRS = ["age_of_head", "persons", "children", "cars", "workers", "income"]
+
+
+def _gap_category_presence(ct, hh):
+    """Vectorised empty-cell detector. Bins every household once into its
+    control-category key (race_id + the bin-min of each ranged attribute) and
+    returns row_is_empty(row). Replaces a per-control-row filter_table scan of
+    the full pool, which was ~half the transition step's runtime.
+
+    Exactness guard: the binning is equivalent to filter_table only when each
+    attribute's control bins tile contiguously ([min, max) with max == next
+    min). The top bin's max may be finite (e.g. the finite persons subset ends
+    at 10; the top income quartile is capped at the base-year max income) —
+    values at/above it, below the lowest min, or NaN match no row, same as
+    filter_table. If any attribute's bins do not tile, falls back to the exact
+    per-row filter_table check.
+    """
+    edges, uppers = {}, {}
+    for a in GAP_RANGED_ATTRS:
+        pairs = (ct[[f"{a}_min", f"{a}_max"]].drop_duplicates()
+                 .sort_values(f"{a}_min").to_numpy(dtype=float))
+        mins, maxs = pairs[:, 0], pairs[:, 1]
+        if not np.all(maxs[:-1] == mins[1:]):
+            # non-contiguous bins -> exact (slow) fallback
+            return lambda row: len(
+                utils.filter_table(hh, row, ignore={"total_number_of_households"})
+            ) == 0
+        edges[a], uppers[a] = mins, maxs[-1]
+
+    cols = {"race_id": hh["race_id"].to_numpy(dtype=float)}
+    valid = np.ones(len(hh), dtype=bool)
+    for a in GAP_RANGED_ATTRS:
+        e = edges[a]
+        vals = pd.to_numeric(hh[a], errors="coerce").to_numpy(dtype=float)
+        pos = np.searchsorted(e, vals, side="right") - 1
+        valid &= (pos >= 0) & ~np.isnan(vals) & (vals < uppers[a])
+        cols[f"{a}_min"] = e[np.clip(pos, 0, len(e) - 1)]
+    key_arr = np.column_stack([cols["race_id"]] + [cols[f"{a}_min"] for a in GAP_RANGED_ATTRS])
+    present = set(map(tuple, key_arr[valid]))
+
+    def row_is_empty(row):
+        key = (float(row["race_id"]),) + tuple(float(row[f"{a}_min"]) for a in GAP_RANGED_ATTRS)
+        return key not in present
+
+    return row_is_empty
+
+
 def fill_control_gaps(ct, hh, p, iter_var, seed=0):
     """Inject attribute-overridden donor households for empty control rows so
     TabularTotalsTransition can fill them. Returns (hh, p, diagnostics)."""
@@ -962,12 +1009,14 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
     next_hid = int(hh.index.max()) + 1
     next_pid = int(p.index.max()) + 1
 
+    row_is_empty = _gap_category_presence(ct, hh)
+
     hh_records, hh_ids, p_chunks, diags = [], [], [], []
 
     for ridx, row in ct.iterrows():
         if row["total_number_of_households"] <= 0:
             continue
-        if len(utils.filter_table(hh, row, ignore={"total_number_of_households"})) > 0:
+        if not row_is_empty(row):
             continue  # already fillable
 
         # Relax race only for a genuine demographic gap: the whole
@@ -1130,18 +1179,30 @@ def presses_trans(xxx_todo_changeme1):
     return out
 
 
+# Errors worth retrying inside a pool worker — transient resource/IO blips.
+# Everything else (logic/data bugs) is deterministic: retrying with identical
+# inputs only fails again, so it is re-raised immediately with its real traceback.
+_RETRYABLE_WORKER_ERRORS = (OSError, MemoryError)
+
+
 def _retry_wrapper(args, max_retries=3):
-    """wrapper for pool.map - must be at module level to be picklable."""
-    last_error = None
-    for attempt in range(max_retries):
+    """Run presses_trans in a pool worker. Retries only transient errors and
+    surfaces real bugs immediately with the full traceback. Must stay at module
+    level to be picklable for pool.map."""
+    import traceback
+    for attempt in range(1, max_retries + 1):
         try:
             return presses_trans(args)
-        except Exception as e:
-            last_error = e
-            print(f"Worker failed (attempt {attempt + 1}/{max_retries}): {e}")
-            if attempt < max_retries - 1:
-                print("Retrying...")
-    raise RuntimeError(f"Task failed after {max_retries} retries. Last error: {last_error}")
+        except _RETRYABLE_WORKER_ERRORS:
+            print(f"[households_transition] transient worker failure "
+                  f"(attempt {attempt}/{max_retries}):\n{traceback.format_exc()}")
+            if attempt == max_retries:
+                raise  # re-raise the original error, traceback intact
+        except Exception:
+            # deterministic failure — retrying won't help; fail fast and loud
+            print("[households_transition] worker failed (not retrying):\n"
+                  + traceback.format_exc())
+            raise
 
 
 def _resolve_hh_pop_target():
@@ -1183,6 +1244,56 @@ def _resolve_hh_pop_target():
     )
 
 
+def _assert_control_coverage(region_hh, region_ct, iter_var):
+    """P2 guard: flag any current household that matches no control category.
+
+    UrbanSim's TabularTotalsTransition builds its output as the concatenation of
+    the per-control-row segments, so a household that falls in *no* control
+    category is silently dropped from the table — its population quietly lost.
+    Full coverage is an emergent property of how the control totals are built,
+    not something the code enforces; a base-year refresh or a control-bin change
+    could start dropping households with no signal. This makes it visible.
+
+    Warns by default; set the `require_full_control_coverage` injectable to raise.
+    Cheap (vectorised bin + merge), runs once per year.
+    """
+    ranged = ["age_of_head", "persons", "children", "cars", "workers", "income"]
+    ct = region_ct
+    if getattr(ct.index, "name", None) == "year" and iter_var in ct.index:
+        ct = ct.loc[[iter_var]]
+    key_cols = ["large_area_id", "race_id"] + [f"{a}_min" for a in ranged]
+    ctrl_keys = ct[key_cols].drop_duplicates()
+
+    # bin each household to its control-category identity (exact LA + race, plus
+    # the bin-min each ranged attribute falls into) and look it up in the controls
+    binned = {
+        "large_area_id": region_hh["large_area_id"].to_numpy(),
+        "race_id": region_hh["race_id"].to_numpy(),
+    }
+    for a in ranged:
+        edges = np.sort(ct[f"{a}_min"].unique())
+        vals = pd.to_numeric(region_hh[a], errors="coerce").fillna(edges[0])
+        vals = vals.clip(lower=edges[0]).to_numpy()
+        binned[f"{a}_min"] = edges[np.searchsorted(edges, vals, side="right") - 1]
+    hh_keys = pd.DataFrame(binned, index=region_hh.index)
+
+    merged = hh_keys.merge(ctrl_keys.assign(_ok=1), on=key_cols, how="left")
+    unmatched = merged["_ok"].isna().to_numpy()
+    n = int(unmatched.sum())
+    if n == 0:
+        return
+    by_la = region_hh.loc[unmatched].groupby("large_area_id").size().to_dict()
+    msg = (f"households_transition: {n} of {len(region_hh)} households match no "
+           f"control category for {iter_var} and would be silently dropped by the "
+           f"transition (by large area: {by_la}). Check control-total coverage "
+           f"against the households table.")
+    strict = (orca.get_injectable("require_full_control_coverage")
+              if orca.is_injectable("require_full_control_coverage") else False)
+    if strict:
+        raise RuntimeError(msg)
+    print("WARNING " + msg)
+
+
 @orca.step()
 def households_transition(
     households, persons, annual_household_control_totals, iter_var
@@ -1196,6 +1307,10 @@ def households_transition(
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+
+    # P2 guard: warn (or raise) if any household matches no control category and
+    # would be silently dropped by the totals transition (see function docstring).
+    _assert_control_coverage(region_hh, region_ct, iter_var)
 
     # NOTE (2026-06): the blanket donor injections that used to live here —
     # appending the full hh_seeds/p_seeds set (issue #56) and the previous
@@ -1574,13 +1689,21 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     & (p.worker == 1)
                 ).sum() - lpr_workers)
 
-        after_selected = (
+        achieved = int((
             (p.large_area_id == large_area_id)
             & (p.age >= row.age_min)
             & (p.age <= row.age_max)
             & (p.worker == True)
-        )
-        print(large_area_id, row.age_min, row.age_max, num_workers, lpr_workers, after_selected.sum())
+        ).sum())
+        print(f"[workers_adjustment] LA {large_area_id} age {row.age_min}-{row.age_max}: "
+              f"workers {num_workers} -> {achieved} (target {lpr_workers})")
+        # swap pool can exhaust before the target is met — surface the shortfall
+        # rather than letting it pass silently
+        if abs(achieved - lpr_workers) > max(1, int(0.01 * lpr_workers)):
+            print(f"WARNING [workers_adjustment] LA {large_area_id} age "
+                  f"{row.age_min}-{row.age_max}: employment target not met "
+                  f"(achieved {achieved}, target {lpr_workers}, "
+                  f"shortfall {lpr_workers - achieved}) — swap pool likely exhausted")
 
     hh["old_workers"] = hh.workers
     hh.workers = p.groupby("household_id").worker.sum()
