@@ -102,7 +102,7 @@ Each domain is owned by a different team. Use this table to find who to contact 
 |---|---|---|
 | [Land Use](domains/land-use.md) | `parcels`, `buildings`, `zoning`, `land_use_types`, `building_types`, `multi_parcel_buildings` | PostgreSQL (parcel/building database) |
 | [Geography](domains/geography.md) | `zones`, `semmcds`, `counties`, `large_areas` | PostgreSQL (boundary tables) / constant |
-| [Demographics](domains/demographics.md) | `households`, `persons`, `annual_household_control_totals`, `remi_pop_total`, relocation rates, `target_vacancies`, `mcd_total`, `bg_hh_increase`, group quarters tables | Population synthesis, REMI, ACS, CSV files |
+| [Demographics](domains/demographics.md) | `households`, `persons`, `annual_household_control_totals`, `remi_hh_pop`, relocation rates, `target_vacancies`, `mcd_total`, `bg_hh_increase`, group quarters tables | Population synthesis, REMI, ACS, CSV files |
 | [Employment](domains/employment.md) | `jobs`, `annual_employment_control_totals`, `annual_relocation_rates_for_jobs`, `building_sqft_per_job`, `employment_sectors`, `employed_workers_rate` | CSV files, REMI |
 | [Development & Context](domains/development-context.md) | `events_addition`, `events_deletion`, `refiner_events`, `demolition_rates`, `landmark_worksites`, `schools`, `crime_rates`, building construction costs | PostgreSQL (event/demo tables), CSV, construction cost estimates |
 | [Street Networks](domains/networks.md) | Walk and drive node/edge tables | `semcog_2050_networks.h5` (separate file) |
