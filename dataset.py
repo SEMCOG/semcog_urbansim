@@ -188,14 +188,16 @@ def households(store, buildings):
         return df
     b = buildings.to_frame(["large_area_id", "residential_units"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
-    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
-        b.index.values, (df.building_id == -1).sum()
-    )
+    n_unplaced = (df.building_id == -1).sum()
+    if n_unplaced:
+        df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+            b.index.values, n_unplaced
+        )
 
     bid_to_la = {
         1: 3, 2: 125, 3:99, 4: 161, 5: 115, 6: 147, 7: 93, 8: 5
     }
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
     hh_to_assign = df.loc[idx_invalid_building_id, "building_id"]
     for bid, laid in bid_to_la.items():
         local_hh = hh_to_assign[hh_to_assign//1000000 == bid]
@@ -242,7 +244,7 @@ def jobs(store, buildings):
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
@@ -341,10 +343,7 @@ orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
 
 
 def _load_remi_growth_rates():
-    base = (
-        "/mnt/DA/Projects/RDF/2050RDF/03 REMI/Draft 2"
-        "/02 Detailed Tables/lfpr income"
-    )
+    base = input_paths.LFPR_INCOME_DIR
     geo_to_la = {
         "rest of wayne": 3,
         "detroit":       5,

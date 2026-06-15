@@ -163,7 +163,7 @@ def households(store, buildings):
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )
@@ -201,7 +201,7 @@ def jobs(store, buildings):
     df.loc[df.building_id == -1, "building_id"] = np.random.choice(
         b.index.values, (df.building_id == -1).sum()
     )
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
     df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
         b.index.values, idx_invalid_building_id.sum()
     )

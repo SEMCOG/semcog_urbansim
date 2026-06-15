@@ -1384,11 +1384,12 @@ def households_transition(
         hhmap = hhmap.reset_index()
         hhmap["household_id_old"] = hhmap["household_id"]
         # assign hh_id to those newly added
-        hhmap.loc[hhmap["building_id"] == -1, "household_id"] = list(
-            range(
-                hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i + 1]
+        if hh_new_added_cumsum[i + 1] > hh_new_added_cumsum[i]:
+            hhmap.loc[hhmap["building_id"] == -1, "household_id"] = list(
+                range(
+                    hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i + 1]
+                )
             )
-        )
         hh_id_mapping[i] = hhmap[["household_id_old", "household_id"]].set_index(
             "household_id_old"
         )
@@ -3765,7 +3766,7 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     pseudo_buildings = pseudo_building_2020.to_frame()
 
     ## jobs
-    idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(j.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
         print(
             (
@@ -3781,7 +3782,7 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
         orca.add_table("jobs", j)
 
     ## households
-    idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(h.building_id, b.index.values) == False
     # ignore hh in pseudo_buildings
     idx_invalid_building_id = idx_invalid_building_id & ~(
         h.building_id.isin(pseudo_buildings.index)
