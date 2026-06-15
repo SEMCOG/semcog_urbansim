@@ -7,6 +7,7 @@ import requests
 import json
 import orca
 import shutil
+import input_paths
 from collections import defaultdict
 from urbansim.utils import misc
 from time import sleep
@@ -519,10 +520,10 @@ def main(
     end = time.time()
     print("runtime:", end - start)
 
-    # copy all files in out_dir to /home/da/share/urbansim/RDF2050/model_runs/run1330
-    if os.path.exists("/mnt/hgfs/urbansim/RDF2050/model_runs"):
+    # copy all files in out_dir to the model-runs archive (input_paths.MODEL_RUNS_DIR)
+    if os.path.exists(input_paths.MODEL_RUNS_DIR):
         run_dir_name = os.path.basename(out_dir.rstrip("/"))
-        dest_dir = os.path.join("/mnt/hgfs/urbansim/RDF2050/model_runs", run_dir_name)
+        dest_dir = os.path.join(input_paths.MODEL_RUNS_DIR, run_dir_name)
 
         os.makedirs(dest_dir, exist_ok=True)
 

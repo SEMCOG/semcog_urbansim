@@ -14,6 +14,7 @@ from forecast_estimation.models.LCM_torch import LCM_NN
 from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
 
 import orca
+import utils
 from urbansim.utils import misc
 from urbansim.models import dcm
 from urbansim.models import util
@@ -43,7 +44,10 @@ def random_choices(model, choosers, alternatives):
         Mapping of chooser ID to alternative ID.
     """
     probabilities = model.calculate_probabilities(choosers, alternatives)
-    choices = np.random.choice(
+    # per-(segment, year) stream (model.name is the segment id) so a change in
+    # one LCM segment doesn't perturb another's choices
+    rng = utils.step_rng("lcm_random_choice", getattr(model, "name", ""))
+    choices = rng.choice(
         probabilities.index, size=len(choosers),
         replace=True, p=probabilities.values)
     return pd.Series(choices, index=choosers.index)

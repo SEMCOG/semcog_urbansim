@@ -7,6 +7,8 @@ from urbansim.utils import misc
 from os import path
 
 import assumptions
+import utils
+import input_paths
 
 warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 
@@ -299,22 +301,22 @@ def building_to_zone_baseyear():
 @orca.table(cache=True)
 def poi():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/pois.csv').set_index('index')
+    return pd.read_csv(input_paths.POIS_CSV).set_index('index')
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/walk/walk_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_csv(input_paths.ACCESS_WALK_CSV).set_index('parcel_id')
 
 @orca.table(cache=True)
 def accessibility_bike_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/bike/bike_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_csv(input_paths.ACCESS_BIKE_CSV).set_index('parcel_id')
 
 @orca.table(cache=True)
 def accessibility_drive_indicator_by_parcel():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/drive/drive_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_csv(input_paths.ACCESS_DRIVE_CSV).set_index('parcel_id')
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
