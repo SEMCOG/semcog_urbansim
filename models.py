@@ -18,6 +18,7 @@ from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_var
 
 import utils
 import lcm_utils
+import input_paths
 from functools import reduce
 
 # set configs if they are not set
@@ -1123,12 +1124,21 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
 
 
 def presses_trans(xxx_todo_changeme1):
-    (ct, hh, p, target, iter_var) = xxx_todo_changeme1
+    (ct, hh, p, target, iter_var, la_seed) = xxx_todo_changeme1
+    # Seed this worker's global NumPy RNG from the per-(large_area, year) seed
+    # derived in the parent (see households_transition). The UrbanSim core
+    # transition draws from the global RNG, so seeding it here makes each LA's
+    # result depend only on its own seed + data — reproducible regardless of
+    # which pool worker runs it or in what order (fixes the fork-RNG problem),
+    # and independent across large areas. A retry of this task re-seeds, so it
+    # reproduces the same draw rather than diverging.
+    np.random.seed(la_seed)
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
     # Inject donor households for any finite control cell with no match, so the
-    # transition below can realise it instead of silently skipping it.
-    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var)[:2]
+    # transition below can realise it instead of silently skipping it. The
+    # gap-filler uses its own stream derived from the same per-LA seed.
+    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var, seed=la_seed)[:2]
     tran = transition.TabularTotalsTransition(ct_finite, "total_number_of_households")
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = model.transition(
@@ -1332,7 +1342,13 @@ def households_transition(
         target = int(region_target.loc[large_area_id, str(iter_var)])
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
-        return ct, hh, p, target, iter_var
+        # Per-(large_area, year) seed derived in the parent (where the run-level
+        # random_seed injectable is available) and passed into the pool worker,
+        # which seeds its global RNG with it. Concrete int so the worker needs
+        # no orca access.
+        la_seed = int(utils.get_rng("households_transition", iter_var, large_area_id)
+                      .integers(0, 2**32))
+        return ct, hh, p, target, iter_var, la_seed
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
 
@@ -1642,7 +1658,9 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     break
                 to_add = min(hh_swap_pool.shape[0], num_new_employ)
                 # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(to_add, replace=False)
+                hh_to_swap = hh_swap_pool.sample(
+                    to_add, replace=False,
+                    random_state=utils.step_rng("workers_adjustment_add", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
@@ -1670,7 +1688,9 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     break
                 to_drop = min(hh_swap_pool.shape[0], num_drop_employ)
                 # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(to_drop, replace=False)
+                hh_to_swap = hh_swap_pool.sample(
+                    to_drop, replace=False,
+                    random_state=utils.step_rng("workers_adjustment_drop", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
@@ -1720,10 +1740,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     # (persons, race, NEW worker count, children, large area), so household
     # economics stay consistent with the adjusted worker count.
     resample_missed = 0
+    resample_rng = utils.step_rng("workers_adjustment_resample")
     for match_colls, chh in hh[changed].groupby(colls):
         try:
             match = same[tuple(match_colls)]
-            new_workers = choice(match.index, len(chh), True)
+            new_workers = resample_rng.choice(match.index, len(chh), True)
             hh.loc[chh.index, ["income", "cars"]] = match.loc[
                 new_workers, ["income", "cars"]
             ].values
@@ -2390,7 +2411,8 @@ def random_demolition_events(
             rel_b = rel_b[rel_b[accounting] <= target]
             size = min(len(rel_b), int(target))
             if size > 0:
-                rel_b = rel_b.sample(size, weights=rel_b[weights])
+                rel_b = rel_b.sample(size, weights=rel_b[weights],
+                                     random_state=utils.step_rng("mcd_hu_sampling_res", city_id))
                 rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
                 buildings_idx.append(rel_b.copy())
 
@@ -2658,7 +2680,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             w    = rel_b[score_col].clip(lower=1e-6)
             size = min(len(rel_b), int(target))
             if size > 0:
-                sampled = rel_b.sample(size, weights=w)
+                sampled = rel_b.sample(size, weights=w,
+                                       random_state=utils.step_rng("mcd_hu_sampling_nonres", city_id))
                 sampled = sampled[sampled[accounting].cumsum() <= int(target)]
                 buildings_idx.append(sampled)
 
@@ -3652,7 +3675,7 @@ def build_networks_2050(parcels):
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
     if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
-        st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
+        st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
         pdna.network.reserve_num_graphs(2)
 
         for n in lstnet:

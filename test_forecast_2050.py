@@ -4,6 +4,7 @@ import sys
 import os
 import pandas as pd
 import utils
+import input_paths
 import subprocess
 
 # get run number and set up log file
@@ -22,8 +23,9 @@ add_2019 = True
 
 # hlcm configs
 # orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune')
-orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/')
+# All external input locations are centralized in input_paths.py
+orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
+orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)
@@ -31,12 +33,9 @@ orca.add_injectable('final_year', final_year)
 
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', False)
-orca.add_injectable('scenario_hh_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_07232024.csv')
-orca.add_injectable('scenario_remi_total_pop',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la07232024.csv')
-orca.add_injectable('scenario_emp_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_employment_control_totals.csv')
+orca.add_injectable('scenario_hh_control_path', input_paths.SCENARIO_HH_CONTROL_CSV)
+orca.add_injectable('scenario_remi_total_pop', input_paths.SCENARIO_REMI_POP_CSV)
+orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTROL_CSV)
 
 # Household-population target for the transition's 10+-person size draw.
 # True (default): if the model input lacks `remi_hh_pop` (household population),
@@ -51,6 +50,21 @@ orca.add_injectable('allow_total_pop_fallback', True)
 # raise instead of warn.
 orca.add_injectable('require_full_control_coverage', False)
 
+# Reproducibility: run-level random seed (single source of truth).
+#   - an integer  -> fully reproducible run (same number => same outputs)
+#   - None        -> a fresh seed is drawn at startup and logged below /
+#                    in run_config.yaml, so a "random" run can still be replayed
+# Every stochastic step derives its own independent stream from this via
+# utils.get_rng(...). To explore output variability, run repeatedly with
+# different integers (an ensemble); to compare a scenario vs baseline, use the
+# same seed for both. See the model wiki "Reproducibility & Random Seeds".
+RANDOM_SEED = 271828
+if RANDOM_SEED is None:
+    import numpy as _np
+    RANDOM_SEED = int(_np.random.SeedSequence().entropy & 0xFFFFFFFF)
+orca.add_injectable('random_seed', RANDOM_SEED)
+print('using random_seed', RANDOM_SEED)
+
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
@@ -63,6 +77,7 @@ with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), 
     import yaml
     yaml.dump({
             "RUN NUMBER": data_out,
+            "random_seed": orca.get_injectable("random_seed") if orca.is_injectable("random_seed") else "N/A",
             "hlcm_model_path": orca.get_injectable("hlcm_model_path") if orca.is_injectable("hlcm_model_path") else "N/A",
             "elcm_model_path": orca.get_injectable("elcm_model_path") if orca.is_injectable("elcm_model_path") else "N/A",
             "yaml_configs": orca.get_injectable("yaml_configs") if orca.is_injectable("yaml_configs") else "N/A",

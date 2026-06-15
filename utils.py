@@ -14,6 +14,71 @@ from urbansim.models import (
 from urbansim.utils import misc
 import numbers
 import logging
+import hashlib
+
+
+# ---------------------------------------------------------------------------
+# Reproducibility: run-level seed + derived per-step random streams
+# ---------------------------------------------------------------------------
+def _stable_seed_int(x):
+    """Deterministic integer from a seed-key component.
+
+    Avoids Python's builtin ``hash()`` on strings, which is *salted per process*
+    (PYTHONHASHSEED) and would therefore differ between runs — silently breaking
+    reproducibility. Integers pass through; strings/other are hashed with a
+    stable algorithm.
+    """
+    if isinstance(x, (int, np.integer)):
+        return int(x) & 0xFFFFFFFFFFFFFFFF
+    return int.from_bytes(hashlib.blake2b(str(x).encode(), digest_size=8).digest(), "big")
+
+
+def get_rng(*key):
+    """Return a NumPy ``Generator`` deterministically derived from the run-level
+    ``random_seed`` injectable and ``key``.
+
+    Usage: ``utils.get_rng("households_transition", year, large_area_id)``.
+
+    Properties:
+    - **Reproducible** — same ``random_seed`` + same ``key`` give the same
+      stream in every run, regardless of execution order or parallelism.
+    - **Independent** — different keys give statistically independent streams
+      (``SeedSequence`` mixes the inputs), so per-(step, year, segment) streams
+      do not interfere.
+    - **Local** — a change in one place perturbs only that key's stream, leaving
+      everything else identical (clean before/after and scenario comparisons).
+
+    If ``random_seed`` is unset (e.g. a script that does not configure it),
+    defaults to 271828 so behavior is still deterministic.
+    """
+    master = orca.get_injectable("random_seed") if orca.is_injectable("random_seed") else 271828
+    entropy = [_stable_seed_int(master)] + [_stable_seed_int(k) for k in key]
+    return np.random.default_rng(np.random.SeedSequence(entropy))
+
+
+def step_rng(name, *segment):
+    """`get_rng` keyed on ``(name, current iteration year, *segment)``.
+
+    Convenience for draw sites that don't carry the iteration year locally — it
+    reads the current year from orca's ``year`` injectable. Pass a segment id
+    (large area, MCD, model segment name, …) for per-segment locality.
+    """
+    year = orca.get_injectable("year") if orca.is_injectable("year") else 0
+    return get_rng(name, year, *segment)
+
+
+def first_existing_path(*paths):
+    """Return the first path that exists; else the first listed (so a downstream
+    error points at the canonical location).
+
+    Lets the same code run where inputs are on the mounted network drives
+    (``/mnt/hgfs/...``) OR copied locally (e.g. ``d_drive/forecast_inputs/...``)
+    — list the production path first, the local fallback second.
+    """
+    for p in paths:
+        if p and os.path.exists(p):
+            return p
+    return paths[0]
 
 
 def get_run_filename():
@@ -218,7 +283,7 @@ def simple_relocation(choosers, relocation_rate, fieldname):
     _print_number_unplaced(choosers, fieldname)
 
     print("Assinging for relocation...")
-    chooser_ids = np.random.choice(
+    chooser_ids = step_rng("simple_relocation", fieldname).choice(
         choosers.index, size=int(relocation_rate * len(choosers)), replace=False
     )
     choosers.update_col_from_series(fieldname, pd.Series(-1, index=chooser_ids))
@@ -260,7 +325,10 @@ def random_choices(model, choosers, alternatives):
         Mapping of chooser ID to alternative ID.
     """
     probabilities = model.calculate_probabilities(choosers, alternatives)
-    choices = np.random.choice(
+    # per-(segment, year) stream so a change in one LCM segment doesn't perturb
+    # another's choices (model.name is the segment id)
+    rng = step_rng("lcm_random_choice", getattr(model, "name", ""))
+    choices = rng.choice(
         probabilities.index, size=len(choosers), replace=True, p=probabilities.values
     )
     return pd.Series(choices, index=choosers.index)
