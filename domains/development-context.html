@@ -714,6 +714,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#remi_pce_growth_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remi_pce_growth_rate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#update-checklist-new-forecast-cycle" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -929,12 +940,13 @@
 
 
 <h1 id="development-context">Development &amp; Context<a class="headerlink" href="#development-context" title="Permanent link">&para;</a></h1>
-<p><strong>Primary sources:</strong> PostgreSQL event and demolition tables; CSV files; crime data from PostgreSQL; construction cost estimates</p>
-<p>This domain brings together three related categories:</p>
+<p><strong>Primary sources:</strong> PostgreSQL event and demolition tables; CSV files; crime data from PostgreSQL; construction cost estimates; REMI price index forecasts</p>
+<p>This domain brings together four related categories:</p>
 <ul>
 <li><strong>Planned development events</strong> — specific buildings that will be added or removed at known future years, plus background demolition rates</li>
 <li><strong>Neighborhood context</strong> — school quality and crime rates that influence location choice</li>
 <li><strong>Building construction costs</strong> — per-square-foot construction cost estimates by building type and area, which determine feasibility of new development</li>
+<li><strong>Price growth rates</strong> — REMI-derived annual price inflation applied to construction costs and property values each simulation year</li>
 </ul>
 <p>All three categories shape <em>where</em> and <em>how much</em> development and population locate in the model.</p>
 <pre class="mermaid"><code>flowchart LR
@@ -1011,6 +1023,11 @@
 <td>Building construction costs</td>
 <td>Per-sqft cost inputs for the developer feasibility model</td>
 <td>Construction cost estimates → CSV</td>
+</tr>
+<tr>
+<td><code>remi_pce_growth_rate</code></td>
+<td>Annual PCE price index growth rate, region-wide × year; applied to construction costs and property values</td>
+<td>REMI extract → HDF</td>
 </tr>
 </tbody>
 </table>
@@ -1505,6 +1522,36 @@ Both are <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.
 - Building types missing from the cost table will have zero construction cost — the model will treat them as infinitely profitable; verify all developable types are covered
 - Large cost differences between pricing areas should be reviewed for plausibility</p>
 <hr />
+<h2 id="remi_pce_growth_rate"><code>remi_pce_growth_rate</code><a class="headerlink" href="#remi_pce_growth_rate" title="Permanent link">&para;</a></h2>
+<p>Annual PCE (Personal Consumption Expenditure) price index growth rate for the region, by forecast year. PCE is a standard measure of economy-wide price change — think of it as the REMI-projected inflation rate for the Southeast Michigan economy. The simulation uses it in two places: to inflate construction costs forward from the base year (so future development feasibility reflects rising build costs), and to apply annual price appreciation to existing buildings in the <code>increase_property_values</code> step.</p>
+<p><strong>Structure:</strong> One row per forecast year</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>year</code></td>
+<td>int16</td>
+<td>Forecast year — index</td>
+</tr>
+<tr>
+<td><code>pce_growth_rate</code></td>
+<td>float64</td>
+<td>Annual growth rate as a fraction (e.g., 0.023 = 2.3%); applied cumulatively — each year's cost compounds the previous</td>
+</tr>
+</tbody>
+</table>
+<p>A rate of 0.0 means no price change that year. The simulation falls back to a default rate (currently 2.0%) for any year missing from this table, so missing years do not crash the model but will produce incorrect results.</p>
+<p><strong>Update:</strong> Regenerate from the same REMI export as <code>income_growth_rates</code> in the Demographics domain — both tables come from the same REMI run and must always be updated together. Extend the year range whenever the forecast horizon changes (e.g., adding years through 2055).</p>
+<p><strong>Common issues:</strong>
+- Year range must cover all forecast years; missing years silently fall back to the 2.0% default — verify full coverage
+- Rates above 5% or below 0% are unusual and should be reviewed against REMI documentation before use</p>
+<hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <p><strong>Events:</strong>
 - [ ] Review planned development projects in PostgreSQL — add new projects, update delayed ones
@@ -1523,6 +1570,9 @@ Both are <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.
 - [ ] Obtain updated construction cost estimates for all building forms × pricing areas
 - [ ] Verify all developable building types are covered in the cost table
 - [ ] Coordinate with modeling team to update proforma configuration with new costs</p>
+<p><strong>Price growth (REMI):</strong>
+- [ ] Update <code>remi_pce_growth_rate</code> from the new REMI export — update together with <code>income_growth_rates</code> in Demographics
+- [ ] Verify year range covers all forecast years; confirm no years are missing</p>
 
 
 

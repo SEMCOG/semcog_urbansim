@@ -841,7 +841,7 @@
 
 <h1 id="street-networks">Street Networks<a class="headerlink" href="#street-networks" title="Permanent link">&para;</a></h1>
 <p><strong>Primary source:</strong> OpenStreetMap (walk network), SEMCOG highway/TDM network (drive network)<br />
-<strong>File:</strong> <code>semcog_2050_networks.h5</code> — a separate HDF5 from the main model input file (filename may need to be updated for the RDF2055 forecast)</p>
+<strong>File:</strong> <code>semcog_networks.h5</code> — a separate HDF5 from the main model input file</p>
 <p>The street network file provides the road and path geometry used by <a href="https://udst.github.io/pandana/">Pandana</a> to compute dynamic neighborhood accessibility variables during the simulation. Each year, the <code>build_networks_2050</code> step loads these networks, snaps parcels and buildings to the nearest node, and aggregates nearby jobs, households, and amenities into building-level variables used by the location choice models.</p>
 <p>This file is distinct from the <a href="accessibility.html">pre-computed accessibility indicators</a> — those are static parcel-level outputs. The network file enables the simulation to recompute dynamic, year-varying accessibility each year as the distribution of jobs and households shifts.</p>
 <hr />
@@ -985,13 +985,13 @@
 1. Download updated OSM data for SE Michigan
 2. Process into Pandana-compatible nodes/edges (<code>feet</code>, <code>minutes</code>, <code>meters</code> cost columns)
 3. Snap parcel centroids to nearest walk node → update <code>parcels.nodeid_walk</code>
-4. Write new tables into <code>semcog_2050_networks.h5</code></p>
+4. Write new tables into <code>semcog_networks.h5</code></p>
 <p><strong>Drive network update:</strong>
 1. Export node/edge tables from the SEMCOG TDM (TransCAD) network
 2. Ensure cost columns are <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code>
 3. Generate "local" subsets (nodes/edges within the 7-county region)
 4. Snap parcel centroids to nearest drive node → update <code>parcels.nodeid_drv</code>
-5. Write new tables into <code>semcog_2050_networks.h5</code>
+5. Write new tables into <code>semcog_networks.h5</code>
 6. Update the network configuration file if table names change</p>
 <p><strong>After updating the network file:</strong>
 - Verify <code>nodeid_walk</code> and <code>nodeid_drv</code> coverage in <code>parcels</code> — count nulls and parcels with no node match

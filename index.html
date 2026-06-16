@@ -410,6 +410,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#table-count" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -817,10 +828,10 @@
 
 <h1 id="semcog-forecast-data-wiki">SEMCOG Forecast Data Wiki<a class="headerlink" href="#semcog-forecast-data-wiki" title="Permanent link">&para;</a></h1>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>This wiki is the reference guide for data developers who produce and maintain the base year model inputs for the SEMCOG UrbanSim land use simulation. It documents every required data table, organized by the team or data domain responsible for it.</p>
+<p>This wiki is the reference guide for data developers who produce and maintain the base year model inputs for the SEMCOG UrbanSim land use simulation. It documents every required data table, organized by data domain — the logical subject area the data belongs to.</p>
 <p>Each domain page describes the expected structure, column definitions, and quality requirements for that domain's data. The final assembly step — combining all inputs into the model input file — is handled by a separate procedure.</p>
 <blockquote>
-<p><strong>Forecast context:</strong> This wiki was originally developed based on the RDF2050 forecast inputs (base year 2020) and has been updated to reflect data development for the RDF2055 forecast. For the 2055 forecast, the base year is expected to be 2024 or 2025 rather than 2020. Where this wiki refers to the "base year," readers should substitute the actual base year for the forecast cycle they are working on.</p>
+<p><strong>Base year:</strong> The base year changes with each forecast cycle. Where this wiki refers to the "base year," substitute the actual base year for the cycle you are working on.</p>
 </blockquote>
 <hr />
 <h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
@@ -895,15 +906,17 @@
 <pre class="mermaid"><code>flowchart TD
     PG["🗄 PostgreSQL\nParcels · Buildings · Zoning\nEvents · Crime · Demolition"]
     CSV["📄 CSV / Excel\nControl Totals · Rate Tables\nSynthetic Population · Jobs"]
-    PHDF["📦 HDFs\nAccessibility Indicators by Parcel\nGeographic constants\n(counties, large_areas, employment_sectors)"]
-    NET["📦 Network HDF\nsemcog_2050_networks.h5\n(used directly by simulation)"]
+    PHDF["📦 Reference HDF\nGeographic constants\n(counties, large_areas, employment_sectors)"]
+    NET["📦 semcog_networks.h5\nPandana street networks\n(walk · drive · bike)"]
+    ACC["📦 access_indicators.h5\nPre-computed accessibility\nby parcel (walk · bike · drive · transit)"]
 
     PG   --&gt; ASSM[Data Assembly]
     CSV  --&gt; ASSM
     PHDF --&gt; ASSM
-    ASSM --&gt; HDF[Model Input File]
+    ASSM --&gt; HDF[forecast_data_input.h5]
     HDF  --&gt; SIM[UrbanSim Simulation]
     NET  --&gt; SIM
+    ACC  --&gt; SIM
 
     style PG   fill:#E3F2FD,stroke:#1E88E5
     style CSV  fill:#E8F5E9,stroke:#43A047
@@ -966,8 +979,8 @@
 </tr>
 <tr>
 <td><a href="domains/demographics.html">Demographics</a></td>
-<td><code>households</code>, <code>persons</code>, <code>annual_household_control_totals</code>, <code>remi_hh_pop</code>, relocation rates, <code>target_vacancies</code>, <code>mcd_total</code>, <code>bg_hh_increase</code>, group quarters tables</td>
-<td>Population synthesis, REMI, ACS, CSV files</td>
+<td><code>households</code>, <code>persons</code>, <code>annual_household_control_totals</code>, <code>remi_hh_pop</code>, relocation rates, <code>target_vacancies</code>, <code>mcd_total</code>, <code>acs_household_change_by_block_group</code>, <code>taz_demographic_snapshots</code>, <code>income_growth_rates</code>, group quarters tables</td>
+<td>Population synthesis, REMI, ACS</td>
 </tr>
 <tr>
 <td><a href="domains/employment.html">Employment</a></td>
@@ -976,18 +989,18 @@
 </tr>
 <tr>
 <td><a href="domains/development-context.html">Development &amp; Context</a></td>
-<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code>, building construction costs</td>
-<td>PostgreSQL (event/demo tables), CSV, construction cost estimates</td>
+<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code>, building construction costs, <code>remi_pce_growth_rate</code></td>
+<td>PostgreSQL (event/demo tables), CSV, construction cost estimates, REMI</td>
 </tr>
 <tr>
 <td><a href="domains/networks.html">Street Networks</a></td>
 <td>Walk and drive node/edge tables</td>
-<td><code>semcog_2050_networks.h5</code> (separate file)</td>
+<td><code>semcog_networks.h5</code> (separate file)</td>
 </tr>
 <tr>
 <td><a href="domains/accessibility.html">Accessibility</a></td>
-<td><code>accessibility_walk/bike/drive_indicator_by_parcel</code>, <code>transit_stops</code>, <code>poi</code></td>
-<td>Accessibility analysis HDF/CSVs</td>
+<td><code>accessibility_walk/bike/drive_indicator_by_parcel</code>, <code>transit_stops</code>, <code>points_of_interest_by_category</code></td>
+<td>Accessibility analysis → <code>access_indicators.h5</code></td>
 </tr>
 <tr>
 <td><a href="domains/travel.html">Travel Data</a></td>
@@ -1002,13 +1015,45 @@
 <ul>
 <li><strong>PostgreSQL</strong> — parcels, buildings, zoning, events, demolitions, crime rates</li>
 <li><strong>CSV / Excel files</strong> — control totals, rate tables, synthetic population, jobs, amenities</li>
-<li><strong>Prior / Reference HDF</strong> — stable tables that do not change between forecast cycles and are carried forward from a previous model input file, plus accessibility indicators by parcel. Includes: <code>counties</code>, <code>large_areas</code>, <code>employment_sectors</code>, and walk/bike/drive indicator tables</li>
-<li><strong>Network HDF</strong> (<code>semcog_2050_networks.h5</code>) — street network geometry used directly by the simulation at runtime; not included in the model input file</li>
+<li><strong>Prior / Reference HDF</strong> — stable tables that do not change between forecast cycles and are carried forward from a previous model input file. Includes: <code>counties</code>, <code>large_areas</code>, <code>employment_sectors</code></li>
+<li><strong>Network HDF</strong> (<code>semcog_networks.h5</code>) — street network geometry used directly by the simulation at runtime; not included in the model input file</li>
 </ul>
 <p>Each domain's data developer is responsible for producing their data to the specifications in this wiki. The assembly and final validation steps are handled outside individual domain procedures.</p>
 <hr />
+<h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">&para;</a></h2>
+<p>The data preparation pipeline delivers three HDF files to the simulation. All three must be present at simulation startup.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>forecast_data_input.h5</code></td>
+<td><strong>Main simulation database</strong> — the primary output of the data assembly pipeline</td>
+<td>All base-year agent and geography tables (households, buildings, parcels, jobs, persons, zones, etc.) plus supplemental reference tables: <code>income_growth_rates</code>, <code>remi_pce_growth_rate</code>, <code>taz_demographic_snapshots</code>, <code>acs_household_change_by_block_group</code>, <code>points_of_interest_by_category</code>. See domain pages for the full table list and <a href="reference/table-catalog.html">Table Catalog</a> for a complete index.</td>
+</tr>
+<tr>
+<td><code>semcog_networks.h5</code></td>
+<td><strong>Pandana street network bundle</strong> — produced by a separate network build step; not assembled from domain data</td>
+<td>Walk network (OSM base year), drive networks (base year + future year). Extendable with bike network. Used by the simulation each year to recompute dynamic neighborhood accessibility as households and jobs shift.</td>
+</tr>
+<tr>
+<td><code>access_indicators.h5</code></td>
+<td><strong>Pre-computed accessibility indicators</strong> — produced by the Pandana accessibility pipeline; regenerated when the network, POI, or transit data is refreshed</td>
+<td>Walk, bike, drive, and transit accessibility metrics by parcel (travel times to destinations + cumulative job counts within time thresholds). Held constant throughout the simulation run.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Filename note:</strong> These names are stable conventions — they do not encode dates, vintages, or forecast horizons. Version control and provenance are tracked in the data development pipeline, not in the filename.</p>
+</blockquote>
+<hr />
 <h2 id="table-count">Table Count<a class="headerlink" href="#table-count" title="Permanent link">&para;</a></h2>
-<p>The model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
+<p>The main model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
 <hr />
 <p><small>Last updated: June 2026</small></p>
 

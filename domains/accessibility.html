@@ -632,10 +632,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#poi" class="md-nav__link">
+  <a href="#points_of_interest_by_category" class="md-nav__link">
     <span class="md-ellipsis">
       
-        poi
+        points_of_interest_by_category
       
     </span>
   </a>
@@ -971,9 +971,9 @@
 <td>CSV</td>
 </tr>
 <tr>
-<td><code>poi</code></td>
-<td>Points of interest by category and location</td>
-<td>CSV</td>
+<td><code>points_of_interest_by_category</code></td>
+<td>Locations and category labels for accessibility destinations (hospitals, grocery stores, parks, libraries, etc.); multiple distinct categories present</td>
+<td>HDF</td>
 </tr>
 <tr>
 <td><code>accessibility_walk_indicator_by_parcel</code></td>
@@ -994,14 +994,14 @@
 </table>
 <pre class="mermaid"><code>flowchart LR
     subgraph Static["Pre-computed (constant throughout simulation)"]
-        POI[poi\nPoints of interest] --&gt; AA[Accessibility Analysis\nPandana offline run]
+        POI[points_of_interest_by_category\nDestination locations by type] --&gt; AA[Accessibility Analysis\nPandana offline run]
         TS[transit_stops] --&gt; AA
         AA --&gt; WI[walk_indicator_by_parcel]
         AA --&gt; BI[bike_indicator_by_parcel]
         AA --&gt; DI[drive_indicator_by_parcel]
     end
     subgraph Dynamic["Dynamic (recomputed each simulation year)"]
-        NET[semcog_2050_networks.h5] --&gt; PN[Pandana\nbuild_networks step]
+        NET[semcog_networks.h5] --&gt; PN[Pandana\nbuild_networks step]
         HH[Current Households\n&amp; Jobs] --&gt; PN
         PN --&gt; NV[Neighborhood Variables\nper building]
     end
@@ -1050,8 +1050,11 @@
 <p><strong>Common issues:</strong>
 - Stops outside the region — verify coordinates
 - Duplicate <code>stop_id</code> values — append agency prefix to ensure uniqueness</p>
-<h3 id="poi"><code>poi</code><a class="headerlink" href="#poi" title="Permanent link">&para;</a></h3>
-<p>Points of interest used as accessibility destinations — grocery stores, hospitals, parks, pharmacies, childcare, schools, etc.</p>
+<h3 id="points_of_interest_by_category"><code>points_of_interest_by_category</code><a class="headerlink" href="#points_of_interest_by_category" title="Permanent link">&para;</a></h3>
+<p>Destination locations used in accessibility analysis, organized by facility type. Multiple distinct categories are present — each category drives a separate set of nearest-POI accessibility variables in the model. The categories currently in use are: grocery stores, hospitals, health centers, urgent care centers, libraries, parks (local, bike-accessible, and school), pharmacies, childcare, fire stations, American Job Centers, community colleges, passenger train stations, and passenger airports.</p>
+<blockquote>
+<p><strong>Note on orca table name:</strong> The simulation registers this table internally as <code>poi</code> (the orca table name). The HDF storage key is <code>points_of_interest_by_category</code>. Code referencing the orca table uses <code>poi</code>; the HDF key is what appears in the data file.</p>
+</blockquote>
 <p><strong>Index:</strong> Row index (integer)</p>
 <table>
 <thead>
@@ -1067,24 +1070,26 @@
 <td><code>category</code></td>
 <td>object</td>
 <td>no null</td>
-<td>POI type (e.g., <code>"grocery_store"</code>, <code>"hospital"</code>)</td>
+<td>Facility type label (e.g., <code>"grocery_store"</code>, <code>"hospital"</code>, <code>"park_local"</code>) — must match the destination names used in the accessibility analysis configuration</td>
 </tr>
 <tr>
 <td><code>point_x</code></td>
 <td>float64</td>
 <td>no null</td>
-<td>State plane X</td>
+<td>State plane X coordinate</td>
 </tr>
 <tr>
 <td><code>point_y</code></td>
 <td>float64</td>
 <td>no null</td>
-<td>State plane Y</td>
+<td>State plane Y coordinate</td>
 </tr>
 </tbody>
 </table>
-<p>POI categories must match the destination names used in the accessibility analysis. If category names change, the analysis must be rerun and the indicator variable names in the model's accessibility configuration updated accordingly.</p>
-<p><strong>Update:</strong> Refresh from the latest accessibility analysis POI dataset. Coordinate with the accessibility analysis team when updating — any change to categories or coverage triggers a full re-analysis.</p>
+<p><strong>Update:</strong> Refresh from the latest accessibility analysis POI dataset. Any change to category names or the set of categories requires a full re-run of the accessibility analysis — the indicator variable names in the model's accessibility configuration are derived from these category labels, and a mismatch causes errors at simulation startup. Coordinate with the accessibility analysis team before making category changes.</p>
+<p><strong>Common issues:</strong>
+- Category name mismatch between this table and the accessibility analysis configuration — causes missing or misnamed indicator variables
+- POIs outside the 7-county region — verify coordinates before use</p>
 <hr />
 <h2 id="accessibility-indicator-tables">Accessibility Indicator Tables<a class="headerlink" href="#accessibility-indicator-tables" title="Permanent link">&para;</a></h2>
 <p>All three indicator tables share the same structure — indexed by <code>parcel_id</code>, with one row per parcel. They contain two variable types:</p>
@@ -1311,7 +1316,7 @@
 - The POI or transit stop dataset is refreshed
 - A new forecast cycle requires updated base-year accessibility</p>
 <p><strong>Steps:</strong>
-1. Update <code>poi</code> and <code>transit_stops</code> CSVs with current data
+1. Update <code>points_of_interest_by_category</code> and <code>transit_stops</code> with current data
 2. Run the accessibility analysis (Pandana-based pipeline)
 3. Export new indicator CSVs with a date stamp in the filename
 4. Update the relevant file path references in the model configuration
