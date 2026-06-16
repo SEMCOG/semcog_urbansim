@@ -423,7 +423,10 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             # std by default
             alts_col_df = std_scaler_transform(alts_col_df)
 
-        # fill them back to alts_df
+        # fill them back to alts_df (ensure float so pandas 3 accepts scaled values)
+        for _c in std_cols:
+            if alts_df[_c].dtype != float:
+                alts_df[_c] = alts_df[_c].astype(float)
         alts_df.loc[alts_idx, std_cols] = alts_col_df
 
         # filter using alt_filter
@@ -554,7 +557,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id
-        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values.astype(
+            choosers_df['building_id'].dtype)
 
         print("Placed %s households." % len(picked_bid))
 

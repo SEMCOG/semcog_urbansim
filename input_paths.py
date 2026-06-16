@@ -118,6 +118,16 @@ FORECAST_INPUT_2040 = _p(
     f"{_LOCAL}/model_improvements/2024_spring/2010_data",
 )
 
+BUILDING_TO_ZONE_CSV = _p(
+    os.path.join(os.path.dirname(__file__), "data", "building_to_zone_baseyear_2020_shrink.csv"),
+    f"{_LOCAL}/building_to_zone_baseyear_2020_shrink.csv",
+)
+
+ACS_BG_HH_CSV = _p(
+    os.path.join(os.path.dirname(__file__), "data", "ACS_HH_14_19_BG.csv"),
+    f"{_LOCAL}/ACS_HH_14_19_BG.csv",
+)
+
 # ---------------------------------------------------------------------------
 # Output destination (optional run-archive copy; consumer guards on existence)
 # ---------------------------------------------------------------------------
