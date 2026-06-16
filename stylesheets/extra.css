@@ -23,6 +23,11 @@
   overflow: hidden !important;
 }
 
+/* Prevent code-formatted table names from wrapping inside table cells */
+table td code {
+  white-space: nowrap;
+}
+
 /* Let the active page table of contents collapse like the other nav sections. */
 .md-nav__item--active.toc-collapsed > .md-nav--secondary {
   display: none !important;
