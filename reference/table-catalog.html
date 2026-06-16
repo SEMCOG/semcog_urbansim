@@ -770,20 +770,26 @@
 <tr>
 <td><code>accessibility_bike_indicator_by_parcel</code></td>
 <td><code>parcel_id</code></td>
-<td>Accessibility analysis CSV</td>
+<td>Accessibility analysis → <code>access_indicators.h5</code></td>
 <td><a href="../domains/accessibility.html">Accessibility</a></td>
 </tr>
 <tr>
 <td><code>accessibility_drive_indicator_by_parcel</code></td>
 <td><code>parcel_id</code></td>
-<td>Accessibility analysis CSV</td>
+<td>Accessibility analysis → <code>access_indicators.h5</code></td>
 <td><a href="../domains/accessibility.html">Accessibility</a></td>
 </tr>
 <tr>
 <td><code>accessibility_walk_indicator_by_parcel</code></td>
 <td><code>parcel_id</code></td>
-<td>Accessibility analysis CSV</td>
+<td>Accessibility analysis → <code>access_indicators.h5</code></td>
 <td><a href="../domains/accessibility.html">Accessibility</a></td>
+</tr>
+<tr>
+<td><code>acs_household_change_by_block_group</code></td>
+<td><code>block_group_geoid</code></td>
+<td>ACS → HDF</td>
+<td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
 <td><code>annual_employment_control_totals</code></td>
@@ -800,7 +806,7 @@
 <tr>
 <td><code>annual_relocation_rates_for_households</code></td>
 <td>row integer (no named index)</td>
-<td>Excel</td>
+<td>Rate table</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
@@ -808,12 +814,6 @@
 <td><code>sector_id</code></td>
 <td>CSV</td>
 <td><a href="../domains/employment.html">Employment</a></td>
-</tr>
-<tr>
-<td><code>bg_hh_increase</code></td>
-<td><code>GEOID</code> (block group)</td>
-<td>ACS CSV</td>
-<td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
 <td><code>building_sqft_per_job</code></td>
@@ -878,7 +878,7 @@
 <tr>
 <td><code>group_quarters</code></td>
 <td><code>personid</code></td>
-<td>CSV (GQ synthesis)</td>
+<td>GQ synthesis</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
@@ -890,7 +890,7 @@
 <tr>
 <td><code>group_quarters_households</code></td>
 <td><code>household_id</code></td>
-<td>CSV (GQ synthesis)</td>
+<td>GQ synthesis</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
@@ -902,7 +902,7 @@
 <tr>
 <td><code>income_growth_rates</code></td>
 <td><code>year</code></td>
-<td>CSV</td>
+<td>REMI extract → HDF</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
@@ -918,16 +918,16 @@
 <td><a href="../domains/land-use.html">Land Use</a></td>
 </tr>
 <tr>
-<td><code>large_areas</code></td>
-<td><code>large_area_id</code></td>
-<td>Constant (prior HDF)</td>
-<td><a href="../domains/geography.html">Geography</a></td>
-</tr>
-<tr>
 <td><code>landmark_worksites</code></td>
 <td>—</td>
 <td>CSV</td>
 <td><a href="../domains/development-context.html">Development &amp; Context</a></td>
+</tr>
+<tr>
+<td><code>large_areas</code></td>
+<td><code>large_area_id</code></td>
+<td>Constant (prior HDF)</td>
+<td><a href="../domains/geography.html">Geography</a></td>
 </tr>
 <tr>
 <td><code>mcd_total</code></td>
@@ -954,9 +954,9 @@
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
-<td><code>poi</code></td>
+<td><code>points_of_interest_by_category</code></td>
 <td>row index</td>
-<td>CSV</td>
+<td>Accessibility analysis → HDF</td>
 <td><a href="../domains/accessibility.html">Accessibility</a></td>
 </tr>
 <tr>
@@ -968,13 +968,19 @@
 <tr>
 <td><code>remi_hh_pop</code></td>
 <td><code>large_area_id</code></td>
-<td>CSV from <code>HH_controls.py</code> (household population = total − GQ; replaces <code>remi_pop_total</code>)</td>
+<td><code>HH_controls.py</code> (household population = total − GQ)</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
+</tr>
+<tr>
+<td><code>remi_pce_growth_rate</code></td>
+<td><code>year</code></td>
+<td>REMI extract → HDF</td>
+<td><a href="../domains/development-context.html">Development &amp; Context</a></td>
 </tr>
 <tr>
 <td><code>schools</code></td>
 <td><code>bcode</code></td>
-<td>Excel</td>
+<td>MDE database</td>
 <td><a href="../domains/development-context.html">Development &amp; Context</a></td>
 </tr>
 <tr>
@@ -986,13 +992,19 @@
 <tr>
 <td><code>target_vacancies</code></td>
 <td>—</td>
-<td>Excel</td>
+<td>Rate table</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
 <td><code>target_vacancies_mcd</code></td>
 <td><code>cityid</code></td>
-<td>Excel</td>
+<td>Rate table</td>
+<td><a href="../domains/demographics.html">Demographics</a></td>
+</tr>
+<tr>
+<td><code>taz_demographic_snapshots</code></td>
+<td><code>taz_id × snapshot_year</code></td>
+<td>Historical data → HDF</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
@@ -1004,13 +1016,13 @@
 <tr>
 <td><code>travel_data</code></td>
 <td><code>from_zone_id, to_zone_id</code></td>
-<td>CSV (from OMX)</td>
+<td>TransCAD OMX → CSV</td>
 <td><a href="../domains/travel.html">Travel Data</a></td>
 </tr>
 <tr>
 <td><code>travel_data_2030</code></td>
 <td><code>from_zone_id, to_zone_id</code></td>
-<td>CSV (from OMX)</td>
+<td>TransCAD OMX → CSV</td>
 <td><a href="../domains/travel.html">Travel Data</a></td>
 </tr>
 <tr>
