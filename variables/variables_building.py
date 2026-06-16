@@ -764,7 +764,7 @@ def zone_id(buildings, parcels, building_to_zone_baseyear):
     # only apply building to zone mapping to selected buildings
     applied_buildings = zid.index.isin(building_to_zone_baseyear.index)
     # update their zone_id
-    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id)
+    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id).astype(zid.dtype)
     return zid
 
 

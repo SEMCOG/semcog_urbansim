@@ -1665,13 +1665,17 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+                for _col in hh_cols_to_swap:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
                 # hh persons overwrite
                 p_idx_to_update = np.array([], dtype=int)
                 for hh_id in hh_to_swap.index:
                     hh_members = pg.get_group(hh_id)
                     p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+                for _col in p_cols_to_swap:
+                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
                 # update added_employ
                 num_new_employ = int(lpr_workers - (
                     (p.large_area_id == large_area_id)
@@ -1695,13 +1699,17 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+                for _col in hh_cols_to_swap:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
                 # hh persons overwrite
                 p_idx_to_update = np.array([], dtype=int)
                 for hh_id in hh_to_swap.index:
                     hh_members = pg.get_group(hh_id)
                     p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+                for _col in p_cols_to_swap:
+                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
                 # update num_drop_employ
                 num_drop_employ = int((
                     (p.large_area_id == large_area_id)
@@ -1962,7 +1970,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 )
                 agents_sample.building_id = new_building_ids
 
-        agents = agents.append(agents_sample)
+        agents = pd.concat([agents, agents_sample])
         return agents, agents_pool
 
     def add_pop_agents(
@@ -2002,7 +2010,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 agents_sample.building_id = bselect.sample(
                     len(agents_sample), replace=True
                 ).index.values
-                agents = agents.append(agents_sample)
+                agents = pd.concat([agents, agents_sample])
                 number_of_agents -= agents_sample.persons.sum()
         else:
             available_agents = agents.query(agent_expression)
@@ -2023,7 +2031,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 agents_sample.building_id = bselect.sample(
                     len(agents_sample), replace=True
                 ).index.values
-                agents = agents.append(agents_sample)
+                agents = pd.concat([agents, agents_sample])
                 number_of_agents -= agents_sample.persons.sum()
         return agents, agents_pool
 
@@ -2041,7 +2049,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             selected_agents = local_agents.sample(
                 min(len(local_agents), number_of_agents)
             )
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
 
@@ -2064,7 +2072,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 selected_agents.persons.cumsum() <= number_of_agents
             ]
             number_of_agents -= selected_agents.persons.sum()
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
             local_agents.drop(selected_agents.index, inplace=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
@@ -2082,7 +2090,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             selected_agents = local_agents.sample(
                 min(len(local_agents), number_of_agents)
             )
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
         return agents, agents_pool
 
     def target_agents(
@@ -2678,11 +2686,17 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             rel_b = rel_b[rel_b[accounting] <= target]
             if len(rel_b) == 0:
                 continue
-            w    = rel_b[score_col].clip(lower=1e-6)
+            w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
             size = min(len(rel_b), int(target))
             if size > 0:
-                sampled = rel_b.sample(size, weights=w,
-                                       random_state=utils.step_rng("mcd_hu_sampling_nonres", city_id))
+                # Use numpy Generator.choice for weighted sampling without
+                # replacement; pandas 3 imposes size*max_weight<=1 which
+                # fails when one building has a dominant score.
+                rng = utils.step_rng("mcd_hu_sampling_nonres", city_id)
+                w_arr = w.to_numpy(dtype=float, copy=True)
+                w_arr /= w_arr.sum()
+                chosen = rng.choice(len(rel_b), size=size, replace=False, p=w_arr)
+                sampled = rel_b.iloc[chosen]
                 sampled = sampled[sampled[accounting].cumsum() <= int(target)]
                 buildings_idx.append(sampled)
 
@@ -3532,7 +3546,7 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
         target_vacancy = float(
             target_vacancies[
                 target_vacancies.large_area_id == lid
-            ].non_res_target_vacancy_rate
+            ].non_res_target_vacancy_rate.iloc[0]
         )
 
         # loop through non-residential building forms (1:1 with building_type_id)
@@ -3862,7 +3876,7 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     pb = pseudo_building_2020.local
     bb = buildings.local
     bb.loc[pb.index, "residential_units"] = 0
-    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b
+    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b.astype(bb["residential_units"].dtype)
 
     print("Dropped %s hh from current pseudo buildings." % k)
 

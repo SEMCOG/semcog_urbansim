@@ -9,6 +9,10 @@ import verify_data_structure
 import utils
 import input_paths
 
+# pandas 3 infers string columns as StringDtype by default, which PyTables
+# cannot serialize to HDF5. Revert to object-backed strings for compatibility.
+pd.options.future.infer_string = False
+
 
 @orca.injectable("year")
 def year():
