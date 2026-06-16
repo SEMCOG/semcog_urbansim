@@ -1021,7 +1021,7 @@
 <tr>
 <td><code>remi_hh_pop</code></td>
 <td>Household population (total − group quarters) by large area × year</td>
-<td>Produced by <code>HH_controls.py</code> (replaces the legacy total-population <code>remi_pop_total</code>)</td>
+<td>Produced by <code>HH_controls.py</code></td>
 </tr>
 <tr>
 <td><code>annual_relocation_rates_for_households</code></td>
@@ -1439,7 +1439,6 @@
 </tbody>
 </table>
 <p><strong>Produced by:</strong> <code>HH_controls.py</code> writes <code>remi_hh_pop.csv</code> from the reviewed household-population series (total − GQ) it already uses to scale household counts — so it comes out of the same control-totals run, not a separate step.</p>
-<p><strong>Replaces <code>remi_pop_total</code>.</strong> The legacy table held <em>total</em> population including group quarters; the transition's 10+-person size target excludes GQ, so total population over-stated the target by each large area's GQ population and biased 10+-person household sizes upward. The simulation now prefers <code>remi_hh_pop</code> and falls back to <code>remi_pop_total</code> only as a temporary back-compat measure (behind the <code>allow_total_pop_fallback</code> switch). Update it from the same REMI run as the household controls; retire <code>remi_pop_total</code> once inputs carry <code>remi_hh_pop</code>.</p>
 <p><img alt="Population forecast by large area" src="../images/remi_pop_forecast.png" /></p>
 <p><strong>Sample rows</strong> (all 8 large areas, selected years):</p>
 <table>
