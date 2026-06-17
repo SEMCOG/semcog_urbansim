@@ -347,7 +347,8 @@ orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
 orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
 
 
-def _load_remi_growth_rates():
+def _load_remi_pi_growth_rates():
+    """Per-large-area personal-income growth rates, used by increase_property_values."""
     base = input_paths.LFPR_INCOME_DIR
     geo_to_la = {
         "rest of wayne": 3,
@@ -361,31 +362,33 @@ def _load_remi_growth_rates():
     }
     years = list(range(2020, 2051))
     pi_rates = {}   # {year: {la_id: rate}}
-    pce_rates = {}  # {year: rate}
-    pce_loaded = False
 
     for geo, la in geo_to_la.items():
         fpath = path.join(base, f"lfpr income {geo}.xlsx")
         df = pd.read_excel(fpath, header=None, sheet_name=0)
-        pi_vals  = df.iloc[24, 9:40].values.astype(float)  # row 25: Personal Income
-        pce_vals = df.iloc[34, 9:40].values.astype(float)  # row 35: PCE-Price Index
+        pi_vals = df.iloc[24, 9:40].values.astype(float)  # row 25: Personal Income
         pi_series = dict(zip(years, pi_vals))
-        if not pce_loaded:
-            pce_series = dict(zip(years, pce_vals))
-            pce_loaded = True
         for i in range(1, len(years)):
             y = years[i]
             rate = max(pi_series[y] / pi_series[years[i - 1]] - 1, 0.0)
             pi_rates.setdefault(y, {})[la] = rate
 
-    for i in range(1, len(years)):
-        y = years[i]
-        pce_rates[y] = pce_series[y] / pce_series[years[i - 1]] - 1
-
-    return pi_rates, pce_rates
+    return pi_rates
 
 
-_remi_pi, _remi_pce = _load_remi_growth_rates()
+def _load_remi_pce_growth_rates():
+    """Region-wide PCE growth rate (year -> rate), used by cost_shifter_callback
+    to inflate construction costs. Precomputed into the HDF by
+    forecast_data_input/development_context/PCE_growth_rate.py as a single
+    population-weighted series across the 8 large areas -- the base
+    construction-cost table only varies by 3 pricing areas, so a per-large-area
+    rate here would be false precision (see that script's README)."""
+    store = orca.get_injectable("store")
+    return store["remi_pce_growth_rate"]["pce_growth_rate"].to_dict()
+
+
+_remi_pi = _load_remi_pi_growth_rates()
+_remi_pce = _load_remi_pce_growth_rates()
 orca.add_injectable("remi_pi_growth_rates", _remi_pi)
 orca.add_injectable("remi_pce_growth_rates", _remi_pce)
 print(f"REMI growth rates loaded: {len(_remi_pi)} years, "

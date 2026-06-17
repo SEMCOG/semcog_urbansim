@@ -35,6 +35,9 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
+    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
+    f"{_LOCAL}/forecast_data_input.h5",
+    # legacy filename, fallback only -- doesn't have remi_pce_growth_rate etc.
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
     f"{_LOCAL}/forecast_data_input_031523.h5",
 )
