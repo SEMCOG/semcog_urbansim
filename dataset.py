@@ -39,7 +39,6 @@ for name in [
     "transit_stops",
     "crime_rates",
     "schools",
-    "jobs_2019",
     # "poi",
     "group_quarters",
     "group_quarters_households",
