@@ -311,18 +311,15 @@ def poi():
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv(input_paths.ACCESS_WALK_CSV).set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_walk_indicator_by_parcel")
 
 @orca.table(cache=True)
 def accessibility_bike_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv(input_paths.ACCESS_BIKE_CSV).set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_bike_indicator_by_parcel")
 
 @orca.table(cache=True)
 def accessibility_drive_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv(input_paths.ACCESS_DRIVE_CSV).set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_drive_indicator_by_parcel")
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
