@@ -56,6 +56,13 @@ POIS_CSV = _p(
     f"{_LOCAL}/pois.csv",
 )
 
+ACCESS_INDICATORS_H5 = _p(
+    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/access_indicators.h5",
+    f"{_LOCAL}/access_indicators.h5",
+)
+
+# legacy CSVs, fallback only -- superseded by ACCESS_INDICATORS_H5 (same data,
+# documented fill values applied: 95/125/155 min near-max, 0 cumulative/gravity)
 _ACCESS = "/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators"
 ACCESS_WALK_CSV = _p(
     f"{_ACCESS}/walk/walk_indicators_by_parcel_20251111.csv",
@@ -72,6 +79,9 @@ ACCESS_DRIVE_CSV = _p(
 
 # Pandana network bundle — normally in the local `data/` dir; fall back to copy.
 NETWORKS_2050_H5 = _p(
+    os.path.join(os.path.dirname(__file__), "data", "semcog_networks.h5"),
+    f"{_LOCAL}/semcog_networks.h5",
+    # legacy filename, fallback only -- identical content
     os.path.join(os.path.dirname(__file__), "data", "semcog_2050_networks.h5"),
     f"{_LOCAL}/semcog_2050_networks.h5",
 )
