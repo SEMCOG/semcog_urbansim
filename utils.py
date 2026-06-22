@@ -15,6 +15,8 @@ from urbansim.utils import misc
 import numbers
 import logging
 import hashlib
+import shutil
+import subprocess
 
 
 # ---------------------------------------------------------------------------
@@ -728,6 +730,95 @@ def filter_table(table, filter_series, ignore=None):
     ]
 
     return apply_filter_query(table, filters)
+
+
+def _git_output(*args):
+    return subprocess.check_output(["git", *args]).decode().strip()
+
+
+def _git_is_dirty():
+    return bool(_git_output("status", "--porcelain"))
+
+
+def _copy_run_configs(data_out_dir, yaml_configs):
+    configs_dir = os.path.join(data_out_dir, "configs_used")
+    os.makedirs(configs_dir, exist_ok=True)
+
+    config_dir = misc.configs_dir()
+    config_sources = {
+        "demolition_model": os.path.join(config_dir, "demolition_model.yaml"),
+        "res_developer": os.path.join(config_dir, "res_developer.yaml"),
+        "nonres_developer": os.path.join(config_dir, "nonres_developer.yaml"),
+        "proforma": os.path.join(config_dir, "proforma.yaml"),
+        "cost_shifters": os.path.join(config_dir, "cost_shifters.yaml"),
+        "developer_selection_coefs": os.path.join(
+            config_dir, "developer_selection_coefs.yaml"
+        ),
+        "mcd_hu_sampling": os.path.join(config_dir, "mcd_hu_sampling.yaml"),
+        "model_steps": os.path.join(config_dir, yaml_configs),
+    }
+
+    copied = {}
+    for name, src in config_sources.items():
+        if not os.path.exists(src):
+            copied[name] = None
+            continue
+        dst = os.path.join(configs_dir, os.path.basename(src))
+        shutil.copy2(src, dst)
+        copied[name] = dst
+    return copied
+
+
+def write_run_metadata(data_out, input_hdf_path, run_options, repm_model_type="XGBoost"):
+    """Write run_config.yaml and copy key model configs into the run folder."""
+    data_out_dir = orca.get_injectable("data_out_dir")
+    os.makedirs(data_out_dir, exist_ok=True)
+
+    yaml_configs = orca.get_injectable("yaml_configs")
+    copied_configs = _copy_run_configs(data_out_dir, yaml_configs)
+    run_config = {
+        "run": {
+            "run_output": data_out,
+            "run_output_dir": data_out_dir,
+            "base_year": orca.get_injectable("base_year"),
+            "final_year": orca.get_injectable("final_year"),
+            "random_seed": orca.get_injectable("random_seed"),
+        },
+        "code": {
+            "git_branch_name": _git_output("rev-parse", "--abbrev-ref", "HEAD"),
+            "git_commit_id": _git_output("rev-parse", "HEAD"),
+            "git_is_dirty": _git_is_dirty(),
+        },
+        "inputs": {
+            "input_hdf_path": input_hdf_path,
+            "input_hdf_schema_snapshot": os.path.join(
+                data_out_dir, "input_hdf_schema_snapshot.yaml"
+            ),
+            "hlcm_model_path": orca.get_injectable("hlcm_model_path"),
+            "elcm_model_path": orca.get_injectable("elcm_model_path"),
+        },
+        "switches": {
+            **run_options,
+            "ENABLE_SCENARIO": orca.get_injectable("ENABLE_SCENARIO"),
+            "use_checkpoint": orca.get_injectable("use_checkpoint"),
+            "runnum_to_resume": orca.get_injectable("runnum_to_resume"),
+            "allow_total_pop_fallback": orca.get_injectable("allow_total_pop_fallback"),
+            "require_full_control_coverage": orca.get_injectable(
+                "require_full_control_coverage"
+            ),
+        },
+        "configs": {
+            "yaml_configs": yaml_configs,
+            "configs_used_dir": os.path.join(data_out_dir, "configs_used"),
+            "copied_configs": copied_configs,
+            "repm_model_type": repm_model_type,
+        },
+    }
+
+    with open(os.path.join(data_out_dir, "run_config.yaml"), "w") as f:
+        import yaml
+
+        yaml.dump(run_config, f, default_flow_style=False, sort_keys=False)
 
 
 def run_log(log_txt, file_path=None):

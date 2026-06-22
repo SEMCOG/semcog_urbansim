@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import utils
 import input_paths
-import subprocess
 
 # get run number and set up log file
 data_out = utils.get_run_filename()
@@ -37,13 +36,10 @@ orca.add_injectable('scenario_hh_control_path', input_paths.SCENARIO_HH_CONTROL_
 orca.add_injectable('scenario_remi_total_pop', input_paths.SCENARIO_REMI_POP_CSV)
 orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTROL_CSV)
 
-# Household-population target for the transition's 10+-person size draw.
-# True (default): if the model input lacks `remi_hh_pop` (household population),
-# fall back to the legacy `remi_pop_total` (TOTAL population incl. group
-# quarters) with a warning — temporary back-compat for older inputs.
-# Set False once inputs provide `remi_hh_pop`, so a wrong (total-pop) file can
-# never silently feed the model (the transition will raise instead).
-orca.add_injectable('allow_total_pop_fallback', True)
+# Household-population target for the transition.
+# Forecast inputs must provide `remi_hh_pop`; legacy total-pop fallback is
+# disabled so the transition fails clearly if the household-pop target is absent.
+orca.add_injectable("allow_total_pop_fallback", False)
 
 # P2 guard: households_transition warns if any household matches no control
 # category (it would be silently dropped by the totals transition). Set True to
@@ -70,28 +66,18 @@ print('using random_seed', RANDOM_SEED)
 orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1365.h5')
 
-# dump all setting in yaml in run folder
-if not os.path.exists(orca.get_injectable("data_out_dir")):
-    os.makedirs(orca.get_injectable("data_out_dir"))
-with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), "w+") as f:
-    import yaml
-    yaml.dump({
-            "RUN NUMBER": data_out,
-            "random_seed": orca.get_injectable("random_seed") if orca.is_injectable("random_seed") else "N/A",
-            "hlcm_model_path": orca.get_injectable("hlcm_model_path") if orca.is_injectable("hlcm_model_path") else "N/A",
-            "elcm_model_path": orca.get_injectable("elcm_model_path") if orca.is_injectable("elcm_model_path") else "N/A",
-            "yaml_configs": orca.get_injectable("yaml_configs") if orca.is_injectable("yaml_configs") else "N/A",
-            "base_year": orca.get_injectable("base_year") if orca.is_injectable("base_year") else "N/A",
-            "final_year": orca.get_injectable("final_year") if orca.is_injectable("final_year") else "N/A",
-            "ENABLE_SCENARIO": orca.get_injectable("ENABLE_SCENARIO") if orca.is_injectable("ENABLE_SCENARIO") else "N/A",
-            "scenario_hh_control_path": orca.get_injectable("scenario_hh_control_path") if orca.is_injectable("scenario_hh_control_path") else "N/A",
-            "scenario_remi_total_pop": orca.get_injectable("scenario_remi_total_pop") if orca.is_injectable("scenario_remi_total_pop") else "N/A",
-            "use_checkpoint": orca.get_injectable("use_checkpoint") if orca.is_injectable("use_checkpoint") else "N/A",
-            "runnum_to_resume": orca.get_injectable("runnum_to_resume") if orca.is_injectable("runnum_to_resume") else "N/A",
-            "repm_model_type": "XGBoost",
-            "git_branch_name": subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode().strip(),
-            "git_commit_id": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
-        }, f, default_flow_style=False)
+# Save run metadata and exact copies of key model config files.
+utils.write_run_metadata(
+    data_out,
+    input_paths.BASE_HDF,
+    {
+        "RUN_OUTPUT_INDICATORS": RUN_OUTPUT_INDICATORS,
+        "indicator_spacing": indicator_spacing,
+        "upload_to_carto": upload_to_carto,
+        "run_debug": run_debug,
+        "add_2019": add_2019,
+    },
+)
 
 import models
 from urbansim.utils import misc, networks
