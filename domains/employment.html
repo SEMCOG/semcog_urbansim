@@ -238,6 +238,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -533,6 +552,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="jobs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-model-uses-key-job-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the model uses key job columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -827,6 +863,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -942,6 +1005,43 @@
 - <code>sector_id</code> outside 1–18 — check against SEMCOG sector mapping
 - <code>building_id</code> referencing non-existent buildings — re-geocode or assign to nearest valid building
 - Total job count by sector × large area for the base year should match REMI base year employment</p>
+<h3 id="how-the-model-uses-key-job-columns">How the model uses key job columns<a class="headerlink" href="#how-the-model-uses-key-job-columns" title="Permanent link">&para;</a></h3>
+<div class="model-usage">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Used by (model step)</th>
+<th>How it's used / why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_id</code> (<code>-1</code> = unplaced)</td>
+<td>ELCM</td>
+<td><code>-1</code> flags a job the ELCM must place this year; already-placed jobs stay put (job relocation is currently off). New jobs added by <code>jobs_transition</code> start at <code>-1</code>.</td>
+</tr>
+<tr>
+<td><code>sector_id</code></td>
+<td>ELCM segmentation</td>
+<td>A separate ELCM is run per sector (× home-based status); the sector also drives sector-specific job-accessibility variables.</td>
+</tr>
+<tr>
+<td><code>home_based_status</code></td>
+<td>ELCM</td>
+<td>Home-based jobs (<code>1</code>) sit in residential buildings and are <strong>not</strong> placed by the building-level ELCM; non-home-based (<code>0</code>) compete for <code>vacant_job_spaces</code>.</td>
+</tr>
+<tr>
+<td><code>sqft</code> / <code>building_sqft_per_job</code></td>
+<td>building job capacity</td>
+<td>Converts non-residential floor space into <code>job_spaces</code> (see <a href="land-use.html">buildings</a>) — the supply that non-home-based jobs fill.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p><strong><code>base_job_space</code></strong> is a separate, derived table — a frozen base-year snapshot of each building's non-home-based job count, used for indicators and trend variables. It is <strong>not</strong> the live job capacity (that is <code>job_spaces</code>, recomputed from current <code>non_residential_sqft</code>).</p>
+</blockquote>
 <h2 id="annual_employment_control_totals"><code>annual_employment_control_totals</code><a class="headerlink" href="#annual_employment_control_totals" title="Permanent link">&para;</a></h2>
 <p>Target job counts by large area × sector × home-based status × year. The <code>jobs_transition</code> model step uses this to add or remove jobs annually.</p>
 <p><strong>Index:</strong> Multi-index <code>(year, sector_id, home_based_status)</code><br />
@@ -1244,7 +1344,7 @@
 </table>
 <hr />
 <h2 id="employed_workers_rate"><code>employed_workers_rate</code><a class="headerlink" href="#employed_workers_rate" title="Permanent link">&para;</a></h2>
-<p>The fraction of the population in each age group that is employed, by large area and year. Used by the <code>fix_lpr</code> simulation step to adjust the <code>workers</code> count in the households table after each year's household transition, keeping the simulated workforce consistent with REMI employment projections.</p>
+<p>The fraction of the population in each age group that is employed, by large area and year. Used by the <code>workers_adjustment_model</code> simulation step (formerly <code>fix_lpr</code>) to adjust the <code>workers</code> count in the households table after each year's household transition, keeping the simulated workforce consistent with REMI employment projections.</p>
 <p><strong>Index:</strong> <code>large_area_id</code></p>
 <table>
 <thead>

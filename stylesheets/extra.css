@@ -34,3 +34,35 @@ table td code {
   max-height: 0 !important;
   overflow: hidden !important;
 }
+
+/* ── "How the model uses key columns" tables ──
+   Amber tint so these downstream-usage tables are easy to tell apart from the
+   regular (teal-themed) data-definition tables. */
+.model-usage {
+  border-left: 4px solid #f0a000;
+  padding-left: 0.85rem;
+  margin: 0.6rem 0 1.2rem;
+}
+
+.model-usage > table {
+  border: 1px solid #f0c46a;
+}
+
+.model-usage > table th {
+  background-color: #fff3d6;
+  color: #5c4300;
+}
+
+.model-usage > table td {
+  background-color: #fffaf0;
+}
+
+/* Keep the amber tint readable in dark mode */
+[data-md-color-scheme="slate"] .model-usage > table th {
+  background-color: #4a3a12;
+  color: #ffe7b0;
+}
+
+[data-md-color-scheme="slate"] .model-usage > table td {
+  background-color: #2e2917;
+}

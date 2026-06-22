@@ -238,6 +238,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -477,6 +496,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="parcels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-model-uses-key-parcel-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the model uses key parcel columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -488,6 +524,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="buildings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-model-uses-key-building-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the model uses key building columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -498,6 +551,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="zoning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-model-uses-key-zoning-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the model uses key zoning columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -816,6 +886,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -996,6 +1093,30 @@
 - Parcels with <code>zone_id = null</code> after join — no TAZ match; check that the parcel's zone code exists in the TAZ boundary table
 - <code>large_area_id</code> outside the 8 allowed values — usually out-of-region parcels; filter them out
 - Coordinate outliers — verify projection (Michigan GeoRef state plane) and check for misplaced records</p>
+<h3 id="how-the-model-uses-key-parcel-columns">How the model uses key parcel columns<a class="headerlink" href="#how-the-model-uses-key-parcel-columns" title="Permanent link">&para;</a></h3>
+<div class="model-usage">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Used by (model step)</th>
+<th>How it's used / why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>landvalue</code></td>
+<td>developer, demolition</td>
+<td>Assessed land value. Paired with building improvement value as the <strong>land-to-improvement ratio</strong> — a high ratio signals teardown pressure in the demolition model — and land value feeds developer feasibility.</td>
+</tr>
+<tr>
+<td><code>bldgimprval</code></td>
+<td>developer, demolition</td>
+<td>Total building improvement value on the parcel. Allocated to each building as <code>improvement_value</code>; the land-to-improvement ratio built from it feeds the demolition-risk score.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr />
 <h2 id="buildings"><code>buildings</code><a class="headerlink" href="#buildings" title="Permanent link">&para;</a></h2>
 <p>Every residential unit and job must be assigned to a building. This is the most-used table in the simulation. Building count is close to parcel count — most parcels have one building.</p>
@@ -1147,6 +1268,51 @@
 - <code>year_built</code> after base year — cap to base year
 - Buildings with both <code>residential_units &gt; 0</code> AND <code>non_residential_sqft &gt; 0</code> — mixed-use is valid; verify intentional
 - <code>residential_units &gt; 0</code> but <code>sqft_per_unit = 0</code> — the model uses <code>sqft_per_unit</code> for feasibility analysis; assign a reasonable default</p>
+<h3 id="how-the-model-uses-key-building-columns">How the model uses key building columns<a class="headerlink" href="#how-the-model-uses-key-building-columns" title="Permanent link">&para;</a></h3>
+<p>Beyond being descriptive attributes, several building columns directly drive model steps. Some values are <strong>derived at runtime</strong> from the input columns above (marked <em>derived</em>) — listed here so you can see why the inputs matter.</p>
+<div class="model-usage">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Used by (model step)</th>
+<th>How it's used / why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>non_residential_sqft</code> → <code>job_spaces</code> <em>(derived)</em></td>
+<td>ELCM (employment location choice)</td>
+<td>Job capacity = <code>non_residential_sqft ÷ building_sqft_per_job</code> (by building type). The ELCM fills only <strong><code>vacant_job_spaces</code></strong> (capacity − jobs present, floored at 0) — the supply ceiling for employment. Understate the sqft and jobs can't locate there; overstate it and the building over-absorbs jobs.</td>
+</tr>
+<tr>
+<td><code>residential_units</code> → <code>vacant_residential_units</code> <em>(derived)</em></td>
+<td>HLCM (household location choice)</td>
+<td>Household capacity. Households are placed only into vacant units; <code>residential_units = 0</code> means no household can live there.</td>
+</tr>
+<tr>
+<td><code>market_value</code></td>
+<td>REPM (price model)</td>
+<td>Seeds the base-year <code>sqft_price_res</code> / <code>sqft_price_nonres</code> and is a <strong>static base-year anchor / predictor</strong> in the hedonic price model (it is not rewritten during the run).</td>
+</tr>
+<tr>
+<td><code>sqft_price_res</code> / <code>sqft_price_nonres</code> <em>(derived)</em></td>
+<td>REPM → developer, HLCM/ELCM</td>
+<td>The model's working prices. REPM re-predicts them each year; the developer reads nearby values to judge feasibility, and location-choice models score them.</td>
+</tr>
+<tr>
+<td><code>improvement_value</code></td>
+<td>demolition model</td>
+<td>Improvement value per sqft and the land-to-improvement ratio feed the building's demolition-risk score.</td>
+</tr>
+<tr>
+<td><code>sp_filter</code></td>
+<td>demolition, relocation, location choice</td>
+<td>Special-building marker. <strong>Negative = protected/excluded:</strong> <code>update_sp_filter</code> sets <code>-1</code> for institutional types (schools, hospitals, government, libraries, religious/civic) so they are never demolished or re-chosen; pseudo-buildings are <code>-2</code>.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr />
 <h2 id="zoning"><code>zoning</code><a class="headerlink" href="#zoning" title="Permanent link">&para;</a></h2>
 <p>Controls what can be built on each parcel. Directly drives the developer/feasibility model.</p>
@@ -1222,6 +1388,41 @@
 - <code>pct_undev = null</code> — treated as 0% developable in the model; fill with 0 or actual value
 - Missing <code>is_developable</code> — defaults to not developable; verify coverage
 - Any parcel in <code>zoning</code> must have a matching <code>parcel_id</code> in <code>parcels</code></p>
+<h3 id="how-the-model-uses-key-zoning-columns">How the model uses key zoning columns<a class="headerlink" href="#how-the-model-uses-key-zoning-columns" title="Permanent link">&para;</a></h3>
+<p>The entire <code>zoning</code> table exists to constrain the <strong>developer / feasibility</strong> model — it decides where and what new construction is allowed.</p>
+<div class="model-usage">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Used by (model step)</th>
+<th>How it's used / why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_developable</code></td>
+<td>feasibility</td>
+<td>Gate: <code>0</code> = never built on. <code>2</code> (UST present) is still developable but adds 10 points to <code>pct_undev</code>, making the parcel slightly less competitive.</td>
+</tr>
+<tr>
+<td><code>pct_undev</code></td>
+<td>developer</td>
+<td>Share of the parcel treated as available for new construction — scales how much can be built.</td>
+</tr>
+<tr>
+<td><code>max_dua</code> / <code>max_far</code> / <code>max_height</code> / <code>max_stories</code></td>
+<td>developer pro-forma</td>
+<td>Hard caps; the feasibility check discards any building proposal that exceeds them.</td>
+</tr>
+<tr>
+<td><code>type81</code> – <code>type95</code></td>
+<td>developer</td>
+<td>Which building types are allowed on the parcel; feasibility only considers allowed forms.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr />
 <h2 id="land_use_types"><code>land_use_types</code><a class="headerlink" href="#land_use_types" title="Permanent link">&para;</a></h2>
 <p>Reference table of land use type definitions.</p>

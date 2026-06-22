@@ -238,6 +238,25 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -516,6 +535,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="households">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-model-uses-key-household-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the model uses key household columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -972,6 +1008,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1151,6 +1214,45 @@
 - <code>building_id = -1</code> — unplaced households; should be a small fraction of total; investigate large unplaced counts
 - Negative income — set to 0 in the build pipeline (intentional)
 - Total household count should be consistent with the base year <code>annual_household_control_totals</code></p>
+<h4 id="how-the-model-uses-key-household-columns">How the model uses key household columns<a class="headerlink" href="#how-the-model-uses-key-household-columns" title="Permanent link">&para;</a></h4>
+<div class="model-usage">
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Used by (model step)</th>
+<th>How it's used / why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>building_id</code> (<code>-1</code> = unplaced)</td>
+<td>HLCM</td>
+<td><code>-1</code> flags a household the HLCM must place this year. Each year <code>households_relocation</code> un-places a share (sets <code>-1</code>) so they re-choose; new households from <code>households_transition</code> also start at <code>-1</code>.</td>
+</tr>
+<tr>
+<td><code>children</code>, <code>income</code> (+ household senior count, from person ages)</td>
+<td>HLCM segmentation</td>
+<td>The HLCM is split into segments by <strong>children</strong> (has / none), <strong>income</strong> (low / mid / high), and <strong>seniors</strong> (with / without), per large area. <code>has_children</code> comes from <code>children &gt; 0</code>; the income tier from <code>income</code>; the senior flag from whether any household member is a senior (person ages). <em>Household size (<code>persons</code>) and <code>age_of_head</code> are </em><em>not</em><em> HLCM segmentation dimensions.</em></td>
+</tr>
+<tr>
+<td><code>workers</code></td>
+<td><code>workers_adjustment_model</code> <em>(formerly <code>fix_lpr</code>)</em></td>
+<td>After each transition, this step swaps a household for a seed household with one more / fewer worker so the employed-worker count matches the <code>employed_workers_rate</code> targets by large area and age band; income and cars are then resampled to match.</td>
+</tr>
+<tr>
+<td><code>age_of_head</code>, <code>persons</code>, <code>children</code>, <code>income</code>, <code>cars</code>, <code>workers</code>, <code>race_id</code></td>
+<td>control totals / <code>households_transition</code></td>
+<td>These are the demographic bracket dimensions in <code>annual_household_control_totals</code>; the transition step adds or removes households to hit the target counts per bracket.</td>
+</tr>
+<tr>
+<td><code>large_area_id</code> <em>(via the building)</em></td>
+<td>HLCM, control totals</td>
+<td>Determines which per-large-area HLCM applies and which control-total rows the household counts toward.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <h3 id="persons"><code>persons</code><a class="headerlink" href="#persons" title="Permanent link">&para;</a></h3>
 <p>All individuals in base-year synthetic households. One row per person.</p>
 <p><strong>Index:</strong> <code>person_id</code> (unique)</p>
