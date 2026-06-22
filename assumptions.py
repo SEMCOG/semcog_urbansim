@@ -370,9 +370,11 @@ def verify():
             "data_out_dir must be configured before loading the input HDF; "
             "input_hdf_schema_snapshot.yaml is written only to the run output folder."
         )
+    data_out_dir = orca.get_injectable("data_out_dir")
+    os.makedirs(data_out_dir, exist_ok=True)
     schema_snapshot = verify_data_structure.yaml_from_store(hdf_store)
     schema_snapshot_path = os.path.join(
-        orca.get_injectable("data_out_dir"),
+        data_out_dir,
         "input_hdf_schema_snapshot.yaml",
     )
     with open(schema_snapshot_path, "w") as out:
