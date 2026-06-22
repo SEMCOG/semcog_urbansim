@@ -364,10 +364,19 @@ def verify():
         saved_run = load_last_checkpoint(saved_runnum)
         hdf_store = update_store_from_checkpoint(hdf_store, saved_run)
 
-    # verifying data structure and save data structure config
-    new = verify_data_structure.yaml_from_store(hdf_store)
-    with open("configs/data_structure.yaml", "w") as out:
-        out.write(new)
+    # Save an input-HDF schema snapshot with the run metadata.
+    if not orca.is_injectable("data_out_dir"):
+        raise RuntimeError(
+            "data_out_dir must be configured before loading the input HDF; "
+            "input_hdf_schema_snapshot.yaml is written only to the run output folder."
+        )
+    schema_snapshot = verify_data_structure.yaml_from_store(hdf_store)
+    schema_snapshot_path = os.path.join(
+        orca.get_injectable("data_out_dir"),
+        "input_hdf_schema_snapshot.yaml",
+    )
+    with open(schema_snapshot_path, "w") as out:
+        out.write(schema_snapshot)
 
     return hdf_store
 
