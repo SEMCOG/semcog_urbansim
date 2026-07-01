@@ -340,8 +340,7 @@ def update_bg_hh_increase(bg_hh_increase, households):
     Returns:
         None
     """
-    # Base year 2020
-    base_year = 2020
+    base_year = orca.get_injectable("base_year")
     year = orca.get_injectable("year")
     year_diff = year - base_year
     hh = households.to_frame(["geoid"]).reset_index()
@@ -386,7 +385,7 @@ def init_taz_hlcm_trend_by_year():
     print('Finishing init TAZ vars from hdf', hdf_input_2045)
     # initiating baseyear attribute df
     df_cur = load_taz_vars_from_orca()
-    taz_hlcm_trend_by_year['2020'] = df_cur
+    taz_hlcm_trend_by_year[str(orca.get_injectable("base_year"))] = df_cur
     print('Finishing loading TAZ vars from orca...')
 
     # add to injectable
@@ -433,7 +432,7 @@ def init_taz_hlcm_trend_by_year():
 def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
     """Update taz_hlcm_trend_by_year for the year
     """
-    base_year = 2020
+    base_year = orca.get_injectable("base_year")
 
     # get current trend df
     df_cur = load_taz_vars_from_orca()
@@ -737,15 +736,17 @@ else:
 
 @orca.step()
 def real_estate_adjustment(buildings, parcels, year):
-    if year < 2022:
+    remi_base_year = orca.get_injectable("remi_base_year")
+    if year < remi_base_year:
         return
     income_ratios = orca.get_injectable("remi_income_ratios")
     la_ratios = income_ratios.get(year, {})
     if not la_ratios:
         return
 
-    # Capture LA-average base prices on first call (after 2022 REPM)
-    if not orca.is_injectable("remi_base_la_prices"):
+    # Capture LA-average base prices on first call; flag used below for one-time backfill
+    first_call = not orca.is_injectable("remi_base_la_prices")
+    if first_call:
         bd0 = buildings.to_frame(["large_area_id", "sqft_price_res"])
         base = (bd0[bd0["sqft_price_res"] > 0]
                 .groupby("large_area_id")["sqft_price_res"].mean()
@@ -796,10 +797,33 @@ def real_estate_adjustment(buildings, parcels, year):
 
     buildings.update_col_from_series("sqft_price_res", updated, cast=True)
 
-    # Backfill missing attributes for new builds so future REPM predictions are valid.
-    # market_value = 0.70 × price×units×sqft_per_unit  (observed ratio in base buildings)
-    # improvement_value = 0.70 × market_value           (building = 70% of total, land = 30%)
-    # land_area = parcel_sqft from parcels table        (new builds are placed on existing parcels)
+    # Backfill missing attributes (improvement_value=0, market_value=0, land_area=0).
+    parcel_sqft = parcels.to_frame(["parcel_sqft"])["parcel_sqft"]
+
+    if first_call:
+        # One-time backfill for all pre-existing buildings missing assessed values
+        bd_full = buildings.to_frame(["residential_units", "sqft_per_unit",
+                                       "parcel_id", "improvement_value"])
+        missing_idx = bd_full[
+            (bd_full["improvement_value"] == 0) & (bd_full["residential_units"] > 0)
+        ].index
+        prices_for_missing = updated.reindex(missing_idx)
+        valid = prices_for_missing[prices_for_missing > 0].index
+        if len(valid) > 0:
+            nb_pre = bd_full.loc[valid]
+            total_val = (prices_for_missing.loc[valid]
+                         * nb_pre["residential_units"].clip(lower=1)
+                         * nb_pre["sqft_per_unit"].clip(lower=1))
+            # Ratios from base buildings: 
+            # market_value = 0.70 × price×units×sqft_per_unit
+            # improvement_value = 0.70 × market_value
+            market_val = (total_val * 0.70).astype(int)
+            buildings.update_col_from_series("market_value",      market_val, cast=True)
+            buildings.update_col_from_series("improvement_value", (market_val * 0.70).astype(int), cast=True)
+            land_area = nb_pre["parcel_id"].map(parcel_sqft).fillna(0).astype(int)
+            buildings.update_col_from_series("land_area", land_area, cast=True)
+            print(f"  [real_estate_adjustment] one-time backfill: {len(valid):,} buildings assessed at year {year}")
+
     if new_build_idx:
         nb = bd.loc[new_build_idx]
         total_val = (updated.loc[new_build_idx]
@@ -808,7 +832,6 @@ def real_estate_adjustment(buildings, parcels, year):
         market_val = (total_val * 0.70).astype(int)
         buildings.update_col_from_series("market_value",      market_val, cast=True)
         buildings.update_col_from_series("improvement_value", (market_val * 0.70).astype(int), cast=True)
-        parcel_sqft = parcels.to_frame(["parcel_sqft"])["parcel_sqft"]
         land_area = nb["parcel_id"].map(parcel_sqft).fillna(0).astype(int)
         buildings.update_col_from_series("land_area", land_area, cast=True)
 
@@ -1613,13 +1636,14 @@ def get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds):
 
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
+    first_sim_year = orca.get_injectable("base_year") + 1
     # run if hh_seeds not found
-    if iter_var != 2021 and orca.is_table("hh_seeds"):
+    if iter_var != first_sim_year and orca.is_table("hh_seeds"):
         print('skipping cache_hh_seeds for forecast year')
         return
 
     # if resume running from forecast year
-    if iter_var != 2021 and not orca.is_table("hh_seeds"):
+    if iter_var != first_sim_year and not orca.is_table("hh_seeds"):
         input_hdf = pd.HDFStore(orca.get_injectable("input_hdf_path"), 'r')
         parcels = input_hdf['parcels']
         b = input_hdf['buildings']
@@ -2532,7 +2556,9 @@ def random_demolition_events(
     buildings, parcels, households, jobs, year, demolition_rates
 ):
     demolition_rates = demolition_rates.to_frame()
-    demolition_rates *= 0.1 + (1.0 - 0.1) * (2050 - year) / (2050 - 2020)
+    base_year = orca.get_injectable("base_year")
+    final_year = orca.get_injectable("final_year")
+    demolition_rates *= 0.1 + (1.0 - 0.1) * (final_year - year) / (final_year - base_year)
     buildings_columns = buildings.local_columns
     buildings = buildings.to_frame(
         buildings.local_columns + ["city_id"] + ["b_total_jobs", "b_total_households"]
@@ -2923,9 +2949,23 @@ def cost_shifter_callback(self, form, df, costs):
 @orca.step("feasibility")
 def feasibility(parcels, buildings, btype_form_map):
     bldgs = buildings.to_frame(
-        ["large_area_id", "sqft_price_res", "sqft_price_nonres", "building_type_id"]
+        ["large_area_id", "sqft_price_res", "sqft_price_nonres", "building_type_id",
+         "parcel_id", "residential_units"]
     )
     pcl_la_s = parcels.to_frame(["large_area_id"])["large_area_id"]
+
+    # Enforce single-building constraint for SF parcels (land_use_type_id=11).
+    sf_parcel_ids = set(
+        parcels.to_frame(["land_use_type_id"])
+        .query("land_use_type_id == 11").index
+    )
+    occupied_sf = (
+        bldgs[(bldgs["parcel_id"].isin(sf_parcel_ids)) & (bldgs["residential_units"] > 0)]
+        ["parcel_id"].unique()
+    )
+    parcels.update_col_from_series(
+        "pct_undev", pd.Series(100, index=occupied_sf), cast=True
+    )
 
     # Build per-nodes-column floor data: {col: (parcel_thr, parcel_rep, reg_avg)}
     form_to_col = {f: col for col, v in btype_form_map.items() for f in v["forms"]}
@@ -3394,8 +3434,8 @@ def residential_developer(
     # C signal decays linearly from full weight in base year to mover_decay_final by final year
     mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
 
-    # compute 2014-2020 per-MCD build rates for hist_floor
-    _hist = orig_buildings[orig_buildings.year_built.between(2014, 2020)]
+    # compute per-MCD build rates for hist_floor (7-year window ending at base year)
+    _hist = orig_buildings[orig_buildings.year_built.between(base_year - 6, base_year)]
     mcd_hist_rate = (_hist.groupby("semmcd")["residential_units"].sum() / 7.0).to_dict()
 
     # build site-selection func from estimated coefs; fall back to profit-rank if missing
@@ -3436,9 +3476,9 @@ def residential_developer(
         orig_buildings_la[orig_buildings_la.year_built.between(lookback_year, year - 1)]
         .groupby("large_area_id")["residential_units"].sum() / 7.0
     )
-    # 2014–2020 historical baseline — floor for LA cap so it can't self-deflate to zero
+    # historical baseline — floor for LA cap so it can't self-deflate to zero
     la_hist_rate = (
-        orig_buildings_la[orig_buildings_la.year_built.between(2014, 2020)]
+        orig_buildings_la[orig_buildings_la.year_built.between(base_year - 6, base_year)]
         .groupby("large_area_id")["residential_units"].sum() / 7.0
     )
     # units already added this year by events/refiner before developer runs
