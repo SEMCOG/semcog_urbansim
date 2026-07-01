@@ -2540,14 +2540,14 @@ def scheduled_demolition_events(
         jobs = jobs.to_frame(jobs.local_columns)
         jobs.loc[jobs.building_id.isin(sched_dev.building_id), "building_id"] = -1
         orca.add_table("jobs", jobs)
+        # reset pct_undev to 0 for parcels left with no buildings after demolition
+        remaining_pids = set(new_buildings_table.parcel_id)
         parcels_idx_to_update = [
             pid
-            for pid in drop_buildings.parcel_id.values.tolist()
-            if pid not in new_buildings_table.parcel_id
+            for pid in set(drop_buildings.parcel_id)
+            if pid not in remaining_pids
         ]
-        # update pct_undev to 0 if theres only one building in the parcel
         pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
-        # update parcels table
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
@@ -2647,13 +2647,14 @@ def random_demolition_events(
     jobs = jobs.to_frame(jobs.local_columns)
     jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
     orca.add_table("jobs", jobs)
+    # reset pct_undev to 0 for parcels left with no buildings after demolition
+    remaining_pids = set(new_buildings_table.parcel_id)
     parcels_idx_to_update = [
         pid
-        for pid in drop_buildings.parcel_id.values.tolist()
-        if pid not in new_buildings_table.parcel_id
+        for pid in set(drop_buildings.parcel_id)
+        if pid not in remaining_pids
     ]
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
-    # update parcels table
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
 
 
