@@ -353,7 +353,8 @@ def _load_remi_growth_rates():
         "washtenaw":     161,
     }
     years = list(range(2020, 2051))
-    base_idx = years.index(2022)  # 2022 calibration year = index 2
+    remi_base_year = 2022
+    base_idx = years.index(remi_base_year)
 
     pi_vals_by_la = {}
     pce_vals = None
@@ -380,4 +381,5 @@ def _load_remi_growth_rates():
 _remi_income, _remi_pce = _load_remi_growth_rates()
 orca.add_injectable("remi_income_ratios", _remi_income)
 orca.add_injectable("remi_pce_ratios", _remi_pce)
+orca.add_injectable("remi_base_year", 2022)
 print(f"REMI growth rates loaded: {len(_remi_income)} years")
