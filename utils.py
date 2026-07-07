@@ -723,13 +723,24 @@ def filter_table(table, filter_series, ignore=None):
     """
     ignore = ignore if ignore else set()
 
-    filters = [
-        _filterize(name, val)
-        for name, val in filter_series.items()
-        if not (name in ignore or (isinstance(val, numbers.Number) and np.isnan(val)))
-    ]
+    # Build the boolean mask directly instead of going through
+    # apply_filter_query/DataFrame.query. These filters are always simple
+    # column comparisons ('_min' -> >=, '_max' -> <, otherwise ==), so a
+    # vectorized mask is result-identical to query but skips expression
+    # parsing and the per-call index resolver query rebuilds every time.
+    # Mirrors urbansim.models.util.filter_table.
+    mask = np.ones(len(table), dtype=bool)
+    for name, val in filter_series.items():
+        if name in ignore or (isinstance(val, numbers.Number) and np.isnan(val)):
+            continue
+        if name.endswith("_min"):
+            mask &= table[name[:-4]].values >= val
+        elif name.endswith("_max"):
+            mask &= table[name[:-4]].values < val
+        else:
+            mask &= table[name].values == val
 
-    return apply_filter_query(table, filters)
+    return table[mask]
 
 
 def _git_output(*args):
