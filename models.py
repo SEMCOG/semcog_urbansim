@@ -763,6 +763,12 @@ def real_estate_adjustment(buildings, parcels, year):
     updated = bd_pos["sqft_price_res"].copy()
     new_build_idx = []
 
+    # On the first call, treat every simulation-era build (year_built >= base_year+1) as a
+    # new build so first-year (placement-year) events get nodes_walk neighborhood pricing
+    # rather than being frozen as "existing" stock at REPM's zero-feature underprediction.
+    sim_start = orca.get_injectable("base_year") + 1
+    new_from = sim_start if first_call else year
+
     for la, ratio in la_ratios.items():
         base_avg = base_la_prices.get(la, 0.0)
         if base_avg <= 0:
@@ -770,8 +776,8 @@ def real_estate_adjustment(buildings, parcels, year):
         target_avg = base_avg * ratio
 
         mask_la    = bd_pos["large_area_id"] == la
-        mask_exist = mask_la & (bd_pos["year_built"] < year)
-        mask_new   = mask_la & (bd_pos["year_built"] == year)
+        mask_exist = mask_la & (bd_pos["year_built"] < new_from)
+        mask_new   = mask_la & (bd_pos["year_built"] >= new_from)
 
         # Scale existing buildings: anchor LA avg to income-ratio target
         exist_bldgs = bd_pos[mask_exist]
