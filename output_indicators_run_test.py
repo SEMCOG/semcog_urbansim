@@ -28,7 +28,6 @@ final_year = 2050
 indicator_spacing = 5
 upload_to_carto = True
 run_debug = False
-add_2019 = True
 # data_out = './runs/run2120_TAZ_refinement_090823_school_legis.h5'
 # data_out = '/mnt/hgfs/urbansim/RDF2050/model_runs/run2120_TAZ_refinement_101823/run2120_TAZ_refinement_101823.h5'
 data_out = 'runs/run1362.h5'
@@ -39,5 +38,4 @@ output_indicators.main(
     final_year,
     spacing=indicator_spacing,
     upload_to_carto=upload_to_carto,
-    add_2019=add_2019,
 )

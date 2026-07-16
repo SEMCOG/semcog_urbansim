@@ -18,7 +18,7 @@ final_year = 2050
 indicator_spacing = 5
 upload_to_carto = True
 run_debug = False
-add_2019 = True
+# add_2019 = True # archived
 
 # hlcm configs
 # orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
@@ -220,7 +220,7 @@ if RUN_OUTPUT_INDICATORS:
         final_year,
         spacing=indicator_spacing,
         upload_to_carto=upload_to_carto,
-        add_2019=add_2019,
+        # add_2019=add_2019, # archived
     )
 
 utils.run_log(
