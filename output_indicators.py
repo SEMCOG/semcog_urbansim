@@ -30,13 +30,10 @@ def orca_year_dataset(hdf, tbls_to_load, year, is_base):
 
     orca.clear_cache()
     orca.add_injectable("year", year)
-    hdf_year = "base" if is_base or (year == 2019) else year
+    hdf_year = "base" if is_base else year
 
     for tbl in tbls_to_load:
-        if (year == 2019) and (tbl == "jobs"):
-            name = f"{hdf_year}/{tbl}_2019"
-        else:
-            name = f"{hdf_year}/{tbl}"
+        name = f"{hdf_year}/{tbl}"
         if name in hdf:
             df = hdf[name]
         else:
@@ -145,7 +142,7 @@ def upload_whatnots_to_carto(run_name, whatnots):
 
 
 def main(
-    run_name, baseyear, finalyear, spacing=5, upload_to_carto=True, add_2019=False
+    run_name, baseyear, finalyear, spacing=5, upload_to_carto=True
 ):
 
     out_dir = run_name.replace(".h5", "")
@@ -262,8 +259,6 @@ def main(
 
         # geo level: school district
     years = list(range(base_year, target_year + 1, spacing))
-    if add_2019:
-        years = [2019] + years
     year_names = ["yr" + str(i) for i in years]
     geom = ["cities", "us_congress", "mi_senate", "mi_house", "schools", "semmcds", "zones", "large_areas", "whatnots"]
     tbls_to_load = [
@@ -347,34 +342,11 @@ def main(
     whatnots_output.index.rename("zone_id", level=6, inplace=True)
     whatnots_output.columns = year_names
 
-    if add_2019:
-        # whatnots for internal
-        whatnots_output_internal = whatnots_output.drop("yr2020", axis=1)
-        whatnots_output_internal.rename(columns={"yr2019": "yr2020"}, inplace=True)
-        if spacing == 1:
-            whatnots_output_internal[year_names[1::5]].to_csv(
-                os.path.join(out_dir, "whatnots_output_internal.csv")
-            )
-        whatnots_output_internal.to_csv(
-            os.path.join(all_years_dir, "whatnots_output_internal.csv")
+    if spacing == 1:
+        whatnots_output[year_names[::5]].to_csv(
+            os.path.join(out_dir, "whatnots_output.csv")
         )
-        # whatnots for external
-        not_jobs = [x for x in whatnots_output.index if "jobs" not in x[-1]]
-        whatnots_output.loc[not_jobs, "yr2019"] = np.nan
-        if spacing == 1:
-            whatnots_output[[year_names[0]] + year_names[1::5]].to_csv(
-                os.path.join(out_dir, "whatnots_output_external.csv")
-            )
-        whatnots_output.to_csv(
-            os.path.join(all_years_dir, "whatnots_output_external.csv")
-        )
-        whatnots_output = whatnots_output_internal
-    else:
-        if spacing == 1:
-            whatnots_output[year_names[::5]].to_csv(
-                os.path.join(out_dir, "whatnots_output.csv")
-            )
-        whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
+    whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
 
     # upload_whatnots_to_postgres(os.path.basename(out_dir), whatnots_output)
     if upload_to_carto is True:
@@ -390,13 +362,7 @@ def main(
     print("\n* Making indicators by year")
     start = time.time()
     geom = ["cities", "large_areas", "us_congress", "mi_senate", "mi_house", "semmcds", "schools", "zones"]
-    not_jobs = [x for x in list_indicators() if "jobs" not in x]
-    if add_2019:
-        y5 = year_names[1::5]
-        for tab in dict_ind:
-            dict_ind[tab][0][not_jobs] = np.nan
-    else:
-        y5 = year_names[0::5]
+    y5 = year_names[0::5]
 
     for tab in geom:
         print(tab)
@@ -443,9 +409,6 @@ def main(
                 df.set_index("large_area_name", append=True, inplace=True)
             if len(df.columns) > 0:
                 print("saving:", ind)
-                if add_2019:
-                    df = df.dropna(axis=1, how="all")
-                #     df = df.drop('yr2019', axis=1)
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(axis=1)
                 df.to_excel(writer, ind)
@@ -495,8 +458,6 @@ def main(
     # construction and demolition
     print("\nSaving building differences (construction and demolition).....")
     start = time.time()
-    if add_2019:
-        years = years[1:]
     year_names = ["yr" + str(i) for i in years]
     writer = pd.ExcelWriter(os.path.join(out_dir, "buildings_dif_by_year.xlsx"))
     for year, year_name in zip(years, year_names):
@@ -541,7 +502,6 @@ if __name__ == "__main__":
         "./runs/run2008.h5",
         2020,
         2021,
-        add_2019=True,
         spacing=5,
         upload_to_carto=False,
     )
