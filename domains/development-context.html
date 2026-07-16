@@ -238,25 +238,6 @@
   
 
       
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../changelog.html" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Changelog
-
-      </a>
-    </li>
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -941,33 +922,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Changelog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1445,12 +1399,48 @@ Both are <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.
 <td>no null</td>
 <td>School achievement score</td>
 </tr>
+<tr>
+<td><code>TOTAL_ENROLLMENT</code></td>
+<td>float32</td>
+<td>may be null</td>
+<td>Total enrollment (single value, all grades)</td>
+</tr>
+<tr>
+<td><code>zone_id</code></td>
+<td>int</td>
+<td>no null</td>
+<td>TAZ the school falls in</td>
+</tr>
+<tr>
+<td><code>maz_id</code></td>
+<td>int</td>
+<td>no null</td>
+<td>MAZ the school falls in</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Update:</strong> Refresh from the Michigan Department of Education database when new schools open, schools close, or achievement scores are updated. For new schools without a score, use the district average.</p>
 <p><strong>Common issues:</strong>
 - Coordinates outside the 7-county region — verify data
 - <code>totalachievementindex = null</code> — causes null neighborhood variables in HLCM; fill with district average</p>
+<p><strong>Travel-model enrollment use</strong> (TAZ/MAZ zonal inputs, <code>forecast_outputs/travel_model/</code>):
+this table is the base-year enrollment source. Two limitations are handled downstream
+and should be understood:</p>
+<ul>
+<li><strong>Single <code>TOTAL_ENROLLMENT</code>, no grade split.</strong> The travel-model pipeline splits it
+  into k-8 vs 9-12 <strong>in proportion to the number of grades each school serves</strong>
+  (from <code>gradelist</code>). This assumes ~equal enrollment per grade, so it under-weights
+  9-12 relative to actual grade-level counts (a K-12 school sends 9/13 to k-8, 4/13 to
+  9-12). Providing measured <code>grades_1_8_enrollment</code> / <code>grades_9_12_enrollment</code> would
+  remove the approximation.</li>
+<li><strong><code>dcode</code> is not re-keyed to <code>parcels.school_id</code>.</strong> Only ~110 of the 128 population
+  school districts overlap the ~536 <code>dcode</code>s here (≈23% of enrollment sits in
+  non-matching codes). The enrollment step scales base enrollment by a per-district
+  population ratio; districts with no population match <strong>carry base enrollment
+  unscaled</strong> (scale = 1.0) rather than being dropped. Re-keying <code>dcode</code> to the
+  <code>parcels.school_id</code> coding (25030–82430) would let every district be population-scaled.</li>
+<li>321 schools have null <code>TOTAL_ENROLLMENT</code> (counted as 0).</li>
+</ul>
 <h3 id="crime_rates"><code>crime_rates</code><a class="headerlink" href="#crime_rates" title="Permanent link">&para;</a></h3>
 <p>Violent and property crime rates by parcel. Derived from city-level crime data — all parcels in a city receive the same rate.</p>
 <p><strong>Index:</strong> <code>parcel_id</code> (unique, joins to <code>parcels</code>)</p>

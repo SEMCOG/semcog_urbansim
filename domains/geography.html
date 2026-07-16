@@ -238,25 +238,6 @@
   
 
       
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../changelog.html" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Changelog
-
-      </a>
-    </li>
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -504,10 +485,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#maz" class="md-nav__link">
+  <a href="#micro_zones" class="md-nav__link">
     <span class="md-ellipsis">
       
-        maz
+        micro_zones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building_to_maz_override" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        building_to_maz_override
       
     </span>
   </a>
@@ -824,33 +816,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Changelog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -908,10 +873,16 @@
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>maz</code></td>
-<td>Micro Analysis Zones — TAZ sub-units for output aggregation</td>
-<td>CSV</td>
-<td><strong>No</strong> — output use only</td>
+<td><code>micro_zones</code></td>
+<td>Micro Analysis Zones (MAZ) — TAZ sub-units; MAZ→TAZ crosswalk and anchor geography</td>
+<td>SQL (<code>terminus_maz_v2</code>)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>building_to_maz_override</code></td>
+<td>Base-year building→MAZ/TAZ override for buildings whose parcel straddles a boundary</td>
+<td>Script (parcel/MAZ overlay)</td>
+<td>Yes (in HDF; not yet pipeline-wired)</td>
 </tr>
 </tbody>
 </table>
@@ -1154,12 +1125,13 @@
 </tbody>
 </table>
 <hr />
-<h2 id="maz"><code>maz</code><a class="headerlink" href="#maz" title="Permanent link">&para;</a></h2>
+<h2 id="micro_zones"><code>micro_zones</code><a class="headerlink" href="#micro_zones" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Not a model input.</strong> This table is not assembled into the model input file and is not read by the simulation. It is maintained here as a geographic reference used for <strong>post-processing simulation outputs</strong> at the MAZ level.</p>
+<p><strong>Model input (anchor geography).</strong> <code>micro_zones</code> is now assembled into the model input file as the <strong>MAZ→TAZ crosswalk</strong>. It is the anchor spatial unit in the MAZ-anchor design: parcels and buildings carry a <code>maz_id</code>, and their TAZ (<code>zone_id</code>) is derived from MAZ through this table's 1:1 <code>maz_id → zone_id</code> mapping. Note: MAZ is present in the inputs as an anchor geography but is <strong>not yet read by any simulation model component</strong> — no model step consumes MAZ directly (yet).</p>
 </blockquote>
-<p>Micro Analysis Zones (MAZ) are sub-units of TAZs used in activity-based travel demand modeling. Each TAZ is divided into approximately 10 MAZs on average, providing a finer spatial resolution for output aggregation and reporting.</p>
-<p><strong>~28,647 MAZs</strong> across the 7-county region, each nested within a TAZ.</p>
+<p>Micro Analysis Zones (MAZ) are sub-units of TAZs used in activity-based travel demand modeling. Each TAZ is divided into approximately 10 MAZs on average.</p>
+<p><strong>~28,647 MAZs</strong> across the region, each nested within a TAZ. Source: <code>creator.terminus_maz_v2</code> (PostGIS, EPSG:2898) — the current delineation (supersedes the older <code>terminus_maz_2055</code>/microzones v1). The HDF table key is <strong><code>micro_zones</code></strong> (renamed from the former <code>maz</code> key).</p>
+<p><strong>Index:</strong> <code>maz_id</code></p>
 <table>
 <thead>
 <tr>
@@ -1170,47 +1142,74 @@
 </thead>
 <tbody>
 <tr>
-<td><code>MAZ_SEQID</code></td>
+<td><code>maz_id</code></td>
 <td>int</td>
-<td>Unique MAZ identifier (sequential, range 1–99999)</td>
+<td>Unique MAZ identifier (index; from <code>maz_seqid</code>)</td>
 </tr>
 <tr>
-<td><code>TAZ_ID</code></td>
+<td><code>zone_id</code></td>
 <td>int</td>
-<td>Parent TAZ — joins to <code>zones.zone_id</code></td>
+<td>Parent TAZ — joins to <code>zones.zone_id</code> (the MAZ→TAZ crosswalk)</td>
 </tr>
 <tr>
-<td><code>TAZCE10_N</code></td>
+<td><code>tazce10_n</code></td>
 <td>int</td>
 <td>Census TAZ code — joins to <code>zones.tazce10_n</code></td>
 </tr>
 <tr>
-<td><code>Acres</code></td>
+<td><code>acres</code></td>
 <td>float</td>
 <td>MAZ area in acres</td>
-</tr>
-<tr>
-<td><code>COUNTY</code></td>
-<td>int</td>
-<td>County FIPS code (93, 99, 115, 125, 147, 161, 163)</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Relationship to other geography tables:</strong></p>
-<div class="highlight"><pre><span></span><code>TAZ (2,811 zones)
-  └── MAZ (~10 per TAZ on average → 28,647 total)
+<div class="highlight"><pre><span></span><code>TAZ (zones)
+  └── MAZ (micro_zones, ~10 per TAZ on average → 28,647 total)
+        ├── parcels.maz_id  → micro_zones.maz_id ; parcels.zone_id derived via micro_zones.zone_id
+        └── buildings → building_to_maz_override (straddling buildings) else parcel-inherited
 </code></pre></div>
-<p>Parcels do not carry a <code>maz_id</code> column — the MAZ assignment for output is derived by spatially joining parcel centroids to the MAZ boundary layer.</p>
-<p><strong>Update:</strong> Regenerate when TAZ boundaries change or when a finer MAZ delineation is adopted. The current file is version 2 (October 2023). Coordinate with the travel demand modeling team when updating, as MAZ boundaries should align with the TAZ structure used in the travel model.</p>
+<p>Parcels now <strong>carry both <code>maz_id</code> and <code>zone_id</code></strong> columns (assigned by spatially joining parcel centroids to the MAZ boundary layer). This replaces the earlier approach where MAZ was derived only at output time.</p>
+<p><strong>Update:</strong> Regenerate when the MAZ delineation changes. Coordinate with the travel demand modeling team, as MAZ boundaries must align with the TAZ structure used in the travel model.</p>
+<hr />
+<h2 id="building_to_maz_override"><code>building_to_maz_override</code><a class="headerlink" href="#building_to_maz_override" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Base-year building→MAZ/TAZ override.</strong> Present in the base-year HDF (~23,914 rows). Because a building's MAZ/TAZ is normally inherited from its parcel, this table overrides that inheritance for buildings whose parcel <strong>straddles a MAZ/TAZ boundary</strong> — assigning the building its own <code>maz_id</code> (and derived <code>zone_id</code>) by point-in-polygon on the building location. Part of the MAZ-anchor work.</p>
+<p><strong>Integration status:</strong> the table exists in the input HDF but is <strong>not yet wired into the standard input pipeline config</strong> (<code>sql.yaml</code>/<code>files.yaml</code>) and is <strong>not yet loaded by the simulation</strong> (<code>dataset.py</code>). Document as data-present, not-yet-consumed.</p>
+</blockquote>
+<p><strong>Index:</strong> <code>building_id</code></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>maz_id</code></td>
+<td>int</td>
+<td>Overriding MAZ for this building (joins <code>micro_zones.maz_id</code>)</td>
+</tr>
+<tr>
+<td><code>zone_id</code></td>
+<td>int</td>
+<td>Overriding TAZ, derived from the MAZ via <code>micro_zones.zone_id</code></td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="update-notes">Update Notes<a class="headerlink" href="#update-notes" title="Permanent link">&para;</a></h2>
 <p><strong><code>zones</code> and <code>semmcds</code></strong> — update when TAZ or MCD boundaries change (typically when census boundaries are updated or new municipalities form or dissolve).</p>
 <p><strong><code>counties</code> and <code>large_areas</code></strong> — stable definitions tied to the 7-county region and 8 modeling zones. Only update if the model's geographic scope changes, which is a major structural decision.</p>
 <p>When updating any geography table, verify all downstream joins:
 - <code>parcels.zone_id</code> → <code>zones</code>
+- <code>parcels.maz_id</code> → <code>micro_zones</code>
 - <code>parcels.semmcd</code> → <code>semmcds</code>
 - <code>parcels.county_id</code> → <code>counties</code>
-- <code>parcels.large_area_id</code> → <code>large_areas</code></p>
+- <code>parcels.large_area_id</code> → <code>large_areas</code>
+- <code>building_to_maz_override.maz_id</code> → <code>micro_zones</code> (and <code>.zone_id</code> → <code>zones</code>)</p>
 <p>Missing join matches will result in null spatial attributes on parcels, which propagates to all buildings, households, and jobs on those parcels.</p>
 
 
