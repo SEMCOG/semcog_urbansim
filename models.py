@@ -1887,17 +1887,50 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
     )
 
     print("%s gqpop before scaling" % gqpop.shape[0])
+
+    # Defensive: a GQ resident whose building_id no longer resolves to a city
+    # (city_id is derived via building_id -> building -> parcel, so a demolished
+    # building yields NaN) would be silently skipped by the city loop below and
+    # linger as an orphan row pointing at a nonexistent building. Drop them.
+    invalid_city = gqpop["city_id"].isna()
+    n_invalid = int(invalid_city.sum())
+    if n_invalid:
+        print(
+            "gq_pop_scaling_model: dropping %d GQ residents with unresolved city_id "
+            "(building_id missing from buildings, e.g. demolished)" % n_invalid
+        )
+        gqpop = gqpop[~invalid_city]
+
     # gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
     target_gq = group_quarters_control_totals.to_frame()
     target_gq = target_gq[target_gq.year == year]
-    # add gq target to city table to iterate
-    city_large_area["gq_target"] = target_gq["count"]
-    city_large_area = city_large_area.fillna(0).sort_index()
 
     # if no control found, skip this year
     if target_gq.shape[0] == 0:
         print("Warning: No gq controls found for year %s, skipping..." % year)
         return
+
+    # add gq target to city table to iterate (NaN where a city has no control row)
+    city_large_area["gq_target"] = target_gq["count"]
+
+    # Defensive: any city that currently has GQ pop must have a control row,
+    # otherwise the "no control -> skip" filter below leaves it untouched. Warn
+    # loudly rather than silently zeroing it (the previous fillna(0) path would
+    # have deleted its non-protected GQ pop).
+    control_cities = set(target_gq.index)
+    gq_cities_missing_control = [
+        c for c in gqpop["city_id"].dropna().unique() if c not in control_cities
+    ]
+    if gq_cities_missing_control:
+        print(
+            "WARNING gq_pop_scaling_model: %d city(ies) have GQ pop but no %s control "
+            "row; leaving them unchanged: %s"
+            % (len(gq_cities_missing_control), year, sorted(gq_cities_missing_control))
+        )
+
+    # Only scale cities that have a control row; a NaN target means no control,
+    # so skip (do not fillna(0) and delete).
+    city_large_area = city_large_area[city_large_area["gq_target"].notna()].sort_index()
 
     for city_id, row in city_large_area.iterrows():
         local_gqpop = gqpop.loc[gqpop.city_id == city_id]
@@ -1910,6 +1943,10 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
             if len(filtered_gqpop) == 0:
                 filtered_gqpop = local_gqpop
 
+            # deterministic per-city stream: reproducible across runs and local
+            # (a change in one city does not perturb another's draws)
+            rng = utils.get_rng("gq_pop_scaling_model", year, city_id)
+
             if diff > 0:
                 # diff = int(min(len(filtered_gqpop), abs(diff)))
                 # if no existing GQ except protected, use large area sample
@@ -1917,14 +1954,14 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
                 # local_gqpop = gqpop.loc[gqpop.large_area_id == row.large_area_id]
                 # filtered_gqpop = filter_local_gq(local_gqpop)
 
-                newgq = filtered_gqpop.sample(diff, replace=True)
+                newgq = filtered_gqpop.sample(diff, replace=True, random_state=rng)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
                 newgq["city_id"] = city_id
                 gqpop = pd.concat((gqpop, newgq))
 
             elif diff < 0:
                 diff = min(len(filtered_gqpop), abs(diff))
-                removegq = filtered_gqpop.sample(diff, replace=False)
+                removegq = filtered_gqpop.sample(diff, replace=False, random_state=rng)
                 gqpop.drop(removegq.index, inplace=True)
 
     print("%s gqpop after scaling" % gqpop.shape[0])
@@ -1933,7 +1970,6 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
         (gqpop.groupby("city_id").size().fillna(0) - city_large_area.gq_target).sum(),
     )
 
-    gqpop.to_csv("data/gqpop_" + str(year) + ".csv")
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
 
 
