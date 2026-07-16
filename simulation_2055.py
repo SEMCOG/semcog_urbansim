@@ -6,29 +6,26 @@ import pandas as pd
 import utils
 import subprocess
 
+# ===============
+## Config
+# ===============
 # get run number and set up log file
 data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
-
 # run config
 RUN_OUTPUT_INDICATORS = True
-base_year = 2020
-final_year = 2050
+base_year = 2025
+final_year = 2055
 indicator_spacing = 5
-upload_to_carto = True
 run_debug = False
-# add_2019 = True # archived
-
-# hlcm configs
-# orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24May31') # hh_size
+# LCM configs
 orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune')
 orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/')
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
-
+# base/final years
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
-
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', False)
 orca.add_injectable('scenario_hh_control_path',
@@ -37,12 +34,10 @@ orca.add_injectable('scenario_remi_total_pop',
     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la07232024.csv')
 orca.add_injectable('scenario_emp_control_path',
     '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_employment_control_totals.csv')
-
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1365.h5')
-
 # dump all setting in yaml in run folder
 if not os.path.exists(orca.get_injectable("data_out_dir")):
     os.makedirs(orca.get_injectable("data_out_dir"))
@@ -65,11 +60,15 @@ with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), 
             "git_commit_id": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
         }, f, default_flow_style=False)
 
+# =================
+## Initialize Model
+# =================
 import models
 from urbansim.utils import misc, networks
 import time
 import logging
 from datetime import datetime
+
 try:
     from zoneinfo import ZoneInfo
     _eastern = ZoneInfo("America/Detroit")
@@ -80,31 +79,23 @@ except ImportError:
     _eastern = pytz.timezone("America/Detroit")
     def _eastern_now():
         return datetime.now(_eastern).strftime("%Y-%m-%d %H:%M:%S %Z")
-
-# check disk space, need at least 16GB
-# total, used, free = [round(s / (2 ** 30), 1) for s in shutil.disk_usage(".")]
-# print(f"Disk space: {total} GB;   Used: {used} GB;   Free: {free} GB")
-# if free < 17:
-#     print(f"Free space is too small. Only {free} GB available. Stop running")
-#     sys.exit()
-
 start_time = time.time()
-
 run_info = f"""data_out: {data_out} \
             \nRun number: {os.path.basename(data_out.replace('.h5', ''))} \
             \nStart time: {_eastern_now()}"""
 utils.run_log(run_info)
-
 if run_debug is True:
     utils.debug_log()
-
 run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get_injectable('checkpoint_year')
 
-# run init_taz_hlcm_trend_by_year
+# =============
+## Simulation
+# =============
+# run init_taz_hlcm_trend_by_year on baseyear
 orca.run([
     'init_taz_hlcm_trend_by_year',
 ])
-
+# Start iteration
 orca.run(
     [
         "build_networks_2050",
@@ -143,7 +134,6 @@ orca.run(
     data_out=data_out,
     out_base_tables=[
         "jobs",
-        "jobs_2019",
         "base_job_space",
         "employment_sectors",
         "annual_relocation_rates_for_jobs",
@@ -151,7 +141,6 @@ orca.run(
         "persons",
         "annual_relocation_rates_for_households",
         "buildings",
-        "pseudo_building_2020",
         "parcels",
         "zones",
         "semmcds",
@@ -219,8 +208,6 @@ if RUN_OUTPUT_INDICATORS:
         base_year,
         final_year,
         spacing=indicator_spacing,
-        upload_to_carto=upload_to_carto,
-        # add_2019=add_2019, # archived
     )
 
 utils.run_log(

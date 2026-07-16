@@ -3275,6 +3275,7 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
 def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     """Unplace households from them
         - 1729 pseudo hh in 2050 forecast
+    Last used during RDF2050
 
     Args:
         households (DataFrameWrapper): households
