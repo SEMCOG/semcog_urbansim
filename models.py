@@ -1151,6 +1151,26 @@ def presses_trans(xxx_todo_changeme1):
     pers.index.name = "person_id"
     out = [[new, pers]]
     target -= len(pers)
+
+    # Unlike the finite cells above, the open-ended 10+ bin is NOT gap-filled:
+    # the loop below realises it only by cloning existing 10+ households, so a
+    # cell with a positive target but no matching donor produces zero households
+    # and is silently skipped. This is intentional for now (synthesizing a
+    # household size for an open-ended bin needs a chosen cap) but should be
+    # visible. Log any such cell; see the model wiki transition todo for the
+    # fuller fix options.
+    la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    for _, r in ct_inf.loc[iter_var].iterrows():
+        if r["total_number_of_households"] <= 0:
+            continue
+        if utils.filter_table(hh, r, ignore={"total_number_of_households"}).shape[0] == 0:
+            cat = {c: r[c] for c in
+                   ["race_id", "age_of_head_min", "age_of_head_max",
+                    "persons_min", "persons_max"] if c in r}
+            print(f"[gap-fill] LA {la} yr {iter_var}: open-ended 10+ control cell "
+                  f"has no donor household (target "
+                  f"{int(r['total_number_of_households'])} hh, not synthesized): {cat}")
+
     best_qal = np.inf
     best = []
     for _ in range(3):
@@ -1280,15 +1300,24 @@ def _assert_control_coverage(region_hh, region_ct, iter_var):
         "large_area_id": region_hh["large_area_id"].to_numpy(),
         "race_id": region_hh["race_id"].to_numpy(),
     }
+    above = np.zeros(len(region_hh), dtype=bool)
     for a in ranged:
         edges = np.sort(ct[f"{a}_min"].unique())
         vals = pd.to_numeric(region_hh[a], errors="coerce").fillna(edges[0])
         vals = vals.clip(lower=edges[0]).to_numpy()
         binned[f"{a}_min"] = edges[np.searchsorted(edges, vals, side="right") - 1]
+        # A value at/above the highest bin's _max is snapped into the top bin by
+        # the lower-bound search above, so the key merge alone would call it
+        # "covered". Flag it as unmatched too, mirroring _gap_category_presence's
+        # `vals < uppers[a]` validity test. Open-ended top bins carry _max == inf
+        # here (households_transition replaced -1 with inf before this guard), so
+        # this never false-positives on them; it only catches a future finite
+        # top bin with households above it.
+        above |= vals >= float(ct[f"{a}_max"].max())
     hh_keys = pd.DataFrame(binned, index=region_hh.index)
 
     merged = hh_keys.merge(ctrl_keys.assign(_ok=1), on=key_cols, how="left")
-    unmatched = merged["_ok"].isna().to_numpy()
+    unmatched = merged["_ok"].isna().to_numpy() | above
     n = int(unmatched.sum())
     if n == 0:
         return
