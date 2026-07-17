@@ -23,3 +23,12 @@ mover_decay_final: 0.9
 # Historical minimum build floor
 hist_floor_factor: 0.7
 hist_floor_min_rate: 30
+
+# Rebuild priority for orphaned demolished SF parcels (demolished, empty, no future event).
+# Site-selection weight = boost * decay^(years_since_demo), capped at max_share of the mass.
+# scheduled_factor further lifts parcels whose demolition was a scheduled (planned) event.
+demo_rebuild_boost: 20.0
+demo_rebuild_decay: 0.6
+demo_rebuild_window: 5
+demo_rebuild_max_share: 0.5
+demo_rebuild_scheduled_factor: 3.0
