@@ -929,12 +929,13 @@
 <p>The most important structural rule in the model is: <strong>every agent (household or job) must be in a building, and every building must be in a parcel.</strong> This three-level chain is the spatial backbone of the simulation. Referential integrity breaks anywhere in this chain will cause model errors.</p>
 <pre class="mermaid"><code>flowchart TD
     R[SEMCOG Region] --&gt; CO[7 Counties]
-    CO --&gt; LA["8 Large Areas\n(Wayne split into Detroit + suburbs)"]
+    CO --&gt; LA["8 Large Areas&lt;br/&gt;(Wayne split into Detroit + suburbs)"]
     LA --&gt; MCD[238 MCDs]
     LA --&gt; TAZ[2,811 TAZs]
+    TAZ --&gt; MAZ["~28,647 MAZs&lt;br/&gt;(micro_zones — anchor geography)"]
 
     MCD --&gt; P["~2M Parcels"]
-    TAZ --&gt; P
+    MAZ --&gt; P
 
     P --&gt; B["~1.8M Buildings"]
     B --&gt; HH[Households]
@@ -944,12 +945,15 @@
     style J  fill:#1E88E5,color:#fff
     style B  fill:#43A047,color:#fff
     style P  fill:#43A047,color:#fff
-    style LA fill:#e0f2f1,stroke:#00897B</code></pre>
+    style LA fill:#e0f2f1,stroke:#00897B
+    style MAZ fill:#fff3e0,stroke:#e65100</code></pre>
+<p>MAZ (<code>micro_zones</code>) is the <strong>anchor spatial unit</strong> for parcels and buildings: each parcel carries a <code>maz_id</code>, and its TAZ (<code>zone_id</code>) is derived from the MAZ through the 1:1 MAZ→TAZ crosswalk rather than assigned independently.</p>
 <blockquote>
 <p><strong>Real-world alignment note</strong></p>
 <p>The hierarchy above is the intended clean structure. In practice, real-world data introduces boundary complications that data developers should keep in mind:</p>
 <ul>
 <li><strong>TAZ–parcel boundary mismatch</strong> — TAZ boundaries are designed for travel modeling and do not always align with parcel boundaries. A parcel that physically straddles two TAZ zones is assigned to one TAZ based on its centroid location.</li>
+<li><strong>MAZ/TAZ–building override</strong> — because MAZ is the anchor unit, a building on a parcel that straddles a MAZ (and therefore TAZ) boundary can be assigned its own <code>maz_id</code>/<code>zone_id</code> by building location via the <code>building_to_maz_override</code> table, overriding the parcel-inherited value.</li>
 <li><strong>MCD–parcel boundary mismatch</strong> — A small number of parcels may physically cross a municipal boundary. These are assigned to the MCD containing their centroid, which may not reflect the parcel's full extent.</li>
 <li><strong>Multi-parcel buildings</strong> — A single building can span multiple parcels (large campuses, industrial complexes). These are tracked separately in the <code>multi_parcel_buildings</code> table.</li>
 </ul>
@@ -969,7 +973,7 @@
 <tbody>
 <tr>
 <td><a href="domains/geography.html">Geography</a></td>
-<td><code>zones</code>, <code>semmcds</code>, <code>counties</code>, <code>large_areas</code></td>
+<td><code>zones</code>, <code>micro_zones</code>, <code>building_to_maz_override</code>, <code>semmcds</code>, <code>counties</code>, <code>large_areas</code></td>
 <td>PostgreSQL (boundary tables) / constant</td>
 </tr>
 <tr>
@@ -1055,7 +1059,7 @@
 <h2 id="table-count">Table Count<a class="headerlink" href="#table-count" title="Permanent link">&para;</a></h2>
 <p>The main model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
 <hr />
-<p><small>Last updated: June 2026</small></p>
+<p><small>Last updated: July 2026</small></p>
 
 
 
