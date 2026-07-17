@@ -2486,7 +2486,78 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
-def make_res_selection_func(lut_models, parcel_features_df):
+def compute_demo_rebuild_boost(parcels, year, boost, decay, window, scheduled_factor=1.0):
+    """Time-decayed site-selection boost for orphaned demolished SF parcels.
+
+    Eligible parcels are SF-zoned (land_use_type_id == 11) residential lots that were
+    demolished within `window` years, are currently empty, and have no future
+    events_addition entry to rebuild them.  Weight = boost * decay^(years_since_demo),
+    so a lot just demolished ranks highest and priority fades over the window — mirroring
+    real tear-down/rebuild timing.
+
+    Parcels whose demolition came from a scheduled event (a planned teardown for
+    redevelopment) are prioritised over random-attrition demolitions: while they remain
+    unbuilt, their weight is multiplied by `scheduled_factor`.
+
+    Parameters
+    ----------
+    parcels : orca.DataFrameWrapper
+        Parcels table; provides `land_use_type_id` for the SF (== 11) filter.
+    year : int
+        Current simulation year.
+    boost : float
+        Peak multiplier applied in the year of demolition (age 0).
+    decay : float
+        Per-year decay factor in [0, 1]; weight = boost * decay^years_since_demo.
+    window : int
+        Number of years a demolished parcel stays eligible for the boost.
+    scheduled_factor : float, default 1.0
+        Extra multiplier for parcels demolished by a scheduled event.
+
+    Returns
+    -------
+    pd.Series
+        float multiplier indexed by parcel_id (int); empty Series if nothing to boost.
+    """
+    empty = pd.Series(dtype=float)
+    if not orca.is_table("dropped_buildings"):
+        return empty
+    db = orca.get_table("dropped_buildings").to_frame(
+        ["parcel_id", "year_demo", "residential_units", "step"]
+    )
+    lut = parcels.to_frame(["land_use_type_id"])["land_use_type_id"]
+    demo = db[
+        (db["residential_units"] > 0)
+        & (db["year_demo"] >= year - window)
+        & (db["parcel_id"].map(lut) == 11)
+    ]
+    if len(demo) == 0:
+        return empty
+    # most-recent demolition per parcel drives the decay
+    demo_year = demo.groupby("parcel_id")["year_demo"].max()
+    # flag parcels that had a scheduled (planned) demolition — prioritised over random
+    scheduled_pids = set(
+        demo.loc[demo["step"] == "scheduled_demolition_events", "parcel_id"]
+    )
+    # currently empty: drop parcels that hold a building now (incl. already rebuilt)
+    occupied = set(orca.get_table("buildings").to_frame(["parcel_id"])["parcel_id"])
+    demo_year = demo_year[~demo_year.index.isin(occupied)]
+    # no future scheduled event: the events pipeline will rebuild those, skip them
+    if orca.is_table("events_addition"):
+        ea = orca.get_table("events_addition").to_frame(["parcel_id", "year_built"])
+        future_evt = set(ea.loc[ea["year_built"] > year, "parcel_id"])
+        demo_year = demo_year[~demo_year.index.isin(future_evt)]
+    if len(demo_year) == 0:
+        return empty
+    age = (year - demo_year).clip(lower=0)
+    weight = boost * (decay ** age)
+    # lift scheduled-demolition parcels above random-attrition ones
+    sched_mask = weight.index.isin(scheduled_pids)
+    weight[sched_mask] *= scheduled_factor
+    return weight
+
+
+def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, demo_max_share=0.5):
     """Return a custom_selection_func closure for residential developer site selection.
 
     Uses per-LUT logistic regression coefficients estimated from revealed developer
@@ -2501,6 +2572,12 @@ def make_res_selection_func(lut_models, parcel_features_df):
     parcel_features_df : pd.DataFrame
         Pre-loaded parcel-level feature columns (index = parcel_id).
         Must include "land_use_type_id" for per-LUT dispatch.
+    demo_boost : pd.Series or None
+        Optional multiplier (index = parcel_id) applied to selection probabilities to
+        prioritise orphaned demolished SF parcels.  See compute_demo_rebuild_boost.
+    demo_max_share : float
+        Cap on the combined post-boost probability mass of boosted parcels, so they
+        cannot starve normal demand-driven development.
     """
     fallback = lut_models["fallback"]
     per_lut  = {k: v for k, v in lut_models.items() if k != "fallback"}
@@ -2520,14 +2597,31 @@ def make_res_selection_func(lut_models, parcel_features_df):
         else:
             probs = _score_with_model(df, fallback, parcel_features_df)
 
-        # Re-normalise to a numpy array that sums to exactly 1.0
         p_arr = probs.values.astype(float)
+
+        # Time-decayed rebuild priority for orphaned demolished SF parcels
+        boosted = None
+        if demo_boost is not None and len(demo_boost):
+            mult = demo_boost.reindex(df.index).fillna(1.0).values
+            p_arr = p_arr * mult
+            boosted = mult > 1.0
+
+        # Re-normalise to a numpy array that sums to exactly 1.0
         p_arr = np.clip(p_arr, 0.0, None)
         total = p_arr.sum()
         if total > 0:
             p_arr /= total
         else:
             p_arr = np.ones(len(p_arr)) / len(p_arr)
+
+        # Cap boosted parcels' combined mass so they can't dominate the whole MCD
+        if boosted is not None and boosted.any():
+            demo_mass = p_arr[boosted].sum()
+            other_mass = 1.0 - demo_mass
+            if demo_mass > demo_max_share and other_mass > 0:
+                p_arr[boosted]  *= demo_max_share / demo_mass
+                p_arr[~boosted] *= (1.0 - demo_max_share) / other_mass
+
         # Correct any floating-point residual so np.random.choice is satisfied
         p_arr[-1] += 1.0 - p_arr.sum()
 
@@ -2695,6 +2789,11 @@ def residential_developer(
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
     hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
+    demo_rebuild_boost     = _res_cfg.get("demo_rebuild_boost", 20.0)
+    demo_rebuild_decay     = _res_cfg.get("demo_rebuild_decay", 0.6)
+    demo_rebuild_window    = _res_cfg.get("demo_rebuild_window", 5)
+    demo_rebuild_max_share = _res_cfg.get("demo_rebuild_max_share", 0.5)
+    demo_rebuild_sched_factor = _res_cfg.get("demo_rebuild_scheduled_factor", 3.0)
     lookback_year = year - 7
 
     mover_decay_final = _res_cfg.get("mover_decay_final", 0.5)
@@ -2705,6 +2804,13 @@ def residential_developer(
     # compute per-MCD build rates for hist_floor (7-year window ending at base year)
     _hist = orig_buildings[orig_buildings.year_built.between(base_year - 6, base_year)]
     mcd_hist_rate = (_hist.groupby("semmcd")["residential_units"].sum() / 7.0).to_dict()
+
+    # rebuild-priority weight for orphaned demolished SF parcels
+    recent_demo_boost = compute_demo_rebuild_boost(
+        parcels, year, demo_rebuild_boost, demo_rebuild_decay, demo_rebuild_window,
+        demo_rebuild_sched_factor
+    )
+    print(f"  Rebuild priority: boosting {len(recent_demo_boost):,} orphaned demolished SF parcels")
 
     # build site-selection func from estimated coefs; fall back to profit-rank if missing
     _coefs = orca.get_injectable("res_developer_selection_coefs")
@@ -2726,7 +2832,9 @@ def residential_developer(
             _rawp, _rawb, _z, year
         )
         _lut_models = _coefs["residential"]
-        custom_sel_func = make_res_selection_func(_lut_models, _p)
+        custom_sel_func = make_res_selection_func(
+            _lut_models, _p, recent_demo_boost, demo_rebuild_max_share
+        )
         n_lut = len([k for k in _lut_models if k != "fallback"])
         print(f"  Using estimated site-selection model (fallback + {n_lut} per-LUT models)")
     else:
