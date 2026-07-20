@@ -343,8 +343,8 @@ orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
 orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
 
 
-def _load_remi_pi_growth_rates():
-    """Per-large-area personal-income growth rates, used by increase_property_values."""
+def _load_remi_growth_rates():
+    """Per-large-area personal-income and PCE growth rates, used by increase_property_values."""
     base = input_paths.LFPR_INCOME_DIR
     geo_to_la = {
         "rest of wayne": 3,
@@ -357,37 +357,33 @@ def _load_remi_pi_growth_rates():
         "washtenaw":     161,
     }
     years = list(range(2020, 2051))
-    pi_rates = {}   # {year: {la_id: rate}}
+    remi_base_year = 2022
+    base_idx = years.index(remi_base_year)
 
     pi_vals_by_la = {}
     pce_vals = None
     for geo, la in geo_to_la.items():
         fpath = path.join(base, f"lfpr income {geo}.xlsx")
         df = pd.read_excel(fpath, header=None, sheet_name=0)
-        pi_vals = df.iloc[24, 9:40].values.astype(float)  # row 25: Personal Income
-        pi_series = dict(zip(years, pi_vals))
-        for i in range(1, len(years)):
-            y = years[i]
-            rate = max(pi_series[y] / pi_series[years[i - 1]] - 1, 0.0)
-            pi_rates.setdefault(y, {})[la] = rate
+        pi_vals_by_la[la] = df.iloc[24, 9:40].values.astype(float)  # Personal Income
+        if pce_vals is None:
+            pce_vals = df.iloc[34, 9:40].values.astype(float)       # PCE-Price Index
 
-    return pi_rates
+    pi_base  = {la: pi_vals_by_la[la][base_idx] for la in geo_to_la.values()}
+    pce_base = pce_vals[base_idx]
 
+    # Cumulative ratios relative to 2022 calibration year
+    income_ratios = {
+        years[i]: {la: pi_vals_by_la[la][i] / pi_base[la] for la in geo_to_la.values()}
+        for i in range(len(years))
+    }
+    pce_ratios = {years[i]: pce_vals[i] / pce_base for i in range(len(years))}
 
-def _load_remi_pce_growth_rates():
-    """Region-wide PCE growth rate (year -> rate), used by cost_shifter_callback
-    to inflate construction costs. Precomputed into the HDF by
-    forecast_data_input/development_context/PCE_growth_rate.py as a single
-    population-weighted series across the 8 large areas -- the base
-    construction-cost table only varies by 3 pricing areas, so a per-large-area
-    rate here would be false precision (see that script's README)."""
-    store = orca.get_injectable("store")
-    return store["remi_pce_growth_rate"]["pce_growth_rate"].to_dict()
+    return income_ratios, pce_ratios
 
 
-_remi_pi = _load_remi_pi_growth_rates()
-_remi_pce = _load_remi_pce_growth_rates()
-orca.add_injectable("remi_pi_growth_rates", _remi_pi)
-orca.add_injectable("remi_pce_growth_rates", _remi_pce)
-print(f"REMI growth rates loaded: {len(_remi_pi)} years, "
-      f"PCE range {min(_remi_pce.values()):.2%}–{max(_remi_pce.values()):.2%}")
+_remi_income, _remi_pce = _load_remi_growth_rates()
+orca.add_injectable("remi_income_ratios", _remi_income)
+orca.add_injectable("remi_pce_ratios", _remi_pce)
+orca.add_injectable("remi_base_year", 2022)
+print(f"REMI growth rates loaded: {len(_remi_income)} years")
