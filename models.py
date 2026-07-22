@@ -18,6 +18,7 @@ from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_var
 
 import utils
 import lcm_utils
+import input_paths
 from functools import reduce
 
 # set configs if they are not set
@@ -42,6 +43,11 @@ if orca.get_injectable('ENABLE_SCENARIO'):
     new_hh_controls = pd.read_csv(hh_controls_path, index_col=0)
     orca.add_table('annual_household_control_totals', new_hh_controls)
 
+    # Scenario population still ships as TOTAL population -> loaded as the legacy
+    # remi_pop_total table. households_transition falls back to it (with a
+    # warning) while allow_total_pop_fallback is True. For a scenario run with
+    # allow_total_pop_fallback=False, provide a household-population scenario file
+    # and register it as `remi_hh_pop` instead.
     remi_total_pop_path = orca.get_injectable('scenario_remi_total_pop')
     new_remi_total_pop = pd.read_csv(remi_total_pop_path, index_col=0)
     orca.add_table('remi_pop_total', new_remi_total_pop)
@@ -916,10 +922,319 @@ def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     _print_number_unplaced(jobs, "building_id")
 
 
+# ---------------------------------------------------------------------------
+# Zero-cell donor gap-filling for the household transition model
+# ---------------------------------------------------------------------------
+# A control row whose 8-dim category matches no household is silently skipped
+# by urbansim's TabularTotalsTransition (its `if len(subset) == 0: continue`),
+# so its households — and their population — never appear. The control-total
+# script now emits nonzero rows for categories absent in the synthesized base
+# year, so the simulation must be able to fill them.
+#
+# Strategy (mirrors the control-side fallback): for each empty control row,
+# find the nearest donor by relaxing the least-structural dimensions, clone it,
+# then OVERRIDE the relaxed attributes back to the control row's target bin
+# (syncing person records). The donor lends only its retained attributes plus
+# its person structure; every dropped dimension is restored to the target.
+#
+# Relax order = most expendable first. The FIRST dim dropped is synthesized in
+# every filled cell (it sits in every non-empty prefix), so it must be the
+# lowest-stakes attribute. age_of_head and persons are NEVER relaxed (they fix
+# headship and population); large_area_id is never relaxed (same-LA donors only).
+#
+# Order rationale:
+#   cars     - not an HLCM segment, no person edit -> drop first (synth everywhere)
+#   workers  - recomputed from persons by workers_adjustment_model each year, so its value
+#              here is downstream-reconciled -> cheap to synthesize, drop early
+#   income   - HLCM segments on it, but the override samples WITHIN the target
+#              income bin so the income segment is preserved regardless -> drop
+#              after workers to better keep the income<->workers joint realism
+#   race_id  - CONDITIONAL: only relaxed when the (LA, age, race) cell is empty
+#              (a genuine demographic gap, e.g. LA 93/115 Black 18-24). For an
+#              ordinary fine-combo gap the race is already correct and is never
+#              relabeled.
+#   children - HLCM segments on has_children AND it is the heaviest person
+#              rewrite (re-aging members) -> drop late
+#   persons  - last-resort catch-all: resize the donor household to the target
+#              size (add/drop members). Only reached when no same-LA, same-age
+#              household of any race/structure of that size exists at all. Keeps
+#              age_of_head (the sole never-relaxed dim besides large_area), so a
+#              same-age head is always retained; population stays correct because
+#              the resized size matches the control row's persons bin.
+# age_of_head and large_area_id are never relaxed.
+# This generalises (and replaces) the hand-maintained step7_fix_zero_samples.
+GAP_RELAX_ORDER = ["cars", "workers", "income", "race_id", "children", "persons"]
+GAP_RELAX_COLS = {
+    "income": ["income_min", "income_max"],
+    "cars": ["cars_min", "cars_max"],
+    "race_id": ["race_id"],
+    "workers": ["workers_min", "workers_max"],
+    "children": ["children_min", "children_max"],
+    "persons": ["persons_min", "persons_max"],
+}
+GAP_DONORS_PER_CELL = 25   # distinct donors injected per empty cell, for variety
+WORKING_AGE_MIN = 16
+
+
+def _gap_rand_int(lo, hi, rng):
+    """Random int in [lo, hi) where hi is the already-+1'd exclusive max
+    (np.inf for open-ended bins, in which case lo is used)."""
+    lo = int(lo)
+    if not np.isfinite(hi):
+        return lo
+    hi = int(hi)
+    return lo if hi <= lo + 1 else int(rng.integers(lo, hi))
+
+
+def _gap_rand_income(lo, hi, rng):
+    """Random income within the target quartile bin (open top bin -> 1.5x lo)."""
+    lo = float(lo)
+    if not np.isfinite(hi):
+        return lo * 1.5 if lo > 0 else 1000.0
+    return float(rng.uniform(lo, float(hi)))
+
+
+def _gap_sync_workers(pers, target_workers):
+    """Set exactly min(target, working-age members) members to worker=1."""
+    cand = pers.index[pers["age"] >= WORKING_AGE_MIN]
+    target = min(int(target_workers), len(cand))
+    pers["worker"] = 0
+    if target > 0:
+        pers.loc[cand[:target], "worker"] = 1
+    pers.loc[pers["worker"] == 0, "industry"] = 0
+    return target
+
+
+def _gap_sync_children(pers, target_children, rng):
+    """Adjust ages of non-head members so own-children (<18) == target, holding
+    total persons fixed. Head (relate==0) untouched. Heaviest edit (logged)."""
+    age_dt = pers["age"].dtype
+    non_head = pers.index[pers["relate"] != 0]
+    n_child = min(int(target_children), len(non_head))
+    child_idx = non_head[:n_child]
+    adult_idx = non_head[n_child:]
+    if len(child_idx):
+        pers.loc[child_idx, "age"] = rng.integers(0, 18, size=len(child_idx)).astype(age_dt)
+        pers.loc[child_idx, "worker"] = 0
+    young = adult_idx[pers.loc[adult_idx, "age"] < 18]
+    if len(young):
+        pers.loc[young, "age"] = rng.integers(18, 65, size=len(young)).astype(age_dt)
+    return n_child
+
+
+def _gap_sync_persons(pers, target_persons, rng):
+    """Resize a household's person rows to exactly target_persons, keeping the
+    single head (relate==0). Drops random non-head members when shrinking, or
+    clones existing members (marked non-head) when growing. member_id is
+    renumbered. children/workers are re-synced by the caller afterwards."""
+    target = int(target_persons)
+    cur = len(pers)
+    if cur != target:
+        rs = int(rng.integers(0, 2**31))
+        head = pers[pers["relate"] == 0]
+        non_head = pers[pers["relate"] != 0]
+        if cur > target:
+            keep = max(target - len(head), 0)
+            non_head = non_head.sample(min(keep, len(non_head)), random_state=rs) \
+                if keep and len(non_head) else non_head.iloc[:0]
+            pers = pd.concat([head, non_head])
+        else:
+            pool = non_head if len(non_head) else head
+            add = pool.sample(target - cur, replace=True, random_state=rs).copy()
+            add["relate"] = (pers["relate"].dtype.type(2))  # mark as non-head members
+            pers = pd.concat([pers, add])
+        # cloning with replacement duplicates index labels; reset to a unique
+        # index so the downstream children/workers .loc edits are well-defined
+        # (the caller reassigns final person_ids anyway).
+        pers = pers.reset_index(drop=True)
+    pers["member_id"] = np.arange(1, len(pers) + 1, dtype=pers["member_id"].dtype)
+    return pers
+
+
+GAP_RANGED_ATTRS = ["age_of_head", "persons", "children", "cars", "workers", "income"]
+
+
+def _gap_category_presence(ct, hh):
+    """Vectorised empty-cell detector. Bins every household once into its
+    control-category key (race_id + the bin-min of each ranged attribute) and
+    returns row_is_empty(row). Replaces a per-control-row filter_table scan of
+    the full pool, which was ~half the transition step's runtime.
+
+    Exactness guard: the binning is equivalent to filter_table only when each
+    attribute's control bins tile contiguously ([min, max) with max == next
+    min). The top bin's max may be finite (e.g. the finite persons subset ends
+    at 10; the top income quartile is capped at the base-year max income) —
+    values at/above it, below the lowest min, or NaN match no row, same as
+    filter_table. If any attribute's bins do not tile, falls back to the exact
+    per-row filter_table check.
+    """
+    edges, uppers = {}, {}
+    for a in GAP_RANGED_ATTRS:
+        pairs = (ct[[f"{a}_min", f"{a}_max"]].drop_duplicates()
+                 .sort_values(f"{a}_min").to_numpy(dtype=float))
+        mins, maxs = pairs[:, 0], pairs[:, 1]
+        if not np.all(maxs[:-1] == mins[1:]):
+            # non-contiguous bins -> exact (slow) fallback
+            return lambda row: len(
+                utils.filter_table(hh, row, ignore={"total_number_of_households"})
+            ) == 0
+        edges[a], uppers[a] = mins, maxs[-1]
+
+    cols = {"race_id": hh["race_id"].to_numpy(dtype=float)}
+    valid = np.ones(len(hh), dtype=bool)
+    for a in GAP_RANGED_ATTRS:
+        e = edges[a]
+        vals = pd.to_numeric(hh[a], errors="coerce").to_numpy(dtype=float)
+        pos = np.searchsorted(e, vals, side="right") - 1
+        valid &= (pos >= 0) & ~np.isnan(vals) & (vals < uppers[a])
+        cols[f"{a}_min"] = e[np.clip(pos, 0, len(e) - 1)]
+    key_arr = np.column_stack([cols["race_id"]] + [cols[f"{a}_min"] for a in GAP_RANGED_ATTRS])
+    present = set(map(tuple, key_arr[valid]))
+
+    def row_is_empty(row):
+        key = (float(row["race_id"]),) + tuple(float(row[f"{a}_min"]) for a in GAP_RANGED_ATTRS)
+        return key not in present
+
+    return row_is_empty
+
+
+def fill_control_gaps(ct, hh, p, iter_var, seed=0):
+    """Inject attribute-overridden donor households for empty control rows so
+    TabularTotalsTransition can fill them. Returns (hh, p, diagnostics)."""
+    rng = np.random.default_rng(seed)
+    la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    next_hid = int(hh.index.max()) + 1
+    next_pid = int(p.index.max()) + 1
+
+    row_is_empty = _gap_category_presence(ct, hh)
+
+    hh_records, hh_ids, p_chunks, diags = [], [], [], []
+
+    for ridx, row in ct.iterrows():
+        if row["total_number_of_households"] <= 0:
+            continue
+        if not row_is_empty(row):
+            continue  # already fillable
+
+        # Relax race only for a genuine demographic gap: the whole
+        # (LA, age_of_head, race) cell empty. For a populated cell the race is
+        # already correct and must not be relabeled.
+        race_cell_empty = len(hh[
+            (hh["race_id"] == row["race_id"])
+            & (hh["age_of_head"] >= row["age_of_head_min"])
+            & (hh["age_of_head"] < row["age_of_head_max"])
+        ]) == 0
+
+        dropped, donors, ignore = [], None, {"total_number_of_households"}
+        for attr in GAP_RELAX_ORDER:
+            if attr == "race_id" and not race_cell_empty:
+                continue  # don't relabel race for a populated (LA, age, race) cell
+            dropped.append(attr)
+            ignore |= set(GAP_RELAX_COLS[attr])
+            cand = utils.filter_table(hh, row, ignore=ignore)
+            if len(cand) > 0:
+                donors = cand
+                break
+
+        if donors is None or len(donors) == 0:
+            # Empty even after relaxing every dim except large_area and
+            # age_of_head -> no same-LA household of this head-age exists at all
+            # (would need a cross-LA donor or relaxing age). Surfaced below.
+            cat = {c: row[c] for c in
+                   ["race_id", "age_of_head_min", "age_of_head_max",
+                    "persons_min", "persons_max"] if c in row}
+            diags.append({"row": ridx, "rung": "NO_DONOR", "cat": cat,
+                          "target": int(row["total_number_of_households"]), "donors": 0})
+            continue
+
+        k = min(GAP_DONORS_PER_CELL, len(donors), int(row["total_number_of_households"]))
+        donor_sample = donors.sample(k, random_state=int(rng.integers(0, 2**31)))
+
+        for old_hid, donor in donor_sample.iterrows():
+            clone = donor.to_dict()
+            dp = p[p["household_id"] == old_hid].copy()
+
+            if "income" in dropped:
+                clone["income"] = _gap_rand_income(row["income_min"], row["income_max"], rng)
+            if "cars" in dropped:
+                clone["cars"] = _gap_rand_int(row["cars_min"], row["cars_max"], rng)
+            if "race_id" in dropped:
+                clone["race_id"] = int(row["race_id"])
+                dp["race_id"] = int(row["race_id"])
+            # persons resize first (changes the member set), then children
+            # before workers: re-age members, then assign worker flags over the
+            # final working-age set. The persons table is the source of truth for
+            # whichever count was edited, so the two stay consistent (and survive
+            # workers_adjustment_model, which recomputes workers from persons). Counts NOT dropped
+            # keep the donor's matching value.
+            if "persons" in dropped:
+                dp = _gap_sync_persons(
+                    dp, _gap_rand_int(row["persons_min"], row["persons_max"], rng), rng)
+                clone["persons"] = int(len(dp))
+            if "children" in dropped:
+                _gap_sync_children(
+                    dp, _gap_rand_int(row["children_min"], row["children_max"], rng), rng)
+                n_child = int((dp["age"] < 18).sum())
+                clone["children"] = n_child
+                if "noc" in clone:
+                    clone["noc"] = n_child
+            if "workers" in dropped:
+                _gap_sync_workers(
+                    dp, _gap_rand_int(row["workers_min"], row["workers_max"], rng))
+                clone["workers"] = int(dp["worker"].sum())
+
+            clone["building_id"] = -1
+            new_hid = next_hid
+            next_hid += 1
+            dp["household_id"] = new_hid
+            dp.index = range(next_pid, next_pid + len(dp))
+            dp.index.name = "person_id"
+            next_pid += len(dp)
+            hh_records.append(clone)
+            hh_ids.append(new_hid)
+            p_chunks.append(dp)
+
+        diags.append({"row": ridx, "rung": "+".join(dropped),
+                      "target": int(row["total_number_of_households"]), "donors": k})
+
+    if hh_records:
+        add_hh = pd.DataFrame(hh_records, index=pd.Index(hh_ids, name=hh.index.name))
+        add_hh = add_hh[hh.columns].astype(hh.dtypes.to_dict())
+        add_p = pd.concat(p_chunks).astype(p.dtypes.to_dict())
+        hh = pd.concat([hh, add_hh])
+        p = pd.concat([p, add_p])
+
+    filled = [d for d in diags if d["rung"] != "NO_DONOR"]
+    nodonor = [d for d in diags if d["rung"] == "NO_DONOR"]
+    if filled or nodonor:
+        rungs = {}
+        for d in filled:
+            rungs[d["rung"]] = rungs.get(d["rung"], 0) + 1
+        resid_hh = sum(d["target"] for d in nodonor)
+        print(f"[gap-fill] LA {la} yr {iter_var}: filled {len(filled)} empty control "
+              f"cell(s), injected {sum(d['donors'] for d in filled)} donor(s); "
+              f"rungs {rungs}; unfillable {len(nodonor)} cell(s) / {resid_hh} hh")
+        for d in nodonor:
+            print(f"[gap-fill]   NO DONOR (target {d['target']} hh): {d['cat']}")
+    return hh, p, diags
+
+
 def presses_trans(xxx_todo_changeme1):
-    (ct, hh, p, target, iter_var) = xxx_todo_changeme1
+    (ct, hh, p, target, iter_var, la_seed) = xxx_todo_changeme1
+    # Seed this worker's global NumPy RNG from the per-(large_area, year) seed
+    # derived in the parent (see households_transition). The UrbanSim core
+    # transition draws from the global RNG, so seeding it here makes each LA's
+    # result depend only on its own seed + data — reproducible regardless of
+    # which pool worker runs it or in what order (fixes the fork-RNG problem),
+    # and independent across large areas. A retry of this task re-seeds, so it
+    # reproduces the same draw rather than diverging.
+    np.random.seed(la_seed)
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
+    # Inject donor households for any finite control cell with no match, so the
+    # transition below can realise it instead of silently skipping it. The
+    # gap-filler uses its own stream derived from the same per-LA seed.
+    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var, seed=la_seed)[:2]
     tran = transition.TabularTotalsTransition(ct_finite, "total_number_of_households")
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = model.transition(
@@ -932,6 +1247,26 @@ def presses_trans(xxx_todo_changeme1):
     pers.index.name = "person_id"
     out = [[new, pers]]
     target -= len(pers)
+
+    # Unlike the finite cells above, the open-ended 10+ bin is NOT gap-filled:
+    # the loop below realises it only by cloning existing 10+ households, so a
+    # cell with a positive target but no matching donor produces zero households
+    # and is silently skipped. This is intentional for now (synthesizing a
+    # household size for an open-ended bin needs a chosen cap) but should be
+    # visible. Log any such cell; see the model wiki transition todo for the
+    # fuller fix options.
+    la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    for _, r in ct_inf.loc[iter_var].iterrows():
+        if r["total_number_of_households"] <= 0:
+            continue
+        if utils.filter_table(hh, r, ignore={"total_number_of_households"}).shape[0] == 0:
+            cat = {c: r[c] for c in
+                   ["race_id", "age_of_head_min", "age_of_head_max",
+                    "persons_min", "persons_max"] if c in r}
+            print(f"[gap-fill] LA {la} yr {iter_var}: open-ended 10+ control cell "
+                  f"has no donor household (target "
+                  f"{int(r['total_number_of_households'])} hh, not synthesized): {cat}")
+
     best_qal = np.inf
     best = []
     for _ in range(3):
@@ -970,23 +1305,172 @@ def presses_trans(xxx_todo_changeme1):
     return out
 
 
+# Errors worth retrying inside a pool worker — transient resource/IO blips.
+# Everything else (logic/data bugs) is deterministic: retrying with identical
+# inputs only fails again, so it is re-raised immediately with its real traceback.
+_RETRYABLE_WORKER_ERRORS = (OSError, MemoryError)
+
+
 def _retry_wrapper(args, max_retries=3):
-    """wrapper for pool.map - must be at module level to be picklable."""
-    last_error = None
-    for attempt in range(max_retries):
+    """Run presses_trans in a pool worker. Retries only transient errors and
+    surfaces real bugs immediately with the full traceback. Must stay at module
+    level to be picklable for pool.map."""
+    import traceback
+    for attempt in range(1, max_retries + 1):
         try:
             return presses_trans(args)
-        except Exception as e:
-            last_error = e
-            print(f"Worker failed (attempt {attempt + 1}/{max_retries}): {e}")
-            if attempt < max_retries - 1:
-                print("Retrying...")
-    raise RuntimeError(f"Task failed after {max_retries} retries. Last error: {last_error}")
+        except _RETRYABLE_WORKER_ERRORS:
+            print(f"[households_transition] transient worker failure "
+                  f"(attempt {attempt}/{max_retries}):\n{traceback.format_exc()}")
+            if attempt == max_retries:
+                raise  # re-raise the original error, traceback intact
+        except Exception:
+            # deterministic failure — retrying won't help; fail fast and loud
+            print("[households_transition] worker failed (not retrying):\n"
+                  + traceback.format_exc())
+            raise
+
+
+def _resolve_hh_pop_target():
+    """Resolve the household-population target table used to size the open-ended
+    10+-person bin in households_transition.
+
+    Prefers `remi_hh_pop` — household population (TOTAL population minus group
+    quarters), the correct quantity. Falls back to the legacy `remi_pop_total`
+    (TOTAL population, including group quarters) only while the
+    `allow_total_pop_fallback` injectable is true (the default). TOTAL population
+    over-states the household-person target by each large area's GQ population,
+    which biases 10+-person household sizes upward; set
+    `allow_total_pop_fallback = False` once the model input provides
+    `remi_hh_pop`, so a wrong (total-pop) file can never silently feed the model.
+    """
+    if orca.is_table("remi_hh_pop"):
+        return orca.get_table("remi_hh_pop")
+
+    allow = (orca.get_injectable("allow_total_pop_fallback")
+             if orca.is_injectable("allow_total_pop_fallback") else True)
+    if orca.is_table("remi_pop_total"):
+        if not allow:
+            raise RuntimeError(
+                "households_transition: 'remi_hh_pop' not found and "
+                "allow_total_pop_fallback is False. The legacy 'remi_pop_total' "
+                "holds TOTAL population (incl. group quarters), which over-sizes "
+                "10+-person households. Regenerate the model input with a "
+                "'remi_hh_pop' table (household population = total - GQ)."
+            )
+        print("WARNING households_transition: 'remi_hh_pop' not found — falling "
+              "back to legacy 'remi_pop_total' (TOTAL population incl. group "
+              "quarters). This over-sizes 10+-person households. Provide "
+              "'remi_hh_pop' and set allow_total_pop_fallback=False.")
+        return orca.get_table("remi_pop_total")
+
+    raise RuntimeError(
+        "households_transition: neither 'remi_hh_pop' nor 'remi_pop_total' is "
+        "available for the household-population target."
+    )
+
+
+def _assert_control_coverage(region_hh, region_ct, iter_var):
+    """P2 guard: flag any current household that matches no control category.
+
+    UrbanSim's TabularTotalsTransition builds its output as the concatenation of
+    the per-control-row segments, so a household that falls in *no* control
+    category is silently dropped from the table — its population quietly lost.
+    Full coverage is an emergent property of how the control totals are built,
+    not something the code enforces; a base-year refresh or a control-bin change
+    could start dropping households with no signal. This makes it visible.
+
+    Warns by default; set the `require_full_control_coverage` injectable to raise.
+    Cheap (vectorised bin + merge), runs once per year.
+    """
+    ranged = ["age_of_head", "persons", "children", "cars", "workers", "income"]
+    ct = region_ct
+    if getattr(ct.index, "name", None) == "year" and iter_var in ct.index:
+        ct = ct.loc[[iter_var]]
+    key_cols = ["large_area_id", "race_id"] + [f"{a}_min" for a in ranged]
+    ctrl_keys = ct[key_cols].drop_duplicates()
+
+    # bin each household to its control-category identity (exact LA + race, plus
+    # the bin-min each ranged attribute falls into) and look it up in the controls
+    binned = {
+        "large_area_id": region_hh["large_area_id"].to_numpy(),
+        "race_id": region_hh["race_id"].to_numpy(),
+    }
+    above = np.zeros(len(region_hh), dtype=bool)
+    for a in ranged:
+        edges = np.sort(ct[f"{a}_min"].unique())
+        vals = pd.to_numeric(region_hh[a], errors="coerce").fillna(edges[0])
+        vals = vals.clip(lower=edges[0]).to_numpy()
+        binned[f"{a}_min"] = edges[np.searchsorted(edges, vals, side="right") - 1]
+        # A value at/above the highest bin's _max is snapped into the top bin by
+        # the lower-bound search above, so the key merge alone would call it
+        # "covered". Flag it as unmatched too, mirroring _gap_category_presence's
+        # `vals < uppers[a]` validity test. Open-ended top bins carry _max == inf
+        # here (households_transition replaced -1 with inf before this guard), so
+        # this never false-positives on them; it only catches a future finite
+        # top bin with households above it.
+        above |= vals >= float(ct[f"{a}_max"].max())
+    hh_keys = pd.DataFrame(binned, index=region_hh.index)
+
+    merged = hh_keys.merge(ctrl_keys.assign(_ok=1), on=key_cols, how="left")
+    unmatched = merged["_ok"].isna().to_numpy() | above
+    n = int(unmatched.sum())
+    if n == 0:
+        return
+    by_la = region_hh.loc[unmatched].groupby("large_area_id").size().to_dict()
+    msg = (f"households_transition: {n} of {len(region_hh)} households match no "
+           f"control category for {iter_var} and would be silently dropped by the "
+           f"transition (by large area: {by_la}). Check control-total coverage "
+           f"against the households table.")
+    strict = (orca.get_injectable("require_full_control_coverage")
+              if orca.is_injectable("require_full_control_coverage") else False)
+    if strict:
+        raise RuntimeError(msg)
+    print("WARNING " + msg)
+
+
+def _resolve_hh_pop_target():
+    """Resolve the household-population target table used to size the open-ended
+    10+-person bin in households_transition.
+
+    Prefers `remi_hh_pop` — household population (TOTAL population minus group
+    quarters), the correct quantity. Falls back to the legacy `remi_pop_total`
+    (TOTAL population, including group quarters) only while the
+    `allow_total_pop_fallback` injectable is true (the default). TOTAL population
+    over-states the household-person target by each large area's GQ population,
+    which biases 10+-person household sizes upward; set
+    `allow_total_pop_fallback = False` once the model input provides
+    `remi_hh_pop`, so a wrong (total-pop) file can never silently feed the model.
+    """
+    if orca.is_table("remi_hh_pop"):
+        return orca.get_table("remi_hh_pop")
+
+    allow = (orca.get_injectable("allow_total_pop_fallback")
+             if orca.is_injectable("allow_total_pop_fallback") else True)
+    if orca.is_table("remi_pop_total"):
+        if not allow:
+            raise RuntimeError(
+                "households_transition: 'remi_hh_pop' not found and "
+                "allow_total_pop_fallback is False. The legacy 'remi_pop_total' "
+                "holds TOTAL population (incl. group quarters), which over-sizes "
+                "10+-person households. Regenerate the model input with a "
+                "'remi_hh_pop' table (household population = total - GQ)."
+            )
+        print("WARNING households_transition: 'remi_hh_pop' not found — falling "
+              "back to legacy 'remi_pop_total' (TOTAL population incl. group "
+              "quarters). This over-sizes 10+-person households. Provide "
+              "'remi_hh_pop' and set allow_total_pop_fallback=False.")
+        return orca.get_table("remi_pop_total")
+
+    raise RuntimeError(
+        "households_transition: neither 'remi_hh_pop' nor 'remi_pop_total' is "
+        "available for the household-population target."
+    )
 
 
 @orca.step()
 def households_transition(
-    households, persons, annual_household_control_totals, remi_pop_total, iter_var
+    households, persons, annual_household_control_totals, iter_var
 ):
     region_ct = annual_household_control_totals.to_frame()
     max_cols = region_ct.columns[region_ct.columns.str.endswith("_max")]
@@ -997,40 +1481,24 @@ def households_transition(
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
-    # issue #56
-    # append hh_seeds and p_seeds to the end 
-    hh_seeds = orca.get_table('hh_seeds').to_frame().reset_index()[region_hh.columns]
-    p_seeds = orca.get_table('p_seeds').to_frame().reset_index()#[region_p.columns]
-    max_hh_idx,max_p_idx = max(region_hh.index), max(region_p.index)
-    hh_seeds.index = list(range(max_hh_idx+1, max_hh_idx+len(hh_seeds)+1))
-    hh_seeds.index.name = 'household_id'
-    # set hh_seeds building_id to -1
-    hh_seeds['building_id'] = -1
 
-    p_seeds.index = list(range(max_p_idx+1, max_p_idx+len(p_seeds)+1))
-    p_seeds.index.name = 'person_id'
-    # map hh_id back to p_seeds
-    p_seeds['household_id'] = p_seeds['seed_id'].map(hh_seeds.reset_index().set_index('seed_id')['household_id'])
-    # append
-    region_hh = pd.concat((region_hh, hh_seeds), axis=0)
-    region_p = pd.concat((region_p, p_seeds), axis=0)
+    # P2 guard: warn (or raise) if any household matches no control category and
+    # would be silently dropped by the totals transition (see function docstring).
+    _assert_control_coverage(region_hh, region_ct, iter_var)
 
-    if "changed_hhs" in orca.list_tables():
-        ## add changed hhs and persons from previous year back (ensure transition sample availability )
-        changed_hhs = orca.get_table("changed_hhs").local
-        changed_hhs.index += region_hh.index.max()
+    # NOTE (2026-06): the blanket donor injections that used to live here —
+    # appending the full hh_seeds/p_seeds set (issue #56) and the previous
+    # year's LPR-changed households — were removed. They guaranteed donor
+    # availability by flooding the pool (~64k seed households/year), which the
+    # totals transition offset by randomly removing real, placed households
+    # (hidden churn + drift toward base-year composition). fill_control_gaps
+    # (called in presses_trans) now guarantees donor availability surgically,
+    # injecting donors only for control cells that would otherwise be empty.
+    # Validated: zero unfilled control cells across all large areas without
+    # the blanket appends. hh_seeds/p_seeds tables themselves are still
+    # maintained by cache_hh_seeds for the labor-participation swaps.
 
-        changed_ps = orca.get_table("changed_ps").local
-        changed_ps.index += region_p.index.max()
-        changed_ps["household_id"] = changed_ps["household_id"] + region_hh.index.max()
-
-        region_hh = pd.concat([region_hh, changed_hhs])
-        region_p = pd.concat([region_p, changed_ps])
-
-    region_hh.index = region_hh.index.astype(int)
-    region_p.index = region_p.index.astype(int)
-
-    region_target = remi_pop_total.to_frame()
+    region_target = _resolve_hh_pop_target().to_frame()
 
     def cut_to_la(xxx_todo_changeme):
         (large_area_id, hh) = xxx_todo_changeme
@@ -1038,7 +1506,13 @@ def households_transition(
         target = int(region_target.loc[large_area_id, str(iter_var)])
         ct = region_ct[region_ct.large_area_id == large_area_id]
         del ct["large_area_id"]
-        return ct, hh, p, target, iter_var
+        # Per-(large_area, year) seed derived in the parent (where the run-level
+        # random_seed injectable is available) and passed into the pool worker,
+        # which seeds its global RNG with it. Concrete int so the worker needs
+        # no orca access.
+        la_seed = int(utils.get_rng("households_transition", iter_var, large_area_id)
+                      .integers(0, 2**32))
+        return ct, hh, p, target, iter_var, la_seed
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
 
@@ -1074,11 +1548,12 @@ def households_transition(
         hhmap = hhmap.reset_index()
         hhmap["household_id_old"] = hhmap["household_id"]
         # assign hh_id to those newly added
-        hhmap.loc[hhmap["building_id"] == -1, "household_id"] = list(
-            range(
-                hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i + 1]
+        if hh_new_added_cumsum[i + 1] > hh_new_added_cumsum[i]:
+            hhmap.loc[hhmap["building_id"] == -1, "household_id"] = list(
+                range(
+                    hhidmax + hh_new_added_cumsum[i], hhidmax + hh_new_added_cumsum[i + 1]
+                )
             )
-        )
         hh_id_mapping[i] = hhmap[["household_id_old", "household_id"]].set_index(
             "household_id_old"
         )
@@ -1131,7 +1606,7 @@ def households_transition(
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
 
-def get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds):
+def get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds):
     # get hh swapping mapping
     # 2hr runtime
     # recommend using cached result
@@ -1244,19 +1719,26 @@ def cache_hh_seeds(households, persons, iter_var):
     orca.add_table('hh_seeds', hh_seeds)
     orca.add_table('p_seeds', p_seeds)
 
-# TODO:
-# - Add worker by swapping hh with 1 worker more hh
-# - try to limit the impact to other variables
-# - same persons, children, income within range(?), car(?), race with worker + 1
-# - update persons table(optional) and households table
 @orca.step()
-def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
+def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
+    """Adjust household/person worker counts to employed-worker rate targets.
+
+    For each large area and age band, compares the current number of employed
+    workers against the target implied by the `employed_workers_rate` table and
+    closes the gap by swapping households with a counterpart seed household
+    that has one more (or one fewer) worker and matched persons / race /
+    age-bin / children. Household `workers` is then recomputed from the person
+    `worker` flags, and income/cars of changed households are resampled from
+    peers with the same composition and new worker count.
+
+    Formerly named `fix_lpr`; renamed 2026-06. Note the rates are employed-
+    worker rates (employment), not labor-force participation rates.
+    """
     from numpy.random import choice
 
     hh = households.to_frame(households.local_columns + ["large_area_id"])
     hh_seeds = hh_seeds.to_frame()
     p_seeds = p_seeds.to_frame()
-    changed_hhs = hh.copy()
     hh["target_workers"] = 0
     hh['inc_qt'] = pd.qcut(hh.income, 4, labels=[1, 2, 3, 4])
     hh['aoh_bin'] = pd.cut(hh.age_of_head, [-1, 4, 17, 24, 34, 64, 200], labels=[1, 2, 3, 4, 5, 6])
@@ -1268,7 +1750,6 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     p['age_bin'] = p['age_bin'].fillna(0).astype(int)
 
     p = p.join(hh.seed_id, on='household_id')
-    changed_ps = p.copy()
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
 
     colls = [
@@ -1284,26 +1765,30 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
     hh_seeds = hh_seeds.reset_index()
     p_seeds = p_seeds.reset_index()
 
+    # Worker-swap seed mappings are expensive to build (~2h); cache as CSV and
+    # reuse. (Previously the existence check looked for .pkl files that were
+    # never written, and the drop-worker table overwrote the add-worker file,
+    # so the cache could never activate.)
     USE_SWAPPING_SEED_MAPPING = True
-    aw_path = 'data/add_worker_dict.pkl'
-    dw_path = 'data/drop_worker_dict.pkl'
+    aw_path = 'data/add_worker_dict.csv'
+    dw_path = 'data/drop_worker_dict.csv'
     if not os.path.exists(aw_path):
         USE_SWAPPING_SEED_MAPPING = False
-        print(aw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+        print(aw_path, ' not found. running get_worker_swap_seed_mapping')
     if not os.path.exists(dw_path):
         USE_SWAPPING_SEED_MAPPING = False
-        print(dw_path, ' not found. running get_lpr_hh_seed_id_mapping')
+        print(dw_path, ' not found. running get_worker_swap_seed_mapping')
     if USE_SWAPPING_SEED_MAPPING:
-        add_worker_df = pd.read_csv('data/add_worker_dict.csv', index_col=0)
+        add_worker_df = pd.read_csv(aw_path, index_col=0)
         add_worker_df.columns = add_worker_df.columns.astype(int)
-        drop_worker_df = pd.read_csv('data/drop_worker_dict.csv', index_col=0)
+        drop_worker_df = pd.read_csv(dw_path, index_col=0)
         drop_worker_df.columns = drop_worker_df.columns.astype(int)
     else:
-        add_worker_dict, drop_worker_dict = get_lpr_hh_seed_id_mapping(hh, p, hh_seeds, p_seeds)
+        add_worker_dict, drop_worker_dict = get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds)
         add_worker_df = pd.DataFrame(add_worker_dict)
         add_worker_df.to_csv(aw_path, index=True)
         drop_worker_df = pd.DataFrame(drop_worker_dict)
-        drop_worker_df.to_csv(aw_path, index=True)
+        drop_worker_df.to_csv(dw_path, index=True)
 
     hh_seeds = hh_seeds.set_index('seed_id')
     p_seeds = p_seeds.set_index('seed_id')
@@ -1339,17 +1824,23 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
                     break
                 to_add = min(hh_swap_pool.shape[0], num_new_employ)
                 # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(to_add, replace=False)
+                hh_to_swap = hh_swap_pool.sample(
+                    to_add, replace=False,
+                    random_state=utils.step_rng("workers_adjustment_add", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+                for _col in hh_cols_to_swap:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
                 # hh persons overwrite
                 p_idx_to_update = np.array([], dtype=int)
                 for hh_id in hh_to_swap.index:
                     hh_members = pg.get_group(hh_id)
                     p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+                for _col in p_cols_to_swap:
+                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
                 # update added_employ
                 num_new_employ = int(lpr_workers - (
                     (p.large_area_id == large_area_id)
@@ -1367,17 +1858,23 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
                     break
                 to_drop = min(hh_swap_pool.shape[0], num_drop_employ)
                 # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(to_drop, replace=False)
+                hh_to_swap = hh_swap_pool.sample(
+                    to_drop, replace=False,
+                    random_state=utils.step_rng("workers_adjustment_drop", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
                 # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh.loc[hh_to_swap.index, hh_cols_to_swap] = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap].values
+                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+                for _col in hh_cols_to_swap:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
                 # hh persons overwrite
                 p_idx_to_update = np.array([], dtype=int)
                 for hh_id in hh_to_swap.index:
                     hh_members = pg.get_group(hh_id)
                     p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p.loc[p_idx_to_update, p_cols_to_swap] = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap].values
+                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+                for _col in p_cols_to_swap:
+                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
                 # update num_drop_employ
                 num_drop_employ = int((
                     (p.large_area_id == large_area_id)
@@ -1386,64 +1883,51 @@ def fix_lpr(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_r
                     & (p.worker == 1)
                 ).sum() - lpr_workers)
 
-        after_selected = (
+        achieved = int((
             (p.large_area_id == large_area_id)
             & (p.age >= row.age_min)
             & (p.age <= row.age_max)
             & (p.worker == True)
-        )
-        print(large_area_id, row.age_min, row.age_max, num_workers, lpr_workers, after_selected.sum())
+        ).sum())
+        print(f"[workers_adjustment] LA {large_area_id} age {row.age_min}-{row.age_max}: "
+              f"workers {num_workers} -> {achieved} (target {lpr_workers})")
+        # swap pool can exhaust before the target is met — surface the shortfall
+        # rather than letting it pass silently
+        if abs(achieved - lpr_workers) > max(1, int(0.01 * lpr_workers)):
+            print(f"WARNING [workers_adjustment] LA {large_area_id} age "
+                  f"{row.age_min}-{row.age_max}: employment target not met "
+                  f"(achieved {achieved}, target {lpr_workers}, "
+                  f"shortfall {lpr_workers - achieved}) — swap pool likely exhausted")
 
     hh["old_workers"] = hh.workers
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
     changed = hh.workers != hh.old_workers
-    print(f"changed number of HHs from LPR is {len(changed)})")
+    print(f"worker counts changed for {int(changed.sum())} of {len(changed)} households")
 
-    # TODO: using hh controls to test out each segment number
+    # NOTE (2026-06): the changed_hhs/changed_ps tables that were saved here as
+    # extra transition donors were removed together with the blanket seed
+    # append in households_transition — fill_control_gaps now guarantees donor
+    # availability in the transition directly.
 
-    # save changed HHs and persons as valid samples for future transition model
-
-    if len(changed[changed == True]) > 0:
-        changed_hhs = changed_hhs[changed]
-        changed_hhs["old_hhid"] = changed_hhs.index
-        changed_hhs.index = range(1, 1 + len(changed_hhs))
-        changed_hhs.index.name = "household_id"
-        changed_hhs = changed_hhs.reset_index().set_index("old_hhid")
-
-        changed_ps = changed_ps.loc[
-            changed_ps.household_id.isin(changed_hhs[changed].index)
-        ]
-        changed_ps = changed_ps.rename(columns={"household_id": "old_hhid"})
-        changed_ps = changed_ps.merge(
-            changed_hhs[["household_id"]],
-            left_on="old_hhid",
-            right_index=True,
-            how="left",
-        )
-        changed_ps.index = range(1, 1 + len(changed_ps))
-        changed_ps = changed_ps.drop("old_hhid", axis=1)
-
-        changed_hhs = changed_hhs.set_index("household_id")
-        changed_hhs["building_id"] = -1
-
-        print(f"saved {len(changed_hhs)} households for future samples")
-    else:
-        changed_hhs = hh.iloc[0:0]
-        changed_ps = changed_ps.iloc[0:0]
-    orca.add_table("changed_hhs", changed_hhs[households.local_columns])
-    orca.add_table("changed_ps", changed_ps[persons.local_columns])
-
+    # Resample income/cars for changed households from peers with the same
+    # (persons, race, NEW worker count, children, large area), so household
+    # economics stay consistent with the adjusted worker count.
+    resample_missed = 0
+    resample_rng = utils.step_rng("workers_adjustment_resample")
     for match_colls, chh in hh[changed].groupby(colls):
         try:
             match = same[tuple(match_colls)]
-            new_workers = choice(match.index, len(chh), True)
+            new_workers = resample_rng.choice(match.index, len(chh), True)
             hh.loc[chh.index, ["income", "cars"]] = match.loc[
                 new_workers, ["income", "cars"]
             ].values
         except KeyError:
-            pass
-            # todo: something better!?
+            # no peer group with this combination — income/cars kept as-is
+            resample_missed += len(chh)
+    if resample_missed:
+        print(f"income/cars resample: no peer group for {resample_missed} "
+              "changed households (values left unchanged)")
 
     orca.add_table("households", hh[households.local_columns])
     orca.add_table("persons", p[persons.local_columns])
@@ -1539,17 +2023,50 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
     )
 
     print("%s gqpop before scaling" % gqpop.shape[0])
+
+    # Defensive: a GQ resident whose building_id no longer resolves to a city
+    # (city_id is derived via building_id -> building -> parcel, so a demolished
+    # building yields NaN) would be silently skipped by the city loop below and
+    # linger as an orphan row pointing at a nonexistent building. Drop them.
+    invalid_city = gqpop["city_id"].isna()
+    n_invalid = int(invalid_city.sum())
+    if n_invalid:
+        print(
+            "gq_pop_scaling_model: dropping %d GQ residents with unresolved city_id "
+            "(building_id missing from buildings, e.g. demolished)" % n_invalid
+        )
+        gqpop = gqpop[~invalid_city]
+
     # gqhh = group_quarters_households.to_frame(group_quarters_households.local_columns)
     target_gq = group_quarters_control_totals.to_frame()
     target_gq = target_gq[target_gq.year == year]
-    # add gq target to city table to iterate
-    city_large_area["gq_target"] = target_gq["count"]
-    city_large_area = city_large_area.fillna(0).sort_index()
 
     # if no control found, skip this year
     if target_gq.shape[0] == 0:
         print("Warning: No gq controls found for year %s, skipping..." % year)
         return
+
+    # add gq target to city table to iterate (NaN where a city has no control row)
+    city_large_area["gq_target"] = target_gq["count"]
+
+    # Defensive: any city that currently has GQ pop must have a control row,
+    # otherwise the "no control -> skip" filter below leaves it untouched. Warn
+    # loudly rather than silently zeroing it (the previous fillna(0) path would
+    # have deleted its non-protected GQ pop).
+    control_cities = set(target_gq.index)
+    gq_cities_missing_control = [
+        c for c in gqpop["city_id"].dropna().unique() if c not in control_cities
+    ]
+    if gq_cities_missing_control:
+        print(
+            "WARNING gq_pop_scaling_model: %d city(ies) have GQ pop but no %s control "
+            "row; leaving them unchanged: %s"
+            % (len(gq_cities_missing_control), year, sorted(gq_cities_missing_control))
+        )
+
+    # Only scale cities that have a control row; a NaN target means no control,
+    # so skip (do not fillna(0) and delete).
+    city_large_area = city_large_area[city_large_area["gq_target"].notna()].sort_index()
 
     for city_id, row in city_large_area.iterrows():
         local_gqpop = gqpop.loc[gqpop.city_id == city_id]
@@ -1562,6 +2079,10 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
             if len(filtered_gqpop) == 0:
                 filtered_gqpop = local_gqpop
 
+            # deterministic per-city stream: reproducible across runs and local
+            # (a change in one city does not perturb another's draws)
+            rng = utils.get_rng("gq_pop_scaling_model", year, city_id)
+
             if diff > 0:
                 # diff = int(min(len(filtered_gqpop), abs(diff)))
                 # if no existing GQ except protected, use large area sample
@@ -1569,14 +2090,14 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
                 # local_gqpop = gqpop.loc[gqpop.large_area_id == row.large_area_id]
                 # filtered_gqpop = filter_local_gq(local_gqpop)
 
-                newgq = filtered_gqpop.sample(diff, replace=True)
+                newgq = filtered_gqpop.sample(diff, replace=True, random_state=rng)
                 newgq.index = gqpop.index.values.max() + 1 + np.arange(len(newgq))
                 newgq["city_id"] = city_id
                 gqpop = pd.concat((gqpop, newgq))
 
             elif diff < 0:
                 diff = min(len(filtered_gqpop), abs(diff))
-                removegq = filtered_gqpop.sample(diff, replace=False)
+                removegq = filtered_gqpop.sample(diff, replace=False, random_state=rng)
                 gqpop.drop(removegq.index, inplace=True)
 
     print("%s gqpop after scaling" % gqpop.shape[0])
@@ -1585,7 +2106,6 @@ def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels,
         (gqpop.groupby("city_id").size().fillna(0) - city_large_area.gq_target).sum(),
     )
 
-    gqpop.to_csv("data/gqpop_" + str(year) + ".csv")
     orca.add_table("group_quarters", gqpop[group_quarters.local_columns])
 
 
@@ -1651,7 +2171,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 )
                 agents_sample.building_id = new_building_ids
 
-        agents = agents.append(agents_sample)
+        agents = pd.concat([agents, agents_sample])
         return agents, agents_pool
 
     def add_pop_agents(
@@ -1691,7 +2211,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 agents_sample.building_id = bselect.sample(
                     len(agents_sample), replace=True
                 ).index.values
-                agents = agents.append(agents_sample)
+                agents = pd.concat([agents, agents_sample])
                 number_of_agents -= agents_sample.persons.sum()
         else:
             available_agents = agents.query(agent_expression)
@@ -1712,7 +2232,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 agents_sample.building_id = bselect.sample(
                     len(agents_sample), replace=True
                 ).index.values
-                agents = agents.append(agents_sample)
+                agents = pd.concat([agents, agents_sample])
                 number_of_agents -= agents_sample.persons.sum()
         return agents, agents_pool
 
@@ -1730,7 +2250,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             selected_agents = local_agents.sample(
                 min(len(local_agents), number_of_agents)
             )
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
 
@@ -1753,7 +2273,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
                 selected_agents.persons.cumsum() <= number_of_agents
             ]
             number_of_agents -= selected_agents.persons.sum()
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
             local_agents.drop(selected_agents.index, inplace=True)
             agents.drop(selected_agents.index, inplace=True)
         return agents, agents_pool
@@ -1771,7 +2291,7 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
             selected_agents = local_agents.sample(
                 min(len(local_agents), number_of_agents)
             )
-            agents_pool = agents_pool.append(selected_agents, ignore_index=True)
+            agents_pool = pd.concat([agents_pool, selected_agents], ignore_index=True)
         return agents, agents_pool
 
     def target_agents(
@@ -2103,7 +2623,8 @@ def random_demolition_events(
             rel_b = rel_b[rel_b[accounting] <= target]
             size = min(len(rel_b), int(target))
             if size > 0:
-                rel_b = rel_b.sample(size, weights=rel_b[weights])
+                rel_b = rel_b.sample(size, weights=rel_b[weights],
+                                     random_state=utils.step_rng("mcd_hu_sampling_res", city_id))
                 rel_b = rel_b[rel_b[accounting].cumsum() <= int(target)]
                 buildings_idx.append(rel_b.copy())
 
@@ -2180,6 +2701,260 @@ def random_demolition_events(
     ]
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+
+# ── Demolition scoring helpers ────────────────────────────────────────────────
+
+_DEMO_CFG_CACHE = {}   # avoids re-reading YAML every simulation year
+
+def _load_demolition_cfg():
+    path = os.path.join(misc.configs_dir(), "demolition_model.yaml")
+    mtime = os.path.getmtime(path)
+    if _DEMO_CFG_CACHE.get("mtime") != mtime:
+        with open(path) as f:
+            _DEMO_CFG_CACHE["cfg"]   = yaml.load(f, Loader=yaml.FullLoader)
+            _DEMO_CFG_CACHE["mtime"] = mtime
+    return _DEMO_CFG_CACHE["cfg"]
+
+
+def _logistic_score(df, section, features):
+    """Return a Series of logistic probabilities for rows in df."""
+    means     = section["feature_mean"]
+    stds      = section["feature_std"]
+    coefs     = section["coef"]
+    intercept = section["intercept"]
+    score     = np.full(len(df), intercept, dtype=float)
+    for feat in features:
+        if feat not in df.columns:
+            continue
+        x = (df[feat].fillna(means.get(feat, 0.0)) - means.get(feat, 0.0)) \
+            / max(stds.get(feat, 1.0), 1e-8)
+        score += coefs.get(feat, 0.0) * x
+    prob = 1.0 / (1.0 + np.exp(-np.clip(score, -15.0, 15.0)))
+    return pd.Series(prob, index=df.index)
+
+
+_DEMO_PRESSURE_CACHE = {}   # per-city baseline + rolling history for the dynamic pressure index
+
+
+def _city_pressure_signals(b_eligible):
+    """Per-city means of three endogenous 'teardown pressure' proxies.
+
+    Older average age, higher vacancy, and a higher land-vs-improvement
+    value ratio all correlate with elevated demolition risk in the
+    calibration data -- aggregating them to city level gives a proxy for
+    how a city's redevelopment pressure is shifting, built entirely from
+    data the simulation already maintains and updates every year.
+    """
+    g = b_eligible.groupby("city_id")
+    return pd.DataFrame({
+        "age":  g["building_age"].mean(),
+        "vac":  g["res_vacancy_rate"].mean(),
+        "ltir": g["land_to_impr_ratio"].mean(),
+    })
+
+
+def _demolition_pressure_ratio(b_eligible, year, base_year, window=5):
+    """City-level multiplier reflecting how 'teardown pressure' has moved
+    relative to the base year, smoothed to damp feedback-loop oscillation.
+
+    demolition_rates is a STATIC snapshot (one row per city_id, no year
+    dimension): left alone it reproduces the same relative geography for
+    every simulated year. This ratio lets RELATIVE emphasis across cities
+    drift with conditions the simulation already tracks (aging stock,
+    vacancy, land-to-improvement value) while the calibrated baseline still
+    anchors the overall pattern (ratio == 1.0 in the base year). See
+    "Dynamic Pressure Index" in docs/models/demolition.md for the rationale,
+    the damping design, and known limitations of this proxy.
+    """
+    signals = _city_pressure_signals(b_eligible)
+
+    if "baseline" not in _DEMO_PRESSURE_CACHE:
+        _DEMO_PRESSURE_CACHE["baseline"] = signals
+        _DEMO_PRESSURE_CACHE["history"]  = {}
+
+    base = _DEMO_PRESSURE_CACHE["baseline"]
+    ratios = pd.DataFrame({
+        col: signals[col] / base[col].clip(lower=1e-6)
+        for col in signals.columns
+    }).reindex(base.index)
+    composite = ratios.mean(axis=1).fillna(1.0)
+
+    # Rolling average over `window` years damps year-to-year sampling noise
+    # and the demolition -> vacancy -> demolition feedback loop; the clip
+    # keeps a single anomalous year from whipsawing the control totals.
+    hist = _DEMO_PRESSURE_CACHE["history"]
+    hist[year] = composite
+    recent = [hist[y] for y in sorted(hist) if y > year - window]
+    smoothed = pd.concat(recent, axis=1).mean(axis=1)
+    return smoothed.clip(lower=0.5, upper=2.0)
+
+
+@orca.step()
+def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year, final_year):
+    """
+    Scored replacement for random_demolition_events.
+
+    Buildings are ranked by a logistic regression score (age, improvement value
+    per sqft, land-to-improvement ratio, tax-exempt status, Wayne County flag)
+    and sampled to hit city-level control totals from demolition_rates.
+
+    When configs/demolition_model.yaml has is_calibrated=false the function
+    falls back to the original inverse-log-occupancy weights so the simulation
+    runs unchanged until calibration_demolition.py has been executed.
+    """
+    cfg              = _load_demolition_cfg()
+    res_calibrated    = cfg.get("residential", {}).get("is_calibrated", False)
+    nonres_calibrated = cfg.get("nonresidential", {}).get("is_calibrated", False)
+    rate_mult         = cfg.get("scenario_rate_multiplier", 1.0)
+    min_age           = cfg.get("min_age_eligible", 10)
+    max_res_occ       = cfg.get("max_res_occupancy_eligible")
+    max_nonres_occ    = cfg.get("max_nonres_occupancy_eligible")
+    any_calibrated    = res_calibrated or nonres_calibrated
+
+    buildings_columns = buildings.local_columns
+    b = buildings.to_frame(
+        buildings_columns + [
+            "city_id", "b_total_jobs", "b_total_households", "job_spaces",
+            "building_age", "vacant_residential_units", "res_vacancy_rate",
+            "impr_value_per_sqft", "land_to_impr_ratio",
+        ]
+    )
+
+    # Wayne County flag needed by logistic model (large_area_id is on parcels)
+    pcl = parcels.to_frame(["large_area_id"])
+    b["is_wayne"]  = b.parcel_id.map(pcl.large_area_id).eq(5).astype(float)
+
+    # ── Eligibility ──────────────────────────────────────────────────────────
+    not_eligible = pd.Series(False, index=b.index)
+    if any_calibrated:
+        not_eligible |= (b.building_age < min_age) | (b.sp_filter < 0) | (b.event_id > 0)
+        if max_res_occ is not None:
+            res_occ = 1.0 - b["res_vacancy_rate"]
+            not_eligible |= (b.residential_units > 0) & (res_occ > max_res_occ)
+        if max_nonres_occ is not None:
+            nonres_occ = b["b_total_jobs"] / b["job_spaces"].clip(lower=1)
+            not_eligible |= (b.non_residential_sqft > 0) & (nonres_occ > max_nonres_occ)
+    eligible = ~not_eligible
+
+    # ── Control totals: taper × scenario multiplier × dynamic pressure ──────
+    # Taper matches random_demolition_events: demolition volume scales from
+    # ~100% at base_year down to 10% at final_year; scenario_rate_multiplier
+    # layers on top (defaults to 1.0, so fallback mode reproduces the legacy
+    # trajectory exactly). Uses orca's base_year/final_year injectables rather
+    # than hardcoded 2020/2050 so this still works on the forecast_2055 horizon.
+    taper = 0.1 + (1.0 - 0.1) * (final_year - year) / (final_year - base_year)
+
+    # demolition_rates is a STATIC city-level snapshot with no year dimension --
+    # on its own it reproduces the SAME relative geography for every simulated
+    # year. _demolition_pressure_ratio lets that geography drift with
+    # conditions the simulation already tracks each year (aging stock,
+    # vacancy, land-to-improvement value), anchored to the calibrated
+    # baseline so it only shifts RELATIVE emphasis across cities, not the
+    # overall volume (the taper still governs that). See "Dynamic Pressure
+    # Index" in docs/models/demolition.md for the full rationale.
+    demolition_rates = demolition_rates.to_frame()
+    if any_calibrated:
+        pressure = _demolition_pressure_ratio(b[eligible], year, base_year)
+        adjusted_rates = demolition_rates.mul(pressure, axis=0).fillna(demolition_rates)
+        base_totals = demolition_rates.sum(axis=0)
+        adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
+        demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
+    demolition_rates = demolition_rates * taper * rate_mult
+
+    # ── Demolition scores ────────────────────────────────────────────────────
+    if res_calibrated:
+        res_score    = _logistic_score(b, cfg["residential"],    ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+    else:
+        # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
+        res_score    = 1.0 / (1.0 + np.log1p(b["b_total_households"]))
+
+    if nonres_calibrated:
+        nonres_score = _logistic_score(b, cfg["nonresidential"], ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+    else:
+        # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
+        nonres_score = 1.0 / (1.0 + np.log1p(b["b_total_jobs"]))
+
+    b["res_score"]    = res_score.where(eligible, 0.0)
+    b["nonres_score"] = nonres_score.where(eligible, 0.0)
+
+    # ── Sampling ─────────────────────────────────────────────────────────────
+    allowed   = variables.parcel_is_allowed_2050()
+    allowed_b = b.parcel_id.isin(allowed[allowed].index)
+
+    buildings_idx = []
+
+    def sample(targets, type_b, accounting, score_col):
+        for city_id, target in targets[targets > 0].items():
+            rel_b = type_b[type_b.city_id == city_id]
+            rel_b = rel_b[rel_b[accounting] <= target]
+            if len(rel_b) == 0:
+                continue
+            w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
+            size = min(len(rel_b), int(target))
+            if size > 0:
+                # Use numpy Generator.choice for weighted sampling without
+                # replacement; pandas 3 imposes size*max_weight<=1 which
+                # fails when one building has a dominant score.
+                rng = utils.step_rng("mcd_hu_sampling_nonres", city_id)
+                w_arr = w.to_numpy(dtype=float, copy=True)
+                w_arr /= w_arr.sum()
+                chosen = rng.choice(len(rel_b), size=size, replace=False, p=w_arr)
+                sampled = rel_b.iloc[chosen]
+                sampled = sampled[sampled[accounting].cumsum() <= int(target)]
+                buildings_idx.append(sampled)
+
+    nonres_eligible = b.loc[allowed_b & eligible]
+    sample(
+        demolition_rates.typenonsqft,
+        nonres_eligible[nonres_eligible.non_residential_sqft > 0],
+        "non_residential_sqft",
+        "nonres_score",
+    )
+    res_eligible = b.loc[allowed_b & eligible & (b.non_residential_sqft == 0)]
+    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score")
+    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score")
+    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score")
+
+    if not buildings_idx:
+        return
+
+    drop_buildings = pd.concat(buildings_idx).copy()
+    drop_buildings = drop_buildings[~drop_buildings.index.duplicated(keep="first")]
+    buildings_idx  = drop_buildings.index
+    drop_buildings["year_demo"]           = year
+    drop_buildings["demolition_pathway"]  = "scored" if any_calibrated else "legacy"
+    drop_buildings["step"]                = "scored_demolition_events"
+
+    if orca.is_table("dropped_buildings"):
+        prev_drops = orca.get_table("dropped_buildings").to_frame()
+        orca.add_table("dropped_buildings", pd.concat([drop_buildings, prev_drops]))
+    else:
+        orca.add_table("dropped_buildings", drop_buildings)
+
+    new_buildings_table = b[buildings_columns].drop(buildings_idx)
+    orca.add_table("buildings", new_buildings_table)
+
+    households = households.to_frame(households.local_columns)
+    households.loc[households.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("households", households)
+
+    jobs = jobs.to_frame(jobs.local_columns)
+    jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
+    orca.add_table("jobs", jobs)
+
+    parcels_idx_to_update = [
+        pid
+        for pid in set(drop_buildings.parcel_id)
+        if pid not in remaining_pids
+    ]
+    pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
+    parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+    print(
+        f"scored_demolition_events {year}: dropped {len(buildings_idx):,} buildings "
+        f"({'calibrated' if any_calibrated else 'legacy weights'})"
+    )
 
 
 def parcel_average_price(use):
@@ -3089,7 +3864,7 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
         target_vacancy = float(
             target_vacancies[
                 target_vacancies.large_area_id == lid
-            ].non_res_target_vacancy_rate
+            ].non_res_target_vacancy_rate.iloc[0]
         )
 
         # loop through non-residential building forms (1:1 with building_type_id)
@@ -3233,7 +4008,7 @@ def build_networks_2050(parcels):
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
     if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
-        st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_2050_networks.h5"), "r")
+        st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
         pdna.network.reserve_num_graphs(2)
 
         for n in lstnet:
@@ -3323,7 +4098,7 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     pseudo_buildings = pseudo_building_2020.to_frame()
 
     ## jobs
-    idx_invalid_building_id = np.in1d(j.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(j.building_id, b.index.values) == False
     if idx_invalid_building_id.sum() > 0:
         print(
             (
@@ -3339,7 +4114,7 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
         orca.add_table("jobs", j)
 
     ## households
-    idx_invalid_building_id = np.in1d(h.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(h.building_id, b.index.values) == False
     # ignore hh in pseudo_buildings
     idx_invalid_building_id = idx_invalid_building_id & ~(
         h.building_id.isin(pseudo_buildings.index)
@@ -3420,7 +4195,7 @@ def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
     pb = pseudo_building_2020.local
     bb = buildings.local
     bb.loc[pb.index, "residential_units"] = 0
-    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b
+    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b.astype(bb["residential_units"].dtype)
 
     print("Dropped %s hh from current pseudo buildings." % k)
 

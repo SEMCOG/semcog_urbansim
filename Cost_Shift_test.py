@@ -19,7 +19,7 @@ orca.run(["refiner",
 orca.run([
     "neighborhood_vars",
     "households_transition",
-    "fix_lpr",
+    "workers_adjustment_model",
     "households_relocation",
     "jobs_transition",
     "jobs_relocation",

@@ -7,6 +7,11 @@ import numpy as np
 import orca
 import verify_data_structure
 import utils
+import input_paths
+
+# pandas 3 infers string columns as StringDtype by default, which PyTables
+# cannot serialize to HDF5. Revert to object-backed strings for compatibility.
+pd.options.future.infer_string = False
 
 
 @orca.injectable("year")
@@ -151,14 +156,20 @@ def nonres_forms(btype_form_map):
     return [f for col, v in btype_form_map.items() if col != "residential" for f in v["forms"]]
 
 
-seed = 271828
-# seed = 79
-
-# seed = 79
-print("using seed", seed)
+# Run-level random seed (single source of truth). A run script may set the
+# `random_seed` injectable before importing models (test_forecast_2050.py does);
+# default 271828 preserves prior behavior, None draws a fresh seed here. The
+# global NumPy RNG is seeded for any steps still drawing from it; steps using
+# utils.get_rng(...) get independent per-(step, year, segment) streams derived
+# from the same seed. See the model wiki "Reproducibility & Random Seeds".
+seed = orca.get_injectable("random_seed") if orca.is_injectable("random_seed") else 271828
+if seed is None:
+    seed = int(np.random.SeedSequence().entropy & 0xFFFFFFFF)
+orca.add_injectable("random_seed", seed)  # store the resolved concrete value
+print("using random_seed", seed)
 random.seed(seed)
 np.random.seed(seed)
-utils.run_log(f"Seed: {seed}")
+utils.run_log(f"random_seed: {seed}")
 
 working_store = 'data/checkpoint_store.h5'
 
@@ -172,7 +183,7 @@ def load_latest_input_hdf():
         if ("forecast_data_input" in f) & (f[-3:] == ".h5")
     ]
     hdf_last = max(hdf_list, key=os.path.getctime)
-    hdf_last = "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5"
+    hdf_last = input_paths.BASE_HDF
     utils.run_log(f"Data: {hdf_last}")
 
     return hdf_last
@@ -332,12 +343,12 @@ orca.add_injectable("CUMULATIVE_VARS", CUMULATIVE_VARS)
 
 # Travel survey data folder — update path before use
 # Expected files: hh.csv, person.csv, trip.csv, linked_trip.csv, vehicle.csv, day.csv, tour.csv
-orca.add_injectable("travel_survey_path", "/mnt/D/RDF2055/input_data/travel_survey/Full_Interim_Dataset_2026-03-04")
+orca.add_injectable("travel_survey_path", input_paths.TRAVEL_SURVEY_DIR)
 
 def verify():
     # load latest input hdf
     # hdf_last = load_latest_input_hdf()
-    hdf_last = "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5"
+    hdf_last = input_paths.BASE_HDF
     orca.add_injectable("input_hdf_path", hdf_last)
     hdf_store = pd.HDFStore(hdf_last, "r")
     # hdf = pd.HDFStore(data_path + "/" +"forecast_data_input_091422.h5", "r")
@@ -353,16 +364,27 @@ def verify():
         saved_run = load_last_checkpoint(saved_runnum)
         hdf_store = update_store_from_checkpoint(hdf_store, saved_run)
 
-    # verifying data structure and save data structure config
-    new = verify_data_structure.yaml_from_store(hdf_store)
-    with open("configs/data_structure.yaml", "w") as out:
-        out.write(new)
+    # Save an input-HDF schema snapshot with the run metadata.
+    if not orca.is_injectable("data_out_dir"):
+        raise RuntimeError(
+            "data_out_dir must be configured before loading the input HDF; "
+            "input_hdf_schema_snapshot.yaml is written only to the run output folder."
+        )
+    data_out_dir = orca.get_injectable("data_out_dir")
+    os.makedirs(data_out_dir, exist_ok=True)
+    schema_snapshot = verify_data_structure.yaml_from_store(hdf_store)
+    schema_snapshot_path = os.path.join(
+        data_out_dir,
+        "input_hdf_schema_snapshot.yaml",
+    )
+    with open(schema_snapshot_path, "w") as out:
+        out.write(schema_snapshot)
 
     return hdf_store
 
 
 # 2045 input hdf
-orca.add_injectable('hdf_input_2045', '/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5')
-orca.add_injectable('forecast_input_2040', '/mnt/hgfs/urbansim/RDF2050/model_improvements/2024_spring/2010_data')
+orca.add_injectable('hdf_input_2045', input_paths.HDF_INPUT_2045)
+orca.add_injectable('forecast_input_2040', input_paths.FORECAST_INPUT_2040)
 
 orca.add_injectable("store", verify())

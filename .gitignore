@@ -1,3 +1,4 @@
+.env
 .idea/
 .ipynb_checkpoints/
 
@@ -69,6 +70,11 @@ models
 RUNNUM
 runs/
 
+# Generated input-HDF schema snapshot (written to the run output folder;
+# configs/data_structure.yaml is the stale pre-rename copy)
+configs/data_structure.yaml
+input_hdf_schema_snapshot.yaml
+
 coeffs
 debug
 output
@@ -79,3 +85,7 @@ db_cred.txt
 
 # claude
 .claude
+# Draft wiki (local only)
+data_wiki_draft/
+data_wiki_draft_site/
+data_wiki_draft_mkdocs.yml

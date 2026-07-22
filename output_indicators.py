@@ -7,12 +7,15 @@ import requests
 import json
 import orca
 import shutil
+import input_paths
 from collections import defaultdict
 from urbansim.utils import misc
 from time import sleep
-from cartoframes import to_carto
-from cartoframes import update_privacy_table
-from cartoframes.auth import set_default_credentials
+# cartoframes is imported lazily inside upload_whatnots_to_carto (only when
+# upload_to_carto=True). It pins old pandas (<2) and is incompatible with the
+# pandas-3 / numpy-2 forecast environment, so importing it at module load broke
+# every run that merely computes indicators. Keeping the import local lets a
+# normal run (upload_to_carto=False) finish without cartoframes installed.
 from indicators.model_outputs import *
 
 warnings.filterwarnings("ignore")
@@ -89,6 +92,12 @@ def upload_whatnots_to_postgres(run_name, whatnots):
 
 def upload_whatnots_to_carto(run_name, whatnots):
     ### code snippet below is from /home/da/share/da/Staff/Finkleman/carto_whatnot_import_snippet.py
+    # Lazy import: cartoframes is only needed for the actual Carto upload and is
+    # incompatible with the pandas-3 forecast env, so it must not be imported at
+    # module load. Install it in a separate env/machine that does the upload.
+    from cartoframes import to_carto, update_privacy_table
+    from cartoframes.auth import set_default_credentials
+
     cred_path = "carto_cred.json"
     with open(cred_path, "r") as f:
         cred = json.load(f)
@@ -378,12 +387,12 @@ def main(
             df = df.fillna(0)
             df = df.sort_index().sort_index(axis=1)
 
-            df.to_excel(writer, y)
+            df.to_excel(writer, sheet_name=y)
             if (spacing == 1) & (y in y5):  # 5-year indicator files
-                df.to_excel(writer5, y)
-        writer.save()
+                df.to_excel(writer5, sheet_name=y)
+        writer.close()
         if spacing == 1:
-            writer5.save()
+            writer5.close()
 
         # year for indicator
         print("\n* Making years by indicator")
@@ -410,14 +419,14 @@ def main(
                 print("saving:", ind)
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(axis=1)
-                df.to_excel(writer, ind)
+                df.to_excel(writer, sheet_name=ind)
                 if spacing == 1:
-                    df[y5].to_excel(writer5, ind)
+                    df[y5].to_excel(writer5, sheet_name=ind)
             else:
                 print("something is wrong with:", ind)
-        writer.save()
+        writer.close()
         if spacing == 1:
-            writer5.save()
+            writer5.close()
 
     end = time.time()
     print("runtime geom:", end - start)
@@ -467,28 +476,32 @@ def main(
         df = df[df.year_built == year]
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
-        df.to_excel(writer, "const_" + year_name)
+        df.to_excel(writer, sheet_name="const_" + year_name)
 
         demos = orca.get_table("dropped_buildings")
         df = demos.to_frame(demos.local_columns + ["city_id", "large_area_id"])
         df = df[df.year_demo == year]
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
-        df.to_excel(writer, "demo_" + year_name)
+        df.to_excel(writer, sheet_name="demo_" + year_name)
 
-    writer.save()
+    writer.close()
     end = time.time()
     print("runtime:", end - start)
 
-    # copy all files in out_dir to /home/da/share/urbansim/RDF2050/model_runs/run1330
-    if os.path.exists("/mnt/hgfs/urbansim/RDF2050/model_runs"):
+    # copy all files in out_dir to the model-runs archive (input_paths.MODEL_RUNS_DIR)
+    if os.path.exists(input_paths.MODEL_RUNS_DIR):
         run_dir_name = os.path.basename(out_dir.rstrip("/"))
-        dest_dir = os.path.join("/mnt/hgfs/urbansim/RDF2050/model_runs", run_dir_name)
+        dest_dir = os.path.join(input_paths.MODEL_RUNS_DIR, run_dir_name)
 
         os.makedirs(dest_dir, exist_ok=True)
 
         for f in os.listdir(out_dir):
-            shutil.copy(os.path.join(out_dir, f), dest_dir)
+            src = os.path.join(out_dir, f)
+            if os.path.isdir(src):
+                shutil.copytree(src, os.path.join(dest_dir, f), dirs_exist_ok=True)
+            else:
+                shutil.copy(src, dest_dir)
 
         print(f"Copied all files in {out_dir} to {dest_dir}")
 
