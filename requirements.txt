@@ -1,12 +1,42 @@
-numpy==1.23.0
-pandas==1.5.3
-torch>=2.6.0
-scikit-learn>=1.3.0
-matplotlib>=3.9.4
-cartoframes==1.2.4
-bokeh==1.4.0
+# Forecast environment — updated 2026-06-23 to the numpy 2.x / pandas 3.x stack.
+# The UrbanSim stack (orca, urbansim, pandana) imports and HDF IO were verified
+# under these versions; this is import-level validation, not a full run. Run a
+# 1-year forecast (final_year = base_year + 1) after any bump to confirm behavior,
+# since pandas 3 (copy-on-write) and numpy 2 can change runtime behavior silently.
+
+# --- Core scientific stack (pinned to the verified versions) ---
+numpy==2.4.3
+pandas==3.0.1
+scipy==1.17.1
+scikit-learn==1.8.0
+joblib==1.5.3
 orca==1.8
-datashader==0.13.0
-jupyter>=1.0.0
-plotly>=5.11.0
-tqdm==4.66.1
+
+# --- GPU / ML ---
+torch>=2.6.0          # 2.11.0 installed; install the CUDA build for the 4090
+xgboost>=3.0          # 3.2.0 installed; HLCM tract calibrator uses device="cuda"
+                      # (falls back to CPU with a warning when no GPU is present)
+
+# --- Accessibility networks ---
+pandana>=0.7
+
+# --- Plotting / progress ---
+matplotlib>=3.9.4     # 3.10.8 installed
+plotly>=5.11.0        # 6.6.0 installed
+tqdm>=4.66.1          # 4.67.3 installed
+
+# --- Database (indicator upload to PostgreSQL) ---
+psycopg2-binary>=2.9  # 2.9.11 installed
+
+# --- Required but sourced outside PyPI (Docker image / internal repos) ---
+# urbansim, urbansim_templates, urbansim_parcels, developer  (UrbanSim ecosystem)
+# forecast_estimation  (provides LCM_NN), dcm_ard_libs        (SEMCOG internal)
+
+# --- Optional extras: not in the core env. Needed only for CartoDB upload,
+# --- legacy dashboards, and notebooks. Old pins (cartoframes 1.2.4, bokeh 1.4.0,
+# --- datashader 0.13.0) conflict with numpy 2 / pandas 3 — install latest as
+# --- needed and verify separately.
+# cartoframes          # upload_to_carto=True path in output_indicators.py
+# bokeh                # whatnots dashboards
+# datashader           # large-scatter rendering
+# jupyter              # notebooks/

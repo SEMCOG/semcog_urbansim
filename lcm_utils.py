@@ -2,6 +2,7 @@
 
 import os
 import copy
+import time
 import yaml
 import itertools
 import numpy as np
@@ -213,9 +214,13 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         taz_emp_ratio_var = f'taz_empratio_{job_sector}'
         space_col = 'job_spaces'
 
+        _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(
             variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id', 'stories', bld_age_var, taz_emp_ratio_var]
         )))
+        print(f"[alts-timing] ELCM la{la_id} sec{job_sector} "
+              f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
+              f"rows={len(alts_df)} cols={alts_df.shape[1]}", flush=True)
 
         # Set bld_age_var to 0 for 10+ story offices
         mask_office_10plus = (alts_df['building_type_id'] == 23) & (alts_df['stories'] >= 10)
@@ -245,26 +250,46 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         final_alts_df['job_btype_ratio'] = final_alts_df['building_type_id'].map(job_btype_matrix).fillna(0.0)
 
         if not home_based:
-            predict_X_df = final_alts_df.loc[
-                np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
-                variable_cols
-            ]
+            # OPTIMIZATION: capacity-weighted sampling WITHOUT materializing the
+            # full capacity-expanded feature matrix. np.repeat on the index alone
+            # is cheap (just an array of building_ids); we sample M slots from it
+            # and only then build the M feature rows via .loc. Sampling positions
+            # from a length-N Series with random_state=0 picks the same positions
+            # as sampling the length-N expanded frame did (sample selects by
+            # position, not data), so the chosen M rows match the old
+            # full-expansion path — without the ~500 MB build. replace=False
+            # keeps each building capped at its capacity (it has that many slots).
+            repeated_idx = pd.Series(
+                np.repeat(final_alts_df.index.to_numpy(),
+                          final_alts_df[alt_capacity].to_numpy().astype(np.int64))
+            )
+            _n_full = len(repeated_idx)
+            M = min(_n_full, n * 20)
+            sampled_idx = repeated_idx.sample(M, replace=False, random_state=0).to_numpy()
+            predict_X_df = final_alts_df.loc[sampled_idx, variable_cols]
         else:
             predict_X_df = final_alts_df.loc[final_alts_df.index, variable_cols]
+            _n_full = len(predict_X_df)
+            M = min(_n_full, n * 20)
+            predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
-        scaler = RobustScaler()
+        # clean + scale only the M sampled rows (was previously done on the full
+        # expanded matrix before sampling)
         predict_X_df = predict_X_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
+
+        _t_sc = time.perf_counter()
+        scaler = RobustScaler()
         predict_X_df = pd.DataFrame(
             scaler.fit_transform(predict_X_df),
             columns=predict_X_df.columns,
             index=predict_X_df.index
         )
         predict_X_df = np.clip(predict_X_df, -5, 5)
-
-        M = min(len(predict_X_df), n * 20)
-        predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
-
+        _t_fw = time.perf_counter()
         pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        print(f"[lcm-timing] ELCM la{la_id} sec{job_sector} full={_n_full} M={M} "
+              f"scale={(_t_fw - _t_sc) * 1000:.0f}ms fwd={(time.perf_counter() - _t_fw) * 1000:.0f}ms",
+              flush=True)
 
         # === CALIBRATION ===
         calibration = elcm_calibration_config
@@ -394,7 +419,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
+        _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, tract_segment_type_var])))
+        print(f"[alts-timing] HLCM la{la_id} "
+              f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
+              f"rows={len(alts_df)} cols={alts_df.shape[1]}", flush=True)
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
