@@ -22,7 +22,7 @@ import utils
 
 # Local fallback copy of the inputs (override per machine).
 _LOCAL = os.environ.get(
-    "SEMCOG_INPUT_DIR", "/home/da/RDF2055/d_drive/forecast_inputs/base_year"
+    "SEMCOG_INPUT_DIR", "/mnt/D/RDF2055/forecast_inputs/base_year"
 )
 
 
@@ -123,7 +123,7 @@ SCENARIO_EMP_CONTROL_CSV = _p(
 # Historical / back-cast (optional analysis, not the forward run)
 # ---------------------------------------------------------------------------
 HDF_INPUT_2045 = _p(
-    "/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast.h5",
+    "/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast-pd3.h5",
     f"{_LOCAL}/all_semcog_data_02-02-18-final-forecast.h5",
 )
 FORECAST_INPUT_2040 = _p(
