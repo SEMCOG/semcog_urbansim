@@ -11,9 +11,11 @@ import input_paths
 from collections import defaultdict
 from urbansim.utils import misc
 from time import sleep
-from cartoframes import to_carto
-from cartoframes import update_privacy_table
-from cartoframes.auth import set_default_credentials
+# cartoframes is imported lazily inside upload_whatnots_to_carto (only when
+# upload_to_carto=True). It pins old pandas (<2) and is incompatible with the
+# pandas-3 / numpy-2 forecast environment, so importing it at module load broke
+# every run that merely computes indicators. Keeping the import local lets a
+# normal run (upload_to_carto=False) finish without cartoframes installed.
 from indicators.model_outputs import *
 
 warnings.filterwarnings("ignore")
@@ -90,6 +92,12 @@ def upload_whatnots_to_postgres(run_name, whatnots):
 
 def upload_whatnots_to_carto(run_name, whatnots):
     ### code snippet below is from /home/da/share/da/Staff/Finkleman/carto_whatnot_import_snippet.py
+    # Lazy import: cartoframes is only needed for the actual Carto upload and is
+    # incompatible with the pandas-3 forecast env, so it must not be imported at
+    # module load. Install it in a separate env/machine that does the upload.
+    from cartoframes import to_carto, update_privacy_table
+    from cartoframes.auth import set_default_credentials
+
     cred_path = "carto_cred.json"
     with open(cred_path, "r") as f:
         cred = json.load(f)
