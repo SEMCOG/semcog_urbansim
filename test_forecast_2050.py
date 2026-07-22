@@ -16,7 +16,7 @@ RUN_OUTPUT_INDICATORS = True
 base_year = 2020
 final_year = 2050
 indicator_spacing = 5
-upload_to_carto = True
+upload_to_carto = False
 run_debug = False
 # add_2019 = True # archived
 
@@ -83,7 +83,6 @@ utils.write_run_metadata(
         "indicator_spacing": indicator_spacing,
         "upload_to_carto": upload_to_carto,
         "run_debug": run_debug,
-        "add_2019": add_2019,
     },
 )
 

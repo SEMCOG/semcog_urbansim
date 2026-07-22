@@ -379,12 +379,12 @@ def main(
             df = df.fillna(0)
             df = df.sort_index().sort_index(axis=1)
 
-            df.to_excel(writer, y)
+            df.to_excel(writer, sheet_name=y)
             if (spacing == 1) & (y in y5):  # 5-year indicator files
-                df.to_excel(writer5, y)
-        writer.save()
+                df.to_excel(writer5, sheet_name=y)
+        writer.close()
         if spacing == 1:
-            writer5.save()
+            writer5.close()
 
         # year for indicator
         print("\n* Making years by indicator")
@@ -411,14 +411,14 @@ def main(
                 print("saving:", ind)
                 df = df.fillna(0)
                 df = df.sort_index().sort_index(axis=1)
-                df.to_excel(writer, ind)
+                df.to_excel(writer, sheet_name=ind)
                 if spacing == 1:
-                    df[y5].to_excel(writer5, ind)
+                    df[y5].to_excel(writer5, sheet_name=ind)
             else:
                 print("something is wrong with:", ind)
-        writer.save()
+        writer.close()
         if spacing == 1:
-            writer5.save()
+            writer5.close()
 
     end = time.time()
     print("runtime geom:", end - start)
@@ -468,16 +468,16 @@ def main(
         df = df[df.year_built == year]
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
-        df.to_excel(writer, "const_" + year_name)
+        df.to_excel(writer, sheet_name="const_" + year_name)
 
         demos = orca.get_table("dropped_buildings")
         df = demos.to_frame(demos.local_columns + ["city_id", "large_area_id"])
         df = df[df.year_demo == year]
         df = df.fillna(0)
         df = df.sort_index().sort_index(axis=1)
-        df.to_excel(writer, "demo_" + year_name)
+        df.to_excel(writer, sheet_name="demo_" + year_name)
 
-    writer.save()
+    writer.close()
     end = time.time()
     print("runtime:", end - start)
 
@@ -489,7 +489,11 @@ def main(
         os.makedirs(dest_dir, exist_ok=True)
 
         for f in os.listdir(out_dir):
-            shutil.copy(os.path.join(out_dir, f), dest_dir)
+            src = os.path.join(out_dir, f)
+            if os.path.isdir(src):
+                shutil.copytree(src, os.path.join(dest_dir, f), dirs_exist_ok=True)
+            else:
+                shutil.copy(src, dest_dir)
 
         print(f"Copied all files in {out_dir} to {dest_dir}")
 
