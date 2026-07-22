@@ -5,12 +5,24 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python Debugger current file all code",
+			"name": "(env=forecast)Python Debugger current file",
 			"type": "debugpy",
 			"request": "launch",
 			"program": "${file}",
 			"console": "integratedTerminal",
-			"justMyCode": false
+			"justMyCode": false,
+			"cwd": "${workspaceFolder}",
+			"python": "/opt/conda/envs/forecast/bin/python"
+		},
+		{
+			"name": "(env=forecast_py312)Python Debugger current file",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"justMyCode": false,
+			"cwd": "${workspaceFolder}",
+			"python": "/root/micromamba/envs/forecast_py312/bin/python"
 		},
 		{
 			"name": "test_developer.py",

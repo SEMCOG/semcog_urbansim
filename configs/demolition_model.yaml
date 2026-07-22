@@ -1,0 +1,46 @@
+residential:
+  is_calibrated: true
+  feature_mean:
+    building_age: 106.63823316403716
+    impr_value_per_sqft: 112.85891332957083
+    land_to_impr_ratio: 0.6137053773655932
+    is_exempt: 0.017620763751192387
+    is_wayne: 0.1509648952193692
+  feature_std:
+    building_age: 293.8052158725349
+    impr_value_per_sqft: 67.91998034083363
+    land_to_impr_ratio: 3.9077728230313116
+    is_exempt: 0.13156850852699162
+    is_wayne: 0.35801465840210245
+  intercept: -1.6511248864245385
+  coef:
+    building_age: 0.19107272142500054
+    impr_value_per_sqft: 0.5448539831234804
+    land_to_impr_ratio: 0.6368053687110089
+    is_exempt: 0.5340487832550243
+    is_wayne: 0.670283724821831
+nonresidential:
+  is_calibrated: true
+  feature_mean:
+    building_age: 406.80131386267493
+    impr_value_per_sqft: 89.74373800778459
+    land_to_impr_ratio: 1.185887896649422
+    is_exempt: 0.16014480963228117
+    is_wayne: 0.1894372356003905
+  feature_std:
+    building_age: 752.3464473318584
+    impr_value_per_sqft: 116.64798571679286
+    land_to_impr_ratio: 5.524037395713871
+    is_exempt: 0.36674030263951296
+    is_wayne: 0.39185554655825994
+  intercept: -0.698059211923653
+  coef:
+    building_age: 0.20442908508591023
+    impr_value_per_sqft: 0.48853233699506393
+    land_to_impr_ratio: 0.6347194525031941
+    is_exempt: 0.06129368864276321
+    is_wayne: 0.33434764371472697
+min_age_eligible: 10
+max_res_occupancy_eligible: 0.85
+max_nonres_occupancy_eligible: 0.85
+scenario_rate_multiplier: 1.0

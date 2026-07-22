@@ -7,13 +7,16 @@ from urbansim.utils import misc
 from os import path
 
 import assumptions
+import utils
+import input_paths
 
 warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 
 table_dir = "data"
 
 for name in [
-    "remi_pop_total",
+    "remi_hh_pop",     # household population target (total - GQ); preferred
+    "remi_pop_total",  # legacy TOTAL population — fallback only (see households_transition)
     "persons",
     "parcels",
     "pseudo_building_2020",
@@ -36,7 +39,6 @@ for name in [
     "transit_stops",
     "crime_rates",
     "schools",
-    "jobs_2019",
     # "poi",
     "group_quarters",
     "group_quarters_households",
@@ -76,7 +78,7 @@ def debug_res_developer():
 
 @orca.table("bg_hh_increase")
 def bg_hh_increase():
-    bg_hh_inc = pd.read_csv(path.join(table_dir, "ACS_HH_14_19_BG.csv"))
+    bg_hh_inc = pd.read_csv(input_paths.ACS_BG_HH_CSV)
     bg_hh_inc["GEOID"] = bg_hh_inc["GEOID"].astype(int)
     # initialized iteration variable
     bg_hh_inc["occupied"] = bg_hh_inc["OccupiedHU19"]
@@ -185,21 +187,23 @@ def households(store, buildings):
         return df
     b = buildings.to_frame(["large_area_id", "residential_units"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
-    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
-        b.index.values, (df.building_id == -1).sum()
-    )
+    _bid_dtype = df["building_id"].dtype
+    n_unplaced = (df.building_id == -1).sum()
+    if n_unplaced:
+        df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+            b.index.values, n_unplaced
+        ).astype(_bid_dtype)
 
     bid_to_la = {
         1: 3, 2: 125, 3:99, 4: 161, 5: 115, 6: 147, 7: 93, 8: 5
     }
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
     hh_to_assign = df.loc[idx_invalid_building_id, "building_id"]
     for bid, laid in bid_to_la.items():
         local_hh = hh_to_assign[hh_to_assign//1000000 == bid]
-        # sample la hu
         df.loc[local_hh.index, 'building_id'] = np.random.choice(
             b[(b.large_area_id==laid)&(b.residential_units>0)].index.values, local_hh.size
-        )
+        ).astype(_bid_dtype)
 
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id,)
 
@@ -236,13 +240,18 @@ def jobs(store, buildings):
         return df
     b = buildings.to_frame(["large_area_id"])
     b = b[b.large_area_id.isin({161.0, 3.0, 5.0, 125.0, 99.0, 115.0, 147.0, 93.0})]
-    df.loc[df.building_id == -1, "building_id"] = np.random.choice(
-        b.index.values, (df.building_id == -1).sum()
-    )
-    idx_invalid_building_id = np.in1d(df.building_id, b.index.values) == False
-    df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
-        b.index.values, idx_invalid_building_id.sum()
-    )
+    _bid_dtype = df["building_id"].dtype
+    n_unplaced = (df.building_id == -1).sum()
+    if n_unplaced:
+        df.loc[df.building_id == -1, "building_id"] = np.random.choice(
+            b.index.values, n_unplaced
+        ).astype(_bid_dtype)
+    idx_invalid_building_id = np.isin(df.building_id, b.index.values) == False
+    n_invalid = idx_invalid_building_id.sum()
+    if n_invalid:
+        df.loc[idx_invalid_building_id, "building_id"] = np.random.choice(
+            b.index.values, n_invalid
+        ).astype(_bid_dtype)
     df["large_area_id"] = misc.reindex(b.large_area_id, df.building_id)
     return df.fillna(0)
 
@@ -292,28 +301,25 @@ def base_job_space(buildings):
 def building_to_zone_baseyear():
     # baseyear building_id to zone_id mapping
     # fix the issue where one parcel could have multiple TAZ zone
-    return pd.read_csv('data/building_to_zone_baseyear_2020_shrink.csv').set_index('building_id')
+    return pd.read_csv(input_paths.BUILDING_TO_ZONE_CSV).set_index('building_id')
 
 ### TODO: have data moved inside HDF input before 2055 forecast
 @orca.table(cache=True)
 def poi():
     # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/pois.csv').set_index('index')
+    return pd.read_csv(input_paths.POIS_CSV).set_index('index')
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/walk/walk_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_walk_indicator_by_parcel")
 
 @orca.table(cache=True)
 def accessibility_bike_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/bike/bike_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_bike_indicator_by_parcel")
 
 @orca.table(cache=True)
 def accessibility_drive_indicator_by_parcel():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv('/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators/drive/drive_indicators_by_parcel_20251111.csv').set_index('parcel_id')
+    return pd.read_hdf(input_paths.ACCESS_INDICATORS_H5, "accessibility_drive_indicator_by_parcel")
 
 # these are dummy returns that last until accessibility runs
 for node_tbl in ["nodes", "nodes_walk", "nodes_drv"]:
@@ -338,10 +344,8 @@ orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
 
 
 def _load_remi_growth_rates():
-    base = (
-        "/mnt/DA/Projects/RDF/2050RDF/03 REMI/Draft 2"
-        "/02 Detailed Tables/lfpr income"
-    )
+    """Per-large-area personal-income and PCE growth rates, used by increase_property_values."""
+    base = input_paths.LFPR_INCOME_DIR
     geo_to_la = {
         "rest of wayne": 3,
         "detroit":       5,

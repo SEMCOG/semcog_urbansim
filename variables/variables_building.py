@@ -764,7 +764,7 @@ def zone_id(buildings, parcels, building_to_zone_baseyear):
     # only apply building to zone mapping to selected buildings
     applied_buildings = zid.index.isin(building_to_zone_baseyear.index)
     # update their zone_id
-    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id)
+    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id).astype(zid.dtype)
     return zid
 
 
@@ -902,6 +902,37 @@ for mode, config in CUMULATIVE_VARS.items():
             indicator_table_name=indicator_table,
             fillna_value=fillna_val,
         )
+
+#####################
+# DEMOLITION SCORING VARIABLES
+#####################
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def impr_value_per_sqft(buildings, parcels):
+    """Parcel improvement value per building sqft — low value flags blight risk."""
+    bldgimpr = misc.reindex(parcels.bldgimprval, buildings.parcel_id).fillna(0)
+    total_sqft = (
+        buildings.residential_units * buildings.sqft_per_unit
+        + buildings.non_residential_sqft
+    ).clip(lower=1)
+    return (bldgimpr / total_sqft).clip(lower=0, upper=500)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def land_to_impr_ratio(buildings, parcels):
+    """Land value divided by improvement value — high ratio flags teardown pressure."""
+    land = misc.reindex(parcels.landvalue, buildings.parcel_id).fillna(0)
+    impr = misc.reindex(parcels.bldgimprval, buildings.parcel_id).fillna(1).clip(lower=1)
+    return (land / impr).clip(lower=0, upper=50)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def res_vacancy_rate(buildings):
+    """Proportion of residential units without a placed household (0–1)."""
+    vac = buildings.vacant_residential_units.clip(lower=0)
+    rate = (vac / buildings.residential_units.clip(lower=1)).clip(0, 1)
+    return rate.where(buildings.residential_units > 0, 0.0)
+
 
 #####################
 # TRAVEL SURVEY VARIABLES (buildings)
