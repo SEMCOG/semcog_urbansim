@@ -46,7 +46,7 @@ CONFIG_PATH = os.path.join(misc.configs_dir(), "demolition_model.yaml")
 WAYNE_LA_ID = 5
 
 # Reference year for building age calculation
-AGE_REF_YEAR = 2020
+AGE_REF_YEAR = 2025
 
 RES_FEATURES    = ["building_age", "impr_value_per_sqft", "land_to_impr_ratio",
                    "is_exempt", "is_wayne"]
