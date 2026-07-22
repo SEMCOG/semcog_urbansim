@@ -2945,8 +2945,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
 
     parcels_idx_to_update = [
         pid
-        for pid in drop_buildings.parcel_id.values.tolist()
-        if pid not in new_buildings_table.parcel_id.values
+        for pid in set(drop_buildings.parcel_id)
+        if pid not in remaining_pids
     ]
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
@@ -2955,9 +2955,6 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         f"scored_demolition_events {year}: dropped {len(buildings_idx):,} buildings "
         f"({'calibrated' if any_calibrated else 'legacy weights'})"
     )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 
 
 def parcel_average_price(use):
