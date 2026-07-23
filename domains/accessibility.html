@@ -776,6 +776,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#accessibility_bike_comfort_indicator_by_parcel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_bike_comfort_indicator_by_parcel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_transit_indicator_by_parcel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_transit_indicator_by_parcel
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -786,6 +808,28 @@
     <span class="md-ellipsis">
       
         How Indicators Join to Buildings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-indicators-go-stale-during-a-forecast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which Indicators Go Stale During a Forecast
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network Bundle
       
     </span>
   </a>
@@ -986,12 +1030,28 @@
 <td>Accessibility analysis output</td>
 </tr>
 <tr>
+<td><code>accessibility_bike_comfort_indicator_by_parcel</code></td>
+<td>Bike metrics on the level-of-traffic-stress network</td>
+<td>Accessibility analysis output</td>
+</tr>
+<tr>
 <td><code>accessibility_drive_indicator_by_parcel</code></td>
 <td>Drive-mode accessibility metrics by parcel</td>
 <td>Accessibility analysis output</td>
 </tr>
+<tr>
+<td><code>accessibility_transit_indicator_by_parcel</code></td>
+<td>Transit-mode accessibility metrics by parcel</td>
+<td>Accessibility analysis output</td>
+</tr>
 </tbody>
 </table>
+<blockquote>
+<p><strong>Not all five are consumed by the simulation.</strong> <code>dataset.py</code> reads only walk, bike
+and drive. The transit and bike-comfort tables are produced for indicator reporting
+and are available for future model use — no model spec references
+<code>*_transit_near_max*</code> or <code>*_transit_cumulative*</code> today.</p>
+</blockquote>
 <pre class="mermaid"><code>flowchart LR
     subgraph Static["Pre-computed (constant throughout simulation)"]
         POI[points_of_interest_by_category\nDestination locations by type] --&gt; AA[Accessibility Analysis\nPandana offline run]
@@ -999,6 +1059,8 @@
         AA --&gt; WI[walk_indicator_by_parcel]
         AA --&gt; BI[bike_indicator_by_parcel]
         AA --&gt; DI[drive_indicator_by_parcel]
+        AA -.-&gt; BC[bike_comfort_indicator_by_parcel\nnot read by the simulation]
+        AA -.-&gt; TI[transit_indicator_by_parcel\nnot read by the simulation]
     end
     subgraph Dynamic["Dynamic (recomputed each simulation year)"]
         NET[semcog_networks.h5] --&gt; PN[Pandana\nbuild_networks step]
@@ -1092,10 +1154,50 @@
 - POIs outside the 7-county region — verify coordinates before use</p>
 <hr />
 <h2 id="accessibility-indicator-tables">Accessibility Indicator Tables<a class="headerlink" href="#accessibility-indicator-tables" title="Permanent link">&para;</a></h2>
-<p>All three indicator tables share the same structure — indexed by <code>parcel_id</code>, with one row per parcel. They contain two variable types:</p>
-<p><strong>Near-max variables</strong> — travel time to the nearest facility (90th-percentile of distances). Lower = better access. Fill value when no route exists: 95 min (walk), 125 min (bike), 155 min (drive).</p>
-<p><strong>Cumulative variables</strong> — count of jobs or transit stops reachable within a time threshold. Higher = better access. Fill value when none reachable: 0.</p>
-<p>File names include a date stamp (e.g., <code>_20251111</code>). Update the relevant configuration when new files are produced.</p>
+<p>All indicator tables share the same structure — indexed by <code>parcel_id</code>, with one row per parcel, and <strong>all tables carry the identical parcel index</strong> so they can be joined without reindexing. They contain two variable types:</p>
+<p><strong>Near-max variables</strong> — travel time to the nearest facility. Lower = better access. Fill value when no route exists is the mode's <code>max_distance</code>, which is <em>not</em> the number in the column name (the name carries the search horizon, the fill carries the top-code):</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Column suffix</th>
+<th>Fill when unreachable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Walk</td>
+<td><code>_near_max90</code></td>
+<td><strong>95</strong></td>
+</tr>
+<tr>
+<td>Bike / bike comfort</td>
+<td><code>_near_max120</code></td>
+<td><strong>125</strong></td>
+</tr>
+<tr>
+<td>Transit</td>
+<td><code>_near_max120</code></td>
+<td><strong>125</strong></td>
+</tr>
+<tr>
+<td>Drive</td>
+<td><code>_near_max150</code></td>
+<td><strong>155</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cumulative and gravity variables</strong> — count (or weighted sum) of jobs or transit stops reachable within a threshold. Higher = better access. Fill value when none reachable: 0.</p>
+<p>Indicator CSVs are date-stamped per mode (e.g. <code>walk_indicators_by_parcel_20260722.csv</code>)
+and combined into a single HDF by
+<code>forecast_data_input/accessibility/build_access_indicators_hdf.py</code>.</p>
+<blockquote>
+<p><strong>Compression matters here.</strong> The combined HDF is written with
+<code>format="fixed", complevel=5, complib="blosc:zstd"</code> — 2,196 MB uncompressed vs
+<strong>348 MB</strong> compressed, values identical. Compression must be applied <strong>at write
+time</strong>: pandas' <code>format="fixed"</code> without <code>complevel</code> writes plain PyTables <code>Array</code>
+nodes, which cannot be compressed afterwards, so <code>ptrepack</code> is a no-op on them.</p>
+</blockquote>
 <hr />
 <h3 id="accessibility_walk_indicator_by_parcel"><code>accessibility_walk_indicator_by_parcel</code><a class="headerlink" href="#accessibility_walk_indicator_by_parcel" title="Permanent link">&para;</a></h3>
 <p><strong>Index:</strong> <code>parcel_id</code></p>
@@ -1307,9 +1409,83 @@
 </tbody>
 </table>
 <hr />
-<h2 id="how-indicators-join-to-buildings">How Indicators Join to Buildings<a class="headerlink" href="#how-indicators-join-to-buildings" title="Permanent link">&para;</a></h2>
-<p>All three tables are indexed by <code>parcel_id</code>. The simulation joins them to buildings via <code>buildings.parcel_id</code>. This join is handled automatically during model variable computation.</p>
+<h3 id="accessibility_bike_comfort_indicator_by_parcel"><code>accessibility_bike_comfort_indicator_by_parcel</code><a class="headerlink" href="#accessibility_bike_comfort_indicator_by_parcel" title="Permanent link">&para;</a></h3>
+<p><strong>Index:</strong> <code>parcel_id</code></p>
+<p>Same destination and threshold set as the bike table, but computed on the <strong>bicycle
+level-of-traffic-stress network</strong> rather than the plain bike network. Variable names
+follow <code>{destination}_bike_comfort_near_max120</code>.</p>
+<p>The stress network's edge costs (<code>minutes_w1</code>, <code>minutes_w2</code>) are <strong>both penalised</strong> —
+neither is real travel time. Against the unpenalised bike network, 86.1% of edges are
+unpenalised in both, but 11.1% of <code>w1</code> and 12.0% of <code>w2</code> edges exceed 1.5x (overall
+1.110x and 1.155x). The accessibility pipeline routes on <code>minutes_w2</code>. Consequently
+times in this table are <strong>stress-weighted minutes</strong>, not clock minutes, and are not
+directly comparable with the plain bike table.</p>
+<h3 id="accessibility_transit_indicator_by_parcel"><code>accessibility_transit_indicator_by_parcel</code><a class="headerlink" href="#accessibility_transit_indicator_by_parcel" title="Permanent link">&para;</a></h3>
+<p><strong>Index:</strong> <code>parcel_id</code></p>
+<p>Peak/off-peak transit access, computed from the pandana transit networks. Pattern
+<code>{destination}_transit_near_max120</code>, plus <code>jobs_transit_cumulative_{15,20,30,45,60,90}min</code>
+and <code>jobs_transit_gravity_90min</code>.</p>
+<p>Roughly <strong>47.5% of parcels</strong> are within the transit service area; the rest are filled as
+unreachable (125 min / 0 jobs). That is a real coverage boundary, not missing data.</p>
+<blockquote>
+<p>The simulation does <strong>not</strong> use this table. Model transit measures come from
+<code>travel_data.am_transit_total_time</code> (TAZ-to-TAZ skims from the travel model), a
+different source — see <code>variables_tract.py</code>.</p>
+</blockquote>
 <hr />
+<h2 id="how-indicators-join-to-buildings">How Indicators Join to Buildings<a class="headerlink" href="#how-indicators-join-to-buildings" title="Permanent link">&para;</a></h2>
+<p>All tables are indexed by <code>parcel_id</code>. The simulation joins them to buildings via <code>buildings.parcel_id</code>. This join is handled automatically during model variable computation.</p>
+<hr />
+<h2 id="which-indicators-go-stale-during-a-forecast">Which Indicators Go Stale During a Forecast<a class="headerlink" href="#which-indicators-go-stale-during-a-forecast" title="Permanent link">&para;</a></h2>
+<p>Not everything in these tables ages the same way, and the distinction is by <strong>what the
+indicator depends on</strong>, not by mode:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Changes during a run?</th>
+<th>Handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*_near_max*</code> (POI-nearest)</td>
+<td>No — POIs and networks are fixed for the run</td>
+<td>Correctly held constant; refresh per forecast vintage</td>
+</tr>
+<tr>
+<td><code>jobs_*_cumulative_*</code>, <code>jobs_*_gravity_*</code></td>
+<td><strong>Yes</strong> — job locations move every simulated year</td>
+<td>Held constant; a known approximation</td>
+</tr>
+<tr>
+<td>Neighborhood variables (<code>nodes_walk</code>, <code>nodes_drv</code>)</td>
+<td>Yes</td>
+<td>Already recomputed <strong>every year</strong> by the <code>neighborhood_vars</code> step</td>
+</tr>
+</tbody>
+</table>
+<p>The frozen <code>jobs_*</code> measures are the only place holding values constant introduces real
+error. The exposure is limited because the model also computes fresh annual job access
+from <code>networks_drv.yaml</code> (<code>log_sum_{15,30,45,60}min_jobs</code>) — but that redundancy is a
+trap: a spec author can pick the frozen variable without realising it never updates.</p>
+<p>Nothing needs recomputing mid-run. Recompute the whole bundle when POIs, networks, or
+the base-year jobs/parcels change — i.e. per forecast vintage.</p>
+<hr />
+<h2 id="network-bundle">Network Bundle<a class="headerlink" href="#network-bundle" title="Permanent link">&para;</a></h2>
+<p>The pandana networks the simulation rebuilds each year are documented separately —
+see <strong><a href="networks.html">Street Networks</a></strong>. Relevant points for accessibility work:</p>
+<ul>
+<li>The accessibility pipeline and the simulation now share the same <strong>drive</strong> network
+  (<code>highway_ext_2020</code>, from <code>highway_ext_2020_UPDATED.shp</code>).</li>
+<li>They still use <strong>different walk networks</strong>: the simulation uses <code>osm_walk_2024</code>
+  (936,001 nodes / 1,380,659 edges) from <code>semcog_networks.h5</code>, while the accessibility
+  run reads <code>network_walkbike_2024_aug2025.h5</code> directly. Same source build, but do not
+  assume node IDs correspond.</li>
+<li>The transit networks (<code>network_transit_{peak,offpeak}_aug2025.h5</code>, ~1.5 GB each) are
+  used <strong>only</strong> by the accessibility pipeline. The simulation declares no transit
+  network.</li>
+</ul>
 <h2 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h2>
 <p>Accessibility indicators should be regenerated when:
 - The street or transit network changes significantly

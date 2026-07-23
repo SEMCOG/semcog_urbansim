@@ -1043,12 +1043,12 @@
 <tr>
 <td><code>semcog_networks.h5</code></td>
 <td><strong>Pandana street network bundle</strong> — produced by a separate network build step; not assembled from domain data</td>
-<td>Walk network (OSM base year), drive networks (base year + future year). Extendable with bike network. Used by the simulation each year to recompute dynamic neighborhood accessibility as households and jobs shift.</td>
+<td><code>osm_walk_2024</code>, <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code>, <code>highway_ext_2020</code> (+ <code>_local</code>). Used by the simulation each year to recompute dynamic neighborhood accessibility as households and jobs shift. Only walk and highway are built at runtime. The 2030 highway network and the retired <code>osm_roads_walk_2020</code> were dropped Jul 2026 — see <a href="domains/networks.html">Street Networks</a>.</td>
 </tr>
 <tr>
 <td><code>access_indicators.h5</code></td>
 <td><strong>Pre-computed accessibility indicators</strong> — produced by the Pandana accessibility pipeline; regenerated when the network, POI, or transit data is refreshed</td>
-<td>Walk, bike, drive, and transit accessibility metrics by parcel (travel times to destinations + cumulative job counts within time thresholds). Held constant throughout the simulation run.</td>
+<td>Walk, bike, bike-comfort, drive and transit metrics by parcel (travel times to destinations + cumulative job counts within thresholds). All five tables share one parcel index. Held constant throughout the run; the simulation reads only walk, bike and drive. Written compressed (blosc:zstd) — 348 MB vs 2,196 MB raw.</td>
 </tr>
 </tbody>
 </table>

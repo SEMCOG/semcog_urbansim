@@ -581,22 +581,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#networks-in-production-use" class="md-nav__link">
+  <a href="#networks-in-the-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Networks in Production Use
+        Networks in the File
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Networks in Production Use">
+    <nav class="md-nav" aria-label="Networks in the File">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#walk-network-osm_roads_walk_2020" class="md-nav__link">
+  <a href="#walk-osm_walk_2024" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk Network — osm_roads_walk_2020
+        Walk — osm_walk_2024
       
     </span>
   </a>
@@ -604,10 +604,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#drive-networks-highway_ext_2020-and-highway_ext_2030" class="md-nav__link">
+  <a href="#drive-highway_ext_2020" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Drive Networks — highway_ext_2020 and highway_ext_2030
+        Drive — highway_ext_2020
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bike-osm_bike_2024-osm_bike_comfort_2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bike — osm_bike_2024, osm_bike_comfort_2024
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retired" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retired
       
     </span>
   </a>
@@ -874,88 +896,100 @@
 </tbody>
 </table>
 <hr />
-<h2 id="networks-in-production-use">Networks in Production Use<a class="headerlink" href="#networks-in-production-use" title="Permanent link">&para;</a></h2>
-<p>The production simulation uses two networks:</p>
-<h3 id="walk-network-osm_roads_walk_2020">Walk Network — <code>osm_roads_walk_2020</code><a class="headerlink" href="#walk-network-osm_roads_walk_2020" title="Permanent link">&para;</a></h3>
-<p>Based on <strong>OpenStreetMap</strong> road and path data for the 2020 base year.</p>
+<h2 id="networks-in-the-file">Networks in the File<a class="headerlink" href="#networks-in-the-file" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Table</th>
-<th>Columns</th>
-<th>Notes</th>
+<th>Network</th>
+<th>Source</th>
+<th>nodes / edges</th>
+<th>Cost columns</th>
+<th>Used by the simulation</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>nodes_osm_roads_walk_2020</code></td>
-<td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
-<td>Node coordinates (state plane)</td>
+<td><code>osm_walk_2024</code></td>
+<td>OpenStreetMap, 2024</td>
+<td>936,001 / 1,380,659</td>
+<td><code>feet</code>, <code>meters</code>, <code>minutes</code></td>
+<td><strong>yes</strong></td>
 </tr>
 <tr>
-<td><code>edges_osm_roads_walk_2020</code></td>
-<td><code>from</code>, <code>to</code>, <code>feet</code>, <code>minutes</code>, <code>meters</code></td>
-<td>Edge cost in feet, travel minutes, and meters</td>
+<td><code>highway_ext_2020</code> (+ <code>_local</code>)</td>
+<td><code>highway_ext_2020_UPDATED.shp</code> (SEMCOG TDM)</td>
+<td>44,866 / 63,690</td>
+<td><code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><code>osm_bike_2024</code></td>
+<td>OpenStreetMap, 2024</td>
+<td>693,760 / 943,964</td>
+<td><code>feet</code>, <code>meters</code>, <code>minutes</code></td>
+<td>not yet</td>
+</tr>
+<tr>
+<td><code>osm_bike_comfort_2024</code></td>
+<td>OSM bike comfort levels</td>
+<td>693,770 / 943,986</td>
+<td><code>minutes_w1</code>, <code>minutes_w2</code>, <code>feet_weighted</code></td>
+<td>not yet</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Cost used for queries:</strong> <code>feet</code> (distance-based) or <code>minutes</code> (time-based)<br />
+<h3 id="walk-osm_walk_2024">Walk — <code>osm_walk_2024</code><a class="headerlink" href="#walk-osm_walk_2024" title="Permanent link">&para;</a></h3>
+<p>OpenStreetMap road and path data, 2024 vintage. Replaced <code>osm_roads_walk_2020</code> in
+Jul 2026 and has <strong>32% more edges</strong>, so walk-based neighborhood variables shift —
+compare against a previous run before relying on them.</p>
+<p><strong>Cost used for queries:</strong> <code>feet</code> (distance) or <code>minutes</code> (time, at 3 mph)
 <strong>Typical query radius:</strong> 500 m (neighborhood density), 1,500 m (local population/jobs)</p>
-<h3 id="drive-networks-highway_ext_2020-and-highway_ext_2030">Drive Networks — <code>highway_ext_2020</code> and <code>highway_ext_2030</code><a class="headerlink" href="#drive-networks-highway_ext_2020-and-highway_ext_2030" title="Permanent link">&para;</a></h3>
-<p>Based on the <strong>SEMCOG highway / TDM road network</strong>. Two vintages are provided — base year (2020) and a future year (2030) reflecting planned road improvements.</p>
+<p><code>feet</code> = <code>meters × 3.280839895</code>.</p>
+<h3 id="drive-highway_ext_2020">Drive — <code>highway_ext_2020</code><a class="headerlink" href="#drive-highway_ext_2020" title="Permanent link">&para;</a></h3>
+<p>SEMCOG highway / TDM road network, built from <strong><code>highway_ext_2020_UPDATED.shp</code></strong>.</p>
 <table>
 <thead>
 <tr>
 <th>Table</th>
 <th>Columns</th>
-<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>nodes_highway_ext_2020</code></td>
 <td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
-<td></td>
 </tr>
 <tr>
 <td><code>edges_highway_ext_2020</code></td>
 <td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
-<td>AM peak and off-peak travel times</td>
 </tr>
 <tr>
 <td><code>nodes_highway_ext_2020_local</code></td>
 <td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
-<td>Local subset for neighborhood queries</td>
 </tr>
 <tr>
 <td><code>edges_highway_ext_2020_local</code></td>
 <td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>nodes_highway_ext_2030</code></td>
-<td>same schema</td>
-<td>Future network (planned improvements)</td>
-</tr>
-<tr>
-<td><code>edges_highway_ext_2030</code></td>
-<td>same schema</td>
-<td></td>
-</tr>
-<tr>
-<td><code>nodes_highway_ext_2030_local</code></td>
-<td>same schema</td>
-<td></td>
-</tr>
-<tr>
-<td><code>edges_highway_ext_2030_local</code></td>
-<td>same schema</td>
-<td></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Cost used for queries:</strong> <code>peak_mins</code> (commute accessibility) or <code>nonpk_mins</code> (off-peak)<br />
+<p><strong>Cost used for queries:</strong> <code>peak_mins</code> (commute accessibility) or <code>nonpk_mins</code> (off-peak)
 <strong>Typical query radius:</strong> 15–60 minutes (job access, retail proximity)</p>
+<h3 id="bike-osm_bike_2024-osm_bike_comfort_2024">Bike — <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code><a class="headerlink" href="#bike-osm_bike_2024-osm_bike_comfort_2024" title="Permanent link">&para;</a></h3>
+<p>Included for future use; no model component reads them yet.</p>
+<p><code>osm_bike_2024</code> carries real distance at a 10 mph basis. <code>osm_bike_comfort_2024</code> is the
+<strong>bicycle level-of-traffic-stress</strong> network — <code>minutes_w1</code> and <code>minutes_w2</code> are both
+<em>stress-penalised</em> times, not clock times, so <code>feet_weighted</code> (derived from <code>minutes_w2</code>)
+is a stress-weighted distance rather than measurable feet. Use <code>osm_bike_2024</code> when real
+distance is needed.</p>
+<h3 id="retired">Retired<a class="headerlink" href="#retired" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>highway_ext_2030</code></strong> — dropped Jul 2026. It was largely the same as the 2020 network,
+  2030 is near, and there is no updated 2030 build to pair with the updated 2020 one. All
+  years now use <code>highway_ext_2020</code>. (The separate <code>travel_data_2030</code> travel-time skims are
+  unaffected — different data.)</li>
+<li><strong><code>osm_roads_walk_2020</code></strong> — replaced by <code>osm_walk_2024</code>.</li>
+</ul>
 <hr />
 <h2 id="what-the-networks-compute">What the Networks Compute<a class="headerlink" href="#what-the-networks-compute" title="Permanent link">&para;</a></h2>
 <p>Each simulation year, Pandana uses these networks to produce <strong>node-level</strong> aggregations. These are then broadcast to buildings and parcels. Key variables computed:</p>
@@ -977,6 +1011,30 @@
 <p>If a parcel's node ID is missing or invalid, that building will have null network-based variables, which can affect location choice model predictions.</p>
 <hr />
 <h2 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h2>
+<p><code>semcog_networks.h5</code> is assembled by
+<code>forecast_data_input/accessibility/build_semcog_networks.py</code>, which pulls from the
+network builds produced for the accessibility analysis:</p>
+<table>
+<thead>
+<tr>
+<th>Network in this file</th>
+<th>Comes from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>highway_ext_2020</code> (+ <code>_local</code>)</td>
+<td><code>network_highway_2024_aug2025.h5</code></td>
+</tr>
+<tr>
+<td><code>osm_walk_2024</code>, <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code></td>
+<td><code>network_walkbike_2024_aug2025.h5</code></td>
+</tr>
+</tbody>
+</table>
+<p>Those source files also contain other tables (including an older, superseded copy of the
+highway network inside the walkbike file), so take each network from the source listed
+above rather than by table name alone.</p>
 <p>The network file should be regenerated when:
 - Road network geometry changes significantly (new highways, removed roads)
 - A new forecast cycle uses a different base year
@@ -1002,7 +1060,7 @@
 <ul>
 <li><strong>Parcels not snapping to network</strong> — parcel coordinates outside the network coverage area; check for projection mismatches (all data should be in Michigan state plane)</li>
 <li><strong>Missing local edges</strong> — the local network subset must fully cover the 7-county region; edges that cross county boundaries may be clipped</li>
-<li><strong>Future network not reflecting planned projects</strong> — confirm that the 2030 network includes committed highway improvements from the TDM</li>
+<li><strong>Expecting a 2030 network</strong> — it was retired in Jul 2026; all years use <code>highway_ext_2020</code>. If planned improvements need representing again, restore both the HDF tables and the <code>available_networks_2050.yaml</code> entry, and reinstate the year-based branch in <code>models.py</code></li>
 </ul>
 
 
