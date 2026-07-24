@@ -1,9 +1,35 @@
-osm_roads_walk_2020:
+# 2024 OSM walk build (replaces osm_roads_walk_2020, Jul 2026). `feet` is derived
+# as meters * 3.28, the same factor the retired table used, so cost1 and models.py's
+# prev=26500 (5 miles in feet) keep their meaning.
+osm_walk_2024:
   cost1: feet
   cost2: meters
   cost3: minutes
-  edges: edges_osm_roads_walk_2020
-  nodes: nodes_osm_roads_walk_2020
+  edges: edges_osm_walk_2024
+  nodes: nodes_osm_walk_2024
+
+# Bike networks: present in semcog_networks.h5 for future use. Nothing builds them
+# at runtime today -- adding one to lstnet in models.py also needs
+# reserve_num_graphs raised above 2.
+osm_bike_2024:
+  cost1: feet
+  cost2: meters
+  cost3: minutes
+  edges: edges_osm_bike_2024
+  nodes: nodes_osm_bike_2024
+
+# Bicycle level-of-traffic-stress network. minutes_w1 and minutes_w2 are BOTH
+# stress-penalised times (two formulas, both at 10 mph base) -- neither is real travel
+# time. minutes_w2 is what the accessibility pipeline routes the comfort indicators on
+# (access_config.yaml network_bike_comfort_levels), so it is cost1.
+# feet_weighted = minutes_w2 * 880: a stress-weighted distance, NOT measurable feet.
+# Use osm_bike_2024 when real distance is needed.
+osm_bike_comfort_2024:
+  cost1: minutes_w2
+  cost2: minutes_w1
+  cost3: feet_weighted
+  edges: edges_osm_bike_comfort_2024
+  nodes: nodes_osm_bike_comfort_2024
 highway_ext_2020:
   cost1: peak_mins
   cost2: nonpk_mins
@@ -12,14 +38,18 @@ highway_ext_2020:
   nodes: nodes_highway_ext_2020
   local_edges: edges_highway_ext_2020_local
   local_nodes: nodes_highway_ext_2020_local
-highway_ext_2030:
-  cost1: peak_mins
-  cost2: nonpk_mins
-  cost3: miles
-  edges: edges_highway_ext_2030
-  nodes: nodes_highway_ext_2030
-  local_edges: edges_highway_ext_2030_local
-  local_nodes: nodes_highway_ext_2030_local
+# highway_ext_2030 retired (Jul 2026): it was largely the same as the 2020 network,
+# 2030 is close, and there is no updated 2030 build to match the UPDATED 2020 one now
+# in semcog_networks.h5. models.py uses highway_ext_2020 for all years, and the 2030
+# tables have been dropped from the HDF. Restore both together if a 2030 build returns.
+# highway_ext_2030:
+#   cost1: peak_mins
+#   cost2: nonpk_mins
+#   cost3: miles
+#   edges: edges_highway_ext_2030
+#   nodes: nodes_highway_ext_2030
+#   local_edges: edges_highway_ext_2030_local
+#   local_nodes: nodes_highway_ext_2030_local
 
 #/edges_highway_ext_2020    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
 #/edges_highway_ext_2020_local    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
