@@ -762,7 +762,12 @@ def maz_id(buildings, parcels, building_to_maz_override):
     # MAZ is the anchor geography: inherit the parcel's MAZ by default, then apply the
     # base-year override for buildings whose parcel straddles a MAZ boundary.
     mid = misc.reindex(parcels.maz_id, buildings.parcel_id)
-    ovr = building_to_maz_override.maz_id.reindex(mid.index).dropna()
+    ovr = building_to_maz_override.maz_id
+    # Guard against a duplicated building_id in the override table (a building must have
+    # one override MAZ); keep the first deterministically. reindex() on a duplicate-index
+    # source would otherwise raise.
+    ovr = ovr[~ovr.index.duplicated(keep="first")]
+    ovr = ovr.reindex(mid.index).dropna()
     if len(ovr):
         mid.loc[ovr.index] = ovr.astype(mid.dtype).values
     return mid
