@@ -30,6 +30,8 @@ for name in [
     "annual_employment_control_totals",
     "travel_data",
     "travel_data_2030",
+    "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
+    "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
     "large_areas",
     "building_types",
@@ -297,11 +299,10 @@ def census_tracts(store):
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
 
-@orca.table(cache=True)
-def building_to_zone_baseyear():
-    # baseyear building_id to zone_id mapping
-    # fix the issue where one parcel could have multiple TAZ zone
-    return pd.read_csv(input_paths.BUILDING_TO_ZONE_CSV).set_index('building_id')
+# building_to_zone_baseyear retired (Jul 2026): its job -- correcting a base-year
+# building to its own TAZ on a parcel that straddles a zone boundary -- is subsumed at
+# finer MAZ resolution by building_to_maz_override + the maz->taz crosswalk. See
+# variables/variables_building.py (maz_id / zone_id).
 
 ### TODO: have data moved inside HDF input before 2055 forecast
 @orca.table(cache=True)
