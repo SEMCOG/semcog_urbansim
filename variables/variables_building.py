@@ -770,16 +770,23 @@ def tract_id(buildings, parcels):
     return misc.reindex(parcels.tract_id, buildings.parcel_id).fillna(0)
 
 
-# zone_id and maz_id come directly from the buildings table 
-# @orca.column("buildings", cache=True, cache_scope="iteration")
-# def zone_id(buildings, parcels, building_to_maz_override):
-#     # use zone_id from parcel as default
-#     zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
-#     # only apply building to zone mapping to selected buildings
-#     applied_buildings = zid.index.isin(building_to_maz_override.index)
-#     # update their zone_id
-#     zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_maz_override.zone_id).astype(zid.dtype)
-#     return zid
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def maz_id(buildings, parcels, building_to_maz_override):
+    # MAZ is the anchor geography: inherit the parcel's MAZ by default, then apply the
+    # base-year override for buildings whose parcel straddles a MAZ boundary.
+    mid = misc.reindex(parcels.maz_id, buildings.parcel_id)
+    ovr = building_to_maz_override.maz_id.reindex(mid.index).dropna()
+    if len(ovr):
+        mid.loc[ovr.index] = ovr.astype(mid.dtype).values
+    return mid
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zone_id(buildings, micro_zones):
+    # TAZ is DERIVED from MAZ through the crosswalk, never assigned independently -- that
+    # guarantees MAZ nests inside TAZ. Replaces the retired building_to_zone_baseyear CSV
+    # (parcel-default + direct-TAZ override), at finer MAZ resolution.
+    return buildings.maz_id.map(micro_zones.zone_id).fillna(0)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")

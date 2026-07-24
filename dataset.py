@@ -29,6 +29,8 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
+    "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
+    "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
     "large_areas",
     "building_types",
@@ -275,12 +277,6 @@ def census_tracts(store):
 @orca.table(cache=True)
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
-
-@orca.table(cache=True)
-def building_to_maz_override(store):
-    # baseyear building_id -> {maz_id, zone_id} override (fixes buildings whose
-    # parcel spans multiple MAZ/TAZ). Source: main.h5 `building_to_maz_override`.
-    return store["building_to_maz_override"][["maz_id", "zone_id"]]
 
 
 @orca.table(cache=True)
