@@ -2003,19 +2003,24 @@ def jobs_scaling_model(jobs):
     )
 
 
+# Share of capacity a new GQ building is filled to, by type. From base-year GQ
+# facility data (licensed_beds vs residents, ~2,250 facilities): dorms/college
+# housing run ~95% full, other GQ ~80%. Tunable; set both equal for a flat rate.
+_GQ_SEED_OCCUPANCY = {"dorm": 0.95, "other": 0.80}
+
+
 @orca.step()
-def seed_new_gq_buildings(group_quarters, buildings, events_addition,
-                          group_quarters_control_totals, parcels, year):
+def seed_new_gq_buildings(group_quarters, buildings, events_addition, year):
     """
-    Populate new GROUP-QUARTERS buildings up to capacity, immediately BEFORE
-    gq_pop_scaling_model (the two steps must stay adjacent and in this order).
+    Populate new GROUP-QUARTERS buildings, immediately BEFORE gq_pop_scaling_model
+    (the two steps must stay adjacent and in this order).
 
     A GQ building added by scheduled_development_events starts empty, and
     gq_pop_scaling_model only clones population among buildings that already hold
     GQ -- so a new dorm/care facility would stay empty. This step fills each
-    confirmed new GQ building up to its capacity, bounded by the city's control
-    increment, then the scaling step reconciles the remainder (diff ~= 0 for
-    seeded cities).
+    confirmed new GQ building to a realistic occupancy of its capacity (see
+    `_GQ_SEED_OCCUPANCY`); the following scaling step then reconciles each city's
+    total to the control (removing the offsetting population from elsewhere).
 
     A building counts as GQ ONLY if it has `events_addition.gqcap > 0` -- never by
     building type (the developer builds type-52/53 speculatively with no GQ intent;
@@ -2030,64 +2035,41 @@ def seed_new_gq_buildings(group_quarters, buildings, events_addition,
         print("seed_new_gq_buildings %s: no GQ-capacity events; nothing to seed" % year)
         return
 
-    b = buildings.to_frame(["parcel_id", "building_type_id", "non_residential_sqft"])
-    b["city_id"] = b["parcel_id"].map(parcels.to_frame(["city_id"])["city_id"])
+    b = buildings.to_frame(["building_type_id"])
     gqb = b.loc[b.index.isin(cap.index)].copy()          # GQ buildings that exist now
     gqb["gqcap"] = cap.reindex(gqb.index)
 
     gq = group_quarters.to_frame(group_quarters.local_columns)
-    gq["btype"]   = gq["building_id"].map(b["building_type_id"])
-    gq["city_id"] = gq["building_id"].map(b["city_id"])
-
-    # remaining capacity = gqcap - current occupancy (>0 means under-filled)
-    occ = gq["building_id"].value_counts()
-    gqb["remaining"] = (gqb["gqcap"] - gqb.index.map(occ).fillna(0)).clip(lower=0).astype(int)
-    gqb = gqb[gqb["remaining"] > 0]
-    if gqb.empty:
-        print("seed_new_gq_buildings %s: GQ buildings already at capacity" % year)
-        return
+    gq["btype"] = gq["building_id"].map(b["building_type_id"])
 
     # --- demographics profile: P(gq_code | building_type) from live GQ ---
     prof = (gq.dropna(subset=["btype"]).astype({"btype": int})
               .groupby("btype")["gq_code"].value_counts(normalize=True))
-    ct   = group_quarters_control_totals.to_frame()
-    ctrl = ct[ct.year == year]["count"]
-    cur  = gq.groupby("city_id").size()
+    occ = gq["building_id"].value_counts()               # current occupancy per building
 
     additions = []
     next_id = int(gq.index.max()) + 1
-    for city_id, cb in gqb.groupby("city_id"):
-        if city_id not in ctrl.index:
+    for bid, brow in gqb.iterrows():
+        bt   = int(brow["building_type_id"])
+        rate = _GQ_SEED_OCCUPANCY["dorm"] if bt == 93 else _GQ_SEED_OCCUPANCY["other"]
+        target = int(round(rate * brow["gqcap"]))
+        need = target - int(occ.get(bid, 0))             # top up toward the occupancy target
+        if need <= 0:
             continue
-        deficit = int(ctrl.loc[city_id] - cur.get(city_id, 0))
-        if deficit <= 0:                      # city at/over control -> leave to scaling
-            continue
-        seed_total = min(deficit, int(cb["remaining"].sum()))   # never exceed capacity or control
-        # allocate across buildings by remaining capacity (largest-remainder), capped at each
-        exact = cb["remaining"] / cb["remaining"].sum() * seed_total
-        share = np.floor(exact).astype(int)
-        leftover = seed_total - int(share.sum())
-        if leftover > 0:
-            for bid in (exact - share).sort_values(ascending=False).index[:leftover]:
-                share[bid] += 1
-        share = share.clip(upper=cb["remaining"])
-
-        rng = utils.get_rng("seed_new_gq_buildings", year, city_id)
-        for bid, n in share[share > 0].items():
-            bt   = int(cb.at[bid, "building_type_id"])
-            dist = prof[bt] if bt in prof.index.get_level_values(0) \
-                   else gq["gq_code"].value_counts(normalize=True)
-            codes = rng.choice(dist.index.values, size=int(n), p=dist.values)
-            for code, k in pd.Series(codes).value_counts().items():
-                picks = (gq[gq["gq_code"] == code]
-                         .sample(int(k), replace=True, random_state=rng)
-                         [group_quarters.local_columns].copy())
-                picks["building_id"] = bid
-                picks["gq_code"]     = code
-                additions.append(picks)
+        dist = prof[bt] if bt in prof.index.get_level_values(0) \
+               else gq["gq_code"].value_counts(normalize=True)
+        rng = utils.get_rng("seed_new_gq_buildings", year, bid)
+        codes = rng.choice(dist.index.values, size=need, p=dist.values)
+        for code, k in pd.Series(codes).value_counts().items():
+            picks = (gq[gq["gq_code"] == code]
+                     .sample(int(k), replace=True, random_state=rng)
+                     [group_quarters.local_columns].copy())
+            picks["building_id"] = bid
+            picks["gq_code"]     = code
+            additions.append(picks)
 
     if not additions:
-        print("seed_new_gq_buildings %s: no city under control; nothing seeded" % year)
+        print("seed_new_gq_buildings %s: new GQ buildings already at target occupancy" % year)
         return
     add = pd.concat(additions, ignore_index=True)
     add.index = pd.Index(next_id + np.arange(len(add)), name=gq.index.name)
@@ -3183,8 +3165,12 @@ def add_extra_columns_nonres(df):
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
-    p = orca.get_table("parcels").to_frame(["zone_id", "city_id"])
-    for col in ["zone_id", "city_id"]:
+    # New buildings inherit the parcel's MAZ (the dominant/non-crossing MAZ) and its TAZ.
+    # maz_id and zone_id are kept mutually consistent because parcels carry both from the
+    # crosswalk. On crossing parcels this is the dominant-MAZ fallback; the area-weighted
+    # per-building MAZ draw (task 2b Phase 1) refines it here later.
+    p = orca.get_table("parcels").to_frame(["maz_id", "zone_id", "city_id"])
+    for col in ["maz_id", "zone_id", "city_id"]:
         # #35
         # df["b_" + col] = misc.reindex(p[col], df.parcel_id)
         df[col] = misc.reindex(p[col], df.parcel_id)
