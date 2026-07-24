@@ -383,8 +383,43 @@ def _load_remi_growth_rates():
     return income_ratios, pce_ratios
 
 
-_remi_income, _remi_pce = _load_remi_growth_rates()
+def _load_remi_growth_rates_from_hdf(store, remi_base_year=2022):
+    """Fallback for _load_remi_growth_rates when the external REMI Excel files are absent.
+
+    Produces the SAME shapes the Excel path returns -- cumulative ratios relative to the
+    REMI base year (2022):
+      income_ratios : {year: {large_area_id(int): income_level[year]/income_level[2022]}}
+      pce_ratios    : {year: pce_level[year]/pce_level[2022]}
+
+    Source tables (per the data wiki, in forecast_data_input.h5):
+      income_growth_rates  -- year-indexed, columns are large_area_id (str); values are
+                              year-over-year growth FACTORS (1+rate), base year = 1.0.
+      remi_pce_growth_rate -- year-indexed, column pce_growth_rate; year-over-year RATE.
+    Both are converted to a cumulative level index (cumprod), then divided by the 2022
+    value so the result is a ratio vs 2022, matching the Excel loader.
+    """
+    ig = store["income_growth_rates"]                       # YoY factors by year x LA
+    income_level = ig.cumprod()                             # cumulative level index
+    income_ratio = income_level.div(income_level.loc[remi_base_year])
+    income_ratios = {int(y): {int(la): float(income_ratio.at[y, la]) for la in ig.columns}
+                     for y in ig.index}
+
+    pce = store["remi_pce_growth_rate"]["pce_growth_rate"]  # YoY rate by year
+    pce_level = (1.0 + pce).cumprod()
+    pce_ratio = pce_level / pce_level.loc[remi_base_year]
+    pce_ratios = {int(y): float(pce_ratio.loc[y]) for y in pce.index}
+    return income_ratios, pce_ratios
+
+
+try:
+    _remi_income, _remi_pce = _load_remi_growth_rates()
+    print(f"REMI growth rates loaded from Excel: {len(_remi_income)} years")
+except (FileNotFoundError, OSError) as e:
+    # External REMI lfpr Excel files unavailable -> read the HDF tables instead.
+    print(f"REMI Excel unavailable ({e}); falling back to HDF "
+          f"income_growth_rates + remi_pce_growth_rate")
+    _remi_income, _remi_pce = _load_remi_growth_rates_from_hdf(orca.get_injectable("store"))
+    print(f"REMI growth rates loaded from HDF: {len(_remi_income)} years")
 orca.add_injectable("remi_income_ratios", _remi_income)
 orca.add_injectable("remi_pce_ratios", _remi_pce)
 orca.add_injectable("remi_base_year", 2022)
-print(f"REMI growth rates loaded: {len(_remi_income)} years")
