@@ -1,5 +1,8 @@
 import os
+import gc
 import time
+import ctypes
+import resource
 import yaml
 import operator
 from multiprocessing import Pool
@@ -115,6 +118,97 @@ for name, model in list(emp_location_choice_models.items()):
         alt_capacity=model_configs['elcm']['vacant_variable'], 
         elcm_calibration_config=model_configs['elcm']['calibration']
     )
+
+
+@orca.step()
+def log_memory(year):
+    """Lightweight OOM-diagnosis probe. Logs current + peak process RSS and the
+    resident size of the largest orca tables. Insert by name in the orca.run step
+    list wherever a memory checkpoint is wanted (it can appear multiple times; the
+    step-timing line just above each entry identifies which phase it follows).
+    All heavy steps now run single-process, so self RSS is the whole footprint.
+    """
+    ps = os.sysconf("SC_PAGE_SIZE")
+    with open("/proc/self/statm") as f:
+        cur = int(f.read().split()[1]) * ps / 1024 ** 3
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 ** 2  # KB->GB
+    # top orca tables by resident MB (local frames only; skip derived recompute)
+    sizes = []
+    for tname in orca.list_tables():
+        try:
+            w = orca.get_table(tname)
+            cols = getattr(w, "local_columns", None)
+            if not cols:
+                continue
+            mb = w.to_frame(cols).memory_usage(deep=True).sum() / 1024 ** 2
+            sizes.append((mb, tname))
+        except Exception:
+            continue
+    sizes.sort(reverse=True)
+    top = ", ".join(f"{n}={mb:.0f}MB" for mb, n in sizes[:6])
+    # orca memoization-cache footprint — the suspected year-over-year accumulation.
+    # If this grows ~+4GB/yr while `top tables` stay flat, the leak is the cache
+    # (which clear_iteration_cache targets); if it stays flat while RSS climbs,
+    # the growth is allocator fragmentation instead.
+    n_cols, cache_gb = _orca_cache_footprint()
+    msg = (f"[MEM] year={year} cur_rss={cur:.1f}GB peak_rss={peak:.1f}GB "
+           f"cache={cache_gb:.1f}GB/{n_cols}cols | top tables: {top}")
+    utils.run_log(msg)
+    print(msg, flush=True)
+
+
+def _orca_cache_footprint():
+    """(n_cached_columns, total_GB) held in orca's column/table memo caches.
+    Returns (0, 0.0) if orca internals aren't shaped as expected."""
+    try:
+        from orca import orca as _oc
+        n = len(_oc._COLUMN_CACHE)
+        b = 0
+        for ci in _oc._COLUMN_CACHE.values():
+            v = getattr(ci, "value", None)
+            if hasattr(v, "memory_usage"):
+                mu = v.memory_usage(deep=True)
+                b += int(mu.sum()) if hasattr(mu, "sum") else int(mu)
+        for ci in _oc._TABLE_CACHE.values():
+            v = getattr(ci, "value", None)
+            fr = getattr(v, "local", v)  # DataFrameWrapper.local, else raw df
+            if hasattr(fr, "memory_usage"):
+                b += int(fr.memory_usage(deep=True).sum())
+        return n, b / 1024 ** 3
+    except Exception:
+        return 0, 0.0
+
+
+@orca.step()
+def clear_iteration_cache(year, base_year):
+    """Tier-1 memory control. At each year boundary, drop orca's memoized derived
+    tables/columns so a duplicate set does not accumulate every year as the big
+    tables (buildings/households/persons/jobs) are replaced via add_table.
+
+    Safe because stored tables (add_table) and stored injectables (add_injectable)
+    are NOT memoized and are therefore preserved — this includes the base tables,
+    the loaded HLCM/ELCM models, and the cross-year trend state
+    (taz_hlcm_trend_by_year, job_btype_baseyear_prob_matrix,
+    tract_hh_type_base_ratios). Cached columns are pure functions of the current
+    tables, so recomputing them next access yields identical values.
+
+    After clearing, force a GC pass and return freed heap arenas to the OS
+    (malloc_trim) so resident memory actually drops rather than being retained by
+    the allocator. Skipped on the first simulated year (nothing accumulated yet).
+    """
+    if year <= base_year + 1:
+        return
+    n_before, gb_before = _orca_cache_footprint()
+    orca.clear_cache()
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+    msg = (f"[clear_cache] year={year}: cleared {n_before} cached cols "
+           f"(~{gb_before:.1f}GB of memo cache)")
+    utils.run_log(msg)
+    print(msg, flush=True)
 
 
 @orca.step()
@@ -1331,6 +1425,14 @@ def _retry_wrapper(args, max_retries=3):
             raise
 
 
+def _downcast_ints(df):
+    """ Reduce df memory usage without loss"""
+    for col in df.columns:
+        if pd.api.types.is_integer_dtype(df[col].dtype):
+            df[col] = pd.to_numeric(df[col], downcast="signed")
+    return df
+
+
 def _resolve_hh_pop_target():
     """Resolve the household-population target table used to size the open-ended
     10+-person bin in households_transition.
@@ -1478,9 +1580,11 @@ def households_transition(
     region_ct[max_cols] += 1
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
     region_hh.index = region_hh.index.astype(int)
+    _downcast_ints(region_hh)
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
+    _downcast_ints(region_p)
 
     # P2 guard: warn (or raise) if any household matches no control category and
     # would be silently dropped by the totals transition (see function docstring).
@@ -1515,27 +1619,51 @@ def households_transition(
         return ct, hh, p, target, iter_var, la_seed
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
+    del cut_to_la
 
-    pool = Pool(8)
-    try:
-        cunks_per_la = pool.map(_retry_wrapper, arg_per_la)
-    except Exception as e:
-        print(f"Pool execution failed: {e}")
-        pool.terminate()
-        raise
-    finally:
-        pool.close()
-        pool.join()
-    out = reduce(operator.concat, cunks_per_la)
-
-    # Sync for testing
-    # out = []
-    # for la_arg in arg_per_la:
-    #     out.append(presses_trans(la_arg))
+    # Worker count, set here like the old `Pool(2)`.
+    #   <= 1  -> run in-process, sequentially (default). No fork, so the workers
+    #           cannot copy-on-write-fault the whole ~50 GB sim address space, and
+    #           nothing is pickled to/from a child. This is what keeps late years
+    #           (~2030+) under the memory ceiling; parallelism here only ever cost
+    #           memory we don't have.
+    #   >  1  -> fork a Pool(n) as before, trading memory for wall time.
+    n_workers = 1
+    if n_workers > 1:
+        pool = Pool(n_workers)
+        try:
+            cunks_per_la = pool.map(_retry_wrapper, arg_per_la)
+        except Exception as e:
+            print(f"Pool execution failed: {e}")
+            pool.terminate()
+            raise
+        finally:
+            pool.close()
+            pool.join()
+        out = reduce(operator.concat, cunks_per_la)
+        del cunks_per_la
+    else:
+        # Sequential: process one large area at a time, releasing each LA's input
+        # slice the moment its result is produced so only one LA is resident at a
+        # peak instead of the whole region duplicated across forked workers.
+        out = []
+        for i in range(len(arg_per_la) - 1, -1, -1):
+            out = _retry_wrapper(arg_per_la[i]) + out
+            arg_per_la[i] = None
+    # out holds references to the per-LA result frames; the list container and the
+    # per-LA input copies are no longer needed. Free them before the concat/merge
+    # build-out below, which itself allocates several more copies.
+    del arg_per_la
+    gc.collect()
 
     # fix indexes
     hhidmax = region_hh.index.values.max() + 1
     pidmax = region_p.index.values.max() + 1
+    # region_hh / region_p are not referenced past this point (the closure that
+    # captured region_p already ran during arg_per_la construction). Free the two
+    # full-region copies before the merge build-out.
+    del region_hh, region_p
+    gc.collect()
 
     ## create {old_hh_id => new_hh_id} mapping
     hh_id_mapping = [x[0]["building_id"] for x in out]
@@ -2943,6 +3071,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     jobs.loc[jobs.building_id.isin(buildings_idx), "building_id"] = -1
     orca.add_table("jobs", jobs)
 
+    remaining_pids = set(new_buildings_table.parcel_id)
     parcels_idx_to_update = [
         pid
         for pid in set(drop_buildings.parcel_id)
