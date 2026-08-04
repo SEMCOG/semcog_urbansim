@@ -3529,7 +3529,9 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
         # Correct any floating-point residual so np.random.choice is satisfied
         p_arr[-1] += 1.0 - p_arr.sum()
 
-        return proposal_select.weighted_random_choice(df, p_arr, target_units)
+        # deduping proposals feasibility emits per parcel
+        p_ser = pd.Series(p_arr, index=df.index)
+        return proposal_select.weighted_random_choice_multiparcel(df, p_ser, target_units)
 
     return score
 
