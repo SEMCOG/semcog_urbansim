@@ -129,9 +129,11 @@ orca.run([
 
 orca.run(
     [
+        "clear_iteration_cache",  # Tier-1: drop last year's memoized derived cols
         "build_networks_2050",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
+        "log_memory",  # after networks + accessibility
         "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
         "scored_demolition_events",
@@ -143,19 +145,23 @@ orca.run(
         "jobs_transition",
         # "jobs_relocation_2050",
         "drop_pseudo_buildings",
+        "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
         "non_residential_developer",
         "update_sp_filter",
+        "log_memory",  # after developer
     ]
     + orca.get_injectable("repm_step_names")
     + ["real_estate_adjustment"]
     + ["refine_housing_units"]
     + ["mcd_hu_sampling"]
+    + ["log_memory"]  # after REPM + housing-unit refine
     + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
     + [
         # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
+        "log_memory",  # after HLCM + ELCM
         "jobs_scaling_model",
         "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
