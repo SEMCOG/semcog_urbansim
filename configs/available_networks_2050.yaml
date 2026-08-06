@@ -38,6 +38,24 @@ highway_ext_2020:
   nodes: nodes_highway_ext_2020
   local_edges: edges_highway_ext_2020_local
   local_nodes: nodes_highway_ext_2020_local
+
+# highway_ext_2025 (Aug 2026): built from the boundary-snapped highway_ext_2025.shp
+# (SEMCOG/TMACOG/surrounding-MI-counties sub-networks reconnected at their shared
+# edges). Identical content to highway_ext_2020 above as of this writing -- both
+# were rebuilt from the same 2025 source and added to semcog_networks.h5 side by
+# side so existing highway_ext_2020-based testing keeps working unaffected. Not yet
+# wired into build_networks_2050's lstnet -- add it there (and raise
+# pdna.network.reserve_num_graphs above 2 if run alongside net_walk/net_drv) to
+# switch the live drive network over.
+highway_ext_2025:
+  cost1: peak_mins
+  cost2: nonpk_mins
+  cost3: miles
+  edges: edges_highway_ext_2025
+  nodes: nodes_highway_ext_2025
+  local_edges: edges_highway_ext_2025_local
+  local_nodes: nodes_highway_ext_2025_local
+
 # highway_ext_2030 retired (Jul 2026): it was largely the same as the 2020 network,
 # 2030 is close, and there is no updated 2030 build to match the UPDATED 2020 one now
 # in semcog_networks.h5. models.py uses highway_ext_2020 for all years, and the 2030
