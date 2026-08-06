@@ -499,3 +499,28 @@ def income_midinc(households):
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_lowinc(households):
     return (households.incomeqt_incqt1 == 1).astype('int8')
+
+
+#####################
+# TRAVEL SURVEY VARIABLES (households)
+# Block-group behavioral vars carried down parcel -> building -> household so
+# household models can read them. Mirrors the parcel/building registrations.
+#####################
+
+from variables.variables_parcel import SURVEY_VARS as _SURVEY_VARS
+
+
+def _make_household_survey_var(var_name):
+    """Register one household-level travel survey column via building broadcast."""
+
+    @orca.column("households", var_name, cache=True, cache_scope="forever")
+    def _col(households, buildings):
+        if var_name not in buildings.columns:
+            return pd.Series(np.nan, index=households.index)
+        return misc.reindex(buildings[var_name], households.building_id).fillna(0)
+
+    return _col
+
+
+for _sv in _SURVEY_VARS:
+    _make_household_survey_var(_sv)

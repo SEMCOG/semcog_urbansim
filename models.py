@@ -833,10 +833,11 @@ def real_estate_adjustment(buildings, parcels, year):
     remi_base_year = orca.get_injectable("remi_base_year")
     if year < remi_base_year:
         return
-    income_ratios = orca.get_injectable("remi_income_ratios")
-    la_ratios = income_ratios.get(year, {})
-    if not la_ratios:
+    income_ratios = orca.get_table("remi_income_ratios").to_frame()
+    if year not in income_ratios.index:
         return
+    # {large_area_id -> cumulative income ratio} for this year (columns are LA strings)
+    la_ratios = {int(la): float(r) for la, r in income_ratios.loc[year].items()}
 
     # Capture LA-average base prices on first call; flag used below for one-time backfill
     first_call = not orca.is_injectable("remi_base_la_prices")
@@ -3105,8 +3106,10 @@ def shifters():
 
 def cost_shifter_callback(self, form, df, costs):
     yr = orca.get_injectable("year")
-    pce_ratios = orca.get_injectable("remi_pce_ratios")
-    costs = costs * pce_ratios.get(yr, 1.0)
+    # region-wide price multiplier = cross-LA mean of remi_local_price_ratios for
+    # the year (cost shifter is city_id-calibrated, so apply a single scalar).
+    lpr = orca.get_table("remi_local_price_ratios").to_frame()
+    costs = costs * (float(lpr.loc[yr].mean()) if yr in lpr.index else 1.0)
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
@@ -4222,11 +4225,10 @@ def build_networks(parcels):
 
 
 @orca.step()
-def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
+def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
-    pseudo_buildings = pseudo_building_2020.to_frame()
 
     ## jobs
     idx_invalid_building_id = np.isin(j.building_id, b.index.values) == False
@@ -4246,10 +4248,6 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
 
     ## households
     idx_invalid_building_id = np.isin(h.building_id, b.index.values) == False
-    # ignore hh in pseudo_buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(
-        h.building_id.isin(pseudo_buildings.index)
-    )
     if idx_invalid_building_id.sum() > 0:
         print(
             (
@@ -4283,56 +4281,6 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
     for var in orca.get_table("nodes_drv").columns:
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
-
-
-@orca.step()
-def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
-    """Unplace households from them
-        - 1729 pseudo hh in 2050 forecast
-    Last used during RDF2050
-
-    Args:
-        households (DataFrameWrapper): households
-        buildings (DataFrameWrapper): buildings
-        pseudo_building_2020 (DataFrameWrapper): pseudo_building_2020
-    """
-    # define k: number of pseudo hh to drop each year
-    k = 90
-
-    # get households with sp_filter
-    hh = households.to_frame(households.local_columns + ["sp_filter"])
-
-    # N: number of existing pseudo households
-    N = hh[hh.sp_filter == -2].shape[0]
-
-    # if empty, return
-    if N == 0:
-        return
-
-    # if less than k, replace k
-    if N < k:
-        k = N
-
-    # sample k pseudo household to drop
-    hh_to_drop = hh[hh.sp_filter == -2].sample(k)
-
-    # unplace households and set sampled hh with building_id -1
-    hh.loc[hh_to_drop.index, "building_id"] = -1
-
-    # set resiential units to hh counts, avoid vacant units in pseudo buildings
-    hhs_by_pseudo_b = (
-        hh[(hh.sp_filter == -2) & (hh.building_id > -1)].groupby("building_id").size()
-    )
-    pb = pseudo_building_2020.local
-    bb = buildings.local
-    bb.loc[pb.index, "residential_units"] = 0
-    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b.astype(bb["residential_units"].dtype)
-
-    print("Dropped %s hh from current pseudo buildings." % k)
-
-    # update households and buildings
-    orca.add_table("households", hh[households.local_columns]) # remove extra columns
-    orca.add_table("buildings", bb)
 
 
 @orca.step()

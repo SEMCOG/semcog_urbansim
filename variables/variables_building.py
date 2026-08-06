@@ -758,13 +758,13 @@ def tract_id(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def zone_id(buildings, parcels, building_to_zone_baseyear):
+def zone_id(buildings, parcels, building_to_zone_overwrite):
     # use zone_id from parcel as default
     zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
     # only apply building to zone mapping to selected buildings
-    applied_buildings = zid.index.isin(building_to_zone_baseyear.index)
+    applied_buildings = zid.index.isin(building_to_zone_overwrite.index)
     # update their zone_id
-    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_baseyear.zone_id).astype(zid.dtype)
+    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_overwrite.zone_id).astype(zid.dtype)
     return zid
 
 

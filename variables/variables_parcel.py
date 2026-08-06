@@ -218,8 +218,6 @@ def parcel_is_allowed_2050(form=None):
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
 
-    pcl_pseudo_blds = pcl_index.isin(buildings[buildings.sp_filter == -2].parcel_id)
-
     protected = (
         pcl_new_building
         | pcl_addition
@@ -229,7 +227,6 @@ def parcel_is_allowed_2050(form=None):
         | pcl_gq
         | pcl_highval_blds
         | pcl_landmark_worksite
-        | pcl_pseudo_blds
     )
 
     if form:
@@ -565,6 +562,7 @@ SURVEY_VARS = [
     "recent_mover_rate",     # % HHs that moved in <= 10 years
     "ev_hybrid_rate",        # % vehicles that are EV/PHEV/HEV
     "median_commute_dist",   # mean work-trip distance in miles
+    "avg_hh_income",         # mean household income
 ]
 
 
