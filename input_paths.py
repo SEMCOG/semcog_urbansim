@@ -35,9 +35,18 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_080526.h5",
+    f"{_LOCAL}/main_080526.h5",
+    # 2050 base, fallback only
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
     f"{_LOCAL}/forecast_data_input.h5",
-    # legacy filename, fallback only -- doesn't have remi_pce_growth_rate etc.
+)
+
+# 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
+# household base trend for bg_hh_increase (see dataset.bg_hh_increase).
+BG_HH_2020_HDF = _p(
+    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
+    f"{_LOCAL}/forecast_data_input.h5",
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
     f"{_LOCAL}/forecast_data_input_031523.h5",
 )
@@ -51,13 +60,8 @@ ELCM_MODEL_DIR = _p(
     f"{_LOCAL}/models/elcm_models_25May30/",
 )
 
-POIS_CSV = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/pois.csv",
-    f"{_LOCAL}/pois.csv",
-)
-
 ACCESS_INDICATORS_H5 = _p(
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/access_indicators.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/access_indicators.h5",
     f"{_LOCAL}/access_indicators.h5",
 )
 
@@ -79,6 +83,7 @@ ACCESS_DRIVE_CSV = _p(
 
 # Pandana network bundle — normally in the local `data/` dir; fall back to copy.
 NETWORKS_2050_H5 = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/semcog_networks.h5",
     os.path.join(os.path.dirname(__file__), "data", "semcog_networks.h5"),
     f"{_LOCAL}/semcog_networks.h5",
     # legacy filename, fallback only -- identical content
@@ -86,19 +91,12 @@ NETWORKS_2050_H5 = _p(
     f"{_LOCAL}/semcog_2050_networks.h5",
 )
 
-# REMI personal-income / PCE growth-rate tables (one .xlsx per geography),
-# used by the income- and price-growth steps in models.py.
-LFPR_INCOME_DIR = _p(
-    "/mnt/DA/Projects/RDF/2050RDF/03 REMI/Draft 2/02 Detailed Tables/lfpr income",
-    f"{_LOCAL}/lfpr income",
-)
-
 # ---------------------------------------------------------------------------
 # Travel survey (block-group variable build; not part of every run)
 # ---------------------------------------------------------------------------
 TRAVEL_SURVEY_DIR = _p(
-    "/mnt/D/RDF2055/input_data/travel_survey/Full_Interim_Dataset_2026-03-04",
-    f"{_LOCAL}/travel_survey/Full_Interim_Dataset_2026-03-04",
+    "/mnt/D/RDF2055/input_data/travel_survey/Full_Dataset_HTS_Uni_2026-06-11",
+    f"{_LOCAL}/travel_survey/Full_Dataset_HTS_Uni_2026-06-11",
 )
 
 # ---------------------------------------------------------------------------

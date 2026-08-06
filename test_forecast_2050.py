@@ -143,7 +143,6 @@ orca.run(
         "households_relocation_2050",
         "jobs_transition",
         # "jobs_relocation_2050",
-        "drop_pseudo_buildings",
         "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
@@ -177,7 +176,6 @@ orca.run(
         "persons",
         "annual_relocation_rates_for_households",
         "buildings",
-        "pseudo_building_2020",
         "parcels",
         "zones",
         "semmcds",
