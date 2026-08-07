@@ -770,6 +770,14 @@ def maz_id(buildings, parcels, building_to_maz_override):
     ovr = ovr.reindex(mid.index).dropna()
     if len(ovr):
         mid.loc[ovr.index] = ovr.astype(mid.dtype).values
+    # A building created during the forecast on a crossing parcel carries a *drawn* MAZ
+    # stored as a local column. That draw is random
+    # and must not be recomputed here -- a stored non-null maz_id wins over the parcel
+    # default. Base-year buildings have no stored maz_id, so they use the inherited value.
+    local = buildings.local
+    if "maz_id" in local.columns:
+        stored = local["maz_id"]
+        mid = stored.where(stored.notna(), mid).astype(mid.dtype)
     return mid
 
 

@@ -56,6 +56,13 @@ POIS_CSV = _p(
     f"{_LOCAL}/pois.csv",
 )
 
+# task 2b: per-crossing-parcel MAZ area shares (new-construction MAZ draw weights)
+PARCEL_MAZ_CROSSING_SHARES_CSV = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/parcel_maz_crossing_shares.csv",
+    f"{_LOCAL}/parcel_maz_crossing_shares.csv",
+    "/mnt/D/RDF2055/forecast_inputs/parcel_taz_maz/parcel_maz_crossing_shares.csv",
+)
+
 ACCESS_INDICATORS_H5 = _p(
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/access_indicators.h5",
     f"{_LOCAL}/access_indicators.h5",

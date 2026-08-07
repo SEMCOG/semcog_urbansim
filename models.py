@@ -3294,16 +3294,42 @@ def add_extra_columns_nonres(df):
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
-    # New buildings inherit the parcel's MAZ (the dominant/non-crossing MAZ) and its TAZ.
-    # maz_id and zone_id are kept mutually consistent because parcels carry both from the
-    # crosswalk. On crossing parcels this is the dominant-MAZ fallback; the area-weighted
-    # per-building MAZ draw (task 2b Phase 1) refines it here later.
-    p = orca.get_table("parcels").to_frame(["maz_id", "zone_id", "city_id"])
-    for col in ["maz_id", "zone_id", "city_id"]:
-        # #35
-        # df["b_" + col] = misc.reindex(p[col], df.parcel_id)
-        df[col] = misc.reindex(p[col], df.parcel_id)
+    df["city_id"] = misc.reindex(orca.get_table("parcels").city_id, df.parcel_id)
+    # task 2b: assign each new building a MAZ. Non-crossing parcels -> the parcel's
+    # dominant MAZ; crossing parcels -> an area-weighted draw among the parcel's MAZ
+    # portions. TAZ is then DERIVED from the drawn MAZ (a crossing parcel can span TAZs,
+    # so zone_id must follow the drawn MAZ, not the parcel's dominant zone). The stored
+    # maz_id is honored by the buildings.maz_id column (a stored draw wins there).
+    df["maz_id"] = assign_new_building_maz(df)
+    micro_zones = orca.get_table("micro_zones").to_frame(["zone_id"])
+    df["zone_id"] = df["maz_id"].map(micro_zones.zone_id)
     return df.fillna(0)
+
+
+def assign_new_building_maz(new_buildings):
+    """Assign a MAZ to each newly created building (task 2b).
+
+    Non-crossing parcels: inherit the parcel's dominant MAZ.
+    Crossing parcels: one area-weighted draw per building among the parcel's MAZ
+    portions (weights = parcel_maz_crossing_shares.share, sum to 1 per parcel). One MAZ
+    per building (a draw, not a fractional split) preserves the one-zone-per-building
+    contract and is correct in expectation across many buildings. Uses the run's seeded
+    RNG stream so the assignment is reproducible.
+    """
+    parcel_maz = orca.get_table("parcels").maz_id
+    maz = misc.reindex(parcel_maz, new_buildings.parcel_id)  # default: dominant MAZ
+
+    cs = orca.get_table("parcel_maz_crossing_shares").to_frame(
+        ["parcel_id", "maz_id", "share"])
+    crossing = new_buildings["parcel_id"].isin(cs["parcel_id"].unique())
+    if crossing.any():
+        rng = utils.get_rng("assign_new_building_maz", orca.get_injectable("year"))
+        opts = {pid: g for pid, g in cs.groupby("parcel_id")}
+        for pid, blds in new_buildings.loc[crossing.values].groupby("parcel_id"):
+            o = opts[pid]
+            maz.loc[blds.index] = rng.choice(
+                o["maz_id"].values, size=len(blds), p=o["share"].values)
+    return maz.astype("int64")
 
 
 def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
@@ -4191,7 +4217,7 @@ def build_networks_2050(parcels):
         {
             "name": "osm_walk_2024",
             "cost": "cost1",
-            "prev": 26500,  # 5 miles
+            "prev": 16400,
             "net": "net_walk",
         },
         {
