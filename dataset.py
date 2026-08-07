@@ -304,6 +304,15 @@ def base_job_space(buildings):
 # finer MAZ resolution by building_to_maz_override + the maz->taz crosswalk. See
 # variables/variables_building.py (maz_id / zone_id).
 
+
+@orca.table(cache=True)
+def parcel_maz_crossing_shares():
+    # task 2b: new-construction MAZ allocation weights for parcels that cross a MAZ
+    # boundary. Each row is (parcel_id, maz_id, area_sqft, share); shares sum to 1 per
+    # parcel. Membership here == "this parcel is crossing". Source column is maz_seqid.
+    df = pd.read_csv(input_paths.PARCEL_MAZ_CROSSING_SHARES_CSV)
+    return df.rename(columns={"maz_seqid": "maz_id"})
+
 ### TODO: have data moved inside HDF input before 2055 forecast
 @orca.table(cache=True)
 def poi():
@@ -344,82 +353,27 @@ orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
 orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
 
 
-def _load_remi_growth_rates():
-    """Per-large-area personal-income and PCE growth rates, used by increase_property_values."""
-    base = input_paths.LFPR_INCOME_DIR
-    geo_to_la = {
-        "rest of wayne": 3,
-        "detroit":       5,
-        "livingston":    93,
-        "macomb":        99,
-        "monroe":        115,
-        "oakland":       125,
-        "stclair":       147,
-        "washtenaw":     161,
-    }
-    years = list(range(2020, 2051))
-    remi_base_year = 2022
-    base_idx = years.index(remi_base_year)
+def _load_remi_ratios_from_hdf(store):
+    """Load pre-computed REMI growth ratios from HDF.
 
-    pi_vals_by_la = {}
-    pce_vals = None
-    for geo, la in geo_to_la.items():
-        fpath = path.join(base, f"lfpr income {geo}.xlsx")
-        df = pd.read_excel(fpath, header=None, sheet_name=0)
-        pi_vals_by_la[la] = df.iloc[24, 9:40].values.astype(float)  # Personal Income
-        if pce_vals is None:
-            pce_vals = df.iloc[34, 9:40].values.astype(float)       # PCE-Price Index
-
-    pi_base  = {la: pi_vals_by_la[la][base_idx] for la in geo_to_la.values()}
-    pce_base = pce_vals[base_idx]
-
-    # Cumulative ratios relative to 2022 calibration year
-    income_ratios = {
-        years[i]: {la: pi_vals_by_la[la][i] / pi_base[la] for la in geo_to_la.values()}
-        for i in range(len(years))
-    }
-    pce_ratios = {years[i]: pce_vals[i] / pce_base for i in range(len(years))}
-
-    return income_ratios, pce_ratios
-
-
-def _load_remi_growth_rates_from_hdf(store, remi_base_year=2022):
-    """Fallback for _load_remi_growth_rates when the external REMI Excel files are absent.
-
-    Produces the SAME shapes the Excel path returns -- cumulative ratios relative to the
-    REMI base year (2022):
-      income_ratios : {year: {large_area_id(int): income_level[year]/income_level[2022]}}
-      pce_ratios    : {year: pce_level[year]/pce_level[2022]}
-
-    Source tables (per the data wiki, in forecast_data_input.h5):
-      income_growth_rates  -- year-indexed, columns are large_area_id (str); values are
-                              year-over-year growth FACTORS (1+rate), base year = 1.0.
-      remi_pce_growth_rate -- year-indexed, column pce_growth_rate; year-over-year RATE.
-    Both are converted to a cumulative level index (cumprod), then divided by the 2022
-    value so the result is a ratio vs 2022, matching the Excel loader.
+    All data comes from the base HDF (forecast_data_input.h5):
+      remi_income_ratios      -- {year: {large_area_id(int): ratio vs 2022}}
+      remi_local_price_ratios -- per-LA price ratios; averaged to region-wide PCE
     """
-    ig = store["income_growth_rates"]                       # YoY factors by year x LA
-    income_level = ig.cumprod()                             # cumulative level index
-    income_ratio = income_level.div(income_level.loc[remi_base_year])
-    income_ratios = {int(y): {int(la): float(income_ratio.at[y, la]) for la in ig.columns}
-                     for y in ig.index}
+    income_df = store["remi_income_ratios"]
+    income_ratios = {int(y): {int(la): float(income_df.at[y, la]) for la in income_df.columns}
+                     for y in income_df.index}
 
-    pce = store["remi_pce_growth_rate"]["pce_growth_rate"]  # YoY rate by year
-    pce_level = (1.0 + pce).cumprod()
-    pce_ratio = pce_level / pce_level.loc[remi_base_year]
-    pce_ratios = {int(y): float(pce_ratio.loc[y]) for y in pce.index}
+    # Region-wide PCE: average the per-LA local price ratios (variation ~1%, negligible)
+    price_df = store["remi_local_price_ratios"]
+    pce_ratios = {int(y): float(price_df.loc[y].mean()) for y in price_df.index}
+
+    print(f"REMI growth rates loaded from HDF: {len(income_ratios)} years, "
+          f"{len(next(iter(income_ratios.values())))} large areas")
     return income_ratios, pce_ratios
 
 
-try:
-    _remi_income, _remi_pce = _load_remi_growth_rates()
-    print(f"REMI growth rates loaded from Excel: {len(_remi_income)} years")
-except (FileNotFoundError, OSError) as e:
-    # External REMI lfpr Excel files unavailable -> read the HDF tables instead.
-    print(f"REMI Excel unavailable ({e}); falling back to HDF "
-          f"income_growth_rates + remi_pce_growth_rate")
-    _remi_income, _remi_pce = _load_remi_growth_rates_from_hdf(orca.get_injectable("store"))
-    print(f"REMI growth rates loaded from HDF: {len(_remi_income)} years")
+_remi_income, _remi_pce = _load_remi_ratios_from_hdf(orca.get_injectable("store"))
 orca.add_injectable("remi_income_ratios", _remi_income)
 orca.add_injectable("remi_pce_ratios", _remi_pce)
 orca.add_injectable("remi_base_year", 2022)
