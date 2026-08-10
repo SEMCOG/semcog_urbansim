@@ -136,28 +136,20 @@ def buildings(store):
 
     df["mcd_model_quota"] = 0
 
-    # calculate city_id if not presented
-    if "city_id" not in df.columns:
-        df = pd.merge(
-            df,
-            store["parcels"][["city_id"]],
-            left_on="parcel_id",
-            right_index=True,
-            how="left",
-        )
-    df["city_id"] = df["city_id"].fillna(0)
+    # drop city_id if exists
+    df = df.drop(columns=["city_id"], errors="ignore")
+
+    # hu_filter assignment
     df["hu_filter"] = 0
-    cites = [551, 1155, 1100, 3130, 6020, 6040]
-    sample = df[df.residential_units > 0]
-    sample = sample[~(sample.index.isin(store["households"].building_id))]
-    # #35
-    for c in sample.city_id.unique():
-        frac = 0.8 if c in cites else 0
-        # #35
-        df.loc[
-            sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
-            "hu_filter",
-        ] = 1
+    hu_cities = [551, 1155, 1100, 3130, 6020, 6040]
+    b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    sample = df[(df.residential_units > 0) & ~df.index.isin(store["households"].building_id)]
+    sample_city = b_city_id.reindex(sample.index)
+    for c in hu_cities:
+        city_sample = sample.index[sample_city == c]
+        if len(city_sample):
+            chosen = pd.Series(city_sample).sample(frac=0.8, replace=False).values
+            df.loc[chosen, "hu_filter"] = 1
 
     df["sp_filter"] = 0  # special filter: for event location/buildings, landmark buildings, etc
     # skip if not presented
