@@ -2157,15 +2157,17 @@ def seed_new_gq_buildings(group_quarters, buildings, events_addition, year):
     demographics from the live group_quarters population.
     """
     # --- confirmed GQ buildings + capacity, from events (the only real source) ---
-    ea  = events_addition.to_frame(["building_id", "gqcap", "year_built"])
-    cap = ea[(ea.gqcap > 0) & (ea.year_built <= year)].groupby("building_id")["gqcap"].sum()
+    # Scheduled-event buildings receive new runtime building IDs. event_id is
+    # the stable link from the event input to the appended building.
+    ea = events_addition.to_frame(["event_id", "gqcap", "year_built"])
+    cap = ea[(ea.gqcap > 0) & (ea.year_built <= year)].groupby("event_id")["gqcap"].sum()
     if len(cap) == 0:
         print("seed_new_gq_buildings %s: no GQ-capacity events; nothing to seed" % year)
         return
 
-    b = buildings.to_frame(["building_type_id"])
-    gqb = b.loc[b.index.isin(cap.index)].copy()          # GQ buildings that exist now
-    gqb["gqcap"] = cap.reindex(gqb.index)
+    b = buildings.to_frame(["building_type_id", "event_id"])
+    gqb = b.loc[b.event_id.isin(cap.index)].copy()       # GQ buildings that exist now
+    gqb["gqcap"] = gqb.event_id.map(cap)
 
     gq = group_quarters.to_frame(group_quarters.local_columns)
     gq["btype"] = gq["building_id"].map(b["building_type_id"])
@@ -2705,12 +2707,12 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
                 "build_type": "building_type_id",
             }
         )
-        ebid = sched_dev.building_id.copy()  # save event_id to be used later
+        source_event_id = sched_dev.event_id.copy()
         sched_dev = add_extra_columns_res(sched_dev)
 
         sched_dev["hu_filter"] = 0
         sched_dev["sp_filter"] = 0
-        sched_dev["event_id"] = ebid  # add back event_id
+        sched_dev["event_id"] = source_event_id
 
         # set sp_filter to -1 to nonres event with refiner events to prevent future reloaction
         refinements = refiner_events.to_frame()
@@ -3304,7 +3306,9 @@ def assign_new_building_maz(new_buildings):
     RNG stream so the assignment is reproducible.
     """
     parcel_maz = orca.get_table("parcels").maz_id
-    maz = misc.reindex(parcel_maz, new_buildings.parcel_id)  # default: dominant MAZ
+    # pandas 3 rejects assigning NumPy's int64 choice output into the int16
+    # parcel MAZ series, even when an individual draw fits that dtype.
+    maz = misc.reindex(parcel_maz, new_buildings.parcel_id).astype("int64")
 
     cs = orca.get_table("parcel_maz_crossing_shares").to_frame(
         ["parcel_id", "maz_id", "share"])
