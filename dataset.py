@@ -53,6 +53,7 @@ for name in [
     "demolition_rates",
     "landmark_worksites", # need 2055 update
     "mcd_total",
+    "parcel_maz_crossing_shares",  # parcel->MAZ area shares for parcels spanning MAZ
     "dropped_buildings",
     "bg_hh_increase",
 ]:
@@ -135,13 +136,15 @@ def buildings(store):
 
     df["mcd_model_quota"] = 0
 
-    df = pd.merge(
-        df,
-        store["parcels"][["city_id"]],
-        left_on="parcel_id",
-        right_index=True,
-        how="left",
-    )
+    # calculate city_id if not presented
+    if "city_id" not in df.columns:
+        df = pd.merge(
+            df,
+            store["parcels"][["city_id"]],
+            left_on="parcel_id",
+            right_index=True,
+            how="left",
+        )
     df["city_id"] = df["city_id"].fillna(0)
     df["hu_filter"] = 0
     cites = [551, 1155, 1100, 3130, 6020, 6040]
@@ -156,16 +159,14 @@ def buildings(store):
             "hu_filter",
         ] = 1
 
-    # TODO, this is placeholder. will update with special emp buildings lookup later
-
-    df[
-        "sp_filter"
-    ] = 0  # special filter: for event location/buildings, landmark buildings, etc
-    landmark_worksites = store["landmark_worksites"]
-    df.loc[
-        landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
-        "sp_filter",
-    ] = -1  # set landmark building_id as negative for blocking
+    df["sp_filter"] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    # skip if not presented
+    if "landmark_worksites" in store:
+        landmark_worksites = store["landmark_worksites"]
+        df.loc[
+            landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
+            "sp_filter",
+        ] = -1  # set landmark building_id as negative for blocking
 
     df["event_id"] = 0  # also add event_id for event reference
 
