@@ -758,27 +758,10 @@ def tract_id(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def maz_id(buildings, parcels, building_to_maz_override):
-    # MAZ is the anchor geography: inherit the parcel's MAZ by default, then apply the
-    # base-year override for buildings whose parcel straddles a MAZ boundary.
-    mid = misc.reindex(parcels.maz_id, buildings.parcel_id)
-    ovr = building_to_maz_override.maz_id
-    # Guard against a duplicated building_id in the override table (a building must have
-    # one override MAZ); keep the first deterministically. reindex() on a duplicate-index
-    # source would otherwise raise.
-    ovr = ovr[~ovr.index.duplicated(keep="first")]
-    ovr = ovr.reindex(mid.index).dropna()
-    if len(ovr):
-        mid.loc[ovr.index] = ovr.astype(mid.dtype).values
-    # A building created during the forecast on a crossing parcel carries a *drawn* MAZ
-    # stored as a local column. That draw is random
-    # and must not be recomputed here -- a stored non-null maz_id wins over the parcel
-    # default. Base-year buildings have no stored maz_id, so they use the inherited value.
-    local = buildings.local
-    if "maz_id" in local.columns:
-        stored = local["maz_id"]
-        mid = stored.where(stored.notna(), mid).astype(mid.dtype)
-    return mid
+def maz_id(buildings):
+    # Initialized from parcel MAZ plus base-year overrides in dataset.buildings;
+    # forecast-created buildings store their own weighted MAZ draw.
+    return buildings.local["maz_id"]
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
