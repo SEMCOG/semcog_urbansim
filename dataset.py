@@ -107,6 +107,8 @@ def bg_hh_increase():
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
+    # City is anchored to the parcel for both base and forecast buildings.
+    df["city_id"] = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
     # Existing checkpoints already contain the local MAZ column. Older checkpoints
     # can be upgraded below without rerunning the rest of the base-year cleanup.
     is_checkpoint = orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint')
