@@ -938,6 +938,7 @@
     MAZ --&gt; P
 
     P --&gt; B["~1.8M Buildings"]
+    MAZ --&gt; B
     B --&gt; HH[Households]
     B --&gt; J[Jobs]
 
@@ -947,7 +948,8 @@
     style P  fill:#43A047,color:#fff
     style LA fill:#e0f2f1,stroke:#00897B
     style MAZ fill:#fff3e0,stroke:#e65100</code></pre>
-<p>MAZ (<code>micro_zones</code>) is the <strong>anchor spatial unit</strong> for parcels and buildings: each parcel carries a <code>maz_id</code>, and its TAZ (<code>zone_id</code>) is derived from the MAZ through the 1:1 MAZ→TAZ crosswalk rather than assigned independently.</p>
+<p>MAZ (<code>micro_zones</code>) is the <strong>anchor spatial unit</strong> for parcels and buildings. Each parcel carries <strong>both</strong> a <code>maz_id</code> and a <code>zone_id</code> (TAZ) column. The two are kept consistent through the 1:1 MAZ→TAZ crosswalk — the parcel's TAZ matches its MAZ's parent zone rather than being assigned independently.</p>
+<p>Buildings also carry their own <code>maz_id</code>. It is initialized from the parcel <code>maz_id</code>, except where <code>building_to_maz_override</code> supplies a building-specific MAZ. A building <code>zone_id</code> (TAZ) is always derived from that building MAZ through the <code>micro_zones</code> crosswalk, not independently assigned from its parcel.</p>
 <blockquote>
 <p><strong>Real-world alignment note</strong></p>
 <p>The hierarchy above is the intended clean structure. In practice, real-world data introduces boundary complications that data developers should keep in mind:</p>
@@ -1059,7 +1061,7 @@
 <h2 id="table-count">Table Count<a class="headerlink" href="#table-count" title="Permanent link">&para;</a></h2>
 <p>The main model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
 <hr />
-<p><small>Last updated: July 2026</small></p>
+<p><small>Last updated: August 2026</small></p>
 
 
 

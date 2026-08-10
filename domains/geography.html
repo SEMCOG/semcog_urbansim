@@ -507,6 +507,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#parcel_maz_crossing_shares" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parcel_maz_crossing_shares
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#update-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -875,14 +886,14 @@
 <tr>
 <td><code>micro_zones</code></td>
 <td>Micro Analysis Zones (MAZ) — TAZ sub-units; MAZ→TAZ crosswalk and anchor geography</td>
-<td>SQL (<code>terminus_maz_v2</code>)</td>
+<td>SQL (<code>terminus_maz_v3</code>)</td>
 <td>Yes</td>
 </tr>
 <tr>
 <td><code>building_to_maz_override</code></td>
 <td>Base-year building→MAZ/TAZ override for buildings whose parcel straddles a boundary</td>
-<td>Script (parcel/MAZ overlay)</td>
-<td>Yes (in HDF; not yet pipeline-wired)</td>
+<td>SQL spatial assignment</td>
+<td>Yes</td>
 </tr>
 </tbody>
 </table>
@@ -1127,10 +1138,10 @@
 <hr />
 <h2 id="micro_zones"><code>micro_zones</code><a class="headerlink" href="#micro_zones" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Model input (anchor geography).</strong> <code>micro_zones</code> is now assembled into the model input file as the <strong>MAZ→TAZ crosswalk</strong>. It is the anchor spatial unit in the MAZ-anchor design: parcels and buildings carry a <code>maz_id</code>, and their TAZ (<code>zone_id</code>) is derived from MAZ through this table's 1:1 <code>maz_id → zone_id</code> mapping. Note: MAZ is present in the inputs as an anchor geography but is <strong>not yet read by any simulation model component</strong> — no model step consumes MAZ directly (yet).</p>
+<p><strong>Model input (anchor geography).</strong> <code>micro_zones</code> is the <strong>MAZ→TAZ crosswalk</strong> used throughout the model. Parcels and buildings carry a <code>maz_id</code>, and their TAZ (<code>zone_id</code>) is derived from MAZ through this table's 1:1 <code>maz_id → zone_id</code> mapping. The model uses MAZ to anchor building locations (esp. on parcels that cross boundaries) and to assign new buildings to fine-grained zones.</p>
 </blockquote>
 <p>Micro Analysis Zones (MAZ) are sub-units of TAZs used in activity-based travel demand modeling. Each TAZ is divided into approximately 10 MAZs on average.</p>
-<p><strong>~28,647 MAZs</strong> across the region, each nested within a TAZ. Source: <code>creator.terminus_maz_v2</code> (PostGIS, EPSG:2898) — the current delineation (supersedes the older <code>terminus_maz_2055</code>/microzones v1). The HDF table key is <strong><code>micro_zones</code></strong> (renamed from the former <code>maz</code> key).</p>
+<p><strong>~28,647 MAZs</strong> across the region, each nested within a TAZ. Source: <code>creator.terminus_maz_v3</code> (PostGIS, EPSG:2898). The HDF table key is <strong><code>micro_zones</code></strong>.</p>
 <p><strong>Index:</strong> <code>maz_id</code></p>
 <table>
 <thead>
@@ -1174,8 +1185,7 @@
 <hr />
 <h2 id="building_to_maz_override"><code>building_to_maz_override</code><a class="headerlink" href="#building_to_maz_override" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Base-year building→MAZ/TAZ override.</strong> Present in the base-year HDF (~23,914 rows). Because a building's MAZ/TAZ is normally inherited from its parcel, this table overrides that inheritance for buildings whose parcel <strong>straddles a MAZ/TAZ boundary</strong> — assigning the building its own <code>maz_id</code> (and derived <code>zone_id</code>) by point-in-polygon on the building location. Part of the MAZ-anchor work.</p>
-<p><strong>Integration status:</strong> the table exists in the input HDF but is <strong>not yet wired into the standard input pipeline config</strong> (<code>sql.yaml</code>/<code>files.yaml</code>) and is <strong>not yet loaded by the simulation</strong> (<code>dataset.py</code>). Document as data-present, not-yet-consumed.</p>
+<p><strong>Base-year building→MAZ/TAZ override.</strong> Present in the base-year HDF (~23,870 rows). For buildings whose parcel <strong>straddles a MAZ/TAZ boundary</strong>, this table overrides the default parcel-inherited MAZ/TAZ, assigning the building its own <code>maz_id</code> (and derived <code>zone_id</code>) based on actual building location. Loaded and used by the model.</p>
 </blockquote>
 <p><strong>Index:</strong> <code>building_id</code></p>
 <table>
@@ -1199,6 +1209,49 @@
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="parcel_maz_crossing_shares"><code>parcel_maz_crossing_shares</code><a class="headerlink" href="#parcel_maz_crossing_shares" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>New-construction MAZ allocation weights.</strong> Specifies, for each parcel that straddles a MAZ boundary, the land area fraction in each MAZ. Used to assign new buildings on crossing parcels: each new building draws one MAZ probabilistically, weighted by these area shares. ~41k rows (crossing parcels only); non-crossing parcels are implicit (single dominant MAZ).</p>
+</blockquote>
+<p><strong>Columns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parcel_id</code></td>
+<td>int</td>
+<td>Parcel identifier (index)</td>
+</tr>
+<tr>
+<td><code>maz_id</code></td>
+<td>int</td>
+<td>One of the MAZs this parcel crosses (joins <code>micro_zones.maz_id</code>)</td>
+</tr>
+<tr>
+<td><code>area_sqft</code></td>
+<td>float</td>
+<td>Land area of parcel within this MAZ (square feet)</td>
+</tr>
+<tr>
+<td><code>share</code></td>
+<td>float</td>
+<td>Fraction of parcel's total area in this MAZ; sums to 1.0 per <code>parcel_id</code></td>
+</tr>
+<tr>
+<td><code>taz_id</code></td>
+<td>int</td>
+<td>Parent TAZ of this MAZ portion</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data note:</strong> Presence in this table is the indicator that a parcel crosses a MAZ boundary. Parcels not in this table are non-crossing (single dominant MAZ from their centroid).</p>
 <hr />
 <h2 id="update-notes">Update Notes<a class="headerlink" href="#update-notes" title="Permanent link">&para;</a></h2>
 <p><strong><code>zones</code> and <code>semmcds</code></strong> — update when TAZ or MCD boundaries change (typically when census boundaries are updated or new municipalities form or dissolve).</p>

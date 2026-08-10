@@ -565,6 +565,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#base-year-event-cutoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base-year event cutoff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#events_addition" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1042,8 +1053,25 @@
 <p><strong>Event timing is by year, not date.</strong> Every event's timing is a single integer <strong>year</strong> — <code>year_built</code> on <code>events_addition</code>, <code>year_demo</code> on <code>events_deletion</code> (renamed to <code>year_built</code> on load), and the <code>year</code> column on <code>refiner_events</code>. There is <strong>no calendar date</strong> anywhere in the chain: the source tables carry only the year column, the input SQL pulls only that year column, and the model fires an event in the year whose value <strong>equals the current simulation year</strong> (<code>year_built == iter_var</code> in the scheduled add/demolish steps; <code>refinements.year == year</code> in the refiner).</p>
 <p><strong>What this means for developing event tables:</strong> all events sharing a year are applied <strong>together</strong> — there is no within-year ordering, sequencing, or partial-year timing. When curating event records, only the <strong>year</strong> matters; a month or day has no effect on when (or whether) an event fires. Assign each event to the year it should take effect and do not attempt to encode sub-year dates — they are neither stored nor read.</p>
 </blockquote>
+<h3 id="base-year-event-cutoff">Base-year event cutoff<a class="headerlink" href="#base-year-event-cutoff" title="Permanent link">&para;</a></h3>
+<p>The input build assembles buildings as the base-year snapshot from the preceding
+building GIS view plus the two physical-event tables. It first removes deletion events
+dated in the base year, then appends addition events dated in the base year. For the
+current cycle, the complete 2024 building view plus complete 2025 additions and
+deletions produces the 2025 buildings snapshot.</p>
+<p>This gives a clear acceptance rule for the base inventory: it is complete when the
+preceding-year GIS building view is complete and every physical addition and deletion
+for the base year has been entered. Event records after the base year stay in their
+event tables. They can be added, corrected, or dropped without rebuilding the current
+base-year buildings snapshot; the forecast captures them when it reaches their year.</p>
+<p>Do not also place a future event directly in buildings, because that would cause the
+physical change to be represented twice. Conversely, do not omit a base-year event
+from the assembly run, because the base snapshot would be stale.</p>
 <h3 id="events_addition"><code>events_addition</code><a class="headerlink" href="#events_addition" title="Permanent link">&para;</a></h3>
-<p>Buildings to be added at a specific future year. Represents known construction projects (stadiums, hospitals, planned developments) that override the market developer model. A new building record is inserted into the buildings table at the scheduled year.</p>
+<p>Known physical building additions, such as planned developments, stadiums, and
+hospitals. A row dated in the base year is incorporated into the assembled
+buildings snapshot. A row dated after the base year remains a scheduled forecast
+input and adds a building when its year is reached.</p>
 <p><strong>Index:</strong> <code>objectid</code> (unique)</p>
 <table>
 <thead>
@@ -1076,7 +1104,7 @@
 <tr>
 <td><code>year_built</code></td>
 <td>int16</td>
-<td>range [base year+1 – forecast end], no null</td>
+<td>base year or later, no null</td>
 <td>Year the building is added</td>
 </tr>
 <tr>
@@ -1098,38 +1126,35 @@
 <td></td>
 </tr>
 <tr>
-<td><code>zone_id</code></td>
-<td>int16</td>
-<td>—</td>
-<td>TAZ reference</td>
-</tr>
-<tr>
-<td><code>city_id</code></td>
-<td>int16</td>
-<td>—</td>
-<td>MCD reference (= semmcd outside Detroit)</td>
-</tr>
-<tr>
 <td><code>gqcap</code></td>
 <td>int</td>
-<td>—</td>
-<td>Group quarters capacity (0 if not GQ)</td>
+<td>≥ 0, no null</td>
+<td>Facility group-quarters capacity; 0 means the event does not create a GQ facility</td>
 </tr>
 <tr>
 <td><code>event_id</code></td>
 <td>int</td>
+<td>unique, no null</td>
+<td>Stable event identifier. Retain it across input refreshes; <code>refiner_events</code> may use it to target the resulting event building.</td>
+</tr>
+<tr>
+<td><code>building_id</code></td>
+<td>int</td>
 <td>—</td>
-<td>Project reference ID; used by <code>refiner_events</code> to target this building</td>
+<td>Optional source-system building reference. It is not the identifier assigned to the event-created building in forecast outputs.</td>
 </tr>
 </tbody>
 </table>
-<p>Event buildings receive <code>sp_filter = -1</code> (protected from random relocation and demolition).</p>
+<p>For an event that creates a GQ facility, set <code>gqcap</code> to the number of beds. Do not infer
+GQ capacity from <code>building_type_id</code>; use <code>0</code> when the event does not create a GQ facility.</p>
 <p><strong>Common issues:</strong>
 - <code>parcel_id</code> not in <code>parcels</code> — building can't be placed; fix parcel reference
-- <code>year_built</code> at or before the base year — these events are filtered out; verify years
-- Year range should cover only future years (after the base year)</p>
+- a base-year row missing from the assembly run — the base buildings snapshot will be incomplete
+- <code>year_built</code> before the base year — verify the forecast-cycle cutoff and source record</p>
 <h3 id="events_deletion"><code>events_deletion</code><a class="headerlink" href="#events_deletion" title="Permanent link">&para;</a></h3>
-<p>Buildings to be demolished at a specific future year. The building record is removed from the buildings table at the scheduled year, displacing any agents that occupied it.</p>
+<p>Known physical building deletions or demolitions. A row dated in the base year removes
+the building while the base snapshot is assembled. A row dated after the base year
+remains a scheduled forecast input and removes the building when its year is reached.</p>
 <p><strong>Index:</strong> <code>objectid</code> (unique)</p>
 <table>
 <thead>
@@ -1156,14 +1181,15 @@
 <tr>
 <td><code>year_built</code></td>
 <td>int16</td>
-<td>no null</td>
-<td>Year of demolition</td>
+<td>base year or later, no null</td>
+<td>Year of demolition. The source field is <code>year_demo</code>; it is normalized to <code>year_built</code> in the model-input HDF.</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Common issues:</strong>
 - <code>building_id</code> not in <code>buildings</code> — skipped but should be cleaned up
-- Demolition years at or before the base year — verify data entry</p>
+- a base-year demolition missing from the assembly run — the base buildings snapshot will be stale
+- Demolition year before the base year — verify the forecast-cycle cutoff and source record</p>
 <h3 id="refiner_events"><code>refiner_events</code><a class="headerlink" href="#refiner_events" title="Permanent link">&para;</a></h3>
 <p>Agent-level events collected from various sources. Unlike <code>events_addition</code>/<code>events_deletion</code>, this table does not change the building inventory — it adds or removes <strong>agents</strong> (jobs, households, or group quarters persons) at specific locations. Typical uses include planned major employer openings or relocations, GQ facility population changes, and other future occupancy events that do not involve new construction or demolition. Assembled by merging employment events and GQ events CSVs.</p>
 <p><strong>Index:</strong> <code>refinement_id</code> (unique, int16)</p>

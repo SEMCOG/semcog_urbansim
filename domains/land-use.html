@@ -509,6 +509,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#base-year-building-snapshot-and-event-cutoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base-year building snapshot and event cutoff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#how-the-model-uses-key-building-columns" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1074,6 +1085,23 @@
 <hr />
 <h2 id="buildings"><code>buildings</code><a class="headerlink" href="#buildings" title="Permanent link">&para;</a></h2>
 <p>Every residential unit and job must be assigned to a building. This is the most-used table in the simulation. Building count is close to parcel count — most parcels have one building.</p>
+<h3 id="base-year-building-snapshot-and-event-cutoff">Base-year building snapshot and event cutoff<a class="headerlink" href="#base-year-building-snapshot-and-event-cutoff" title="Permanent link">&para;</a></h3>
+<p>The <code>buildings</code> table is an assembled base-year inventory, not a direct copy of the source
+building view. For each forecast cycle, the input build:</p>
+<ol>
+<li>loads the building GIS view for the year immediately before the base year;</li>
+<li>removes all scheduled deletion events dated in the base year;</li>
+<li>adds all scheduled addition events dated in the base year; and</li>
+<li>validates the resulting buildings against parcels and building types.</li>
+</ol>
+<p>For the current cycle, this means the 2024 building view is advanced to the 2025
+base-year snapshot. Deletions are applied before additions. The source building view and
+the complete set of base-year additions and deletions are therefore the data-development
+inputs that determine whether the base-year buildings table is complete.</p>
+<p>Events after the base year are <strong>not</strong> folded into the base buildings table. They remain in
+<code>events_addition</code> and <code>events_deletion</code> for the forecast to apply in their stated years.
+Do not manually add or remove future event buildings from the base-year building view; doing
+so would apply the same event twice.</p>
 <p><strong>Index:</strong> <code>building_id</code> (unique)</p>
 <p><strong>Columns exported to model input:</strong></p>
 <table>
@@ -1154,6 +1182,10 @@
 </tr>
 </tbody>
 </table>
+<p><code>city_id</code> is not a required base-year buildings input field. Municipal geography is owned by
+<code>parcels.city_id</code>; do not maintain a separate building-level city assignment. Likewise,
+<code>maz_id</code> is established from the parcel MAZ, with exceptions supplied through
+<code>building_to_maz_override</code> in the Geography domain.</p>
 <p><strong>Building type codes:</strong></p>
 <table>
 <thead>
