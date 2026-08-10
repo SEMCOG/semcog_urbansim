@@ -2705,13 +2705,9 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
                 "build_type": "building_type_id",
             }
         )
-        # #35
-        # city = sched_dev.b_city_id
-        city = sched_dev.city_id
         ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
-        sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
         sched_dev["sp_filter"] = 0
         sched_dev["event_id"] = ebid  # add back event_id
