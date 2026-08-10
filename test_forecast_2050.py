@@ -144,7 +144,6 @@ orca.run(
         "households_relocation_2050",
         "jobs_transition",
         # "jobs_relocation_2050",
-        "drop_pseudo_buildings",
         "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",

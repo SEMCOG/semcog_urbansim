@@ -2698,11 +2698,6 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
     if len(sched_dev) > 0:
         if "stories" not in sched_dev.columns:
             sched_dev["stories"] = 0
-        zone = (
-            # #35
-            # sched_dev.b_zone_id
-            sched_dev.zone_id
-        )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
         sched_dev = sched_dev.rename(
             columns={
                 "nonres_sqft": "non_residential_sqft",
@@ -2716,10 +2711,6 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
         ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
-        # #35
-        # sched_dev["b_zone_id"] = zone
-        # sched_dev["b_city_id"] = city
-        sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
         sched_dev["sp_filter"] = 0
@@ -4317,11 +4308,10 @@ def build_networks(parcels):
 
 
 @orca.step()
-def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
+def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)
     h = households.to_frame(households.local_columns)
-    pseudo_buildings = pseudo_building_2020.to_frame()
 
     ## jobs
     idx_invalid_building_id = np.isin(j.building_id, b.index.values) == False
@@ -4341,10 +4331,6 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
 
     ## households
     idx_invalid_building_id = np.isin(h.building_id, b.index.values) == False
-    # ignore hh in pseudo_buildings
-    idx_invalid_building_id = idx_invalid_building_id & ~(
-        h.building_id.isin(pseudo_buildings.index)
-    )
     if idx_invalid_building_id.sum() > 0:
         print(
             (
@@ -4379,55 +4365,6 @@ def neighborhood_vars(jobs, households, buildings, pseudo_building_2020):
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
 
-
-@orca.step()
-def drop_pseudo_buildings(households, buildings, pseudo_building_2020):
-    """Unplace households from them
-        - 1729 pseudo hh in 2050 forecast
-    Last used during RDF2050
-
-    Args:
-        households (DataFrameWrapper): households
-        buildings (DataFrameWrapper): buildings
-        pseudo_building_2020 (DataFrameWrapper): pseudo_building_2020
-    """
-    # define k: number of pseudo hh to drop each year
-    k = 90
-
-    # get households with sp_filter
-    hh = households.to_frame(households.local_columns + ["sp_filter"])
-
-    # N: number of existing pseudo households
-    N = hh[hh.sp_filter == -2].shape[0]
-
-    # if empty, return
-    if N == 0:
-        return
-
-    # if less than k, replace k
-    if N < k:
-        k = N
-
-    # sample k pseudo household to drop
-    hh_to_drop = hh[hh.sp_filter == -2].sample(k)
-
-    # unplace households and set sampled hh with building_id -1
-    hh.loc[hh_to_drop.index, "building_id"] = -1
-
-    # set resiential units to hh counts, avoid vacant units in pseudo buildings
-    hhs_by_pseudo_b = (
-        hh[(hh.sp_filter == -2) & (hh.building_id > -1)].groupby("building_id").size()
-    )
-    pb = pseudo_building_2020.local
-    bb = buildings.local
-    bb.loc[pb.index, "residential_units"] = 0
-    bb.loc[hhs_by_pseudo_b.index, "residential_units"] = hhs_by_pseudo_b.astype(bb["residential_units"].dtype)
-
-    print("Dropped %s hh from current pseudo buildings." % k)
-
-    # update households and buildings
-    orca.add_table("households", hh[households.local_columns]) # remove extra columns
-    orca.add_table("buildings", bb)
 
 
 @orca.step()
