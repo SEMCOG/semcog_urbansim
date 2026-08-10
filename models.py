@@ -2703,11 +2703,6 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
     if len(sched_dev) > 0:
         if "stories" not in sched_dev.columns:
             sched_dev["stories"] = 0
-        zone = (
-            # #35
-            # sched_dev.b_zone_id
-            sched_dev.zone_id
-        )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
         sched_dev = sched_dev.rename(
             columns={
                 "nonres_sqft": "non_residential_sqft",
@@ -2721,10 +2716,6 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
         ebid = sched_dev.building_id.copy()  # save event_id to be used later
         sched_dev = add_extra_columns_res(sched_dev)
 
-        # #35
-        # sched_dev["b_zone_id"] = zone
-        # sched_dev["b_city_id"] = city
-        sched_dev["zone_id"] = zone
         sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
         sched_dev["sp_filter"] = 0
