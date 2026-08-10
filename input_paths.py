@@ -35,7 +35,7 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_080526.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_080726.h5",
     f"{_LOCAL}/main_080526.h5",
     # 2050 base, fallback only
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
@@ -63,22 +63,6 @@ ELCM_MODEL_DIR = _p(
 ACCESS_INDICATORS_H5 = _p(
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/access_indicators.h5",
     f"{_LOCAL}/access_indicators.h5",
-)
-
-# legacy CSVs, fallback only -- superseded by ACCESS_INDICATORS_H5 (same data,
-# documented fill values applied: 95/125/155 min near-max, 0 cumulative/gravity)
-_ACCESS = "/mnt/hgfs/urbansim/Accessibility/access_to_core_2024/outputs_model/indicators"
-ACCESS_WALK_CSV = _p(
-    f"{_ACCESS}/walk/walk_indicators_by_parcel_20251111.csv",
-    f"{_LOCAL}/indicators/walk/walk_indicators_by_parcel_20251111.csv",
-)
-ACCESS_BIKE_CSV = _p(
-    f"{_ACCESS}/bike/bike_indicators_by_parcel_20251111.csv",
-    f"{_LOCAL}/indicators/bike/bike_indicators_by_parcel_20251111.csv",
-)
-ACCESS_DRIVE_CSV = _p(
-    f"{_ACCESS}/drive/drive_indicators_by_parcel_20251111.csv",
-    f"{_LOCAL}/indicators/drive/drive_indicators_by_parcel_20251111.csv",
 )
 
 # Pandana network bundle — normally in the local `data/` dir; fall back to copy.

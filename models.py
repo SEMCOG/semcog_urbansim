@@ -4109,41 +4109,32 @@ def build_networks_2050(parcels):
         orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
         orca.clear_columns("zones")
 
-    if year < 2030:
-        lstnet = [
-            {
-                "name": "osm_roads_walk_2020",
-                "cost": "cost1",
-                "prev": 26500,  # 5 miles
-                "net": "net_walk",
-            },
-            {
-                "name": "highway_ext_2020",
-                "cost": "cost1",
-                "prev": 60,  # 60 minutes
-                "net": "net_drv",
-            },
-        ]
-    else:
-        lstnet = [
-            {
-                "name": "osm_roads_walk_2020",
-                "cost": "cost1",
-                "prev": 26500,  # 5 miles
-                "net": "net_walk",
-            },
-            {
-                "name": "highway_ext_2030",
-                "cost": "cost1",
-                "prev": 60,  # 60 minutes
-                "net": "net_drv",
-            },
-        ]
+    lstnet = [
+        {
+            "name": "osm_walk_2024",
+            "cost": "cost1",
+            "prev": 16400,  # 3.1 miles
+            "net": "net_walk",
+        },
+        {
+            "name": "highway_ext_2025",
+            "cost": "cost1",
+            "prev": 60,  # 60 minutes
+            "net": "net_drv",
+        },
+        {
+            "name": "osm_bike_2024",
+            "cost": "cost1",
+            "prev": 26400,  # 5 miles
+            "net": "net_bike",
+            "precompute": False,  # POI queries only, no range aggregations
+        },
+    ]
 
     ## TODO, remove 2015, 2019 after switching to full 2050 model
     if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
         st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
-        pdna.network.reserve_num_graphs(2)
+        pdna.network.reserve_num_graphs(len(lstnet))
 
         for n in lstnet:
             n_dic_net = dic_net[n["name"]]
@@ -4155,7 +4146,8 @@ def build_networks_2050(parcels):
                 edges["to"],
                 edges[[n_dic_net[n["cost"]]]],
             )
-            net.precompute(n["prev"])
+            if n.get("precompute", True):
+                net.precompute(n["prev"])
             net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
 
             orca.add_injectable(n["net"], net)
@@ -4166,6 +4158,9 @@ def build_networks_2050(parcels):
             p["centroid_x"], p["centroid_y"]
         )
         p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
+            p["centroid_x"], p["centroid_y"]
+        )
+        p["nodeid_bike"] = orca.get_injectable("net_bike").get_node_ids(
             p["centroid_x"], p["centroid_y"]
         )
         orca.add_table("parcels", p)
@@ -4281,6 +4276,15 @@ def neighborhood_vars(jobs, households, buildings):
     for var in orca.get_table("nodes_drv").columns:
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
+
+    # nodes_bike carries no yaml aggregations -- it exists so the bike_nearest_*
+    # columns in variables_access.py have a table indexed by bike network nodes.
+    # They reach buildings through parcels.nodeid_bike, so no disagg loop here.
+    orca.add_table(
+        "nodes_bike",
+        pd.DataFrame(index=orca.get_injectable("net_bike").node_ids),
+    )
+
 
 
 @orca.step()

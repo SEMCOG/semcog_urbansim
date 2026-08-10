@@ -455,28 +455,30 @@ def walk_nearest_park(parcels, nodes_walk):
     return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
 
 
+# the bike_nearest_* columns live on nodes_bike (osm_bike_2024), so they come
+# across on parcels.nodeid_bike rather than nodeid_walk
 @orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
+def bike_nearest_grocery(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_grocery, parcels.nodeid_walk)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_library(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_library, parcels.nodeid_walk)
+    return misc.reindex(nodes_bike.bike_nearest_grocery, parcels.nodeid_bike)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_park(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
+def bike_nearest_library(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_park, parcels.nodeid_walk)
+    return misc.reindex(nodes_bike.bike_nearest_library, parcels.nodeid_bike)
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def bike_nearest_park(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
+    return misc.reindex(nodes_bike.bike_nearest_park, parcels.nodeid_bike)
 
 
 @orca.column("parcels", cache=True, cache_scope="forever")
