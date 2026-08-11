@@ -757,15 +757,16 @@ def tract_id(buildings, parcels):
     return misc.reindex(parcels.tract_id, buildings.parcel_id).fillna(0)
 
 
-@orca.column("buildings", cache=True, cache_scope="iteration")
-def zone_id(buildings, parcels, building_to_zone_overwrite):
-    # use zone_id from parcel as default
-    zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
-    # only apply building to zone mapping to selected buildings
-    applied_buildings = zid.index.isin(building_to_zone_overwrite.index)
-    # update their zone_id
-    zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_zone_overwrite.zone_id).astype(zid.dtype)
-    return zid
+# zone_id and maz_id come directly from the buildings table 
+# @orca.column("buildings", cache=True, cache_scope="iteration")
+# def zone_id(buildings, parcels, building_to_maz_override):
+#     # use zone_id from parcel as default
+#     zid = misc.reindex(parcels.zone_id, buildings.parcel_id).fillna(0)
+#     # only apply building to zone mapping to selected buildings
+#     applied_buildings = zid.index.isin(building_to_maz_override.index)
+#     # update their zone_id
+#     zid.loc[applied_buildings] = zid.loc[applied_buildings].index.map(building_to_maz_override.zone_id).astype(zid.dtype)
+#     return zid
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
