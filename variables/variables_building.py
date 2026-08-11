@@ -203,7 +203,9 @@ def popden(buildings, zones):
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def residential_sqft(buildings):
-    return buildings.sqft_per_unit * buildings.residential_units
+    #  Cast to int64 to prevent overflow
+    return (buildings.sqft_per_unit.astype("int64")
+            * buildings.residential_units.astype("int64"))
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
@@ -915,10 +917,10 @@ for mode, config in CUMULATIVE_VARS.items():
 def impr_value_per_sqft(buildings, parcels):
     """Parcel improvement value per building sqft — low value flags blight risk."""
     bldgimpr = misc.reindex(parcels.bldgimprval, buildings.parcel_id).fillna(0)
-    total_sqft = (
-        buildings.residential_units * buildings.sqft_per_unit
-        + buildings.non_residential_sqft
-    ).clip(lower=1)
+    # reuse building_sqft (= residential_sqft + non_residential_sqft) rather than
+    # recomputing the int16 product, which wrapped for ~2k buildings; the clips
+    # below hid the damage instead of preventing it.
+    total_sqft = buildings.building_sqft.clip(lower=1)
     return (bldgimpr / total_sqft).clip(lower=0, upper=500)
 
 
