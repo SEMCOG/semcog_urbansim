@@ -3556,7 +3556,9 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
     if len(new_b) == 0:
         return
     new_b["building_sqft"] = (
-        new_b["residential_units"] * new_b["sqft_per_unit"]
+        #  Cast to int64 to prevent overflow
+        new_b["residential_units"].astype("int64")
+        * new_b["sqft_per_unit"].astype("int64")
         + new_b["non_residential_sqft"]
     )
     new_b["footprint"] = new_b["building_sqft"] / new_b["stories"].clip(lower=1)
