@@ -575,6 +575,9 @@ def _make_parcel_survey_var(var_name):
     def _col(parcels, travel_survey_bg_vars):
         bg_vals = travel_survey_bg_vars.to_frame([var_name])
         if bg_vals.empty or var_name not in bg_vals.columns:
+            print(f"  WARNING [travel_survey] '{var_name}' not in travel_survey_bg_vars "
+                  f"(has: {sorted(travel_survey_bg_vars.columns)}) -- parcels.{var_name} "
+                  f"will be NaN/0.")
             return pd.Series(np.nan, index=parcels.index)
         # survey index is full 12-digit Census FIPS BG; parcels store only
         # the 7-digit internal ID, so reconstruct: state(26) + county*1e7 + bg_id

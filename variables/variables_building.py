@@ -449,9 +449,14 @@ def b_total_households(households, buildings):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def jobs_home_based(jobs):
+def jobs_home_based(jobs, buildings):
+    # groupby().size() is indexed only by buildings that HAVE home-based jobs;
+    # reindex to the full buildings index so the rest are 0, not NaN.
     jobs = jobs.to_frame(["building_id", "home_based_status"])
-    return jobs[jobs.home_based_status == 1].groupby("building_id").size()
+    return pd.Series(
+        index=buildings.index,
+        data=jobs[jobs.home_based_status == 1].groupby("building_id").size(),
+    ).fillna(0)
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
@@ -614,11 +619,14 @@ def make_building_employment_variable(sector_id):
     var_name = "bldg_jobs_sector_%s" % sector_id
 
     @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
-    def func():
+    def func(buildings):
         jobs = orca.get_table("jobs")
         jobs = jobs.to_frame(jobs.local_columns)
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
-        return jobs_sector.fillna(0)
+        # value_counts is indexed only by buildings that HAVE this sector, so the
+        # bare .fillna(0) was a no-op -- NaNs appeared later when orca aligned the
+        # short Series to the buildings index. Reindex first, then fill.
+        return jobs_sector.reindex(buildings.index).fillna(0)
 
 def make_employment_node_ratio_variable(sector_id):
     """
