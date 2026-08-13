@@ -55,10 +55,6 @@ ELCM_MODEL_DIR = _p(
     f"{_LOCAL}/models/elcm_models_25May30/",
 )
 
-POIS_CSV = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/pois.csv",
-    f"{_LOCAL}/pois.csv",
-)
 
 # task 2b: per-crossing-parcel MAZ area shares (new-construction MAZ draw weights)
 PARCEL_MAZ_CROSSING_SHARES_CSV = _p(
