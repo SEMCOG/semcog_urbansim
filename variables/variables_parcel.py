@@ -218,8 +218,6 @@ def parcel_is_allowed_2050(form=None):
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
 
-    pcl_pseudo_blds = pcl_index.isin(buildings[buildings.sp_filter == -2].parcel_id)
-
     protected = (
         pcl_new_building
         | pcl_addition
@@ -229,7 +227,6 @@ def parcel_is_allowed_2050(form=None):
         | pcl_gq
         | pcl_highval_blds
         | pcl_landmark_worksite
-        | pcl_pseudo_blds
     )
 
     if form:
@@ -458,28 +455,30 @@ def walk_nearest_park(parcels, nodes_walk):
     return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
 
 
+# the bike_nearest_* columns live on nodes_bike (osm_bike_2024), so they come
+# across on parcels.nodeid_bike rather than nodeid_walk
 @orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
+def bike_nearest_grocery(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_grocery, parcels.nodeid_walk)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_library(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_library, parcels.nodeid_walk)
+    return misc.reindex(nodes_bike.bike_nearest_grocery, parcels.nodeid_bike)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_park(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
+def bike_nearest_library(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_park, parcels.nodeid_walk)
+    return misc.reindex(nodes_bike.bike_nearest_library, parcels.nodeid_bike)
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def bike_nearest_park(parcels, nodes_bike):
+    if len(nodes_bike) == 0:
+        # if nodes isn't generated yet
+        return pd.Series(index=parcels.index)
+    return misc.reindex(nodes_bike.bike_nearest_park, parcels.nodeid_bike)
 
 
 @orca.column("parcels", cache=True, cache_scope="forever")
@@ -565,6 +564,7 @@ SURVEY_VARS = [
     "recent_mover_rate",     # % HHs that moved in <= 10 years
     "ev_hybrid_rate",        # % vehicles that are EV/PHEV/HEV
     "median_commute_dist",   # mean work-trip distance in miles
+    "avg_hh_income",         # mean household income
 ]
 
 
@@ -575,6 +575,9 @@ def _make_parcel_survey_var(var_name):
     def _col(parcels, travel_survey_bg_vars):
         bg_vals = travel_survey_bg_vars.to_frame([var_name])
         if bg_vals.empty or var_name not in bg_vals.columns:
+            print(f"  WARNING [travel_survey] '{var_name}' not in travel_survey_bg_vars "
+                  f"(has: {sorted(travel_survey_bg_vars.columns)}) -- parcels.{var_name} "
+                  f"will be NaN/0.")
             return pd.Series(np.nan, index=parcels.index)
         # survey index is full 12-digit Census FIPS BG; parcels store only
         # the 7-digit internal ID, so reconstruct: state(26) + county*1e7 + bg_id

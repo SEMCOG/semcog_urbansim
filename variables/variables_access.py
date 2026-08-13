@@ -109,11 +109,26 @@ def walk_nearest_grocery(poi):
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable("net_walk"), t, cats, 7920, 1, 7921)
 
-@orca.column("nodes_walk", cache=True, cache_scope="iteration")
+@orca.column("nodes_bike", cache=True, cache_scope="iteration")
 def bike_nearest_grocery(poi):
     cats = ["GroceryStores"]
     t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_walk"), t, cats, 26400, 1, 26401)
+    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
+
+
+@orca.column("nodes_bike", cache=True, cache_scope="iteration")
+def bike_nearest_library(poi):
+    cats = ["Libraries"]
+    t = poi.to_frame()[poi.category.isin(cats)]
+    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
+
+
+@orca.column("nodes_bike", cache=True, cache_scope="iteration")
+def bike_nearest_park(poi):
+    cats = ["Park_Entrance_points"]
+    t = poi.to_frame()[poi.category.isin(cats)]
+    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
+
 
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
 def walk_nearest_healthcenter(poi):
@@ -130,23 +145,10 @@ def walk_nearest_library(poi):
 
 
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
-def bike_nearest_library(poi):
-    cats = ["Libraries"]
-    t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_walk"), t, cats, 26400, 1, 26401)
-
-@orca.column("nodes_walk", cache=True, cache_scope="iteration")
 def walk_nearest_park(poi):
     cats = ["Park_Entrance_points"]
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable("net_walk"), t, cats, 7920, 1, 7921)
-
-@orca.column("nodes_walk", cache=True, cache_scope="iteration")
-def bike_nearest_park(poi):
-    cats = ["Park_Entrance_points"]
-    t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_walk"), t, cats, 26400, 1, 26401)
-
 
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
 def walk_nearest_urgentcare(poi):
