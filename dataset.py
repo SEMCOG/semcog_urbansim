@@ -307,11 +307,9 @@ def parcel_maz_crossing_shares():
     df = pd.read_csv(input_paths.PARCEL_MAZ_CROSSING_SHARES_CSV)
     return df.rename(columns={"maz_seqid": "maz_id"})
 
-### TODO: have data moved inside HDF input before 2055 forecast
 @orca.table(cache=True)
-def poi():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv(input_paths.POIS_CSV).set_index('index')
+def poi(store):
+    return store["poi"]
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
