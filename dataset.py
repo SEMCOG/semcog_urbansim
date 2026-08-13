@@ -309,7 +309,7 @@ def parcel_maz_crossing_shares():
 
 @orca.table(cache=True)
 def poi(store):
-    return store["poi"]
+    return store["points_of_interest_by_category"]
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
