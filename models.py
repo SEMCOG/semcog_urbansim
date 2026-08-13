@@ -3650,7 +3650,8 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
     if len(new_b) == 0:
         return
     new_b["building_sqft"] = (
-        new_b["residential_units"] * new_b["sqft_per_unit"]
+        new_b["residential_units"].astype("int64")
+        * new_b["sqft_per_unit"].astype("int64")
         + new_b["non_residential_sqft"]
     )
     new_b["footprint"] = new_b["building_sqft"] / new_b["stories"].clip(lower=1)
@@ -4203,9 +4204,7 @@ def build_networks_2050(parcels):
         orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
         orca.clear_columns("zones")
 
-    # The 2030 highway network is retired: it was largely the same as 2020, and
-    # semcog_networks.h5 now carries an UPDATED 2020 build (highway_ext_2020_UPDATED.shp)
-    # with no matching 2030 update. All years use highway_ext_2020.
+    # The 2030 highway network is retired. All years use the 2025 network bundle.
     lstnet = [
         {
             "name": "osm_walk_2024",
@@ -4214,7 +4213,7 @@ def build_networks_2050(parcels):
             "net": "net_walk",
         },
         {
-            "name": "highway_ext_2020",
+            "name": "highway_ext_2025",
             "cost": "cost1",
             "prev": 60,  # 60 minutes
             "net": "net_drv",

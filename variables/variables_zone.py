@@ -33,13 +33,16 @@ def jobs_within_30_min(jobs, travel_data):
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
-def households(households):
-    return households.zone_id.groupby(households.zone_id).size()
+def households(zones, households):
+    # reindex to the full zone index: a zone with no households is 0, not NaN
+    return (households.zone_id.groupby(households.zone_id).size()
+            .reindex(zones.index).fillna(0))
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
-def population(households):
-    return households.persons.groupby(households.zone_id).sum()
+def population(zones, households):
+    return (households.persons.groupby(households.zone_id).sum()
+            .reindex(zones.index).fillna(0))
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
@@ -152,8 +155,8 @@ def logsum_job_low_income(zones, travel_data):
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
-def z_total_jobs(jobs):
-    return jobs.zone_id.value_counts()
+def z_total_jobs(zones, jobs):
+    return jobs.zone_id.value_counts().reindex(zones.index).fillna(0)
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def transit_jobs_60min(zones, travel_data):
@@ -285,25 +288,29 @@ def mean_age_of_head(households):
 @orca.column("zones", cache=True, cache_scope="iteration")
 def prop_race_1(zones, households):
     households = households.to_frame(["race_id", "zone_id"])
-    return households.query("race_id == 1").groupby("zone_id").size() / zones.households
+    n = households.query("race_id == 1").groupby("zone_id").size().reindex(zones.index).fillna(0)
+    return (n / zones.households).replace([np.inf, -np.inf], 0).fillna(0)
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def prop_race_2(zones, households):
     households = households.to_frame(["race_id", "zone_id"])
-    return households.query("race_id == 2").groupby("zone_id").size() / zones.households
+    n = households.query("race_id == 2").groupby("zone_id").size().reindex(zones.index).fillna(0)
+    return (n / zones.households).replace([np.inf, -np.inf], 0).fillna(0)
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def prop_race_3(zones, households):
     households = households.to_frame(["race_id", "zone_id"])
-    return households.query("race_id == 3").groupby("zone_id").size() / zones.households
+    n = households.query("race_id == 3").groupby("zone_id").size().reindex(zones.index).fillna(0)
+    return (n / zones.households).replace([np.inf, -np.inf], 0).fillna(0)
 
 
 @orca.column("zones", cache=True, cache_scope="iteration")
 def prop_race_4(zones, households):
     households = households.to_frame(["race_id", "zone_id"])
-    return households.query("race_id == 4").groupby("zone_id").size() / zones.households
+    n = households.query("race_id == 4").groupby("zone_id").size().reindex(zones.index).fillna(0)
+    return (n / zones.households).replace([np.inf, -np.inf], 0).fillna(0)
 
 
 ##########  Parcel vars to add for proforma calibration
