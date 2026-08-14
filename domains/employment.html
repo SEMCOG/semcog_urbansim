@@ -1298,7 +1298,8 @@
 </table>
 <hr />
 <h2 id="employed_workers_rate"><code>employed_workers_rate</code><a class="headerlink" href="#employed_workers_rate" title="Permanent link">&para;</a></h2>
-<p>The fraction of the population in each age group that is employed, by large area and year. Used by the <code>workers_adjustment_model</code> simulation step (formerly <code>fix_lpr</code>) to adjust the <code>workers</code> count in the households table after each year's household transition, keeping the simulated workforce consistent with REMI employment projections.</p>
+<p>The fraction of the population in each age group that is employed, by large area and year.</p>
+<p><strong>How it's used:</strong> Each simulation year, after households transition, the <code>workers_adjustment_model</code> step compares the simulated household population (by age group × large area) against the employment target from this table. It adjusts each household's <code>workers</code> count to match the REMI employment target, ensuring the simulated workforce stays aligned with regional economic projections.</p>
 <p><strong>Index:</strong> <code>large_area_id</code></p>
 <table>
 <thead>
