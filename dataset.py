@@ -39,7 +39,7 @@ for name in [
     "transit_stops",
     "crime_rates",
     "schools",
-    "poi",
+    "points_of_interest_by_category",
     "travel_survey_bg_vars",  # block-group behavioral vars (joined to parcels by geoid)
     "group_quarters",
     "group_quarters_households",
