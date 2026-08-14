@@ -153,7 +153,7 @@ def buildings(store):
     df["mcd_model_quota"] = 0
 
     df["hu_filter"] = 0
-    cites = [551, 1155, 1100, 3130, 6020, 6040]
+    cites = [1155, 1100, 3130, 6020, 6040]
     sample = df[df.residential_units > 0]
     sample = sample[~(sample.index.isin(store["households"].building_id))]
     # #35
