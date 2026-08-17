@@ -28,8 +28,7 @@ for name in [
     "annual_relocation_rates_for_households", # need 2055 update
     "annual_relocation_rates_for_jobs", # need 2055 update
     "annual_employment_control_totals",
-    "travel_data",
-    "travel_data_2030",
+    "travel_data", # updated to 2055
     "zoning",
     "large_areas",
     "building_types",

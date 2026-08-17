@@ -4106,11 +4106,6 @@ def build_networks_2050(parcels):
     year = orca.get_injectable("year")
     utils.run_log(f"\tyear: {year} | {time.ctime()}")
 
-    # change travel data to 2030, enable when travel data 2030 is inplace
-    if year == 2030:
-        orca.add_table("travel_data", orca.get_table("travel_data_2030").to_frame())
-        orca.clear_columns("zones")
-
     lstnet = [
         {
             "name": "osm_walk_2024",
