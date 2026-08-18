@@ -4207,6 +4207,8 @@ def build_networks_2050(parcels):
     year = orca.get_injectable("year")
     utils.run_log(f"\tyear: {year} | {time.ctime()}")
 
+
+    # The 2030 highway network is retired. All years use the 2025 network bundle.
     lstnet = [
         {
             "name": "osm_walk_2024",
