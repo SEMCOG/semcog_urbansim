@@ -28,7 +28,6 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
-    "travel_data_2030",
     "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
     "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
