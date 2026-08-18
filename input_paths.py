@@ -37,13 +37,6 @@ def _p(*candidates):
 BASE_HDF = _p(
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_081326.h5",
     f"{_LOCAL}/main_081326.h5",
-    f"{_LOCAL}/main_080526.h5",
-    # 2050 base, fallback only
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
-    f"{_LOCAL}/forecast_data_input.h5",
-    # legacy filename, fallback only -- doesn't have remi_pce_growth_rate etc.
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
-    f"{_LOCAL}/forecast_data_input_031523.h5",
 )
 
 HLCM_MODEL_DIR = _p(
