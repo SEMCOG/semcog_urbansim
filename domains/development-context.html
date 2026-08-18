@@ -1317,29 +1317,21 @@ Both are <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.
 <code>events_addition</code>, and <code>events_deletion</code> tables define which buildings exist.
 They therefore need to describe one consistent forecast-input release.</p>
 <ul>
-<li>A location expression using <code>event_id==...</code> must use the immutable
-  <code>events_addition.event_id</code>, not the optional source-system <code>building_id</code>.
-  Base-year buildings begin with <code>event_id = 0</code>; an event ID becomes available
-  on a building only when its scheduled addition has been processed. The
-  scheduled-development step runs before the refiner step in each forecast
-  year (<code>models.py:2697</code>; <code>simulation_2055.py:98</code>).</li>
-<li>A refiner event for a planned building cannot take effect before that
-  building's <code>year_built</code>. Its effective year must be the same as or later than
-  the corresponding scheduled-addition year.</li>
+<li>Use <code>events_addition.event_id</code> to target a planned building. The optional
+  source-system <code>building_id</code> is not the identifier assigned to that building
+  during the forecast.</li>
+<li>A refiner event for a planned building can take effect only once the building
+  exists. Its effective year must be the same as or later than the corresponding
+  addition year.</li>
 <li>A location expression using <code>building_id==...</code> must reference a building in
-  the assembled base-year <code>buildings</code> table. Do not assume that the optional
-  source-system <code>building_id</code> on an addition will be the runtime ID of the
-  building created during the forecast.</li>
-<li>A building targeted by a refiner event must not be removed by
-  <code>events_deletion</code> in the same or an earlier forecast year. Scheduled
-  demolitions are applied before the refiner step, so the target building would
-  no longer be available.</li>
+  the assembled base-year <code>buildings</code> table.</li>
+<li>Do not target a building that is removed in the same or an earlier forecast
+  year.</li>
 <li>Base-year additions and deletions must already be reflected in the assembled
-  <code>buildings</code> snapshot. Refiner records dated at or before the base year need
-  to be reconciled with that snapshot rather than treated as future events.</li>
+  <code>buildings</code> snapshot. Records dated at or before the base year need to be
+  reconciled with that snapshot rather than treated as future events.</li>
 </ul>
-<p>These principles are about consistency between the related inputs; they apply
-regardless of which team maintains each source table.</p>
+<p>These principles apply regardless of which team maintains each source table.</p>
 <p><strong>Update:</strong> Add rows to the employment events CSV for new employment centers or relocations. Add rows to the GQ events CSV for GQ facility changes. Merge both into <code>refiner_events</code> via the build pipeline.</p>
 <h3 id="demolition_rates"><code>demolition_rates</code><a class="headerlink" href="#demolition_rates" title="Permanent link">&para;</a></h3>
 <p>Annual background demolition counts by city and building type. Applied probabilistically each year by <code>random_demolition_events</code>.</p>

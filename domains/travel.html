@@ -659,10 +659,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#travel_data_2030" class="md-nav__link">
+  <a href="#logsum-input-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        travel_data_2030
+        Logsum input notes
       
     </span>
   </a>
@@ -673,7 +673,7 @@
   <a href="#taz-id-mapping-critical" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TAZ ID Mapping — Critical
+        TAZ ID Mapping - Critical
       
     </span>
   </a>
@@ -838,12 +838,7 @@
 <tbody>
 <tr>
 <td><code>travel_data</code></td>
-<td>Base-year zone-to-zone travel skims</td>
-<td>CSV (converted from OMX)</td>
-</tr>
-<tr>
-<td><code>travel_data_2030</code></td>
-<td>Future-year zone-to-zone travel skims</td>
+<td>Zone-to-zone travel skims</td>
 <td>CSV (converted from OMX)</td>
 </tr>
 </tbody>
@@ -937,18 +932,28 @@
 <blockquote>
 <p><strong>What is a mode choice logsum?</strong>
 The mode choice logsum is the expected maximum utility a traveler can achieve between an origin-destination pair, considering all available travel modes (auto, transit, walk, etc.) and their relative costs and times. A higher logsum value means better overall multimodal accessibility between two zones — not just faster driving, but better access by any mode.</p>
-<p>These logsums are <strong>not</strong> destination choice logsums (which aggregate over all destinations). They are zone-to-zone matrices used in UrbanSim as gravity-type impedance weights: the model computes zone-level accessibility as <code>Σ [population or jobs at destination] × exp(logsum)</code> across all destination zones, capturing how well each zone is connected to opportunities by all modes combined. Work-trip logsums are segmented by income because lower-income households are more sensitive to transit access and cost.</p>
+<p>These zone-to-zone matrices are used as gravity-type impedance weights:
+the model combines destination population or jobs with <code>exp(logsum)</code> to describe
+how well each zone is connected to opportunities. Work-trip logsums are
+segmented by income because travel options and costs differ across income
+groups.</p>
 </blockquote>
 <hr />
-<h2 id="travel_data_2030"><code>travel_data_2030</code><a class="headerlink" href="#travel_data_2030" title="Permanent link">&para;</a></h2>
-<p>Future-year travel skims representing conditions after planned transportation investments. Same schema as <code>travel_data</code>. Allows the model to use time-varying travel conditions for later simulation years.</p>
+<h2 id="logsum-input-notes">Logsum input notes<a class="headerlink" href="#logsum-input-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The logsum fields are mode-choice utilities, not travel times or a generic
+  accessibility score. Preserve a consistent mode-choice specification and
+  utility scale across all three work income groups.</li>
+<li>Logsum values must be finite for every modeled OD pair. Retain the named
+  low-, mid-, and high-income work logsums and the midday-other logsum rather
+  than substituting a time skim for a missing logsum.</li>
+</ul>
 <hr />
-<h2 id="taz-id-mapping-critical">TAZ ID Mapping — Critical<a class="headerlink" href="#taz-id-mapping-critical" title="Permanent link">&para;</a></h2>
-<p>The travel demand model uses its own internal TAZ codes, which differ from the model's <code>zone_id</code> values. <strong>Always map through the <code>zones</code> table</strong> when converting OMX to CSV:</p>
-<div class="highlight"><pre><span></span><code>Travel model TAZ code  →  zones.tazce10_n  →  zones.zone_id
-</code></pre></div>
-<p>Using the wrong TAZ codes will silently produce incorrect accessibility measurements without any error — this is one of the most common and hard-to-detect mistakes in this pipeline.</p>
-<hr />
+<h2 id="taz-id-mapping-critical">TAZ ID Mapping - Critical<a class="headerlink" href="#taz-id-mapping-critical" title="Permanent link">&para;</a></h2>
+<p>The final OD index must use the model's <code>zone_id</code> values. Verify the zone
+mapping explicitly rather than assuming that source TAZ codes use the same
+numeric values. A valid-looking matrix with the wrong zone coding will silently
+attach travel conditions to the wrong locations.</p>
 <h2 id="conversion-from-omx-to-csv">Conversion from OMX to CSV<a class="headerlink" href="#conversion-from-omx-to-csv" title="Permanent link">&para;</a></h2>
 <p>General process:
 1. Open OMX files using the <code>openmatrix</code> or <code>omx</code> Python library
@@ -960,16 +965,16 @@ The mode choice logsum is the expected maximum utility a traveler can achieve be
 <hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] Get new OMX skims from the travel model run (base year and future year)</li>
+<li>[ ] Get new OMX skims from the travel model run</li>
 <li>[ ] Run OMX-to-CSV conversion</li>
-<li>[ ] Verify TAZ ID mapping — travel model codes → <code>zones.tazce10_n</code> → <code>zones.zone_id</code></li>
+<li>[ ] Verify the OMX mapping covers the model <code>zone_id</code> values exactly</li>
 <li>[ ] Verify TAZ coverage — all zones should appear as both origin and destination</li>
 <li>[ ] Verify no null values in any skim column</li>
 <li>[ ] Check plausibility: auto times must be positive; near-zero values are expected only for intra-zonal pairs</li>
 <li>[ ] Confirm row count = number of zones² (all origin-destination combinations present)</li>
 </ul>
 <p><strong>Common issues:</strong>
-- TAZ ID mismatch — always map through the <code>zones</code> table; see note above
+- TAZ ID mismatch - verify the OMX mapping against the model <code>zone_id</code> values
 - Zero or negative travel times — usually an OMX extraction error; auto times must be positive
 - Missing zone pairs — fill with a high default time (e.g., 999 minutes) rather than leaving null</p>
 

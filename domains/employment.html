@@ -1316,7 +1316,7 @@
 <td>8 valid large area codes — row index</td>
 </tr>
 <tr>
-<td><code>Age_Group</code></td>
+<td><code>age_group</code></td>
 <td>object</td>
 <td>Age group label (e.g., "Ages 16-19")</td>
 </tr>
@@ -1327,8 +1327,8 @@
 </tr>
 <tr>
 <td><code>age_max</code></td>
-<td>float</td>
-<td>Upper bound of age group (NaN for the open-ended oldest group)</td>
+<td>int8</td>
+<td>Upper bound of age group; use a finite integer for the open-ended oldest group</td>
 </tr>
 <tr>
 <td>one column per year</td>
@@ -1339,12 +1339,16 @@
 </table>
 <p><strong>Structure:</strong> 104 rows (8 large areas × 13 age groups), with year columns running from the historical reference period through the end of the forecast horizon.</p>
 <p><strong>Age groups:</strong> 16–19, 20–21, 22–24, 25–29, 30–34, 35–44, 45–54, 55–59, 60–61, 62–64, 65–69, 70–74, 75+.</p>
+<p><strong>Alignment note:</strong> Rates should cover every large area, age band, and
+forecast year. The open-ended oldest age group may be labeled 75+ in source
+data, but its assembled <code>age_max</code> must be a finite integer rather than a null
+value.</p>
 <p><strong>Sample rows</strong> — Ages 25-29 across all large areas, showing regional variation:</p>
 <table>
 <thead>
 <tr>
 <th>large_area_id</th>
-<th>Age_Group</th>
+<th>age_group</th>
 <th>age_min</th>
 <th>age_max</th>
 <th>2020</th>
@@ -1452,7 +1456,8 @@
 <p><strong>Common issues:</strong>
 - All 8 large areas and all 13 age groups must be present (104 rows total)
 - Year columns must cover the full simulation range
-- Values outside [0, 1] indicate a data error</p>
+- Values outside [0, 1] indicate a data error
+- The assembled open-ended age group must have a finite <code>age_max</code>, not a null value</p>
 <hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <ul>
