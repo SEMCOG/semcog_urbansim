@@ -12,7 +12,8 @@ from sklearn.preprocessing import RobustScaler
 import xgboost as xgb
 import torch
 from forecast_estimation.models.LCM_torch import LCM_NN
-from forecast_estimation.utils import std_scaler_transform, robust_scaler_transform, min_max_scaler_transform
+from forecast_estimation.utils import (std_scaler_transform, robust_scaler_transform,
+                                       min_max_scaler_transform, apply_scaler_state)
 
 import orca
 import utils
@@ -442,7 +443,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         except IndexError:
             scaler = 'std'
 
-        if scaler == 'std':
+        # retrive scaler trained during estimation for consistency
+        scaler_state = getattr(model, 'scaler_state', None)
+        if scaler_state is not None:
+            alts_col_df = apply_scaler_state(alts_col_df, scaler_state)
+        elif scaler == 'std':
             alts_col_df = std_scaler_transform(alts_col_df)
         elif scaler == 'robust':
             alts_col_df = robust_scaler_transform(alts_col_df)
