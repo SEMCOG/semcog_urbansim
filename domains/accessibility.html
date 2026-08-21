@@ -1188,16 +1188,10 @@ and are available for future model use — no model spec references
 </tbody>
 </table>
 <p><strong>Cumulative and gravity variables</strong> — count (or weighted sum) of jobs or transit stops reachable within a threshold. Higher = better access. Fill value when none reachable: 0.</p>
-<p>Indicator CSVs are date-stamped per mode (e.g. <code>walk_indicators_by_parcel_20260722.csv</code>)
-and combined into a single HDF by
-<code>forecast_data_input/accessibility/build_access_indicators_hdf.py</code>.</p>
-<blockquote>
-<p><strong>Compression matters here.</strong> The combined HDF is written with
-<code>format="fixed", complevel=5, complib="blosc:zstd"</code> — 2,196 MB uncompressed vs
-<strong>348 MB</strong> compressed, values identical. Compression must be applied <strong>at write
-time</strong>: pandas' <code>format="fixed"</code> without <code>complevel</code> writes plain PyTables <code>Array</code>
-nodes, which cannot be compressed afterwards, so <code>ptrepack</code> is a no-op on them.</p>
-</blockquote>
+<p><strong>Input management principle:</strong> The complete indicator collection must be delivered as one
+consistent parcel-indexed release. File names, storage format, and compression are
+implementation choices; they must preserve the parcel index, variable names, and numeric
+values used by the model.</p>
 <hr />
 <h3 id="accessibility_walk_indicator_by_parcel"><code>accessibility_walk_indicator_by_parcel</code><a class="headerlink" href="#accessibility_walk_indicator_by_parcel" title="Permanent link">&para;</a></h3>
 <p><strong>Index:</strong> <code>parcel_id</code></p>
@@ -1473,31 +1467,23 @@ trap: a spec author can pick the frozen variable without realising it never upda
 the base-year jobs/parcels change — i.e. per forecast vintage.</p>
 <hr />
 <h2 id="network-bundle">Network Bundle<a class="headerlink" href="#network-bundle" title="Permanent link">&para;</a></h2>
-<p>The pandana networks the simulation rebuilds each year are documented separately —
-see <strong><a href="networks.html">Street Networks</a></strong>. Relevant points for accessibility work:</p>
-<ul>
-<li>The accessibility pipeline and the simulation now share the same <strong>drive</strong> network
-  (<code>highway_ext_2020</code>, from <code>highway_ext_2020_UPDATED.shp</code>).</li>
-<li>They still use <strong>different walk networks</strong>: the simulation uses <code>osm_walk_2024</code>
-  (936,001 nodes / 1,380,659 edges) from <code>semcog_networks.h5</code>, while the accessibility
-  run reads <code>network_walkbike_2024_aug2025.h5</code> directly. Same source build, but do not
-  assume node IDs correspond.</li>
-<li>The transit networks (<code>network_transit_{peak,offpeak}_aug2025.h5</code>, ~1.5 GB each) are
-  used <strong>only</strong> by the accessibility pipeline. The simulation declares no transit
-  network.</li>
-</ul>
+<p>The networks used to create the indicators are documented separately — see
+<strong><a href="networks.html">Street Networks</a></strong>. They must use a consistent source release, coverage,
+and impedance definition for each mode. Static accessibility networks and the simulation's
+dynamic networks may have different node IDs or roles; do not assume that identifiers can
+be exchanged between them. Document any intentional difference, especially where a mode
+is represented only in the static indicators.</p>
 <h2 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h2>
 <p>Accessibility indicators should be regenerated when:
 - The street or transit network changes significantly
 - The POI or transit stop dataset is refreshed
 - A new forecast cycle requires updated base-year accessibility</p>
-<p><strong>Steps:</strong>
-1. Update <code>points_of_interest_by_category</code> and <code>transit_stops</code> with current data
-2. Run the accessibility analysis (Pandana-based pipeline)
-3. Export new indicator CSVs with a date stamp in the filename
-4. Update the relevant file path references in the model configuration
-5. Re-assemble the model input file to incorporate the new indicators
-6. If variable names or columns changed, coordinate with the modeling team — model coefficients are estimated on specific variable names; renaming requires re-estimation</p>
+<p><strong>Data-release principles:</strong>
+1. Use POI, transit-stop, network, and parcel data from a consistent base-year release.
+2. Recalculate the complete indicator bundle when those inputs materially change.
+3. Preserve the established variable names and definitions, or coordinate a model update
+   when a change is necessary because model coefficients are tied to specific variables.
+4. Verify that every current parcel has one row in every indicator table before loading.</p>
 <p><strong>Common issues:</strong>
 - Parcels with all values at fill value (95/125/155 min) — parcel has no network connection; check coordinates
 - Column name mismatch between CSV and model configuration — causes errors at simulation startup

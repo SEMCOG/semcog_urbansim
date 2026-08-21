@@ -973,7 +973,7 @@
 <tr>
 <td><code>building_id</code> (<code>-1</code> = unplaced)</td>
 <td>ELCM</td>
-<td><code>-1</code> flags a job the ELCM must place this year; already-placed jobs stay put (job relocation is currently off). New jobs added by <code>jobs_transition</code> start at <code>-1</code>.</td>
+<td><code>-1</code> flags a job the ELCM must place this year. Jobs selected for relocation, and new jobs added by <code>jobs_transition</code>, start at <code>-1</code>.</td>
 </tr>
 <tr>
 <td><code>sector_id</code></td>
@@ -1204,7 +1204,10 @@
 <h2 id="annual_relocation_rates_for_jobs"><code>annual_relocation_rates_for_jobs</code><a class="headerlink" href="#annual_relocation_rates_for_jobs" title="Permanent link">&para;</a></h2>
 <p>Annual probability of a job relocating, by sector.</p>
 <blockquote>
-<p><strong>Note:</strong> Job relocation is currently <strong>disabled</strong> in the simulation. This table is kept for future use.</p>
+<p><strong>Model use:</strong> When job relocation is included in a simulation run, this table supplies
+the sector-specific probability that an existing job becomes unplaced and is then
+eligible for relocation. It should be maintained as a complete sector-level input even
+when a particular run does not include the relocation step.</p>
 </blockquote>
 <p><strong>Index:</strong> <code>sector_id</code> (unique)</p>
 <table>

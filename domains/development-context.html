@@ -584,6 +584,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="events_addition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#which-id-should-i-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which ID should I use?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1152,18 +1169,29 @@ input and adds a building when its year is reached.</p>
 <td><code>event_id</code></td>
 <td>int</td>
 <td>unique, no null</td>
-<td>Stable event identifier. Retain it across input refreshes; <code>refiner_events</code> may use it to target the resulting event building.</td>
+<td>Required stable event identifier. Retain it across input refreshes; <code>refiner_events</code> uses it to target the resulting event building.</td>
 </tr>
 <tr>
 <td><code>building_id</code></td>
 <td>int</td>
-<td>—</td>
-<td>Optional source-system building reference. It is not the identifier assigned to the event-created building in forecast outputs.</td>
+<td>optional</td>
+<td>Optional source-system reference only. Leave blank for a new future addition unless retaining that source reference is useful. The model does not use it to assign the new building runtime ID.</td>
 </tr>
 </tbody>
 </table>
 <p>For an event that creates a GQ facility, set <code>gqcap</code> to the number of beds. Do not infer
 GQ capacity from <code>building_type_id</code>; use <code>0</code> when the event does not create a GQ facility.</p>
+<h4 id="which-id-should-i-use">Which ID should I use?<a class="headerlink" href="#which-id-should-i-use" title="Permanent link">&para;</a></h4>
+<p>For every future <code>events_addition</code> row, populate <strong><code>event_id</code></strong>. The forecast
+keeps that value on the building as its stable event link. It assigns the new
+building a separate, collision-safe runtime <strong><code>building_id</code></strong> when the addition
+is applied; the next available building ID is used.</p>
+<p><code>events_addition.building_id</code> is not required to create the building. It is
+optional source metadata, so it can normally be left blank for a planned new
+building. If a source system supplies a building reference that is useful to
+retain, it may be kept, but it must not be used as the forecast building ID.</p>
+<p>Implementation references: <code>semcog_urbansim/models.py:2697</code> and
+<code>urbansim_parcels/urbansim_parcels/utils.py:977</code>.</p>
 <p><strong>Common issues:</strong>
 - <code>parcel_id</code> not in <code>parcels</code> — building can't be placed; fix parcel reference
 - a base-year row missing from the assembly run — the base buildings snapshot will be incomplete
@@ -1272,6 +1300,33 @@ remains a scheduled forecast input and removes the building when its year is rea
 </table>
 <p><strong><code>agent_expression</code> and <code>location_expression</code> syntax:</strong>
 Both are <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html">pandas query strings</a> applied at runtime to the relevant DataFrame. <code>agent_expression</code> filters the agents table (e.g., <code>jobs</code>, <code>households</code>); <code>location_expression</code> filters the <code>buildings</code> table.</p>
+<p><code>refiner_events</code> does not have a separate <code>building_id</code> field. Choose the target
+in <code>location_expression</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Target building</th>
+<th>Use in <code>location_expression</code></th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Already exists in the assembled base-year <code>buildings</code> table</td>
+<td><code>building_id == &lt;id&gt;</code></td>
+<td>Its runtime building ID is already known.</td>
+</tr>
+<tr>
+<td>Is created by a scheduled <code>events_addition</code> row</td>
+<td><code>event_id == &lt;id&gt;</code></td>
+<td>The forecast assigns its runtime <code>building_id</code> only when it adds the building. <code>event_id</code> is the stable link.</td>
+</tr>
+</tbody>
+</table>
+<p>For the second case, schedule the refiner event in the same year as, or a later
+year than, the building addition. Scheduled development runs before <code>refiner</code> in
+<code>semcog_urbansim/test_forecast_2050.py:130</code>; <code>refiner</code> applies this expression
+to the runtime buildings table in <code>semcog_urbansim/models.py:2353</code>.</p>
 <p>Examples from the current data:</p>
 <table>
 <thead>
@@ -1404,8 +1459,11 @@ They therefore need to describe one consistent forecast-input release.</p>
 <hr />
 <h2 id="neighborhood-context">Neighborhood Context<a class="headerlink" href="#neighborhood-context" title="Permanent link">&para;</a></h2>
 <h3 id="schools"><code>schools</code><a class="headerlink" href="#schools" title="Permanent link">&para;</a></h3>
-<p>K-12 school locations and quality scores. Used as HLCM features — school quality affects where families with children choose to live.</p>
-<p><strong>Index:</strong> <code>bcode</code> (unique)</p>
+<p>School locations, characteristics, and quality measures used to represent the
+education context available to households. The table supports location-choice
+features and may also supply enrollment inputs for travel or other supporting
+analyses.</p>
+<p><strong>Index:</strong> <code>bcode</code> (unique school identifier)</p>
 <table>
 <thead>
 <tr>
@@ -1418,93 +1476,91 @@ They therefore need to describe one consistent forecast-input release.</p>
 <tbody>
 <tr>
 <td><code>bcode</code></td>
-<td>int16</td>
+<td>integer</td>
 <td>unique, no null</td>
-<td>School building code</td>
+<td>Stable school identifier</td>
 </tr>
 <tr>
 <td><code>bname</code></td>
 <td>object</td>
-<td>—</td>
+<td>-</td>
 <td>School name</td>
 </tr>
 <tr>
 <td><code>dcode</code></td>
-<td>int32</td>
-<td>range [47010–84060], no null</td>
-<td>School district code</td>
+<td>integer</td>
+<td>no null</td>
+<td>District identifier; should align with any district-level control data used with the table</td>
 </tr>
 <tr>
 <td><code>gradelist</code></td>
 <td>object</td>
 <td>no null</td>
-<td>Grade levels served</td>
+<td>Grades served</td>
 </tr>
 <tr>
 <td><code>is_grade_school</code></td>
 <td>int8</td>
 <td>values: 0, 1</td>
-<td>1=K-8</td>
+<td>Indicator for schools serving elementary or middle grades</td>
 </tr>
 <tr>
 <td><code>point_x</code></td>
 <td>float64</td>
 <td>no null</td>
-<td>State plane X coordinate</td>
+<td>Projected X coordinate</td>
 </tr>
 <tr>
 <td><code>point_y</code></td>
 <td>float64</td>
 <td>no null</td>
-<td>State plane Y coordinate</td>
+<td>Projected Y coordinate</td>
 </tr>
 <tr>
 <td><code>totalachievementindex</code></td>
 <td>float64</td>
 <td>no null</td>
-<td>School achievement score</td>
+<td>School quality or achievement measure</td>
 </tr>
 <tr>
 <td><code>TOTAL_ENROLLMENT</code></td>
 <td>float32</td>
 <td>may be null</td>
-<td>Total enrollment (single value, all grades)</td>
+<td>Total enrollment</td>
 </tr>
 <tr>
 <td><code>zone_id</code></td>
-<td>int</td>
+<td>integer</td>
 <td>no null</td>
-<td>TAZ the school falls in</td>
+<td>Model travel-analysis zone</td>
 </tr>
 <tr>
 <td><code>maz_id</code></td>
-<td>int</td>
+<td>integer</td>
 <td>no null</td>
-<td>MAZ the school falls in</td>
+<td>Model micro-analysis zone</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Update:</strong> Refresh from the Michigan Department of Education database when new schools open, schools close, or achievement scores are updated. For new schools without a score, use the district average.</p>
-<p><strong>Common issues:</strong>
-- Coordinates outside the 7-county region — verify data
-- <code>totalachievementindex = null</code> — causes null neighborhood variables in HLCM; fill with district average</p>
-<p><strong>Travel-model enrollment use</strong> (TAZ/MAZ zonal inputs, <code>forecast_outputs/travel_model/</code>):
-this table is the base-year enrollment source. Two limitations are handled downstream
-and should be understood:</p>
+<p><strong>Data principles:</strong></p>
 <ul>
-<li><strong>Single <code>TOTAL_ENROLLMENT</code>, no grade split.</strong> The travel-model pipeline splits it
-  into k-8 vs 9-12 <strong>in proportion to the number of grades each school serves</strong>
-  (from <code>gradelist</code>). This assumes ~equal enrollment per grade, so it under-weights
-  9-12 relative to actual grade-level counts (a K-12 school sends 9/13 to k-8, 4/13 to
-  9-12). Providing measured <code>grades_1_8_enrollment</code> / <code>grades_9_12_enrollment</code> would
-  remove the approximation.</li>
-<li><strong><code>dcode</code> is not re-keyed to <code>parcels.school_id</code>.</strong> Only ~110 of the 128 population
-  school districts overlap the ~536 <code>dcode</code>s here (≈23% of enrollment sits in
-  non-matching codes). The enrollment step scales base enrollment by a per-district
-  population ratio; districts with no population match <strong>carry base enrollment
-  unscaled</strong> (scale = 1.0) rather than being dropped. Re-keying <code>dcode</code> to the
-  <code>parcels.school_id</code> coding (25030–82430) would let every district be population-scaled.</li>
-<li>321 schools have null <code>TOTAL_ENROLLMENT</code> (counted as 0).</li>
+<li>Each school should have a valid location and be assigned to the model
+  geography used by location and travel analysis.</li>
+<li>Quality measures must use a consistent definition across all schools. Missing
+  values need a documented treatment, such as an appropriate district or
+  regional imputation.</li>
+<li>Enrollment should represent the base-year school population. Grade-specific
+  enrollment is preferred when downstream applications distinguish school
+  levels; otherwise, any allocation from total enrollment should be documented.</li>
+<li>District identifiers should be compatible with the population, enrollment, or
+  control data used alongside the school table.</li>
+</ul>
+<p><strong>Common issues:</strong></p>
+<ul>
+<li>Invalid or out-of-region coordinates</li>
+<li>Missing school-quality measures or enrollment without a documented treatment</li>
+<li>Grade labels or district identifiers that cannot be consistently matched to
+  related data</li>
 </ul>
 <h3 id="crime_rates"><code>crime_rates</code><a class="headerlink" href="#crime_rates" title="Permanent link">&para;</a></h3>
 <p>Violent and property crime rates by parcel. Derived from city-level crime data — all parcels in a city receive the same rate.</p>
@@ -1647,14 +1703,23 @@ and should be understood:</p>
 </tr>
 </tbody>
 </table>
-<p>A rate of 0.0 means no price change that year. The simulation falls back to a default rate (currently 2.0%) for any year missing from this table, so missing years do not crash the model but will produce incorrect results.</p>
-<p><strong>Why region-wide, not per-large-area:</strong> REMI's PCE index actually varies by large area (it isn't a true national constant despite being labeled "(Nation)" in the source workbooks). It's deliberately collapsed to one region-wide number here because the base construction-cost table is only differentiated by 3 pricing areas (AA/DET/ROAK), not REMI's 8 large areas — a per-large-area rate would be false precision the cost basis was never built to support.</p>
-<p><strong>Produced by:</strong> <code>forecast_data_input/development_context/PCE_growth_rate.py</code>. Reads the "PCE-Price Index" row (summary sheet) from each of the 8 large-area <code>SEMCOG Region {horizon} Preliminary Forecast</code> workbooks, log-linear interpolates through the years REMI only reports in 5-year steps (it's annual through 2030, then 5-year jumps), combines the 8 series into one using household-population weights from <code>remi_hh_pop</code>, and converts to year-over-year growth rates. See that script's <code>README.md</code> for the full rationale. This is a different, newer REMI export than the one behind <code>income_growth_rates</code> (Demographics) — they are not regenerated together.</p>
-<p><strong>Update:</strong> Re-run <code>PCE_growth_rate.py</code> whenever a new REMI preliminary-forecast vintage is delivered (update the 8 workbook paths if the vintage folder name changes), and whenever the forecast horizon extends (e.g., past 2055).</p>
+<p>A rate of 0.0 means no price change that year. The simulation can fall back to a default
+rate when a year is missing, but a complete year range is required: a fallback rate is not
+a substitute for the adopted forecast series.</p>
+<p><strong>Data principle:</strong> Use a regional series when the construction-cost basis does not support a
+meaningful smaller-area distinction. A 2025-base example aggregates source forecasts to one
+regional rate because the available construction-cost inputs use broader pricing areas.</p>
+<p><strong>Data principle:</strong> Derive the regional series from a documented economic forecast source,
+using a consistent aggregation method whenever the source is segmented geographically.
+Preserve the adopted annual values and identify any interpolation explicitly.</p>
+<p><strong>2025-base example:</strong> The current series aggregates large-area REMI PCE forecasts with
+household-population weights and interpolates years that are only reported at multi-year
+intervals. This is an example of the required documentation, not a prescribed source or
+method for future forecast cycles.</p>
 <p><strong>Common issues:</strong>
-- Year range must cover all forecast years; missing years silently fall back to the 2.0% default — verify full coverage
+- Year range must cover all forecast years — verify full coverage rather than relying on a fallback value
 - Rates above 5% or below 0% are unusual and should be reviewed against REMI documentation before use
-- The 8 source workbooks report annual data only through 2030; years beyond that are interpolated, not REMI-native — re-check the interpolation if REMI delivers a fully annual series in a future vintage</p>
+- If the source is reported at multi-year intervals, document and review the interpolation used to create annual values</p>
 <hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <p><strong>Events:</strong>

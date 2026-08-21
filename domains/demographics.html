@@ -1911,7 +1911,16 @@
 - Block groups that were split or merged between ACS vintages must be resolved before use</p>
 <hr />
 <h2 id="group-quarters">Group Quarters<a class="headerlink" href="#group-quarters" title="Permanent link">&para;</a></h2>
-<p>GQ synthesis has three scripts in <code>forecast_data_input/group_quarters/</code>: <code>gq_controls_builder.py</code> assembles a per-facility <code>BuildingLevel</code> control table from the 2025 GQ data (<code>GQ_by_cityID_2025.xlsx</code>), with <code>primary_PUMA</code> derived from each building's census tract (base-year buildings table → 2020 tract→PUMA crosswalk) and a derived same-county→region <code>secondary_PUMA</code> fallback; <code>gq_synth.py</code> samples ACS PUMS GQ donor records into it; and <code>gq_control_totals.py</code> builds the forecast control totals. <code>gq_synth.py</code> writes the tables <strong>UrbanSim-ready</strong> (<code>group_quarters.csv</code>, <code>group_quarters_households.csv</code>, loaded straight into the base HDF, plus a <code>_synth</code>-suffixed PUMS-schema reference copy). GQ are modeled as <strong>single-person households</strong> (one household per person). Base-year GQ ≈ 76,017 persons.</p>
+<p>Group quarters (GQ) data represents people living in non-household facilities, such as
+dormitories, nursing homes, correctional facilities, and barracks. The input must provide
+a valid facility building for every GQ person, a documented GQ type classification, and
+person attributes suitable for the model's demographic uses. GQ are modeled as
+<strong>single-person households</strong> (one household per person) and are tracked separately from
+regular households.</p>
+<p><strong>2025 base-data example:</strong> The 2025 base-year GQ input contains approximately <strong>76,017
+persons</strong>. Its facility controls were matched to base-year buildings and synthesized from
+survey donor records. This illustrates the expected reconciliation and scale; the sources,
+crosswalks, and total will change with a future base year.</p>
 <h3 id="group_quarters"><code>group_quarters</code><a class="headerlink" href="#group_quarters" title="Permanent link">&para;</a></h3>
 <p>Group quarters persons — one row per person living in a non-household arrangement (dormitory, nursing home, prison, military barracks). Tracked separately from regular households; not subject to HLCM.</p>
 <p><strong>Index:</strong> <code>personid</code> (unique)</p>
@@ -1957,7 +1966,9 @@
 </tr>
 </tbody>
 </table>
-<p><strong>GQ type codes</strong> (from <code>GQ_by_cityID_2025.xlsx</code> → <code>Lookup</code>). Codes ≤ 403 are institutional (PUMS RELSHIPP 37), &gt; 403 non-institutional (38):</p>
+<p><strong>2025 base-data GQ type-code example.</strong> The following locally maintained codes classify
+institutional and non-institutional facilities in the 2025 input. Maintain a documented
+crosswalk whenever the source classification changes:</p>
 <table>
 <thead>
 <tr>
@@ -2029,7 +2040,7 @@
 </tr>
 <tr>
 <td><code>hh_id</code>, <code>seed_id</code></td>
-<td>Donor PUMS household id / <code>SERIALNO</code> (travel-model GQ seed join key)</td>
+<td>Donor household and record identifiers, retained when needed for traceability</td>
 </tr>
 <tr>
 <td><code>cars</code>, <code>children</code>, <code>ten</code>, <code>hht</code></td>
@@ -2038,7 +2049,10 @@
 </tbody>
 </table>
 <h3 id="group_quarters_control_totals"><code>group_quarters_control_totals</code><a class="headerlink" href="#group_quarters_control_totals" title="Permanent link">&para;</a></h3>
-<p>Target GQ population counts by city × year, built by <code>gq_control_totals.py</code> (base-year within-large-area city GQ shares held constant, scaled to the <code>LargeArea_GQ</code> trajectory). Used by <code>gq_pop_scaling_model</code> to scale GQ population each simulation year.</p>
+<p>Target GQ population counts by city × year. Used by <code>gq_pop_scaling_model</code> to scale GQ
+population each simulation year. The base-year city distribution, annual targets, and
+facility geography must be mutually consistent; document any allocation method used to
+translate broader-area controls to cities.</p>
 <p><strong>Index:</strong> <code>city_id</code> ¹</p>
 <blockquote>
 <p>¹ <strong><code>city_id</code> naming note:</strong> This column equals <code>semmcd</code> (the official MCD code) everywhere except the City of Detroit, where it identifies a neighborhood. This is a legacy convention — see the <a href="../index.html#glossary">Glossary</a> for the full explanation.</p>

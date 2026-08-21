@@ -1141,7 +1141,9 @@
 <p><strong>Model input (anchor geography).</strong> <code>micro_zones</code> is the <strong>MAZ→TAZ crosswalk</strong> used throughout the model. Parcels and buildings carry a <code>maz_id</code>, and their TAZ (<code>zone_id</code>) is derived from MAZ through this table's 1:1 <code>maz_id → zone_id</code> mapping. The model uses MAZ to anchor building locations (esp. on parcels that cross boundaries) and to assign new buildings to fine-grained zones.</p>
 </blockquote>
 <p>Micro Analysis Zones (MAZ) are sub-units of TAZs used in activity-based travel demand modeling. Each TAZ is divided into approximately 10 MAZs on average.</p>
-<p><strong>~28,647 MAZs</strong> across the region, each nested within a TAZ. Source: <code>creator.terminus_maz_v3</code> (PostGIS, EPSG:2898). The HDF table key is <strong><code>micro_zones</code></strong>.</p>
+<p>Each MAZ is nested within a TAZ. The 2025 base-year input has approximately <strong>28,647
+MAZs</strong> across the region; use this as a scale reference, not a required count. The HDF
+table key is <strong><code>micro_zones</code></strong>.</p>
 <p><strong>Index:</strong> <code>maz_id</code></p>
 <table>
 <thead>
@@ -1176,16 +1178,21 @@
 </table>
 <p><strong>Relationship to other geography tables:</strong></p>
 <div class="highlight"><pre><span></span><code>TAZ (zones)
-  └── MAZ (micro_zones, ~10 per TAZ on average → 28,647 total)
+  └── MAZ (micro_zones, about 10 per TAZ on average in the 2025 base-year example)
         ├── parcels.maz_id  → micro_zones.maz_id ; parcels.zone_id derived via micro_zones.zone_id
         └── buildings → building_to_maz_override (straddling buildings) else parcel-inherited
 </code></pre></div>
-<p>Parcels now <strong>carry both <code>maz_id</code> and <code>zone_id</code></strong> columns (assigned by spatially joining parcel centroids to the MAZ boundary layer). This replaces the earlier approach where MAZ was derived only at output time.</p>
+<p>Parcels carry both <code>maz_id</code> and <code>zone_id</code> columns, assigned by spatially joining parcel
+centroids to the MAZ boundary layer.</p>
 <p><strong>Update:</strong> Regenerate when the MAZ delineation changes. Coordinate with the travel demand modeling team, as MAZ boundaries must align with the TAZ structure used in the travel model.</p>
 <hr />
 <h2 id="building_to_maz_override"><code>building_to_maz_override</code><a class="headerlink" href="#building_to_maz_override" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>Base-year building→MAZ/TAZ override.</strong> Present in the base-year HDF (~23,870 rows). For buildings whose parcel <strong>straddles a MAZ/TAZ boundary</strong>, this table overrides the default parcel-inherited MAZ/TAZ, assigning the building its own <code>maz_id</code> (and derived <code>zone_id</code>) based on actual building location. Loaded and used by the model.</p>
+<p><strong>Base-year building→MAZ/TAZ override.</strong> For buildings whose parcel <strong>straddles a
+MAZ/TAZ boundary</strong>, this table overrides the default parcel-inherited MAZ/TAZ, assigning
+the building its own <code>maz_id</code> (and derived <code>zone_id</code>) based on actual building location.
+The 2025 base-year input has about <strong>23,870</strong> override rows; the count will vary with the
+building and boundary data.</p>
 </blockquote>
 <p><strong>Index:</strong> <code>building_id</code></p>
 <table>
@@ -1212,7 +1219,11 @@
 <hr />
 <h2 id="parcel_maz_crossing_shares"><code>parcel_maz_crossing_shares</code><a class="headerlink" href="#parcel_maz_crossing_shares" title="Permanent link">&para;</a></h2>
 <blockquote>
-<p><strong>New-construction MAZ allocation weights.</strong> Specifies, for each parcel that straddles a MAZ boundary, the land area fraction in each MAZ. Used to assign new buildings on crossing parcels: each new building draws one MAZ probabilistically, weighted by these area shares. ~41k rows (crossing parcels only); non-crossing parcels are implicit (single dominant MAZ).</p>
+<p><strong>New-construction MAZ allocation weights.</strong> Specifies, for each parcel that straddles a
+MAZ boundary, the land area fraction in each MAZ. Used to assign new buildings on
+crossing parcels: each new building draws one MAZ probabilistically, weighted by these
+area shares. The 2025 base-year input has about <strong>41,000</strong> crossing-parcel rows;
+non-crossing parcels are implicit (single dominant MAZ).</p>
 </blockquote>
 <p><strong>Columns:</strong></p>
 <table>
