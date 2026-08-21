@@ -35,19 +35,14 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_081726.h5",
-    f"{_LOCAL}/main_080526.h5",
-    # 2050 base, fallback only
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
-    f"{_LOCAL}/forecast_data_input.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_082126.h5",
 )
 
 # 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
 # household base trend for bg_hh_increase (see dataset.bg_hh_increase).
 BG_HH_2020_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input.h5",
-    f"{_LOCAL}/forecast_data_input.h5",
     "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
+    f"{_LOCAL}/forecast_data_input.h5",
     f"{_LOCAL}/forecast_data_input_031523.h5",
 )
 
