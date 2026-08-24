@@ -25,16 +25,16 @@ for name in [
     "counties",
     "employment_sectors",
     "building_sqft_per_job",
-    "annual_relocation_rates_for_households", # need 2055 update
-    "annual_relocation_rates_for_jobs", # need 2055 update
+    "annual_relocation_rates_for_households",
+    "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
-    "travel_data", # updated to 2055
+    "travel_data",
     "zoning",
     "large_areas",
     "building_types",
     "land_use_types",
     # "workers_labor_participation_rates",
-    "employed_workers_rate", # need 2055 update
+    "employed_workers_rate",
     "transit_stops",
     "crime_rates",
     "schools",
@@ -46,11 +46,11 @@ for name in [
     "annual_household_control_totals",
     "events_addition",
     "events_deletion",
-    "refiner_events", # need 2055 update
-    "target_vacancies", # need 2055 update
-    "target_vacancies_mcd", # need 2055 update
+    "refiner_events",
+    "target_vacancies",
+    "target_vacancies_mcd",
     "demolition_rates",
-    "landmark_worksites", # need 2055 update
+    "landmark_worksites",
     "mcd_total",
     "parcel_maz_crossing_shares",  # parcel->MAZ area shares for parcels spanning MAZ
     "dropped_buildings",
