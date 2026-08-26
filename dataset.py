@@ -299,11 +299,10 @@ def base_job_space(buildings):
 
 
 @orca.table(cache=True)
-def parcel_maz_crossing_shares():
-    # task 2b: new-construction MAZ allocation weights for parcels that cross a MAZ
-    # boundary. Each row is (parcel_id, maz_id, area_sqft, share); shares sum to 1 per
-    # parcel. Membership here == "this parcel is crossing". Source column is maz_seqid.
-    df = pd.read_csv(input_paths.PARCEL_MAZ_CROSSING_SHARES_CSV)
+def parcel_maz_crossing_shares(store):
+    # New-construction MAZ allocation weights for parcels that cross a MAZ boundary.
+    # Read only from the main HDF so the forecast has one release-controlled source.
+    df = store["parcel_maz_crossing_shares"]
     return df.rename(columns={"maz_seqid": "maz_id"})
 
 @orca.table(cache=True)
