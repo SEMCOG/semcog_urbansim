@@ -130,7 +130,7 @@ orca.run([
 orca.run(
     [
         "clear_iteration_cache",  # Tier-1: drop last year's memoized derived cols
-        "build_networks_2050",
+        "build_networks",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
         "log_memory",  # after networks + accessibility

@@ -18,14 +18,14 @@ data_out = utils.get_run_filename()
 print(data_out)
 
 orca.run(
-    ["refiner", "build_networks_2050", "neighborhood_vars"]
+    ["refiner", "build_networks", "neighborhood_vars"]
     + orca.get_injectable("repm_step_names")
     + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
 )  # increase feasibility based on projected income
 
 orca.run(
     [
-        "build_networks_2050",
+        "build_networks",
         "neighborhood_vars",
         "scheduled_demolition_events",
         "random_demolition_events",

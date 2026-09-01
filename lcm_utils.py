@@ -1165,7 +1165,7 @@ def load_hlcm_dataset(valid_hh_vars, valid_b_vars, var_pool_table_path, hh_filte
 
         # set year to 2020 and run build network and neigh vars
         orca.add_injectable('year', 2020)
-        orca.run(["build_networks_2050"])
+        orca.run(["build_networks"])
         orca.run(["neighborhood_vars"])
 
         # set year to 2050 and run mcd_hu_sampling
@@ -1223,7 +1223,7 @@ def load_elcm_dataset(valid_job_vars, valid_b_vars, var_pool_table_path, job_fil
 
         # set year to 2020 and run build network and neigh vars
         orca.add_injectable('year', 2020)
-        orca.run(["build_networks_2050"])
+        orca.run(["build_networks"])
         orca.run(["neighborhood_vars"])
 
         # set year to 2050 and run mcd_hu_sampling

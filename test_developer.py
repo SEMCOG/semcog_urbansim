@@ -76,7 +76,7 @@ if CHECKPOINT_H5:
 
 # ── Steps 1-3 ─────────────────────────────────────────────────────────────────
 for label, step in [
-    ("STEP 1 — Build networks",       "build_networks_2050"),
+    ("STEP 1 — Build networks",       "build_networks"),
     ("STEP 2 — Neighborhood vars",    "neighborhood_vars"),
     ("STEP 3 — Feasibility",          "feasibility"),
 ]:

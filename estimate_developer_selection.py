@@ -189,7 +189,7 @@ if __name__ == "__main__":
     print("Developer Site Selection — Estimation")
     print("=" * 60)
 
-    orca.run(["build_networks_2050"], iter_vars=[BASE_YEAR])
+    orca.run(["build_networks"], iter_vars=[BASE_YEAR])
     orca.run(["neighborhood_vars"],   iter_vars=[BASE_YEAR])
 
     pcl = orca.get_table("parcels").to_frame([
