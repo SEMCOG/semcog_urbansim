@@ -157,7 +157,7 @@ orca.run(
         "transit_stops",
         "crime_rates",
         "schools",
-        "poi",
+        "points_of_interest_by_category",
         "group_quarters",
         "group_quarters_households",
         "group_quarters_control_totals",
