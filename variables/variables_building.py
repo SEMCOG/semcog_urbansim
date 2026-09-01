@@ -62,6 +62,7 @@ def hedonic_id(buildings):
         71,  # Others
         84,  # Residential (shouldn't be in non-res but keeping for safety)
         94,  # Other commercial
+        96,  # Data Center (regional constant-price fallback)
     ]
 
     # For types marked as all-building, use building_type_id directly (area 0)
