@@ -59,6 +59,8 @@ CORRELATION_THRESHOLD = 0.95  # Remove features with correlation > 0.95
 
 # Simple model threshold: use Ridge regression for samples below this size
 SIMPLE_MODEL_THRESHOLD = 100  # Samples below this use Ridge instead of XGBoost
+MIN_SAMPLES_FOR_RIDGE = 4  # mutual-information feature selection needs >= 4 records
+REGIONAL_DUMMY_HEDONIC_IDS = {96}  # Data Center: 31 regional records, not enough for a hedonic fit
 
 # Feature selection based on sample size (reduce features when data is limited)
 # Returns max features to keep based on sample size
@@ -331,6 +333,20 @@ def _train_xgboost_model(mat, segment, vars_used, use_grid_search=False, grid_se
     if sample_size == 0:
         return None
 
+    if segment["hedonic_id"] in REGIONAL_DUMMY_HEDONIC_IDS:
+        return _train_constant_dummy_model(
+            X_all, y, feat_names, segment, t0, "regional_data_center"
+        )
+
+    # Very small segments cannot support feature selection, a train/test split,
+    # or a fitted hedonic relationship. Keep a simulation-ready constant-price
+    # fallback instead of failing the entire estimation run.
+    if sample_size < MIN_SAMPLES_FOR_RIDGE:
+        fallback_reason = "one_record_segment" if sample_size == 1 else "insufficient_records"
+        return _train_constant_dummy_model(
+            X_all, y, feat_names, segment, t0, fallback_reason
+        )
+
     # Feature selection: remove low variance and correlated features
     X_all, feat_names = _remove_low_variance(X_all, feat_names)
     X_all, feat_names = _remove_correlated(X_all, feat_names)
@@ -344,6 +360,50 @@ def _train_xgboost_model(mat, segment, vars_used, use_grid_search=False, grid_se
     else:
         return _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
                                          use_grid_search, grid_search_baseline, t0)
+
+
+def _train_constant_dummy_model(X, y, feat_names, segment, start_time, fallback_reason):
+    """Create a simulation-ready constant-price model without validation."""
+    # DummyRegressor still validates feature shape at prediction time. Use a
+    # stable existing building column rather than preserving every candidate.
+    feature_index = feat_names.index("market_value") if "market_value" in feat_names else 0
+    feature_names = [feat_names[feature_index]]
+    X = X[:, [feature_index]]
+
+    model = DummyRegressor(strategy="mean")
+    model.fit(X, y)
+    prediction = model.predict(X)
+    unavailable = float("nan")
+    metrics = {
+        "r2_test": unavailable,
+        "rmse_test": unavailable,
+        "mae_test": unavailable,
+        "mape_test": unavailable,
+        "r2_train": unavailable,
+        "rmse_train": unavailable,
+        "mae_train": unavailable,
+        "r2_val": unavailable,
+        "r2_adj_val": unavailable,
+        "rmse_val": unavailable,
+        "mae_val": unavailable,
+        "sample_size": len(y),
+        "n_features": len(feature_names),
+    }
+    print(f"  Using constant-price Dummy fallback ({len(y)} valid records; {fallback_reason})")
+    return {
+        "model": model,
+        "feature_names": feature_names,
+        "feature_importance": {feature_names[0]: 0.0},
+        "metrics": metrics,
+        "segment": segment,
+        "y_test": y,
+        "y_pred_test": prediction,
+        "training_time": time.time() - start_time,
+        "using_grid_search": False,
+        "using_gs_baseline": False,
+        "model_type": "dummy",
+        "fallback_reason": fallback_reason,
+    }
 
 
 def _select_features_by_importance(X, y, feat_names, sample_size, model_type='ridge'):
@@ -682,6 +742,11 @@ def _save_model(model_artifacts, model_name):
         'metrics': model_artifacts['metrics'],
         'trained_at': time.strftime('%Y-%m-%d %H:%M:%S'),
     }
+    if model_artifacts.get('fallback_reason'):
+        metadata['fallback_reason'] = model_artifacts['fallback_reason']
+
+    def format_metric(value):
+        return f"{value:.4f}" if np.isfinite(value) else "not_available"
 
     metadata_path = model_dir / "metadata.pkl"
     joblib.dump(metadata, metadata_path)
@@ -695,14 +760,16 @@ def _save_model(model_artifacts, model_name):
         'sample_size': metadata['metrics']['sample_size'],
         'n_features': metadata['n_features'],
         'performance': {
-            'r2_train': f"{metadata['metrics']['r2_train']:.4f}",
-            'r2_val': f"{metadata['metrics']['r2_val']:.4f}",
-            'r2_adj_val': f"{metadata['metrics']['r2_adj_val']:.4f}",
-            'rmse_val': f"{metadata['metrics']['rmse_val']:.4f}",
-            'mae_val': f"{metadata['metrics']['mae_val']:.4f}",
+            'r2_train': format_metric(metadata['metrics']['r2_train']),
+            'r2_val': format_metric(metadata['metrics']['r2_val']),
+            'r2_adj_val': format_metric(metadata['metrics']['r2_adj_val']),
+            'rmse_val': format_metric(metadata['metrics']['rmse_val']),
+            'mae_val': format_metric(metadata['metrics']['mae_val']),
         },
         'top_features': dict(list(metadata['feature_importance'].items())[:10]),
     }
+    if metadata.get('fallback_reason'):
+        summary['fallback_reason'] = metadata['fallback_reason']
 
     summary_path = model_dir / "summary.yaml"
     with open(summary_path, 'w') as f:
@@ -912,18 +979,27 @@ def run_repm_training():
         nonres_results = [r for r in results.values() if not r['is_residential']]
 
         if res_results:
-            r2_res = [r['r2_val'] for r in res_results]
+            r2_res = [r['r2_val'] for r in res_results if np.isfinite(r['r2_val'])]
             print(f"\nResidential Models (n={len(res_results)}):")
-            print(f"  R²:     {np.mean(r2_res):.4f} ± {np.std(r2_res):.4f}  [{np.min(r2_res):.4f}, {np.max(r2_res):.4f}]")
+            if r2_res:
+                print(f"  R²:     {np.mean(r2_res):.4f} ± {np.std(r2_res):.4f}  [{np.min(r2_res):.4f}, {np.max(r2_res):.4f}]")
+            else:
+                print("  R²:     not available (no validated models)")
 
         if nonres_results:
-            r2_nonres = [r['r2_val'] for r in nonres_results]
+            r2_nonres = [r['r2_val'] for r in nonres_results if np.isfinite(r['r2_val'])]
             print(f"\nNon-Residential Models (n={len(nonres_results)}):")
-            print(f"  R²:     {np.mean(r2_nonres):.4f} ± {np.std(r2_nonres):.4f}  [{np.min(r2_nonres):.4f}, {np.max(r2_nonres):.4f}]")
+            if r2_nonres:
+                print(f"  R²:     {np.mean(r2_nonres):.4f} ± {np.std(r2_nonres):.4f}  [{np.min(r2_nonres):.4f}, {np.max(r2_nonres):.4f}]")
+            else:
+                print("  R²:     not available (no validated models)")
 
-        all_r2 = [r['r2_val'] for r in results.values()]
+        all_r2 = [r['r2_val'] for r in results.values() if np.isfinite(r['r2_val'])]
         print(f"\nAll Models:")
-        print(f"  R²:     {np.mean(all_r2):.4f} ± {np.std(all_r2):.4f}")
+        if all_r2:
+            print(f"  R²:     {np.mean(all_r2):.4f} ± {np.std(all_r2):.4f}")
+        else:
+            print("  R²:     not available (no validated models)")
 
         total_time = sum(r['training_time'] for r in results.values())
         print(f"  Time:   {total_time:.1f}s training, {training_time_total:.1f}s total")
