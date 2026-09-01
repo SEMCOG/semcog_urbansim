@@ -100,7 +100,7 @@ orca.run([
 # Start iteration
 orca.run(
     [
-        "build_networks_2050",
+        "build_networks",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
         "cache_hh_seeds", # only run on first year
