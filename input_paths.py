@@ -36,6 +36,7 @@ def _p(*candidates):
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_082426.h5",
+    f"{_LOCAL}/main_082426.h5",
 )
 
 # 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
