@@ -428,7 +428,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
 
         # query using alts_pre_filter to match whats used in estimation
         alts_idx = alts_df.query(alts_pre_filter).index
-        
+
+        raw_res_units = None
+        if 'residential_units' in alts_df.columns:
+            raw_res_units = alts_df.loc[alts_idx, 'residential_units'].astype(float).copy()
+
         # alts_col_df alts columns
         std_cols = [col for col in formula_alts_col if col != alt_capacity]
         alts_col_df = alts_df.loc[alts_idx, std_cols]
@@ -495,7 +499,29 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
-        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        # Housing-unit correction, run if enable
+        if getattr(model, 'sampling_correction', False):
+            units = None
+            if raw_res_units is not None:
+                units = raw_res_units.reindex(predict_X_df.index).to_numpy(dtype=float)
+            if units is None or not np.isfinite(units).all():
+                raise ValueError(
+                    "%s was trained with the housing-unit correction, so "
+                    "simulation must subtract ln(residential_units) from its "
+                    "score -- but residential_units is unavailable for these "
+                    "alternatives. Re-estimate with "
+                    "run.sampled_softmax.apply_sampling_correction: false, or "
+                    "make residential_units available here." % model_name)
+            units = np.clip(units, 1.0, None)
+            with torch.no_grad():
+                _u = model.utility(
+                    torch.tensor(predict_X_df.values, dtype=torch.float)
+                ).detach().cpu().numpy().flatten()
+            pred = 1.0 / (1.0 + np.exp(-(_u - np.log(units))))
+            print("[hu-correction] %s: subtracted ln(units) from %d scored rows "
+                  "(per-building -> per-unit)" % (model_name, len(pred)), flush=True)
+        else:
+            pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
 
         # === CALIBRATION ===
         USE_TRACT_CALIBRATOR_MODEL = True
