@@ -31,6 +31,21 @@ def income_quartile(households):
     )
 
 
+@orca.column("households", cache=True, cache_scope="iteration")
+def income_tercile(households):
+    """Region-wide income thirds, backing the lowinc / midinc / highinc segments.
+
+    Recomputed each iteration, like income_quartile, so a segment always holds
+    a third of households: the HLCM is trained on relative position in the
+    income distribution, and fixed dollar thresholds would drift over a 30-year
+    horizon as incomes grow.
+    """
+    return (
+        pd.Series(pd.qcut(households.income, 3, labels=False), index=households.index)
+        + 1
+    )
+
+
 orca.add_injectable(
     "household_type_map",
     {
@@ -488,17 +503,22 @@ def incomeqt_incqt3(households):
 def incomeqt_incqt4(households):
     return (households.income_quartile == 4).astype('int8')
 
+# HLCM income segments -- thirds, not the quartile grouping. These must stay in
+# step with forecast_estimation.utils.add_hh_indicators, which cuts the same way
+# at estimation time; the quartile grouping below gave 25/50/25 while estimation
+# assumed equal segments. income_quartile above is unchanged and still backs
+# household_type_map and the output indicators.
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_highinc(households):
-    return (households.incomeqt_incqt4 == 1).astype('int8')
+    return (households.income_tercile == 3).astype('int8')
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_midinc(households):
-    return ((households.incomeqt_incqt2 == 1) | (households.incomeqt_incqt3 == 1)).astype('int8')
+    return (households.income_tercile == 2).astype('int8')
 
 @orca.column("households", cache=True, cache_scope="iteration")
 def income_lowinc(households):
-    return (households.incomeqt_incqt1 == 1).astype('int8')
+    return (households.income_tercile == 1).astype('int8')
 
 
 #####################

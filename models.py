@@ -2752,7 +2752,7 @@ def scheduled_demolition_events(
     events_deletion,
 ):
     sched_dev = events_deletion.to_frame()
-    sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
+    sched_dev = sched_dev[sched_dev.year_demo == iter_var].reset_index(drop=True)
     buildings_columns = buildings.local_columns
     if len(sched_dev) > 0:
         buildings = buildings.to_frame(
