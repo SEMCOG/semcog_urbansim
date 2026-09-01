@@ -88,6 +88,11 @@ def _should_skip_var(var: str) -> bool:
 
     var_lower = var.lower()
 
+    # Bike mode share is too small for bike-nearest indicators to be a
+    # defensible regional price driver.
+    if var_lower.startswith('bike_nearest_'):
+        return True
+
     # === SKIP: All parcels_ variables (duplicates of building vars) ===
     if var_lower.startswith('parcels_'):
         return True
@@ -763,6 +768,9 @@ def run_repm_training():
 
     # Stage 1: Load data
     print("[1/4] Loading data and building networks...")
+    orca.add_injectable("repm_estimation_only", True)
+    if not orca.is_injectable("data_out_dir"):
+        orca.add_injectable("data_out_dir", REPM_XGB_PATH)
     import models
     orca.run(["build_networks"])
     orca.run(["neighborhood_vars"])

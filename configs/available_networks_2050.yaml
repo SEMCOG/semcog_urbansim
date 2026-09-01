@@ -43,10 +43,8 @@ highway_ext_2020:
 # (SEMCOG/TMACOG/surrounding-MI-counties sub-networks reconnected at their shared
 # edges). Identical content to highway_ext_2020 above as of this writing -- both
 # were rebuilt from the same 2025 source and added to semcog_networks.h5 side by
-# side so existing highway_ext_2020-based testing keeps working unaffected. Not yet
-# wired into build_networks_2050's lstnet -- add it there (and raise
-# pdna.network.reserve_num_graphs above 2 if run alongside net_walk/net_drv) to
-# switch the live drive network over.
+# side so existing highway_ext_2020-based testing keeps working unaffected. This is
+# the active drive network used by build_networks.
 highway_ext_2025:
   cost1: peak_mins
   cost2: nonpk_mins

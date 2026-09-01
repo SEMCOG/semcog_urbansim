@@ -38,7 +38,7 @@ def load_hlcm_df(hh_var, b_var):
     orca.add_injectable('year', 2020)
     buildings = orca.get_table("buildings")
     households = orca.get_table("households")
-    orca.run(["build_networks_2050"])
+    orca.run(["build_networks"])
     orca.run(["neighborhood_vars"])
     # load both hh
     hh = households.to_frame(hh_var)
@@ -239,4 +239,3 @@ def run_elcm_large_MNL(job_region, b_region, SLID, number_of_vars_to_use=40):
 if __name__ == '__main__':
     hh_region, b_region = load_hh_and_b(93, False)
     run_large_MNL(hh_region, b_region, 93, 60)
-

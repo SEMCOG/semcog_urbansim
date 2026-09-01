@@ -35,8 +35,8 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_081326.h5",
-    f"{_LOCAL}/main_081326.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_082426.h5",
+    f"{_LOCAL}/main_082426.h5",
 )
 
 HLCM_MODEL_DIR = _p(

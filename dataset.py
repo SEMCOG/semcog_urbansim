@@ -28,6 +28,7 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
+    "travel_survey_bg_vars",  # block-group travel-survey aggregates for parcel/building variables
     "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
     "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
