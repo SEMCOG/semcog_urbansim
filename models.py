@@ -26,16 +26,19 @@ from functools import reduce
 
 # set configs if they are not set
 if not orca.is_injectable('hlcm_model_path'):
-    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+    orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
 
 if not orca.is_injectable('elcm_model_path'):
-    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
+    orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
 
 if not orca.is_injectable('yaml_configs'):
     orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 if not orca.is_injectable('ENABLE_SCENARIO'):
     orca.add_injectable('ENABLE_SCENARIO', False)
+
+if not orca.is_injectable('repm_estimation_only'):
+    orca.add_injectable('repm_estimation_only', False)
 
 import dataset
 import variables
@@ -65,35 +68,39 @@ if orca.get_injectable('ENABLE_SCENARIO'):
 hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
+model_configs = {}
 
-hlcm_model_path = orca.get_injectable('hlcm_model_path')
-elcm_model_path = orca.get_injectable('elcm_model_path')
-yaml_configs = orca.get_injectable('yaml_configs')
+if not orca.get_injectable('repm_estimation_only'):
+    hlcm_model_path = orca.get_injectable('hlcm_model_path')
+    elcm_model_path = orca.get_injectable('elcm_model_path')
+    yaml_configs = orca.get_injectable('yaml_configs')
 
-# load hlcm model config from path and save to yaml
-lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
-lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
+    # load hlcm model config from path and save to yaml
+    lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
+    lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
 
-# load model_configs
-model_configs = lcm_utils.get_model_category_configs(yaml_configs)
+    # load model_configs
+    model_configs = lcm_utils.get_model_category_configs(yaml_configs)
 
-for model_category_name, model_category_attributes in model_configs.items():
-    if model_category_attributes["model_type"] == "location_choice":
-        model_config_files = model_category_attributes["config_filenames"]
+    for model_category_name, model_category_attributes in model_configs.items():
+        if model_category_attributes["model_type"] == "location_choice":
+            model_config_files = model_category_attributes["config_filenames"]
 
-        for model_config in model_config_files:
+            for model_config in model_config_files:
 
-            if model_category_name == "hlcm":
-                # load torch-based hlcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
-                hlcm_step_names.append(model_config)
-                hh_location_choice_models[model_config] = model
+                if model_category_name == "hlcm":
+                    # load torch-based hlcm model
+                    model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
+                    hlcm_step_names.append(model_config)
+                    hh_location_choice_models[model_config] = model
 
-            if model_category_name == "elcm":
-                # load torch-based elcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
-                elcm_step_names.append(model_config)
-                emp_location_choice_models[model_config] = model
+                if model_category_name == "elcm":
+                    # load torch-based elcm model
+                    model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
+                    elcm_step_names.append(model_config)
+                    emp_location_choice_models[model_config] = model
+else:
+    print("Skipping HLCM/ELCM setup for REPM estimation.")
 
 orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
 orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
@@ -4186,8 +4193,7 @@ def update_sp_filter(buildings):
 
 
 @orca.step()
-## for 2050 forecast, ready to replace the old one
-def build_networks_2050(parcels):
+def build_networks(parcels):
     import yaml
 
     # networks in semcog_networks.h5
@@ -4216,7 +4222,7 @@ def build_networks_2050(parcels):
         },
     ]
 
-    ## TODO, remove 2015, 2019 after switching to full 2050 model
+    ## TODO, remove legacy-year triggers after the current forecast setup is fully adopted
     # 2030 dropped from the rebuild triggers: the network no longer changes at 2030,
     # so rebuilding there would just discard and recreate identical graphs.
     if (year in [2015, 2020, 2021]) or ("net_walk" not in orca.list_tables()):
@@ -4250,7 +4256,7 @@ def build_networks_2050(parcels):
 
 
 @orca.step()
-def build_networks(parcels):
+def build_networks_legacy(parcels):
     import yaml
 
     pdna.network.reserve_num_graphs(2)
