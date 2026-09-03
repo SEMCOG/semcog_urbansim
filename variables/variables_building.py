@@ -958,6 +958,13 @@ def nodes_walk_residential_excl_self(buildings):
     )
 
 
+MARKET_NONRES_PRICE_POOL_GENERAL_TYPES = (
+    "Retail", "Office", "Industrial", "TCU", "Medical", "Entertainment",
+    "Hospitality", "Agricultural",
+)
+MARKET_NONRES_PRICE_POOL_EXCLUDED_BTYPE_IDS = (95, 96)
+
+
 def _register_nonres_price_excl_self(raw_name, observation_name, general_type=None):
     """Register one non-residential node price mean with focal building removed."""
     column_name = f"nodes_walk_{raw_name}_excl_self"
@@ -965,7 +972,13 @@ def _register_nonres_price_excl_self(raw_name, observation_name, general_type=No
     @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
     def price_excl_self(buildings):
         if general_type is None:
-            is_price_observation = buildings.building_type_id.between(21, 71)
+            # Must match the market_nonres YAML anchor in networks_walk.yaml.
+            is_price_observation = (
+                buildings.general_type.isin(MARKET_NONRES_PRICE_POOL_GENERAL_TYPES)
+                & ~buildings.building_type_id.isin(
+                    MARKET_NONRES_PRICE_POOL_EXCLUDED_BTYPE_IDS
+                )
+            )
         else:
             is_price_observation = buildings.general_type.eq(general_type)
         return _leave_one_out_price(
