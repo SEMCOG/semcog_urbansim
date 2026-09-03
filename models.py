@@ -4213,6 +4213,7 @@ def build_networks(parcels):
             "cost": "cost1",
             "prev": 16400,
             "net": "net_walk",
+            "nodeid_col": "nodeid_walk",
         },
         {
             "name": "highway_ext_2025",
@@ -4220,18 +4221,32 @@ def build_networks(parcels):
             "prev": 60,  # 60 minutes
             "net": "net_drv",
         },
+        {
+            # Snap parcels to non-highway nodes, then use those shared node IDs
+            # for full-drive network aggregation.
+            "name": "highway_ext_2025",
+            "cost": "cost1",
+            "net": "net_drv_local",
+            "nodes_key": "local_nodes",
+            "edges_key": "local_edges",
+            "nodeid_col": "nodeid_drv",
+        },
     ]
 
-    ## TODO, remove legacy-year triggers after the current forecast setup is fully adopted
-    # 2030 dropped from the rebuild triggers: the network no longer changes at 2030,
-    # so rebuilding there would just discard and recreate identical graphs.
-    if (year in [2015, 2020, 2021]) or ("net_walk" not in orca.list_tables()):
+    # All years use the same network bundle (see lstnet above), so retain each
+    # network's cache and rebuild only a network that is missing.
+    missing_networks = [
+        n for n in lstnet if not orca.is_injectable(n["net"])
+    ]
+    if missing_networks:
         st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
         pdna.network.reserve_num_graphs(2)
 
-        for n in lstnet:
+        for n in missing_networks:
             n_dic_net = dic_net[n["name"]]
-            nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
+            nodes_key = n.get("nodes_key", "nodes")
+            edges_key = n.get("edges_key", "edges")
+            nodes, edges = st[n_dic_net[nodes_key]], st[n_dic_net[edges_key]]
             net = pdna.Network(
                 nodes["x"],
                 nodes["y"],
@@ -4239,19 +4254,19 @@ def build_networks(parcels):
                 edges["to"],
                 edges[[n_dic_net[n["cost"]]]],
             )
-            net.precompute(n["prev"])
-            net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
+            if "prev" in n:
+                net.precompute(n["prev"])
+                net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
 
             orca.add_injectable(n["net"], net)
 
-        # spatially join node ids to parcels
+        # Reassign parcel node IDs only for networks recreated above.
         p = parcels.local
-        p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
-            p["centroid_x"], p["centroid_y"]
-        )
-        p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
-            p["centroid_x"], p["centroid_y"]
-        )
+        for n in missing_networks:
+            if "nodeid_col" in n:
+                p[n["nodeid_col"]] = orca.get_injectable(n["net"]).get_node_ids(
+                    p["centroid_x"], p["centroid_y"]
+                )
         orca.add_table("parcels", p)
 
 
