@@ -348,11 +348,21 @@ variable_definitions:
     dataframe: buildings
     filters:
     - 81 <= building_type_id <= 84
-    - 0 < sqft_price_res < 500
+    - 0 < sqft_price_res < 650
     decay: flat
     name: residential
     radius: 6560
     varname: sqft_price_res
+
+  # Companion count for the residential price average.  It allows the
+  # building-level leave-one-out price feature to remove the focal building.
+  - aggregation: count
+    dataframe: buildings
+    filters:
+    - 81 <= building_type_id <= 84
+    - 0 < sqft_price_res < 650
+    name: residential_price_observations
+    radius: 6560
 
   - aggregation: ave
     dataframe: buildings
@@ -470,4 +480,3 @@ variable_definitions:
     decay: flat
     apply: np.log1p
  
-
