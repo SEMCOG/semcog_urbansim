@@ -4,6 +4,16 @@ model_type: networks
 
 node_col: nodeid_walk
 
+# Shared REPM broad non-residential peer-price pool. This includes market
+# property types and excludes special-purpose Parking Garage (95) and Data
+# Center (96); institutional and Death Care types are not in the listed
+# general types. Keep the matching source rule in variables_building.py in
+# sync when changing this specification.
+price_pool_filters:
+  market_nonres: &market_nonres_price_pool
+    - general_type in ["Retail", "Office", "Industrial", "TCU", "Medical", "Entertainment", "Hospitality", "Agricultural"]
+    - building_type_id not in [95, 96]
+
 #all distances are foot based (cost1 for 2050 walk network)
 #2500 feet, about 750 meters, 1640 feet about 500 meters
 
@@ -367,8 +377,9 @@ variable_definitions:
   - aggregation: ave
     dataframe: buildings
     decay: flat
-    filters:
-    - 21 <= building_type_id <= 71
+    add_fields:
+    - general_type
+    filters: *market_nonres_price_pool
     name: ave_nonres_sqft_price
     radius: 6560
     varname: sqft_price_nonres
@@ -377,8 +388,9 @@ variable_definitions:
   # building-level leave-one-out price feature to remove the focal building.
   - aggregation: count
     dataframe: buildings
-    filters:
-    - 21 <= building_type_id <= 71
+    add_fields:
+    - general_type
+    filters: *market_nonres_price_pool
     name: ave_nonres_sqft_price_observations
     radius: 6560
 
