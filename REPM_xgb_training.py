@@ -18,6 +18,8 @@ import joblib
 import pickle
 from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from utils import apply_filter_query
 
@@ -37,8 +39,14 @@ from sklearn.dummy import DummyRegressor
 # CONFIGURATION - Edit these settings as needed
 # ==============================================================================
 
-# Output directory for trained models
-REPM_XGB_PATH = "./configs/repm_xgb/"
+# Estimation outputs are saved to a dated archive. Grid-search baselines remain
+# in the versioned config directory and can be reused by later estimations.
+REPM_OUTPUT_ROOT = Path(
+    os.environ.get("REPM_ESTIMATION_OUTPUT_DIR", "/home/da/RDF2055/d_drive/estimation/REPM")
+)
+GRID_SEARCH_BASELINE_DIR = Path("./configs/repm_xgb/")
+REPM_XGB_PATH = None
+EASTERN = ZoneInfo("America/Detroit")
 
 # Grid search settings
 USE_GRID_SEARCH = True  # Set to True for hyperparameter tuning (slower)
@@ -48,6 +56,11 @@ USE_GRID_SEARCH = True  # Set to True for hyperparameter tuning (slower)
 #   - "/path/to/dir/": Load from specified directory (auto per segment)
 #   - "/path/to/file.yaml": Use single baseline for all segments (not recommended)
 GRID_SEARCH_BASELINE = "auto"  # Auto-load per-segment baselines for refined search
+
+
+def _make_output_path(started_at):
+    """Create a unique, Eastern-time-dated output directory for one estimation."""
+    return REPM_OUTPUT_ROOT / f"repm_{started_at.strftime('%Y%m%d_%H%M%S')}"
 
 # ==============================================================================
 # ADVANCED CONFIGURATION (usually doesn't need to be changed)
@@ -113,15 +126,14 @@ def _should_skip_var(var: str) -> bool:
         return True
 
     # === SKIP: Target variables ===
-    if 'sqft_price' in var_lower:
+    if 'sqft_price' in var_lower and not var_lower.endswith('_excl_self'):
         return True
 
     # === SKIP: Price-derived and self-referential price fields ===
     # The price targets are calculated from market_value. improvement_value is
     # a closely related assessed-value component and can be generated from the
-    # predicted price during simulation. The original node residential average
-    # includes the focal building's target price; use the leave-one-out version
-    # instead. housing_cost is derived from that same leaking average.
+    # predicted price during simulation. Raw node price means include the focal
+    # building's target price; use their leave-one-out versions instead.
     if var in {
         'market_value',
         'improvement_value',
@@ -129,6 +141,20 @@ def _should_skip_var(var: str) -> bool:
         'nodes_walk_residential',
         'nodes_walk_housing_cost',
         'nodes_walk_residential_price_observations',
+        'nodes_walk_ave_nonres_sqft_price',
+        'nodes_walk_ave_nonres_sqft_price_observations',
+        'nodes_walk_retail',
+        'nodes_walk_retail_price_observations',
+        'nodes_walk_office',
+        'nodes_walk_office_price_observations',
+        'nodes_walk_industrial',
+        'nodes_walk_industrial_price_observations',
+        'nodes_walk_medical',
+        'nodes_walk_medical_price_observations',
+        'nodes_walk_entertainment',
+        'nodes_walk_entertainment_price_observations',
+        'nodes_walk_hospitality',
+        'nodes_walk_hospitality_price_observations',
     }:
         return True
 
@@ -581,7 +607,8 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
                                use_grid_search, grid_search_baseline, start_time):
     """Train XGBoost model (internal implementation)."""
     model_name = f"{segment['prefix']}{segment['hedonic_id']}"
-    gs_path = Path(REPM_XGB_PATH) / f"grid_search_{model_name}.yaml"
+    gs_output_path = Path(REPM_XGB_PATH) / f"grid_search_{model_name}.yaml"
+    gs_baseline_path = GRID_SEARCH_BASELINE_DIR / f"grid_search_{model_name}.yaml"
     using_gs = False
     using_gs_baseline = False
 
@@ -589,8 +616,8 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
     params = _get_xgb_params(sample_size)
 
     # Load existing grid search params if available and not doing new grid search
-    if not use_grid_search and gs_path.exists():
-        with open(gs_path, 'r') as f:
+    if not use_grid_search and gs_baseline_path.exists():
+        with open(gs_baseline_path, 'r') as f:
             gs_results = yaml.load(f, Loader=yaml.FullLoader)
             best_params = gs_results.get('best_params', {})
             if best_params:
@@ -612,7 +639,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
         baseline_path = None
         if grid_search_baseline:
             if grid_search_baseline == "auto":
-                baseline_path = gs_path if gs_path.exists() else None
+                baseline_path = gs_baseline_path if gs_baseline_path.exists() else None
             elif Path(grid_search_baseline).is_dir():
                 baseline_path = Path(grid_search_baseline) / f"grid_search_{model_name}.yaml"
                 baseline_path = baseline_path if baseline_path.exists() else None
@@ -662,7 +689,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
             'best_cv_mean': float(cv_results['mean_test_score'][gs.best_index_]),
             'best_cv_std': float(cv_results['std_test_score'][gs.best_index_]),
             'model_name': model_name,
-            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
             'sample_size': sample_size,
             'n_features': len(feat_names),
             'all_results': {
@@ -673,7 +700,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
         }
 
         # Save to file
-        with open(gs_path, 'w') as f:
+        with open(gs_output_path, 'w') as f:
             yaml.dump(grid_search_results, f, default_flow_style=False, sort_keys=False)
 
         # Update params with grid search best params for final training
@@ -756,7 +783,7 @@ def _save_model(model_artifacts, model_name):
         'n_features': len(model_artifacts['feature_names']),
         'feature_importance': model_artifacts['feature_importance'],
         'metrics': model_artifacts['metrics'],
-        'trained_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'trained_at': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
     }
     if model_artifacts.get('fallback_reason'):
         metadata['fallback_reason'] = model_artifacts['fallback_reason']
@@ -842,7 +869,10 @@ def _remove_correlated(X, names, threshold=None):
 
 def run_repm_training():
     """Run REPM XGBoost training pipeline with modern best practices."""
+    global REPM_XGB_PATH
     overall_start = time.time()
+    started_at = datetime.now(EASTERN)
+    REPM_XGB_PATH = str(_make_output_path(started_at))
 
     # Header
     print("\n" + "="*80)
@@ -850,7 +880,7 @@ def run_repm_training():
     print("="*80)
     print(f"Output:     {REPM_XGB_PATH}")
     print(f"Grid Search:{' Yes' if USE_GRID_SEARCH else ' No'}")
-    print(f"Timestamp:  {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Timestamp:  {started_at.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("="*80 + "\n")
 
     Path(REPM_XGB_PATH).mkdir(parents=True, exist_ok=True)
@@ -954,7 +984,7 @@ def run_repm_training():
     n_dummy = sum(1 for r in results.values() if r.get('model_type', 'xgboost') == 'dummy')
 
     summary = {
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
         'training_time_seconds': round(training_time_total, 2),
         'grid_search_used': USE_GRID_SEARCH,
         'grid_search_baseline': GRID_SEARCH_BASELINE,

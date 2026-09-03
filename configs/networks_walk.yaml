@@ -373,6 +373,15 @@ variable_definitions:
     radius: 6560
     varname: sqft_price_nonres
 
+  # Companion count for the non-residential price average.  It allows the
+  # building-level leave-one-out price feature to remove the focal building.
+  - aggregation: count
+    dataframe: buildings
+    filters:
+    - 21 <= building_type_id <= 71
+    name: ave_nonres_sqft_price_observations
+    radius: 6560
+
   - aggregation: ave
     dataframe: buildings
     decay: flat
@@ -383,6 +392,15 @@ variable_definitions:
     name: retail
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    name: retail_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -395,6 +413,15 @@ variable_definitions:
     radius: 10560
     varname: sqft_price_nonres
 
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    name: office_price_observations
+    radius: 10560
+
   - aggregation: ave
     dataframe: buildings
     decay: flat
@@ -405,6 +432,15 @@ variable_definitions:
     name: industrial
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    name: industrial_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -417,6 +453,15 @@ variable_definitions:
     radius: 10560
     varname: sqft_price_nonres
 
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Medical"
+    name: medical_price_observations
+    radius: 10560
+
   - aggregation: ave
     dataframe: buildings
     decay: flat
@@ -428,6 +473,15 @@ variable_definitions:
     radius: 10560
     varname: sqft_price_nonres
 
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Entertainment"
+    name: entertainment_price_observations
+    radius: 10560
+
   - aggregation: ave
     dataframe: buildings
     decay: flat
@@ -438,6 +492,15 @@ variable_definitions:
     name: hospitality
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Hospitality"
+    name: hospitality_price_observations
+    radius: 10560
 
   - aggregation: count
     name: quarter_mile_to_transit
