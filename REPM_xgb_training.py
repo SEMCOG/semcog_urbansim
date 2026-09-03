@@ -116,6 +116,22 @@ def _should_skip_var(var: str) -> bool:
     if 'sqft_price' in var_lower:
         return True
 
+    # === SKIP: Price-derived and self-referential price fields ===
+    # The price targets are calculated from market_value. improvement_value is
+    # a closely related assessed-value component and can be generated from the
+    # predicted price during simulation. The original node residential average
+    # includes the focal building's target price; use the leave-one-out version
+    # instead. housing_cost is derived from that same leaking average.
+    if var in {
+        'market_value',
+        'improvement_value',
+        'impr_value_per_sqft',
+        'nodes_walk_residential',
+        'nodes_walk_housing_cost',
+        'nodes_walk_residential_price_observations',
+    }:
+        return True
+
     # === SKIP: Standardized, log-transformed, tract, zone lowercase ===
     skip_prefixes = ['st_', 'b_ln_', 'ln_', 'tract_', 'zone_']
     for prefix in skip_prefixes:
@@ -766,7 +782,13 @@ def _save_model(model_artifacts, model_name):
             'rmse_val': format_metric(metadata['metrics']['rmse_val']),
             'mae_val': format_metric(metadata['metrics']['mae_val']),
         },
-        'top_features': dict(list(metadata['feature_importance'].items())[:10]),
+        'top_features': dict(
+            sorted(
+                metadata['feature_importance'].items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:10]
+        ),
     }
     if metadata.get('fallback_reason'):
         summary['fallback_reason'] = metadata['fallback_reason']

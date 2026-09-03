@@ -924,6 +924,40 @@ def impr_value_per_sqft(buildings, parcels):
     return (bldgimpr / total_sqft).clip(lower=0, upper=500)
 
 
+def _leave_one_out_residential_price(
+    neighborhood_mean, observations, own_price, is_price_observation
+):
+    """Remove a qualifying building's own price from its node price average."""
+    result = neighborhood_mean.copy()
+    has_peer = is_price_observation & (observations > 1)
+    result.loc[has_peer] = (
+        (neighborhood_mean.loc[has_peer] * observations.loc[has_peer]
+         - own_price.loc[has_peer])
+        / (observations.loc[has_peer] - 1)
+    )
+    # A qualifying building with no other price observation has no local peer
+    # price.  Do not fall back to its own target value.
+    result.loc[is_price_observation & ~has_peer] = 0
+    return result.fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def nodes_walk_residential_excl_self(buildings):
+    """Residential node price average with the focal building excluded."""
+    own_price = buildings.sqft_price_res
+    is_price_observation = (
+        buildings.building_type_id.between(81, 84)
+        & own_price.gt(0)
+        & own_price.lt(650)
+    )
+    return _leave_one_out_residential_price(
+        buildings.nodes_walk_residential,
+        buildings.nodes_walk_residential_price_observations,
+        own_price,
+        is_price_observation,
+    )
+
+
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def land_to_impr_ratio(buildings, parcels):
     """Land value divided by improvement value — high ratio flags teardown pressure."""
