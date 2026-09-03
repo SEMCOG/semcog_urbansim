@@ -924,10 +924,10 @@ def impr_value_per_sqft(buildings, parcels):
     return (bldgimpr / total_sqft).clip(lower=0, upper=500)
 
 
-def _leave_one_out_residential_price(
+def _leave_one_out_price(
     neighborhood_mean, observations, own_price, is_price_observation
 ):
-    """Remove a qualifying building's own price from its node price average."""
+    """Remove a qualifying building's own price from a node price average."""
     result = neighborhood_mean.copy()
     has_peer = is_price_observation & (observations > 1)
     result.loc[has_peer] = (
@@ -950,11 +950,39 @@ def nodes_walk_residential_excl_self(buildings):
         & own_price.gt(0)
         & own_price.lt(650)
     )
-    return _leave_one_out_residential_price(
+    return _leave_one_out_price(
         buildings.nodes_walk_residential,
         buildings.nodes_walk_residential_price_observations,
         own_price,
         is_price_observation,
+    )
+
+
+def _register_nonres_price_excl_self(raw_name, observation_name, general_type=None):
+    """Register one non-residential node price mean with focal building removed."""
+    column_name = f"nodes_walk_{raw_name}_excl_self"
+
+    @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
+    def price_excl_self(buildings):
+        if general_type is None:
+            is_price_observation = buildings.building_type_id.between(21, 71)
+        else:
+            is_price_observation = buildings.general_type.eq(general_type)
+        return _leave_one_out_price(
+            getattr(buildings, f"nodes_walk_{raw_name}"),
+            getattr(buildings, f"nodes_walk_{observation_name}"),
+            buildings.sqft_price_nonres,
+            is_price_observation,
+        )
+
+
+_register_nonres_price_excl_self(
+    "ave_nonres_sqft_price", "ave_nonres_sqft_price_observations"
+)
+for _price_type in ["Retail", "Office", "Industrial", "Medical", "Entertainment", "Hospitality"]:
+    _price_name = _price_type.lower()
+    _register_nonres_price_excl_self(
+        _price_name, f"{_price_name}_price_observations", _price_type
     )
 
 
