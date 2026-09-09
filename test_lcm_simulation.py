@@ -3,14 +3,14 @@ import os
 import yaml
 from urbansim_templates.models import LargeMultinomialLogitStep
 from urbansim_templates import modelmanager as mm
-mm.initialize('estimation/location_choice/configs_elcm_2050')
+mm.initialize('configs/elcm_2050')
 
 
 def generate_yaml_configs():
-    hlcm_yaml = os.listdir('estimation/location_choice/configs_hlcm_2050')
+    hlcm_yaml = os.listdir('configs/hlcm_2050')
     hlcm_yaml = ["hlcm_2050/"+path for path in hlcm_yaml if '.yaml' in path]
 
-    elcm_yaml = os.listdir('estimation/location_choice/configs_elcm_2050')
+    elcm_yaml = os.listdir('configs/elcm_2050')
     elcm_yaml = ["elcm_2050/"+path for path in elcm_yaml if '.yaml' in path]
     obj = {
         'hlcm': hlcm_yaml,
