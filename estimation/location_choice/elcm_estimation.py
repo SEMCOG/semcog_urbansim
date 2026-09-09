@@ -20,7 +20,9 @@ from dcm_ard_libs import minimize, neglog_DCM
 from fit_large_MNL_LCM import run_elcm_large_MNL
 from urbansim_templates import modelmanager as mm
 ESTIMATION_DIR = Path(__file__).resolve().parent
-mm.initialize(str(ESTIMATION_DIR / 'configs_elcm_2050'))
+REPO_ROOT = ESTIMATION_DIR.parents[1]
+ELCM_CONFIG_DIR = REPO_ROOT / 'configs' / 'elcm_2050'
+mm.initialize(str(ELCM_CONFIG_DIR))
 
 # from guppy import hpy; h=hpy()
 # import pymrmr
@@ -29,7 +31,7 @@ mm.initialize(str(ESTIMATION_DIR / 'configs_elcm_2050'))
 def warn(*args, **kwargs):
     pass
 
-os.chdir(ESTIMATION_DIR.parents[1])
+os.chdir(REPO_ROOT)
 
 # config
 data_path = r'/home/da/share/urbansim/RDF2050/model_inputs/base_hdf'
@@ -152,7 +154,7 @@ def estimation(SLID, job_region, b_region, vars_to_use):
     out_theta = pd.DataFrame(theta_optim_full[0], columns=['theta'])
     out_theta.index = newX_cols_name[used_val]
     out_theta = out_theta.loc[out_theta.theta.abs().sort_values(ascending=False).index]
-    out_theta.to_csv(ESTIMATION_DIR / 'configs_elcm_2050' / 'thetas' / ('out_theta_job_%s_%s.txt' % (SLID, ESTIMATION_SAMPLE_SIZE)))
+    out_theta.to_csv(ELCM_CONFIG_DIR / 'thetas' / ('out_theta_job_%s_%s.txt' % (SLID, ESTIMATION_SAMPLE_SIZE)))
 
     print("Warning: variables with 0 variation")
     print(newX_cols_name[unused_val.tolist()])
