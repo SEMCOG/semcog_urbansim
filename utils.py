@@ -907,7 +907,7 @@ def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
 
-    model_dir = "configs/repm_xgb"
+    model_dir = "estimation/repm/configs/xgb"
     all_features = set()
 
     if not os.path.exists(model_dir):

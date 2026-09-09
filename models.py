@@ -687,14 +687,14 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
     model_name : str
         Name of the model step (e.g., "res_repm381")
     xgb_model_dir : str
-        Path to XGBoost model directory (e.g., "configs/repm_xgb")
+        Path to XGBoost model directory (e.g., "estimation/repm/configs/xgb")
     dep_var : str
         Target variable name ("sqft_price_res" or "sqft_price_nonres")
     """
 
     @orca.step(model_name)
     def func():
-        from repm_xgb_utils import load_repm_xgb_model
+        from estimation.repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
 
@@ -782,7 +782,7 @@ def repm_comparison_log():
 
 # Register XGBoost REPM steps
 repm_step_names = []
-xgb_repm_dir = "configs/repm_xgb"
+xgb_repm_dir = "estimation/repm/configs/xgb"
 
 # Use absolute path for checking existence
 xgb_model_full_path = os.path.abspath(xgb_repm_dir)

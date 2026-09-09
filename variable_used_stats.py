@@ -13,10 +13,10 @@ from os import listdir
 from os.path import isfile, join
 from collections import Counter
 
-fpath = "./configs/repm"  # repm
-fpath = "./configs/hlcm_calib"  # hlcm calib
-fpath = "./configs/hlcm/large_area_income_quartile"  # income quartile
-fpath = "./configs/elcm/large_area_sector"  # income quartile
+fpath = "./estimation/repm/configs/legacy"  # repm
+fpath = "./estimation/location_choice/configs_hlcm_calib"  # hlcm calib
+fpath = "./estimation/location_choice/configs_hlcm/large_area_income_quartile"  # income quartile
+fpath = "./estimation/location_choice/configs_elcm/large_area_sector"  # income quartile
 onlyfiles = [f for f in listdir(fpath) if isfile(join(fpath, f))]
 
 # %%
