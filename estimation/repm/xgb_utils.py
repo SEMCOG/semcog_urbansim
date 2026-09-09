@@ -17,7 +17,7 @@ import joblib
 import xgboost as xgb
 from pathlib import Path
 
-DEFAULT_MODEL_DIR = Path(__file__).resolve().parent / "configs" / "xgb"
+DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[2] / "configs" / "repm_xgb"
 
 class REPMXGBoostModel:
     """

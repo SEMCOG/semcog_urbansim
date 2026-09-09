@@ -689,7 +689,7 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
     model_name : str
         Name of the model step (e.g., "res_repm381")
     xgb_model_dir : str
-        Path to XGBoost model directory (e.g., "estimation/repm/configs/xgb")
+        Path to XGBoost model directory (e.g., "configs/repm_xgb")
     dep_var : str
         Target variable name ("sqft_price_res" or "sqft_price_nonres")
     """
@@ -785,7 +785,7 @@ def repm_comparison_log():
 # Register XGBoost REPM steps
 repm_step_names = []
 if not orca.is_injectable("xgb_repm_dir"):
-    orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
+    orca.add_injectable("xgb_repm_dir", "estimation/repm/configs/xgb")
 xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence
