@@ -908,7 +908,7 @@ def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
 
-    model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb"
+    model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "estimation/repm/configs/xgb"
     all_features = set()
 
     if not os.path.exists(model_dir):
