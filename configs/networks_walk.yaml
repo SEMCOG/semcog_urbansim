@@ -49,6 +49,26 @@ variable_definitions:
     decay: flat
     apply: np.log1p
 
+  # Local industrial activity, distinct from the industrial price peer mean.
+  # It is based on structural floor area, not assessed value or sale price.
+  - name: log_industrial_nonres_sqft
+    dataframe: buildings
+    varname: non_residential_sqft
+    filters:
+    - general_type == "Industrial"
+    radius: 4920
+    decay: flat
+    aggregation: sum
+    apply: np.log1p
+
+  - name: industrial_buildings
+    dataframe: buildings
+    filters:
+    - general_type == "Industrial"
+    radius: 4920
+    decay: flat
+    aggregation: count
+
   - name: ave_lot_sqft
     dataframe: buildings
     varname: land_area
