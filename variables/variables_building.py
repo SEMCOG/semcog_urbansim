@@ -1015,6 +1015,186 @@ def res_vacancy_rate(buildings):
     return rate.where(buildings.residential_units > 0, 0.0)
 
 
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def nonres_vacancy_rate(buildings):
+    """Proportion of job spaces without a placed job (0–1)."""
+    rate = (buildings.vacant_job_spaces.clip(lower=0) /
+            buildings.job_spaces.clip(lower=1)).clip(0, 1)
+    return rate.where(buildings.non_residential_sqft > 0, 0.0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def nonres_far(buildings):
+    """Non-residential floor-area ratio for the focal building's parcel."""
+    return (buildings.non_residential_sqft /
+            buildings.parcel_sqft.clip(lower=1)).clip(lower=0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def building_site_coverage(buildings):
+    """Estimated building footprint divided by parcel area (0–1)."""
+    footprint = buildings.building_sqft / buildings.stories.clip(lower=1)
+    return (footprint / buildings.parcel_sqft.clip(lower=1)).clip(0, 1)
+
+
+def _zoning_value(buildings, zoning, column):
+    """Broadcast one static parcel zoning field to buildings."""
+    return misc.reindex(zoning[column], buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_max_far(buildings, zoning):
+    return _zoning_value(buildings, zoning, "max_far")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_avg_far(buildings, zoning):
+    return _zoning_value(buildings, zoning, "avg_far")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_far_headroom(buildings):
+    """Unused zoned FAR after the focal building's non-residential floor area."""
+    return (buildings.zoning_max_far - buildings.nonres_far).clip(lower=0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_max_height(buildings, zoning):
+    return _zoning_value(buildings, zoning, "max_height")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_max_stories(buildings, zoning):
+    return _zoning_value(buildings, zoning, "max_stories")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_pct_undev(buildings, zoning):
+    return _zoning_value(buildings, zoning, "pct_undev")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def zoning_developable(buildings, zoning):
+    return _zoning_value(buildings, zoning, "is_developable")
+
+
+def _register_zoning_future_use_indicator(future_use):
+    column_name = "zoning_future_use_" + future_use.lower().replace(" ", "_")
+
+    @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
+    def zoning_future_use_indicator(buildings, zoning):
+        values = misc.reindex(zoning.future_use, buildings.parcel_id)
+        return values.eq(future_use).astype("int8")
+
+
+for _future_use in sorted(orca.get_table("zoning").future_use.dropna().unique()):
+    _register_zoning_future_use_indicator(_future_use)
+
+
+def _zone_value(buildings, zones, column):
+    """Broadcast one zone-level market measure to buildings."""
+    return misc.reindex(zones[column], buildings.zone_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def market_zone_employment_density(buildings, zones):
+    return _zone_value(buildings, zones, "empden")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def market_zone_population_density(buildings, zones):
+    return _zone_value(buildings, zones, "popden")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def market_zone_job_vacancy_rate(buildings, zones):
+    return _zone_value(buildings, zones, "percent_vacant_job_spaces")
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def market_zone_jobs_per_household(buildings, zones):
+    jobs_per_household = zones.employment / zones.households.clip(lower=1)
+    return misc.reindex(jobs_per_household, buildings.zone_id).fillna(0)
+
+
+@orca.table("zone_sector_job_shares", cache=True, cache_scope="iteration")
+def zone_sector_job_shares(zones, jobs):
+    """Employment-sector shares by zone, with every defined sector present."""
+    job_data = jobs.to_frame(["zone_id", "sector_id"])
+    counts = (
+        job_data.groupby(["zone_id", "sector_id"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(index=zones.index, columns=range(1, 19), fill_value=0)
+    )
+    shares = counts.div(counts.sum(axis=1).replace(0, np.nan), axis=0).fillna(0)
+    shares.columns = [f"sector_{sector_id}_job_share" for sector_id in shares.columns]
+    return shares
+
+
+def _register_zone_sector_job_share(sector_id):
+    column_name = f"market_zone_sector_{sector_id}_job_share"
+    source_name = f"sector_{sector_id}_job_share"
+
+    @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
+    def zone_sector_job_share(buildings, zone_sector_job_shares):
+        return misc.reindex(
+            zone_sector_job_shares[source_name], buildings.zone_id
+        ).fillna(0)
+
+
+for _sector_id in range(1, 19):
+    _register_zone_sector_job_share(_sector_id)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_total_sqft(buildings, parcels):
+    return misc.reindex(parcels.total_sqft, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_nonres_sqft(buildings, parcels):
+    return misc.reindex(parcels.non_residential_sqft, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_nonres_share(buildings):
+    return (buildings.parcel_nonres_sqft /
+            buildings.parcel_total_sqft.clip(lower=1)).clip(0, 1)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_job_space_density(buildings, parcels):
+    spaces = misc.reindex(parcels.total_job_spaces, buildings.parcel_id).fillna(0)
+    return (spaces / buildings.parcel_sqft.clip(lower=1)).clip(lower=0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_building_count(buildings):
+    counts = buildings.parcel_id.value_counts()
+    return misc.reindex(counts, buildings.parcel_id).fillna(0)
+
+
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def parcel_nonres_building_count(buildings):
+    nonres = buildings.non_residential_sqft.gt(0)
+    counts = buildings.parcel_id[nonres].value_counts()
+    return misc.reindex(counts, buildings.parcel_id).fillna(0)
+
+
+def _register_parcel_land_use_indicator(land_use_type_id, land_use_name):
+    column_name = "parcel_land_use_" + land_use_name.lower().replace(" ", "_")
+
+    @orca.column("buildings", column_name, cache=True, cache_scope="iteration")
+    def parcel_land_use_indicator(buildings, parcels):
+        values = misc.reindex(parcels.land_use_type_id, buildings.parcel_id)
+        return values.eq(land_use_type_id).astype("int8")
+
+
+for _land_use_type_id, _land_use_name in orca.get_table("land_use_types").land_use_name.items():
+    _register_parcel_land_use_indicator(_land_use_type_id, _land_use_name)
+
+
 #####################
 # TRAVEL SURVEY VARIABLES (buildings)
 # Inherited from parcel-level BG aggregates via parcel_id.
