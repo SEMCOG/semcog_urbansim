@@ -13,6 +13,7 @@ price_pool_filters:
   market_nonres: &market_nonres_price_pool
     - general_type in ["Retail", "Office", "Industrial", "TCU", "Medical", "Entertainment", "Hospitality", "Agricultural"]
     - building_type_id not in [95, 96]
+    - sqft_price_nonres > 0
 
 #all distances are foot based (cost1 for 2050 walk network)
 #2500 feet, about 750 meters, 1640 feet about 500 meters
@@ -421,6 +422,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Retail"
+    - sqft_price_nonres > 0
     name: retail
     radius: 10560
     varname: sqft_price_nonres
@@ -431,6 +433,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Retail"
+    - sqft_price_nonres > 0
     name: retail_price_observations
     radius: 10560
 
@@ -441,6 +444,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Office"
+    - sqft_price_nonres > 0
     name: office
     radius: 10560
     varname: sqft_price_nonres
@@ -451,6 +455,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Office"
+    - sqft_price_nonres > 0
     name: office_price_observations
     radius: 10560
 
@@ -461,6 +466,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Industrial"
+    - sqft_price_nonres > 0
     name: industrial
     radius: 10560
     varname: sqft_price_nonres
@@ -471,6 +477,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Industrial"
+    - sqft_price_nonres > 0
     name: industrial_price_observations
     radius: 10560
 
@@ -481,6 +488,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Medical"
+    - sqft_price_nonres > 0
     name: medical
     radius: 10560
     varname: sqft_price_nonres
@@ -491,6 +499,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Medical"
+    - sqft_price_nonres > 0
     name: medical_price_observations
     radius: 10560
 
@@ -501,6 +510,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Entertainment"
+    - sqft_price_nonres > 0
     name: entertainment
     radius: 10560
     varname: sqft_price_nonres
@@ -511,6 +521,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Entertainment"
+    - sqft_price_nonres > 0
     name: entertainment_price_observations
     radius: 10560
 
@@ -521,6 +532,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Hospitality"
+    - sqft_price_nonres > 0
     name: hospitality
     radius: 10560
     varname: sqft_price_nonres
@@ -531,6 +543,7 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Hospitality"
+    - sqft_price_nonres > 0
     name: hospitality_price_observations
     radius: 10560
 

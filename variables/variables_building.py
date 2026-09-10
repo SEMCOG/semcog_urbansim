@@ -978,9 +978,13 @@ def _register_nonres_price_excl_self(raw_name, observation_name, general_type=No
                 & ~buildings.building_type_id.isin(
                     MARKET_NONRES_PRICE_POOL_EXCLUDED_BTYPE_IDS
                 )
+                & buildings.sqft_price_nonres.gt(0)
             )
         else:
-            is_price_observation = buildings.general_type.eq(general_type)
+            is_price_observation = (
+                buildings.general_type.eq(general_type)
+                & buildings.sqft_price_nonres.gt(0)
+            )
         return _leave_one_out_price(
             getattr(buildings, f"nodes_walk_{raw_name}"),
             getattr(buildings, f"nodes_walk_{observation_name}"),
