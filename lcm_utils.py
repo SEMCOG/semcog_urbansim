@@ -164,6 +164,113 @@ def register_config_injectable_from_yaml(injectable_name, yaml_file):
     return func
 
 
+def pick_slots(scores, n, method='slot_sampling', seed=0, log_scores=None):
+    """Choose n slots out of the scored candidates.
+
+    Parameters:
+        scores (np.ndarray): Score per candidate slot, used for 'top_n'.
+        n (int): Slots to fill.
+        method (str): 'slot_sampling' draws slots without replacement with
+            probability proportional to exp(log_scores); 'top_n' takes the n
+            highest by `scores`, which is what this did before 2026-09-09.
+            'sample' is accepted as the former name for slot_sampling, so model
+            directories written before the rename still load.
+        seed (int): Seeds the draw, so a run is reproducible.
+        log_scores (np.ndarray, optional): Scores on a log scale, for sampling.
+            Falls back to log(scores).
+
+    Returns:
+        np.ndarray: Positions into `scores`.
+    """
+    n = int(min(n, len(scores)))
+    if n <= 0:
+        return np.empty(0, dtype=np.int64)
+    if method == 'top_n':
+        return np.argsort(scores)[-n:]
+    if method not in ('slot_sampling', 'sample'):
+        raise ValueError("placement must be 'slot_sampling' or 'top_n', got %r"
+                         % method)
+
+    if log_scores is None:
+        w = np.clip(np.nan_to_num(np.asarray(scores, dtype='float64'), nan=0.0), 0.0, None)
+        if w.sum() <= 0:
+            return np.argsort(scores)[-n:]
+        with np.errstate(divide='ignore'):
+            keys = np.log(w)
+    else:
+        keys = np.nan_to_num(np.asarray(log_scores, dtype='float64'),
+                             nan=-np.inf, posinf=np.inf, neginf=-np.inf)
+    rng = np.random.default_rng(seed)
+    finite = np.isfinite(keys)
+    if not finite.any():
+        return np.argsort(scores)[-n:]
+    keys = np.where(finite, keys + rng.gumbel(size=keys.shape), -np.inf)
+    return np.argpartition(keys, -n)[-n:]
+
+
+def _elcm_calibrate(calibration, pred, utility, predict_X_df, final_alts_df,
+                    la_id, job_sector, bld_age_var, taz_emp_ratio_var):
+    """Apply the hand-tuned multipliers to a segment's scores.
+
+    Returns both scales, because ranking uses the probability and slot sampling
+    uses the log. Off by default -- see the note at the call site.
+
+    Parameters:
+        calibration (dict): The `calibration` block from model_structure.yaml.
+        pred (np.ndarray): sigmoid(utility) per candidate slot.
+        utility (np.ndarray): Raw pre-sigmoid score per candidate slot.
+        predict_X_df (pd.DataFrame): The scored candidates, indexed by building.
+        final_alts_df (pd.DataFrame): Alternatives carrying the weight inputs.
+        la_id, job_sector: Identify the segment, for the per-segment overrides.
+        bld_age_var, taz_emp_ratio_var (str): Column names.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray]: (pred_weighted, logit_weighted).
+    """
+    method = calibration.get("calibration_method", "multiplicative")
+    weights = calibration.get("weights", {})
+    use_taz_cluster = calibration.get(
+        "use_taz_cluster_by_sector", {}).get(job_sector, False)
+    override_key = f"la_{la_id}_sector_{job_sector}"
+    if override_key in calibration.get("overrides", {}):
+        method = calibration["overrides"][override_key].get("calibration_method", method)
+        weights = calibration["overrides"][override_key].get("weights", weights)
+
+    w_age = weights.get("building_age", 1.0)
+    w_vac = weights.get("vacancy", 1.0)
+    w_btype = weights.get("btype_matrix", 1.0)
+    w_taz = weights.get("taz_cluster", 1.0)
+
+    building_age_weights = np.array([5.0, 3.0, 1.0])[np.digitize(
+        final_alts_df.loc[predict_X_df.index, bld_age_var], [16, 31])]
+    vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
+    job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
+
+    if use_taz_cluster:
+        taz_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
+        lo, hi = taz_arr.min(), taz_arr.max()
+        taz_cluster_arr = np.ones_like(taz_arr) if lo == hi else (taz_arr - lo) / (hi - lo)
+    else:
+        taz_cluster_arr = np.ones(len(predict_X_df))
+
+    if method == 'log_weighted':
+        total = w_age + w_vac + w_btype + w_taz
+        log_cal = ((w_age / total) * np.log(building_age_weights + 1e-6) +
+                   (w_vac / total) * np.log(vacancy_weights + 1e-6) +
+                   (w_btype / total) * np.log(job_btype_arr + 1e-6) +
+                   (w_taz / total) * np.log(taz_cluster_arr + 1e-6))
+        pred_weighted = pred * np.exp(log_cal)
+    else:
+        pred_weighted = (pred * building_age_weights * vacancy_weights
+                         * job_btype_arr * taz_cluster_arr)
+        with np.errstate(divide='ignore'):
+            log_cal = (np.log(building_age_weights + 1e-12)
+                       + np.log(vacancy_weights + 1e-12)
+                       + np.log(job_btype_arr + 1e-12)
+                       + np.log(taz_cluster_arr + 1e-12))
+    return pred_weighted, utility + log_cal
+
+
 def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None):
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
@@ -217,7 +324,9 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
 
         _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(
-            variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id', 'stories', bld_age_var, taz_emp_ratio_var]
+            variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id',
+                                                'stories', bld_age_var, taz_emp_ratio_var,
+                                                'residential_units']
         )))
         print(f"[alts-timing] ELCM la{la_id} sec{job_sector} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
@@ -230,9 +339,25 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         alts_idx = alts_df.query(alts_pre_filter).index
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
+        # residential_units is kept explicitly
         final_alts_df = final_alts_df[list(set(
-            variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id', taz_emp_ratio_var]
+            variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id',
+                             taz_emp_ratio_var, 'residential_units']
         ))]
+
+        # jobs placing rule defined in esimation, reused here
+        # default to slot_sampling
+        _pl = model_desc.get('placement') or {}
+        placement = _pl.get('rule', 'slot_sampling')
+        # k_candidates is either one number for both segment types or a mapping
+        # with home_based / non_home_based keys
+        _k = _pl.get('k_candidates', 100)
+        k_candidates = int(_k.get('home_based' if home_based else 'non_home_based',
+                                  100) if isinstance(_k, dict) else _k)
+        if 'placement' in (elcm_calibration_config or {}):
+            print('[placement] %s: model_structure.yaml still sets placement; it is '
+                  'ignored, run.placement in the estimation config is authoritative'
+                  % model_name, flush=True)
 
         # Compute vacancy rate
         vacancy_rate = np.where(
@@ -251,92 +376,71 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         final_alts_df['job_btype_ratio'] = final_alts_df['building_type_id'].map(job_btype_matrix).fillna(0.0)
 
         if not home_based:
-            # OPTIMIZATION: capacity-weighted sampling WITHOUT materializing the
-            # full capacity-expanded feature matrix. np.repeat on the index alone
-            # is cheap (just an array of building_ids); we sample M slots from it
-            # and only then build the M feature rows via .loc. Sampling positions
-            # from a length-N Series with random_state=0 picks the same positions
-            # as sampling the length-N expanded frame did (sample selects by
-            # position, not data), so the chosen M rows match the old
-            # full-expansion path — without the ~500 MB build. replace=False
-            # keeps each building capped at its capacity (it has that many slots).
             repeated_idx = pd.Series(
                 np.repeat(final_alts_df.index.to_numpy(),
                           final_alts_df[alt_capacity].to_numpy().astype(np.int64))
             )
             _n_full = len(repeated_idx)
-            M = min(_n_full, n * 20)
+            M = min(_n_full, n * k_candidates)
             sampled_idx = repeated_idx.sample(M, replace=False, random_state=0).to_numpy()
             predict_X_df = final_alts_df.loc[sampled_idx, variable_cols]
         else:
-            predict_X_df = final_alts_df.loc[final_alts_df.index, variable_cols]
-            _n_full = len(predict_X_df)
-            M = min(_n_full, n * 20)
-            predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
+            hb_capacity = final_alts_df['residential_units'].to_numpy()
+            hb_capacity = np.nan_to_num(hb_capacity, nan=0.0)
+            hb_capacity = np.clip(hb_capacity, 0, None).astype(np.int64)
+            repeated_idx = pd.Series(
+                np.repeat(final_alts_df.index.to_numpy(), hb_capacity))
+            _n_full = len(repeated_idx)
+            if _n_full == 0:
+                return
+            M = min(_n_full, n * k_candidates)
+            sampled_idx = repeated_idx.sample(M, replace=False, random_state=0).to_numpy()
+            predict_X_df = final_alts_df.loc[sampled_idx, variable_cols]
 
         # clean + scale only the M sampled rows (was previously done on the full
         # expanded matrix before sampling)
         predict_X_df = predict_X_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
         _t_sc = time.perf_counter()
-        scaler = RobustScaler()
-        predict_X_df = pd.DataFrame(
-            scaler.fit_transform(predict_X_df),
-            columns=predict_X_df.columns,
-            index=predict_X_df.index
-        )
-        predict_X_df = np.clip(predict_X_df, -5, 5)
+        # Prefer the scaler fitted during estimation
+        scaler_state = getattr(model, 'scaler_state', None)
+        if scaler_state is not None:
+            predict_X_df = apply_scaler_state(predict_X_df, scaler_state)
+        else:
+            scaler = RobustScaler()
+            predict_X_df = pd.DataFrame(
+                scaler.fit_transform(predict_X_df),
+                columns=predict_X_df.columns,
+                index=predict_X_df.index
+            )
+            predict_X_df = np.clip(predict_X_df, -5, 5)
         _t_fw = time.perf_counter()
-        pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+        with torch.no_grad():
+            _u = model.utility(
+                torch.tensor(predict_X_df.values, dtype=torch.float)
+            ).detach().cpu().numpy().flatten()
+
+        # sigmoid of utility _u
+        pred = 1.0 / (1.0 + np.exp(-_u))
         print(f"[lcm-timing] ELCM la{la_id} sec{job_sector} full={_n_full} M={M} "
               f"scale={(_t_fw - _t_sc) * 1000:.0f}ms fwd={(time.perf_counter() - _t_fw) * 1000:.0f}ms",
               flush=True)
 
         # === CALIBRATION ===
-        calibration = elcm_calibration_config
-        method = calibration.get("calibration_method", "multiplicative")
-        weights = calibration.get("weights", {})
-        use_taz_cluster = calibration.get("use_taz_cluster_by_sector", {}).get(job_sector, False)
-        override_key = f"la_{la_id}_sector_{job_sector}"
-        if override_key in calibration.get("overrides", {}):
-            method = calibration["overrides"][override_key].get("calibration_method", method)
-            weights = calibration["overrides"][override_key].get("weights", weights)
-
-        # Default weights fallback
-        weight_building_age = weights.get("building_age", 1.0)
-        weight_vacancy = weights.get("vacancy", 1.0)
-        weight_btype = weights.get("btype_matrix", 1.0)
-        weight_taz = weights.get("taz_cluster", 1.0)
-
-        # Apply individual weight components
-        building_age_weights = final_alts_df.loc[predict_X_df.index, bld_age_var]
-        building_age_weights = np.digitize(building_age_weights, [16, 31])
-        building_age_weights = np.array([5.0, 3.0, 1.0])[building_age_weights]
-
-        vacancy_weights = final_alts_df.loc[predict_X_df.index, 'vacancy_weight'].to_numpy()
-        job_btype_arr = final_alts_df.loc[predict_X_df.index, 'job_btype_ratio'].to_numpy()
-
-        if use_taz_cluster:
-            taz_arr = final_alts_df.loc[predict_X_df.index, taz_emp_ratio_var].to_numpy()
-            min_val, max_val = taz_arr.min(), taz_arr.max()
-            taz_cluster_arr = np.ones_like(taz_arr) if min_val == max_val else (taz_arr - min_val) / (max_val - min_val)
+        calibration = elcm_calibration_config or {}
+        if not calibration.get("enabled", False):
+            pred_weighted = pred
+            logit_weighted = _u
         else:
-            taz_cluster_arr = np.ones(len(predict_X_df))
+            pred_weighted, logit_weighted = _elcm_calibrate(
+                calibration, pred, _u, predict_X_df, final_alts_df,
+                la_id, job_sector, bld_age_var, taz_emp_ratio_var)
 
-        # Final calibration
-        if method == 'log_weighted':
-            total = weight_building_age + weight_vacancy + weight_btype + weight_taz
-            pred_weighted = pred * np.exp(
-                (weight_building_age / total) * np.log(building_age_weights + 1e-6) +
-                (weight_vacancy / total) * np.log(vacancy_weights + 1e-6) +
-                (weight_btype / total) * np.log(job_btype_arr + 1e-6) +
-                (weight_taz / total) * np.log(taz_cluster_arr + 1e-6)
-            )
-        else:
-            # use regular multiplication
-            pred_weighted = pred * building_age_weights * vacancy_weights * job_btype_arr * taz_cluster_arr
-
-        picked_idx = np.argsort(pred_weighted)[-n:]
+        _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
+        picked_idx = pick_slots(pred_weighted, n, placement,
+                                seed=(int(_yr or 0) * 100000
+                                      + int(la_id) * 1000 + int(job_sector)),
+                                log_scores=logit_weighted)
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # Assign buildings

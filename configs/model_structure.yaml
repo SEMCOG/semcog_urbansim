@@ -16,6 +16,8 @@ models:
         supply_variable: job_spaces
         vacant_variable: vacant_job_spaces
         calibration:
+            enabled: false
+
             # Calibration method can be 'multiplicative' or 'log_weighted'
             calibration_method: multiplicative  # or 'log_weighted'
 
