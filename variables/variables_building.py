@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import orca
 import pandas as pd
@@ -719,8 +720,10 @@ for sector in emp_sectors:
 # taz_segments will be like
 # [("children_has_children", "ownership_own", "aoh_lt35"), ...]
 taz_segments = lcm_utils.get_hlcm_segment()
+# names follow the hh_categories order of the HLCM model description
 for seg in taz_segments:
-    make_household_tract_proportion_variable(seg)
+    for order in itertools.permutations(seg):
+        make_household_tract_proportion_variable(order)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):

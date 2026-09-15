@@ -22,6 +22,7 @@ run_debug = False
 # LCM configs
 orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune')
 orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/')
+orca.add_injectable('xgb_repm_dir', '/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm')
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 # base/final years
 orca.add_injectable('base_year', base_year)
@@ -47,6 +48,7 @@ with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), 
             "RUN NUMBER": data_out,
             "hlcm_model_path": orca.get_injectable("hlcm_model_path") if orca.is_injectable("hlcm_model_path") else "N/A",
             "elcm_model_path": orca.get_injectable("elcm_model_path") if orca.is_injectable("elcm_model_path") else "N/A",
+            "xgb_repm_dir": orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "N/A",
             "yaml_configs": orca.get_injectable("yaml_configs") if orca.is_injectable("yaml_configs") else "N/A",
             "base_year": orca.get_injectable("base_year") if orca.is_injectable("base_year") else "N/A",
             "final_year": orca.get_injectable("final_year") if orca.is_injectable("final_year") else "N/A",

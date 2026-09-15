@@ -807,6 +807,7 @@ def write_run_metadata(data_out, input_hdf_path, run_options, repm_model_type="X
             ),
             "hlcm_model_path": orca.get_injectable("hlcm_model_path"),
             "elcm_model_path": orca.get_injectable("elcm_model_path"),
+            "xgb_repm_dir": orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb",
         },
         "switches": {
             **run_options,
@@ -898,7 +899,7 @@ def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
 
-    model_dir = "configs/repm_xgb"
+    model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb"
     all_features = set()
 
     if not os.path.exists(model_dir):
