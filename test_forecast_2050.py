@@ -25,6 +25,7 @@ run_debug = False
 # All external input locations are centralized in input_paths.py
 orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
 orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
+orca.add_injectable('xgb_repm_dir', input_paths.REPM_MODEL_DIR)
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)

@@ -46,13 +46,20 @@ BG_HH_2020_HDF = _p(
     f"{_LOCAL}/forecast_data_input_031523.h5",
 )
 
+# RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    "/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune",
-    f"{_LOCAL}/models/models_survey_finetune",
+    "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
+    "/mnt/hgfs/RDF2055/estimation/models/models_26Sep14_slot_sample",
+    f"{_LOCAL}/models/models_26Sep14_slot_sample",
 )
 ELCM_MODEL_DIR = _p(
-    "/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/",
-    f"{_LOCAL}/models/elcm_models_25May30/",
+    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep10",
+    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep10",
+    f"{_LOCAL}/models/elcm_models_26Sep10",
+)
+REPM_MODEL_DIR = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm",
+    f"{_LOCAL}/models/repm",
 )
 
 ACCESS_INDICATORS_H5 = _p(

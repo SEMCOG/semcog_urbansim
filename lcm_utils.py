@@ -1,5 +1,6 @@
 
 
+import zlib
 import os
 import copy
 import time
@@ -459,7 +460,42 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
 
     return choice_model_simulate
 
-def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
+def _hlcm_calibration_target(base_ratios, current_ratios, zero_base_share='floor'):
+    """Tract calibrator target per candidate row: base-year share / current share.
+
+    Above 1 the tract has lost this household type since the base year. A tract
+    with no base-year households of the type gets 0, the floor once clipped
+    ('floor'), or 1.0, no adjustment ('neutral').
+    """
+    base = np.asarray(base_ratios, dtype='float64')
+    with np.errstate(divide='ignore', invalid='ignore'):
+        y = np.divide(base, np.asarray(current_ratios, dtype='float64'))
+    y = np.nan_to_num(y, nan=1.0, posinf=2.0, neginf=0.5)
+    if zero_base_share == 'neutral':
+        y = np.where(np.nan_to_num(base) == 0, 1.0, y)
+    elif zero_base_share != 'floor':
+        raise ValueError("zero_base_share must be 'floor' or 'neutral', got %r" % (zero_base_share,))
+    return y
+
+
+def _hlcm_tract_adjustment(tract_weights, tract_ids, clip=(0.5, 2.0), strength=1.0):
+    """Per-row score multiplier from predicted tract weights.
+
+    Weights are bounded to `clip`, then raised to `strength`, which scales the
+    adjustment on the log scale: 0.5 turns a 2x boost into 1.41x, 0 switches it
+    off. Rows in tracts without a prediction get 1.
+
+    Returns:
+        tuple[np.ndarray, float]: multiplier per row, share of tracts at a bound.
+    """
+    lo, hi = float(clip[0]), float(clip[1])
+    w = pd.Series(tract_weights, dtype='float64')
+    at_bound = float(((w <= lo) | (w >= hi)).mean()) if len(w) else 0.0
+    w = w.clip(lower=lo, upper=hi) ** float(strength)
+    return w.reindex(tract_ids).fillna(1.0).to_numpy(), at_bound
+
+
+def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_calibration_config=None):
 
     # TODO: Update simulate steps with lcm nn model
     @orca.step(model_name)
@@ -470,6 +506,14 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         model_desc_path = os.path.join(model_path, 'model_description.yaml')
         with open(model_desc_path, 'r') as f:
             model_desc = yaml.load(f, Loader=yaml.FullLoader)
+
+        # How to place households, read from the estimation run's
+        # model_description.yaml so the rule the reported zone accuracy assumed is
+        # the rule used here. Model directories written before 2026-09-14 carry no
+        # placement block and take slot_sampling with 5 candidate slots.
+        _pl = model_desc.get('placement') or {}
+        placement = _pl.get('rule', 'slot_sampling')
+        k_candidates = int(_pl.get('k_candidates', 5))
 
         # chooser segment
         la_id = model_name.split('_')[2][2:]
@@ -599,7 +643,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
         predict_X_df = np.clip(predict_X_df.fillna(0.0), -5, 5)
 
         # sample predict_X_df to 1:5 preventing hlcm segment order issue
-        M = min(len(predict_X_df), n * 5) # HU pool count
+        M = min(len(predict_X_df), n * k_candidates)  # HU pool count
         predict_X_df = predict_X_df.sample(M, replace=False, random_state=0)
 
         # run predict
@@ -625,11 +669,21 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             print("[hu-correction] %s: subtracted ln(units) from %d scored rows "
                   "(per-building -> per-unit)" % (model_name, len(pred)), flush=True)
         else:
-            pred = model.predict(predict_X_df).detach().cpu().numpy().flatten()
+            with torch.no_grad():
+                _u = model.utility(
+                    torch.tensor(predict_X_df.values, dtype=torch.float)
+                ).detach().cpu().numpy().flatten()
+            pred = 1.0 / (1.0 + np.exp(-_u))
+        # the same score on the log scale slot sampling needs. Sampling on pred,
+        # the sigmoid, flattens the distribution and measures worse than top_n.
+        log_score = (_u - np.log(units)) if getattr(model, 'sampling_correction', False) else _u
 
         # === CALIBRATION ===
-        USE_TRACT_CALIBRATOR_MODEL = True
-        if USE_TRACT_CALIBRATOR_MODEL:
+        # tract calibrator, set by models.hlcm.calibration in model_structure.yaml;
+        # without that block it runs at full strength as before
+        calibration = hlcm_calibration_config or {}
+        cal_strength = float(calibration.get('strength', 1.0))
+        if calibration.get('enabled', True) and cal_strength > 0:
             # Build training targets from observed & base ratios
             base_ratios_df = orca.get_table("tract_hh_type_base_ratios").to_frame()
             current_ratios = final_alts_df.loc[predict_X_df.index, tract_segment_type_var].to_numpy()
@@ -639,9 +693,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             base_ratios = base_ratios_df[tract_segment_type_var].reindex(tract_ids).to_numpy()
 
             # Compute y_train = base / current (avoid divide-by-zero)
-            with np.errstate(divide='ignore', invalid='ignore'):
-                y_train = np.divide(base_ratios, current_ratios)
-                y_train = np.nan_to_num(y_train, nan=1.0, posinf=2.0, neginf=0.5)
+            y_train = _hlcm_calibration_target(
+                base_ratios, current_ratios, calibration.get('zero_base_share', 'floor'))
 
             # Load and prepare Census Tracts features
             # TODO: load current all Tracts available in alt_df
@@ -703,21 +756,33 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units'):
             mae_model = mean_absolute_error(y_tract.values, y_pred)
             print(f"[Calibrator] Post-train error:        MSE={mse_model:.4f}, MAE={mae_model:.4f}")
 
-            # Predict adjustment weights
+            # Predict adjustment weights, bound and temper them, map to HU rows
             tract_predicted_weights = pd.Series(y_pred, index=X_train_scaled.index)
-            tract_predicted_weights = tract_predicted_weights.clip(lower=0.5, upper=2.0)
-
-            # Map to HU-level rows in predict_X_df
-            tract_segment_adj_arr = tract_predicted_weights.reindex(tract_ids).fillna(1.0).to_numpy()
+            tract_segment_adj_arr, cal_at_bound = _hlcm_tract_adjustment(
+                tract_predicted_weights, tract_ids,
+                clip=calibration.get('clip', (0.5, 2.0)), strength=cal_strength)
+            print('[Calibrator] %s: strength %.2f | weight min %.3f median %.3f max %.3f | '
+                  'mean |ln w| %.4f | tracts at clip bound %.1f%%'
+                  % (model_name, cal_strength, tract_segment_adj_arr.min(),
+                     np.median(tract_segment_adj_arr), tract_segment_adj_arr.max(),
+                     np.abs(np.log(tract_segment_adj_arr)).mean(), 100 * cal_at_bound))
 
         else:
             tract_segment_adj_arr = np.ones(len(predict_X_df))
 
         # Apply individual weight components
         # default to multiplicative calibration
-        pred_weighted = pred * tract_segment_adj_arr 
-        
-        picked_idx = np.argsort(pred_weighted)[-n:]
+        pred_weighted = pred * tract_segment_adj_arr
+        # the calibrator weight on the log scale: under slot sampling it scales the
+        # probability of a slot being drawn rather than only reordering the ranking
+        logit_weighted = log_score + np.log(np.clip(tract_segment_adj_arr, 1e-12, None))
+
+        # year in the seed, or every simulation year draws the same random stream
+        _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
+        picked_idx = pick_slots(
+            pred_weighted, n, placement,
+            seed=zlib.crc32(('%s|%s' % (_yr, model_name)).encode()),
+            log_scores=logit_weighted)
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id

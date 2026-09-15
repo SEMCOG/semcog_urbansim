@@ -110,7 +110,9 @@ orca.add_injectable(
 )
 
 for name, model in list(hh_location_choice_models.items()):
-    lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
+    lcm_utils.register_hlcm_model_step(
+        name, alt_capacity=model_configs['hlcm']['vacant_variable'],
+        hlcm_calibration_config=model_configs['hlcm'].get('calibration'))
 
 for name, model in list(emp_location_choice_models.items()):
     lcm_utils.register_elcm_model_step(
@@ -775,7 +777,9 @@ def repm_comparison_log():
 
 # Register XGBoost REPM steps
 repm_step_names = []
-xgb_repm_dir = "configs/repm_xgb"
+if not orca.is_injectable("xgb_repm_dir"):
+    orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
+xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence
 xgb_model_full_path = os.path.abspath(xgb_repm_dir)
