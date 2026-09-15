@@ -29,6 +29,9 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
+    "travel_survey_bg_vars",  # block-group travel-survey aggregates for parcel/building variables
+    "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
+    "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
     "large_areas",
     "building_types",
@@ -39,7 +42,6 @@ for name in [
     "crime_rates",
     "schools",
     "points_of_interest_by_category",
-    "travel_survey_bg_vars",  # block-group behavioral vars (joined to parcels by geoid)
     "group_quarters",
     "group_quarters_households",
     "group_quarters_control_totals",
@@ -105,8 +107,26 @@ def bg_hh_increase():
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
-    # Skip recalculation when resuming from checkpoint - use checkpoint data as-is
-    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
+    # City is anchored to the parcel for both base and forecast buildings.
+    df["city_id"] = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    # Existing checkpoints already contain the local MAZ column. Older checkpoints
+    # can be upgraded below without rerunning the rest of the base-year cleanup.
+    is_checkpoint = orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint')
+    if is_checkpoint and "maz_id" in df.columns:
+        return df
+    # MAZ is a building attribute for the entire forecast. Initialize every
+    # base-year building from its parcel, then apply the building-level spatial
+    # override for structures on parcels that cross a MAZ boundary. Keeping the
+    # result as a local column lets developer and event-created buildings retain
+    # their own drawn MAZ through merge_buildings and checkpoints.
+    parcel_maz = misc.reindex(store["parcels"]["maz_id"], df["parcel_id"])
+    overrides = store["building_to_maz_override"]["maz_id"]
+    overrides = overrides[~overrides.index.duplicated(keep="first")]
+    overrides = overrides.reindex(df.index).dropna()
+    if len(overrides):
+        parcel_maz.loc[overrides.index] = overrides.astype(parcel_maz.dtype)
+    df["maz_id"] = parcel_maz.astype("int64")
+    if is_checkpoint:
         return df
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
@@ -247,7 +267,7 @@ def parcels(store, zoning):
     # Skip recalculation when resuming from checkpoint
     if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return parcels_df
-    #  based on zoning.is_developable, adjust parcels pct_undev
+    # Based on zoning.is_developable, adjust parcels pct_undev
     pct_undev = zoning.pct_undev.copy()
     # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
     pct_undev[zoning.is_developable == 0] = 100
@@ -275,12 +295,6 @@ def census_tracts(store):
 @orca.table(cache=True)
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
-
-@orca.table(cache=True)
-def building_to_maz_override(store):
-    # baseyear building_id -> {maz_id, zone_id} override (fixes buildings whose
-    # parcel spans multiple MAZ/TAZ). Source: main.h5 `building_to_maz_override`.
-    return store["building_to_maz_override"][["maz_id", "zone_id"]]
 
 
 @orca.table(cache=True)

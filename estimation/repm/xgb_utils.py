@@ -17,6 +17,7 @@ import joblib
 import xgboost as xgb
 from pathlib import Path
 
+DEFAULT_MODEL_DIR = Path(__file__).resolve().parents[2] / "configs" / "repm_xgb"
 
 class REPMXGBoostModel:
     """
@@ -31,7 +32,7 @@ class REPMXGBoostModel:
     - Ridge: For segments with < 100 samples
     """
 
-    def __init__(self, model_name, model_dir="./configs/repm_xgb/"):
+    def __init__(self, model_name, model_dir=DEFAULT_MODEL_DIR):
         """
         Initialize the REPM XGBoost model.
 
@@ -144,7 +145,7 @@ class REPMXGBoostModel:
         return df
 
 
-def load_repm_xgb_model(model_name, model_dir="./configs/repm_xgb/"):
+def load_repm_xgb_model(model_name, model_dir=DEFAULT_MODEL_DIR):
     """
     Load a trained REPM XGBoost model.
 
@@ -158,7 +159,7 @@ def load_repm_xgb_model(model_name, model_dir="./configs/repm_xgb/"):
     return REPMXGBoostModel(model_name, model_dir)
 
 
-def predict_repm_xgb(cfg, tbl, nodes, out_fname, model_dir="./configs/repm_xgb/"):
+def predict_repm_xgb(cfg, tbl, nodes, out_fname, model_dir=DEFAULT_MODEL_DIR):
     """
     Simulate hedonic prices using trained XGBoost models.
 
@@ -205,7 +206,7 @@ def predict_repm_xgb(cfg, tbl, nodes, out_fname, model_dir="./configs/repm_xgb/"
     print(f"Updated {out_fname} for {len(predictions)} buildings using {model_name}")
 
 
-def list_available_models(model_dir="./configs/repm_xgb/"):
+def list_available_models(model_dir=DEFAULT_MODEL_DIR):
     """
     List all available trained XGBoost REPM models.
 
@@ -235,7 +236,7 @@ def list_available_models(model_dir="./configs/repm_xgb/"):
     return models
 
 
-def compare_repm_models(model_dir="./configs/repm_xgb/"):
+def compare_repm_models(model_dir=DEFAULT_MODEL_DIR):
     """
     Print a comparison of all trained REPM models.
 

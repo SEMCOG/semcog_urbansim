@@ -1557,11 +1557,11 @@ def non_residential_developer(jobs, parcels, target_vacancies):
 
 @orca.step()
 ## for 2050 forecast, ready to replace the old one
-def build_networks_2050(parcels):
+def build_networks_2050_legacy(parcels):
     import yaml
 
     # networks in semcog_networks.h5
-    with open(r"configs/available_networks_2050.yaml", "r") as stream:
+    with open(r"configs/available_networks.yaml", "r") as stream:
         dic_net = yaml.load(stream, Loader=yaml.FullLoader)
 
     year = orca.get_injectable("year")
@@ -1628,7 +1628,7 @@ def build_networks_2050(parcels):
 
 
 @orca.step()
-def build_networks(parcels):
+def build_networks_legacy(parcels):
     import yaml
 
     pdna.network.reserve_num_graphs(2)

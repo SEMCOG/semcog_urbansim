@@ -4,6 +4,17 @@ model_type: networks
 
 node_col: nodeid_walk
 
+# Shared REPM broad non-residential peer-price pool. This includes market
+# property types and excludes special-purpose Parking Garage (95) and Data
+# Center (96); institutional and Death Care types are not in the listed
+# general types. Keep the matching source rule in variables_building.py in
+# sync when changing this specification.
+price_pool_filters:
+  market_nonres: &market_nonres_price_pool
+    - general_type in ["Retail", "Office", "Industrial", "TCU", "Medical", "Entertainment", "Hospitality", "Agricultural"]
+    - building_type_id not in [95, 96]
+    - sqft_price_nonres > 0
+
 #all distances are foot based (cost1 for 2050 walk network)
 #2500 feet, about 750 meters, 1640 feet about 500 meters
 
@@ -38,6 +49,26 @@ variable_definitions:
     radius: 2500
     decay: flat
     apply: np.log1p
+
+  # Local industrial activity, distinct from the industrial price peer mean.
+  # It is based on structural floor area, not assessed value or sale price.
+  - name: log_industrial_nonres_sqft
+    dataframe: buildings
+    varname: non_residential_sqft
+    filters:
+    - general_type == "Industrial"
+    radius: 4920
+    decay: flat
+    aggregation: sum
+    apply: np.log1p
+
+  - name: industrial_buildings
+    dataframe: buildings
+    filters:
+    - general_type == "Industrial"
+    radius: 4920
+    decay: flat
+    aggregation: count
 
   - name: ave_lot_sqft
     dataframe: buildings
@@ -348,20 +379,41 @@ variable_definitions:
     dataframe: buildings
     filters:
     - 81 <= building_type_id <= 84
-    - 0 < sqft_price_res < 500
+    - 0 < sqft_price_res < 650
     decay: flat
     name: residential
     radius: 6560
     varname: sqft_price_res
 
+  # Companion count for the residential price average.  It allows the
+  # building-level leave-one-out price feature to remove the focal building.
+  - aggregation: count
+    dataframe: buildings
+    filters:
+    - 81 <= building_type_id <= 84
+    - 0 < sqft_price_res < 650
+    name: residential_price_observations
+    radius: 6560
+
   - aggregation: ave
     dataframe: buildings
     decay: flat
-    filters:
-    - 21 <= building_type_id <= 71
+    add_fields:
+    - general_type
+    filters: *market_nonres_price_pool
     name: ave_nonres_sqft_price
     radius: 6560
     varname: sqft_price_nonres
+
+  # Companion count for the non-residential price average.  It allows the
+  # building-level leave-one-out price feature to remove the focal building.
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters: *market_nonres_price_pool
+    name: ave_nonres_sqft_price_observations
+    radius: 6560
 
   - aggregation: ave
     dataframe: buildings
@@ -370,9 +422,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Retail"
+    - sqft_price_nonres > 0
     name: retail
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Retail"
+    - sqft_price_nonres > 0
+    name: retail_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -381,9 +444,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Office"
+    - sqft_price_nonres > 0
     name: office
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Office"
+    - sqft_price_nonres > 0
+    name: office_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -392,9 +466,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Industrial"
+    - sqft_price_nonres > 0
     name: industrial
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Industrial"
+    - sqft_price_nonres > 0
+    name: industrial_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -403,9 +488,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Medical"
+    - sqft_price_nonres > 0
     name: medical
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Medical"
+    - sqft_price_nonres > 0
+    name: medical_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -414,9 +510,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Entertainment"
+    - sqft_price_nonres > 0
     name: entertainment
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Entertainment"
+    - sqft_price_nonres > 0
+    name: entertainment_price_observations
+    radius: 10560
 
   - aggregation: ave
     dataframe: buildings
@@ -425,9 +532,20 @@ variable_definitions:
     - general_type
     filters:
     - general_type == "Hospitality"
+    - sqft_price_nonres > 0
     name: hospitality
     radius: 10560
     varname: sqft_price_nonres
+
+  - aggregation: count
+    dataframe: buildings
+    add_fields:
+    - general_type
+    filters:
+    - general_type == "Hospitality"
+    - sqft_price_nonres > 0
+    name: hospitality_price_observations
+    radius: 10560
 
   - aggregation: count
     name: quarter_mile_to_transit
@@ -470,4 +588,3 @@ variable_definitions:
     decay: flat
     apply: np.log1p
  
-

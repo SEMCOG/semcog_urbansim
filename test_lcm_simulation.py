@@ -23,7 +23,7 @@ if __name__ == "__main__":
     generate_yaml_configs()
     import models
     orca.add_injectable('year', 2020)
-    orca.run(["build_networks_2050"])
+    orca.run(["build_networks"])
     orca.run(["neighborhood_vars"])
     # set year to 2050 
     orca.add_injectable('year', 2030)
