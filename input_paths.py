@@ -36,6 +36,7 @@ def _p(*candidates):
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_082426.h5",
+    f"{_LOCAL}/main_082426.h5",
 )
 
 # 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
@@ -113,11 +114,6 @@ HDF_INPUT_2045 = _p(
 FORECAST_INPUT_2040 = _p(
     "/mnt/hgfs/urbansim/RDF2050/model_improvements/2024_spring/2010_data",
     f"{_LOCAL}/model_improvements/2024_spring/2010_data",
-)
-
-BUILDING_TO_ZONE_CSV = _p(
-    os.path.join(os.path.dirname(__file__), "data", "building_to_zone_baseyear_2020_shrink.csv"),
-    f"{_LOCAL}/building_to_zone_baseyear_2020_shrink.csv",
 )
 
 ACS_BG_HH_CSV = _p(

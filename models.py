@@ -26,16 +26,19 @@ from functools import reduce
 
 # set configs if they are not set
 if not orca.is_injectable('hlcm_model_path'):
-    orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_24Mar5')
+    orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
 
 if not orca.is_injectable('elcm_model_path'):
-    orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_24Jun05')
+    orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
 
 if not orca.is_injectable('yaml_configs'):
     orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 if not orca.is_injectable('ENABLE_SCENARIO'):
     orca.add_injectable('ENABLE_SCENARIO', False)
+
+if not orca.is_injectable('repm_estimation_only'):
+    orca.add_injectable('repm_estimation_only', False)
 
 import dataset
 import variables
@@ -65,35 +68,39 @@ if orca.get_injectable('ENABLE_SCENARIO'):
 hh_location_choice_models, emp_location_choice_models = {}, {}
 hlcm_step_names = []
 elcm_step_names = []
+model_configs = {}
 
-hlcm_model_path = orca.get_injectable('hlcm_model_path')
-elcm_model_path = orca.get_injectable('elcm_model_path')
-yaml_configs = orca.get_injectable('yaml_configs')
+if not orca.get_injectable('repm_estimation_only'):
+    hlcm_model_path = orca.get_injectable('hlcm_model_path')
+    elcm_model_path = orca.get_injectable('elcm_model_path')
+    yaml_configs = orca.get_injectable('yaml_configs')
 
-# load hlcm model config from path and save to yaml
-lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
-lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
+    # load hlcm model config from path and save to yaml
+    lcm_utils.load_hlcm_model_configs_from_path(hlcm_model_path, yaml_configs)
+    lcm_utils.load_elcm_model_configs_from_path(elcm_model_path, yaml_configs)
 
-# load model_configs
-model_configs = lcm_utils.get_model_category_configs(yaml_configs)
+    # load model_configs
+    model_configs = lcm_utils.get_model_category_configs(yaml_configs)
 
-for model_category_name, model_category_attributes in model_configs.items():
-    if model_category_attributes["model_type"] == "location_choice":
-        model_config_files = model_category_attributes["config_filenames"]
+    for model_category_name, model_category_attributes in model_configs.items():
+        if model_category_attributes["model_type"] == "location_choice":
+            model_config_files = model_category_attributes["config_filenames"]
 
-        for model_config in model_config_files:
+            for model_config in model_config_files:
 
-            if model_category_name == "hlcm":
-                # load torch-based hlcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
-                hlcm_step_names.append(model_config)
-                hh_location_choice_models[model_config] = model
+                if model_category_name == "hlcm":
+                    # load torch-based hlcm model
+                    model = lcm_utils.load_torch_lcm(os.path.join(hlcm_model_path, 'pts', model_config), model_category_attributes)
+                    hlcm_step_names.append(model_config)
+                    hh_location_choice_models[model_config] = model
 
-            if model_category_name == "elcm":
-                # load torch-based elcm model
-                model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
-                elcm_step_names.append(model_config)
-                emp_location_choice_models[model_config] = model
+                if model_category_name == "elcm":
+                    # load torch-based elcm model
+                    model = lcm_utils.load_torch_lcm(os.path.join(elcm_model_path, 'pts', model_config), model_category_attributes)
+                    elcm_step_names.append(model_config)
+                    emp_location_choice_models[model_config] = model
+else:
+    print("Skipping HLCM/ELCM setup for REPM estimation.")
 
 orca.add_injectable("hh_location_choice_models", hh_location_choice_models)
 orca.add_injectable("emp_location_choice_models", emp_location_choice_models)
@@ -689,7 +696,7 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
     @orca.step(model_name)
     def func():
-        from repm_xgb_utils import load_repm_xgb_model
+        from estimation.repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
 
@@ -778,7 +785,7 @@ def repm_comparison_log():
 # Register XGBoost REPM steps
 repm_step_names = []
 if not orca.is_injectable("xgb_repm_dir"):
-    orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
+    orca.add_injectable("xgb_repm_dir", "estimation/repm/configs/xgb")
 xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence
@@ -2136,6 +2143,84 @@ def jobs_scaling_model(jobs):
     )
 
 
+# Share of capacity a new GQ building is filled to, by type. From base-year GQ
+# facility data (licensed_beds vs residents, ~2,250 facilities): dorms/college
+# housing run ~95% full, other GQ ~80%. Tunable; set both equal for a flat rate.
+_GQ_SEED_OCCUPANCY = {"dorm": 0.95, "other": 0.80}
+
+
+@orca.step()
+def seed_new_gq_buildings(group_quarters, buildings, events_addition, year):
+    """
+    Populate new GROUP-QUARTERS buildings, immediately BEFORE gq_pop_scaling_model
+    (the two steps must stay adjacent and in this order).
+
+    A GQ building added by scheduled_development_events starts empty, and
+    gq_pop_scaling_model only clones population among buildings that already hold
+    GQ -- so a new dorm/care facility would stay empty. This step fills each
+    confirmed new GQ building to a realistic occupancy of its capacity (see
+    `_GQ_SEED_OCCUPANCY`); the following scaling step then reconciles each city's
+    total to the control (removing the offsetting population from elsewhere).
+
+    A building counts as GQ ONLY if it has `events_addition.gqcap > 0` -- never by
+    building type (the developer builds type-52/53 speculatively with no GQ intent;
+    dorms/type-93 come only from events). Self-contained w.r.t. external files:
+    reads only tables already in the simulation store and derives the gq_code
+    demographics from the live group_quarters population.
+    """
+    # --- confirmed GQ buildings + capacity, from events (the only real source) ---
+    # Scheduled-event buildings receive new runtime building IDs. event_id is
+    # the stable link from the event input to the appended building.
+    ea = events_addition.to_frame(["event_id", "gqcap", "year_built"])
+    cap = ea[(ea.gqcap > 0) & (ea.year_built <= year)].groupby("event_id")["gqcap"].sum()
+    if len(cap) == 0:
+        print("seed_new_gq_buildings %s: no GQ-capacity events; nothing to seed" % year)
+        return
+
+    b = buildings.to_frame(["building_type_id", "event_id"])
+    gqb = b.loc[b.event_id.isin(cap.index)].copy()       # GQ buildings that exist now
+    gqb["gqcap"] = gqb.event_id.map(cap)
+
+    gq = group_quarters.to_frame(group_quarters.local_columns)
+    gq["btype"] = gq["building_id"].map(b["building_type_id"])
+
+    # --- demographics profile: P(gq_code | building_type) from live GQ ---
+    prof = (gq.dropna(subset=["btype"]).astype({"btype": int})
+              .groupby("btype")["gq_code"].value_counts(normalize=True))
+    occ = gq["building_id"].value_counts()               # current occupancy per building
+
+    additions = []
+    next_id = int(gq.index.max()) + 1
+    for bid, brow in gqb.iterrows():
+        bt   = int(brow["building_type_id"])
+        rate = _GQ_SEED_OCCUPANCY["dorm"] if bt == 93 else _GQ_SEED_OCCUPANCY["other"]
+        target = int(round(rate * brow["gqcap"]))
+        need = target - int(occ.get(bid, 0))             # top up toward the occupancy target
+        if need <= 0:
+            continue
+        dist = prof[bt] if bt in prof.index.get_level_values(0) \
+               else gq["gq_code"].value_counts(normalize=True)
+        rng = utils.get_rng("seed_new_gq_buildings", year, bid)
+        codes = rng.choice(dist.index.values, size=need, p=dist.values)
+        for code, k in pd.Series(codes).value_counts().items():
+            picks = (gq[gq["gq_code"] == code]
+                     .sample(int(k), replace=True, random_state=rng)
+                     [group_quarters.local_columns].copy())
+            picks["building_id"] = bid
+            picks["gq_code"]     = code
+            additions.append(picks)
+
+    if not additions:
+        print("seed_new_gq_buildings %s: new GQ buildings already at target occupancy" % year)
+        return
+    add = pd.concat(additions, ignore_index=True)
+    add.index = pd.Index(next_id + np.arange(len(add)), name=gq.index.name)
+    n_bldgs = add["building_id"].nunique()
+    orca.add_table("group_quarters", pd.concat([gq[group_quarters.local_columns], add]))
+    print("seed_new_gq_buildings %s: seeded %d residents into %d GQ buildings"
+          % (year, len(add), n_bldgs))
+
+
 @orca.step()
 def gq_pop_scaling_model(group_quarters, group_quarters_control_totals, parcels, year):
     def filter_local_gq(local_gqpop):
@@ -2627,11 +2712,6 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
     if len(sched_dev) > 0:
         if "stories" not in sched_dev.columns:
             sched_dev["stories"] = 0
-        zone = (
-            # #35
-            # sched_dev.b_zone_id
-            sched_dev.zone_id
-        )  # save buildings based zone and city ids for later updates. model could update columns using parcel zone and city ids.
         sched_dev = sched_dev.rename(
             columns={
                 "nonres_sqft": "non_residential_sqft",
@@ -2639,20 +2719,12 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
                 "build_type": "building_type_id",
             }
         )
-        # #35
-        # city = sched_dev.b_city_id
-        city = sched_dev.city_id
-        ebid = sched_dev.building_id.copy()  # save event_id to be used later
+        source_event_id = sched_dev.event_id.copy()
         sched_dev = add_extra_columns_res(sched_dev)
 
-        # #35
-        # sched_dev["b_zone_id"] = zone
-        # sched_dev["b_city_id"] = city
-        sched_dev["zone_id"] = zone
-        sched_dev["city_id"] = city
         sched_dev["hu_filter"] = 0
         sched_dev["sp_filter"] = 0
-        sched_dev["event_id"] = ebid  # add back event_id
+        sched_dev["event_id"] = source_event_id
 
         # set sp_filter to -1 to nonres event with refiner events to prevent future reloaction
         refinements = refiner_events.to_frame()
@@ -3225,12 +3297,44 @@ def add_extra_columns_nonres(df):
     ]:
         df[col] = 0
     df["year_built"] = orca.get_injectable("year")
-    p = orca.get_table("parcels").to_frame(["zone_id", "city_id"])
-    for col in ["zone_id", "city_id"]:
-        # #35
-        # df["b_" + col] = misc.reindex(p[col], df.parcel_id)
-        df[col] = misc.reindex(p[col], df.parcel_id)
+    df["city_id"] = misc.reindex(orca.get_table("parcels").city_id, df.parcel_id)
+    # task 2b: assign each new building a MAZ. Non-crossing parcels -> the parcel's
+    # dominant MAZ; crossing parcels -> an area-weighted draw among the parcel's MAZ
+    # portions. TAZ is then DERIVED from the drawn MAZ (a crossing parcel can span TAZs,
+    # so zone_id must follow the drawn MAZ, not the parcel's dominant zone). The stored
+    # maz_id is honored by the buildings.maz_id column (a stored draw wins there).
+    df["maz_id"] = assign_new_building_maz(df)
+    micro_zones = orca.get_table("micro_zones").to_frame(["zone_id"])
+    df["zone_id"] = df["maz_id"].map(micro_zones.zone_id)
     return df.fillna(0)
+
+
+def assign_new_building_maz(new_buildings):
+    """Assign a MAZ to each newly created building (task 2b).
+
+    Non-crossing parcels: inherit the parcel's dominant MAZ.
+    Crossing parcels: one area-weighted draw per building among the parcel's MAZ
+    portions (weights = parcel_maz_crossing_shares.share, sum to 1 per parcel). One MAZ
+    per building (a draw, not a fractional split) preserves the one-zone-per-building
+    contract and is correct in expectation across many buildings. Uses the run's seeded
+    RNG stream so the assignment is reproducible.
+    """
+    parcel_maz = orca.get_table("parcels").maz_id
+    # pandas 3 rejects assigning NumPy's int64 choice output into the int16
+    # parcel MAZ series, even when an individual draw fits that dtype.
+    maz = misc.reindex(parcel_maz, new_buildings.parcel_id).astype("int64")
+
+    cs = orca.get_table("parcel_maz_crossing_shares").to_frame(
+        ["parcel_id", "maz_id", "share"])
+    crossing = new_buildings["parcel_id"].isin(cs["parcel_id"].unique())
+    if crossing.any():
+        rng = utils.get_rng("assign_new_building_maz", orca.get_injectable("year"))
+        opts = {pid: g for pid, g in cs.groupby("parcel_id")}
+        for pid, blds in new_buildings.loc[crossing.values].groupby("parcel_id"):
+            o = opts[pid]
+            maz.loc[blds.index] = rng.choice(
+                o["maz_id"].values, size=len(blds), p=o["share"].values)
+    return maz.astype("int64")
 
 
 def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
@@ -4097,8 +4201,7 @@ def update_sp_filter(buildings):
 
 
 @orca.step()
-## for 2050 forecast, ready to replace the old one
-def build_networks_2050(parcels):
+def build_networks(parcels):
     import yaml
 
     # networks in semcog_networks.h5
@@ -4110,12 +4213,15 @@ def build_networks_2050(parcels):
     year = orca.get_injectable("year")
     utils.run_log(f"\tyear: {year} | {time.ctime()}")
 
+
+    # The 2030 highway network is retired. All years use the 2025 network bundle.
     lstnet = [
         {
             "name": "osm_walk_2024",
             "cost": "cost1",
             "prev": 16400,  # 3.1 miles
             "net": "net_walk",
+            "nodeid_col": "nodeid_walk",
         },
         {
             "name": "highway_ext_2025",
@@ -4124,22 +4230,31 @@ def build_networks_2050(parcels):
             "net": "net_drv",
         },
         {
-            "name": "osm_bike_2024",
+            # Snap parcels to non-highway nodes, then use those shared node IDs
+            # for full-drive network aggregation.
+            "name": "highway_ext_2025",
             "cost": "cost1",
-            "prev": 26400,  # 5 miles
-            "net": "net_bike",
-            "precompute": False,  # POI queries only, no range aggregations
+            "net": "net_drv_local",
+            "nodes_key": "local_nodes",
+            "edges_key": "local_edges",
+            "nodeid_col": "nodeid_drv",
         },
     ]
 
-    ## TODO, remove 2015, 2019 after switching to full 2050 model
-    if (year in [2015, 2020, 2021, 2030]) or ("net_walk" not in orca.list_tables()):
+    # All years use the same network bundle (see lstnet above), so retain each
+    # network's cache and rebuild only a network that is missing.
+    missing_networks = [
+        n for n in lstnet if not orca.is_injectable(n["net"])
+    ]
+    if missing_networks:
         st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
         pdna.network.reserve_num_graphs(len(lstnet))
 
-        for n in lstnet:
+        for n in missing_networks:
             n_dic_net = dic_net[n["name"]]
-            nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
+            nodes_key = n.get("nodes_key", "nodes")
+            edges_key = n.get("edges_key", "edges")
+            nodes, edges = st[n_dic_net[nodes_key]], st[n_dic_net[edges_key]]
             net = pdna.Network(
                 nodes["x"],
                 nodes["y"],
@@ -4147,28 +4262,24 @@ def build_networks_2050(parcels):
                 edges["to"],
                 edges[[n_dic_net[n["cost"]]]],
             )
-            if n.get("precompute", True):
+            if "prev" in n:
                 net.precompute(n["prev"])
-            net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
+                net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
 
             orca.add_injectable(n["net"], net)
 
-        # spatially join node ids to parcels
+        # Reassign parcel node IDs only for networks recreated above.
         p = parcels.local
-        p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
-            p["centroid_x"], p["centroid_y"]
-        )
-        p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
-            p["centroid_x"], p["centroid_y"]
-        )
-        p["nodeid_bike"] = orca.get_injectable("net_bike").get_node_ids(
-            p["centroid_x"], p["centroid_y"]
-        )
+        for n in missing_networks:
+            if "nodeid_col" in n:
+                p[n["nodeid_col"]] = orca.get_injectable(n["net"]).get_node_ids(
+                    p["centroid_x"], p["centroid_y"]
+                )
         orca.add_table("parcels", p)
 
 
 @orca.step()
-def build_networks(parcels):
+def build_networks_legacy(parcels):
     import yaml
 
     pdna.network.reserve_num_graphs(2)

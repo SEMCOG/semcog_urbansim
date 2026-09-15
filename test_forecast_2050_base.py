@@ -31,7 +31,7 @@ orca.list_tables()
 
 # orca.run(["households_transition"], iter_vars=list(range(2020, 2025)))
 orca.run(
-    ["build_networks_2050", "neighborhood_vars"]  # "refiner",
+    ["build_networks", "neighborhood_vars"]  # "refiner",
     #    + orca.get_injectable("repm_step_names")
     #    + ["increase_property_values"]  # In place of ['nrh_simulate', 'rsh_simulate']
 )  # increase feasibility based on projected income
@@ -971,7 +971,7 @@ time.ctime()
 
 # orca.run(
 #     [
-#         "build_networks_2050",
+#         "build_networks",
 #         "neighborhood_vars",
 #         # "scheduled_demolition_events",
 #         # "random_demolition_events",
@@ -1021,8 +1021,7 @@ time.ctime()
 #         "building_sqft_per_job",
 #         "annual_employment_control_totals",
 #         "travel_data",
-#         "travel_data_2030",
-#         "zoning",
+# #         "zoning",
 #         "large_areas",
 #         "building_types",
 #         "land_use_types",

@@ -6,6 +6,7 @@ import pandas as pd
 import utils
 import input_paths
 
+os.environ['DATA_HOME'] = '/home/da/RDF2055/d_drive/runs'
 # get run number and set up log file
 data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
@@ -130,7 +131,7 @@ orca.run([
 orca.run(
     [
         "clear_iteration_cache",  # Tier-1: drop last year's memoized derived cols
-        "build_networks_2050",
+        "build_networks",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
         "log_memory",  # after networks + accessibility
@@ -162,6 +163,7 @@ orca.run(
         # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
         "log_memory",  # after HLCM + ELCM
         "jobs_scaling_model",
+        "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
@@ -186,7 +188,6 @@ orca.run(
         "building_sqft_per_job",
         "annual_employment_control_totals",
         "travel_data",
-        "travel_data_2030",
         "zoning",
         "large_areas",
         "building_types",
