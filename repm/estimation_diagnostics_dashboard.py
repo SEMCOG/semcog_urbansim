@@ -4,7 +4,7 @@ from pathlib import Path
 
 import joblib
 import yaml
-from estimation.repm.estimation_dashboard import load_hedonic_labels
+from repm.estimation_dashboard import load_hedonic_labels
 
 
 RUN = Path("/home/da/RDF2055/d_drive/estimation/REPM/repm_20260904_102106")

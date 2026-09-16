@@ -696,7 +696,7 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
     @orca.step(model_name)
     def func():
-        from estimation.repm.xgb_utils import load_repm_xgb_model
+        from repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
 
@@ -785,7 +785,7 @@ def repm_comparison_log():
 # Register XGBoost REPM steps
 repm_step_names = []
 if not orca.is_injectable("xgb_repm_dir"):
-    orca.add_injectable("xgb_repm_dir", "estimation/repm/configs/xgb")
+    orca.add_injectable("xgb_repm_dir", "repm/configs/xgb")
 xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence

@@ -68,7 +68,7 @@ micromamba activate forecast
 
 #### Running similation with complete loggings
 ```
-nohup python test_forecast_2050.py >> runs/run_stdout/simulation_log.txt 2>&1 &
+nohup python simulation_2055.py >> runs/run_stdout/simulation_log.txt 2>&1 &
 ```
 
 ### Commit, Export and Load
