@@ -117,30 +117,6 @@ def walk_nearest_grocery(points_of_interest_by_category):
     t = poi.to_frame()[poi.category.isin(cats)]
     return get_nearest(orca.get_injectable("net_walk"), t, cats, 7920, 1, 7921)
 
-@orca.column("nodes_bike", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(points_of_interest_by_category):
-    poi = points_of_interest_by_category
-    cats = ["GroceryStores"]
-    t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
-
-
-@orca.column("nodes_bike", cache=True, cache_scope="iteration")
-def bike_nearest_library(points_of_interest_by_category):
-    poi = points_of_interest_by_category
-    cats = ["Libraries"]
-    t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
-
-
-@orca.column("nodes_bike", cache=True, cache_scope="iteration")
-def bike_nearest_park(points_of_interest_by_category):
-    poi = points_of_interest_by_category
-    cats = ["Park_Entrance_points"]
-    t = poi.to_frame()[poi.category.isin(cats)]
-    return get_nearest(orca.get_injectable("net_bike"), t, cats, 26400, 1, 26401)
-
-
 @orca.column("nodes_walk", cache=True, cache_scope="iteration")
 def walk_nearest_healthcenter(points_of_interest_by_category):
     poi = points_of_interest_by_category

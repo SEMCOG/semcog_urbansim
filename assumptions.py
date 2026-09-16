@@ -104,6 +104,31 @@ orca.add_injectable(
     },
 )
 
+# keys: from proforma forms
+# values: zoning.future_use categories the form may be built on. Replaces the
+# per-building-type type* zoning columns, which the 2055 zoning table dropped.
+# Planned use keeps vacant land developable; current land use does not.
+orca.add_injectable(
+    "form_to_future_use",
+    {
+        "retail":           ["COMMERCIAL", "MIXED USE"],
+        "office":           ["OFFICE", "COMMERCIAL", "MIXED USE"],
+        "manufacturing":    ["INDUSTRIAL"],
+        "wholesale":        ["INDUSTRIAL"],
+        "warehouse":        ["INDUSTRIAL"],
+        "health-care":      ["INSTITUTIONAL", "MIXED USE"],
+        "hospital":         ["INSTITUTIONAL"],
+        "residential-care": ["INSTITUTIONAL", "MIXED USE"],
+        "leisure":          ["COMMERCIAL", "MIXED USE", "PARK AND OPEN SPACE"],
+        "hotel":            ["COMMERCIAL", "MIXED USE"],
+        "restaurant":       ["COMMERCIAL", "MIXED USE"],
+        "single-family":    ["RESIDENTIAL", "MIXED USE"],
+        "condo":            ["RESIDENTIAL", "MIXED USE"],
+        "apartment":        ["RESIDENTIAL", "MIXED USE"],
+        "theater":          ["COMMERCIAL", "MIXED USE"],
+    },
+)
+
 #proforma forms → nodes_walk price column → buildings table btypes & price field
 orca.add_injectable(
     "btype_form_map",
