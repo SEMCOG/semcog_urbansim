@@ -45,7 +45,7 @@ REPM_OUTPUT_ROOT = Path(
     os.environ.get("REPM_ESTIMATION_OUTPUT_DIR", "/home/da/RDF2055/d_drive/estimation/REPM")
 )
 REPM_DIR = Path(__file__).resolve().parent
-REPO_ROOT = REPM_DIR.parents[1]
+REPO_ROOT = REPM_DIR.parent
 GRID_SEARCH_BASELINE_DIR = REPO_ROOT / "configs" / "repm_xgb"
 REPM_XGB_PATH = None
 EASTERN = ZoneInfo("America/Detroit")
