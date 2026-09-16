@@ -4,6 +4,11 @@ Scripts that are not part of a forecast run. The live pipeline stays in the
 repository root (`models.py`, `dataset.py`, `assumptions.py`, `utils.py`,
 `lcm_utils.py`, `input_paths.py`, `output_indicators.py`, `simulation_2055.py`).
 
+Configs were sorted the same way: `configs/` holds only what the pipeline loads
+at runtime, and superseded ones moved to `configs/legacy/` (the MNL-era
+`hlcm/`, `elcm/`, `repm/`, `hlcm_calib/`, `hlcm_2050/`, `elcm_2050/`, the unused
+`yaml_configs*` variants, and the LCM/REPM constraint files).
+
 ## Running them
 
 Python puts the *script's own directory* on `sys.path`, not the repository root,

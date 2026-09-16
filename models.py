@@ -785,7 +785,7 @@ def repm_comparison_log():
 # Register XGBoost REPM steps
 repm_step_names = []
 if not orca.is_injectable("xgb_repm_dir"):
-    orca.add_injectable("xgb_repm_dir", "repm/configs/xgb")
+    orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
 xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence

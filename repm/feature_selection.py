@@ -31,7 +31,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import Lasso
 
-REPM_PATH = str(Path(__file__).resolve().parents[2] / "configs" / "repm_2050")
+REPM_PATH = str(Path(__file__).resolve().parents[1] / "configs" / "repm_2050")
 VARS_TO_SKIP = [
     "large_area_id",
     "county_id",
