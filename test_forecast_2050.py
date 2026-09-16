@@ -6,7 +6,6 @@ import pandas as pd
 import utils
 import input_paths
 
-os.environ['DATA_HOME'] = '/home/da/RDF2055/d_drive/runs'
 # get run number and set up log file
 data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
@@ -142,9 +141,9 @@ orca.run(
         "refiner",
         "households_transition",
         "workers_adjustment_model",
-        "households_relocation_2050",
+        "households_relocation",
         "jobs_transition",
-        # "jobs_relocation_2050",
+        # "jobs_relocation",
         "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
@@ -196,7 +195,7 @@ orca.run(
         "transit_stops",
         "crime_rates",
         "schools",
-        "poi",
+        "points_of_interest_by_category",
         "group_quarters",
         "group_quarters_households",
         "group_quarters_control_totals",

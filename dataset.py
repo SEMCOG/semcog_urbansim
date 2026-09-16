@@ -54,7 +54,6 @@ for name in [
     "demolition_rates",
     "landmark_worksites",
     "mcd_total",
-    "parcel_maz_crossing_shares",  # parcel->MAZ area shares for parcels spanning MAZ
     "dropped_buildings",
     "bg_hh_increase",
 ]:
@@ -64,13 +63,23 @@ for name in [
         continue
     orca.add_table(name, store[name])
 
-# #35 change csv column name from b_city_id to city_id
-# orca.add_table('extreme_hu_controls', pd.read_csv(
-#     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
-# orca.add_table(
-#     "extreme_hu_controls",
-#     pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
-# )
+
+@orca.table(cache=True)
+def parcel_maz_crossing_shares(store):
+    # parcel->MAZ area shares for parcels spanning MAZ; assign_new_building_maz
+    # reads parcel_id / maz_id / share as columns
+    df = store["parcel_maz_crossing_shares"]
+    return df.rename(columns={"maz_seqid": "maz_id"}).reset_index()
+
+
+@orca.injectable(cache=True)
+def btype_owner_share(store):
+    # base-year owner-occupied share of units by building type; new buildings have
+    # no tenure split of their own (see models.add_extra_columns_nonres)
+    b = store["buildings"]
+    b = b[b.residential_units > 0]
+    g = b.groupby("building_type_id")[["owner_units", "residential_units"]].sum()
+    return (g.owner_units / g.residential_units).to_dict()
 
 
 @orca.table("debug_res_developer")
@@ -160,7 +169,7 @@ def buildings(store):
 
     # hu_filter assignment
     df["hu_filter"] = 0
-    hu_cities = [551, 1155, 1100, 3130, 6020, 6040]
+    hu_cities = [1155, 1100, 3130, 6020, 6040]
     b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
     sample = df[(df.residential_units > 0) & ~df.index.isin(store["households"].building_id)]
     sample_city = b_city_id.reindex(sample.index)

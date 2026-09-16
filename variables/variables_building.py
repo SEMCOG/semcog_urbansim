@@ -357,20 +357,6 @@ def walk_nearest_park(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_grocery, buildings.parcel_id)
-
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_library(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_library, buildings.parcel_id)
-
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_park(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_park, buildings.parcel_id)
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age(buildings, year):
     # Retrieve year_built and city_id series
     year_built = buildings.year_built

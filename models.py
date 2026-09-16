@@ -847,8 +847,9 @@ def real_estate_adjustment(buildings, parcels, year):
     income_ratios = orca.get_table("remi_income_ratios").to_frame()
     if year not in income_ratios.index:
         return
-    # {large_area_id -> cumulative income ratio} for this year (columns are LA strings)
-    la_ratios = {int(la): float(r) for la, r in income_ratios.loc[year].items()}
+    # use baseyear
+    r0 = income_ratios.loc[remi_base_year]
+    la_ratios = {int(la): float(r / r0[la]) for la, r in income_ratios.loc[year].items()}
 
     # Capture LA-average base prices on first call; flag used below for one-time backfill
     first_call = not orca.is_injectable("remi_base_la_prices")
@@ -958,24 +959,10 @@ def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = relocation_rates.rename(
         columns={"age_max": "age_of_head_max", "age_min": "age_of_head_min"}
     )
-    relocation_rates.probability_of_relocating *= 0.2
-    reloc = relocation.RelocationModel(relocation_rates, "probability_of_relocating")
-    _print_number_unplaced(households, "building_id")
-    print("un-placing")
-    hh = households.to_frame(households.local_columns)
-    idx_reloc = reloc.find_movers(hh)
-    households.update_col_from_series(
-        "building_id", pd.Series(-1, index=idx_reloc), cast=True
-    )
-    _print_number_unplaced(households, "building_id")
-
-
-@orca.step()
-def households_relocation_2050(households, annual_relocation_rates_for_households):
-    relocation_rates = annual_relocation_rates_for_households.to_frame()
-    relocation_rates = relocation_rates.rename(
-        columns={"age_max": "age_of_head_max", "age_min": "age_of_head_min"}
-    )
+    # find_movers filters households on every column except the rate one, so drop
+    # bookkeeping columns (e.g. probability_of_relocating_orig) households lack
+    relocation_rates = relocation_rates.drop(
+        columns=[c for c in relocation_rates.columns if c.endswith("_orig")])
     relocation_rates.probability_of_relocating *= 0.2
     reloc = relocation.RelocationModel(relocation_rates, "probability_of_relocating")
     _print_number_unplaced(households, "building_id")
@@ -995,7 +982,7 @@ def households_relocation_2050(households, annual_relocation_rates_for_household
 
 
 @orca.step()
-def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
+def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
     _print_number_unplaced(jobs, "building_id")
@@ -1007,20 +994,6 @@ def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
     blocklst = bb.loc[bb.sp_filter < 0].index
     j = j.loc[~j.building_id.isin(blocklst)]
 
-    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
-    jobs.update_col_from_series(
-        "building_id", pd.Series(-1, index=idx_reloc), cast=True
-    )
-    _print_number_unplaced(jobs, "building_id")
-
-
-@orca.step()
-def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
-    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
-    reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
-    _print_number_unplaced(jobs, "building_id")
-    print("un-placing")
-    j = jobs.to_frame(jobs.local_columns)
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
     jobs.update_col_from_series(
         "building_id", pd.Series(-1, index=idx_reloc), cast=True
@@ -1362,6 +1335,14 @@ def presses_trans(xxx_todo_changeme1):
     # visible. Log any such cell; see the model wiki transition todo for the
     # fuller fix options.
     la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    # a large area can have no open-ended 10+ control cells at all (LA 147 in the
+    # 2055 controls, which also has no 10+ households); nothing to realise here,
+    # and both the lookups and the transition below would raise on the empty frame
+    if iter_var not in ct_inf.index:
+        print(f"[households_transition] LA {la} yr {iter_var}: no open-ended 10+ "
+              f"control cells, skipping the 10+ bin")
+        out.append((hh.loc[[]], p.loc[[]]))
+        return out
     for _, r in ct_inf.loc[iter_var].iterrows():
         if r["total_number_of_households"] <= 0:
             continue
@@ -1935,6 +1916,24 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
 
     # p = p.reset_index().set_index('household_id')
     pg = p.groupby('household_id')
+    hh_person_counts = pg.size()
+    seed_sizes = p_seeds.groupby(level=0).size()
+
+    def _drop_size_mismatch(hh_to_swap, target_seed_ids, ctx):
+        """Keep only households holding as many people as their target seed.
+
+        A household can differ from its seed -- a swap mapping built from other
+        base data, or gap-fill donors that resized persons but kept the seed_id.
+        Copying the seed's person rows onto it would misalign the assignment.
+        """
+        ok = (
+            hh_to_swap.index.to_series().map(hh_person_counts).fillna(0).to_numpy()
+            == target_seed_ids.map(seed_sizes).fillna(-1).to_numpy()
+        )
+        if not ok.all():
+            print(f"[workers_adjustment] {ctx}: skipped {int((~ok).sum())} of {len(ok)} "
+                  f"household(s) whose size differs from the target seed")
+        return hh_to_swap[ok], target_seed_ids[ok]
 
     hh_cols_to_swap = [col for col in hh.columns if col not in ['blkgrp', 'building_id', 'large_area_id']]
     p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'household_id', 'large_area_id', 'weight']]
@@ -1969,6 +1968,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     random_state=utils.step_rng("workers_adjustment_add", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
+                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
+                    hh_to_swap, target_hh_seed_id,
+                    f"LA {large_area_id} age {row.age_min}-{row.age_max} add")
+                if hh_to_swap.empty:
+                    break
                 # overwrite old attributes except building_id, large_area_id, blkgrp
                 hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
                 for _col in hh_cols_to_swap:
@@ -2003,6 +2007,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     random_state=utils.step_rng("workers_adjustment_drop", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
+                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
+                    hh_to_swap, target_hh_seed_id,
+                    f"LA {large_area_id} age {row.age_min}-{row.age_max} drop")
+                if hh_to_swap.empty:
+                    break
                 # overwrite old attributes except building_id, large_area_id, blkgrp
                 hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
                 for _col in hh_cols_to_swap:
@@ -2351,6 +2360,8 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
+    # inputs have shipped both "Add" and "add"; actions are matched lower-case below
+    refinements["action"] = refinements.action.str.lower()
     assert refinements.action.isin(
         {"clone", "subtract_pop", "subtract", "add_pop", "add", "target_pop", "target"}
     ).all(), "Unknown action"
@@ -2369,8 +2380,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
         # maybe use job reallocation instead of random
 
-        if len(agents_pool) > 0:
-            agents_sub_pool = agents_pool.query(agent_expression)
+        # the pool only holds agents removed by earlier subtract records of the same
+        # transaction, so it can be non-empty yet hold none matching this expression
+        agents_sub_pool = (
+            agents_pool.query(agent_expression) if len(agents_pool) > 0 else agents_pool
+        )
+        if len(agents_sub_pool) > 0:
             if len(agents_sub_pool) >= number_of_agents:
                 agents_sample = agents_sub_pool.sample(number_of_agents, replace=False)
             else:
@@ -2815,7 +2830,7 @@ def random_demolition_events(
     )
 
     b = buildings.copy()
-    allowed = variables.parcel_is_allowed_2050()
+    allowed = variables.parcel_is_allowed_2055()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
     buildings_idx = []
 
@@ -3084,7 +3099,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     b["nonres_score"] = nonres_score.where(eligible, 0.0)
 
     # ── Sampling ─────────────────────────────────────────────────────────────
-    allowed   = variables.parcel_is_allowed_2050()
+    allowed   = variables.parcel_is_allowed_2055()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
     buildings_idx = []
@@ -3263,7 +3278,7 @@ def feasibility(parcels, buildings, btype_form_map):
     parcel_utils.run_feasibility(
         parcels,
         _price_with_floor,
-        variables.parcel_is_allowed_2050,
+        variables.parcel_is_allowed_2055,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
     )
@@ -3296,6 +3311,13 @@ def add_extra_columns_nonres(df):
         "mcd_model_quota",
     ]:
         df[col] = 0
+    # new buildings carry no tenure split of their own; split units by the
+    # base-year owner share of the same building type
+    if {"residential_units", "building_type_id"}.issubset(df.columns):
+        share = df["building_type_id"].map(orca.get_injectable("btype_owner_share")).fillna(0)
+        df["owner_units"] = (df["residential_units"] * share).round().astype(int)
+    else:
+        df["owner_units"] = 0
     df["year_built"] = orca.get_injectable("year")
     df["city_id"] = misc.reindex(orca.get_table("parcels").city_id, df.parcel_id)
     # task 2b: assign each new building a MAZ. Non-crossing parcels -> the parcel's
@@ -3354,7 +3376,10 @@ def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
     elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
-        df["sqft_per_unit"] = df["res_sqft"] / df["residential_units"]
+        # some event rows carry res_sqft with 0 units (e.g. parking structures);
+        # dividing by 0 gives inf, which survives fillna and breaks later int casts
+        units_safe = df["residential_units"].where(df["residential_units"] > 0)
+        df["sqft_per_unit"] = (df["res_sqft"] / units_safe).fillna(0)
     else:
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
@@ -4279,59 +4304,6 @@ def build_networks(parcels):
 
 
 @orca.step()
-def build_networks_legacy(parcels):
-    import yaml
-
-    pdna.network.reserve_num_graphs(2)
-
-    # networks in semcog_networks.h5
-    with open(r"configs/available_networks.yaml", "r") as stream:
-        dic_net = yaml.load(stream, Loader=yaml.FullLoader)
-
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks_py3.h5"), "r")
-
-    lstnet = [
-        {
-            "name": "mgf14_ext_walk",
-            "cost": "cost1",
-            "prev": 26500,  # 2 miles
-            "net": "net_walk",
-        },
-        {
-            "name": "tdm_ext",
-            "cost": "cost1",
-            "prev": 60,  # 60 minutes
-            "net": "net_drv",
-        },
-    ]
-
-    for n in lstnet:
-        n_dic_net = dic_net[n["name"]]
-        nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
-        net = pdna.Network(
-            nodes["x"],
-            nodes["y"],
-            edges["from"],
-            edges["to"],
-            edges[[n_dic_net[n["cost"]]]],
-        )
-        net.precompute(n["prev"])
-        net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
-
-        orca.add_injectable(n["net"], net)
-
-    # spatially join node ids to parcels
-    p = parcels.local
-    p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    orca.add_table("parcels", p)
-
-
-@orca.step()
 def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)
@@ -4388,14 +4360,6 @@ def neighborhood_vars(jobs, households, buildings):
     for var in orca.get_table("nodes_drv").columns:
         if var not in building_vars:
             variables.make_disagg_var("nodes_drv", "buildings", var, "nodeid_drv")
-
-    # nodes_bike carries no yaml aggregations -- it exists so the bike_nearest_*
-    # columns in variables_access.py have a table indexed by bike network nodes.
-    # They reach buildings through parcels.nodeid_bike, so no disagg loop here.
-    orca.add_table(
-        "nodes_bike",
-        pd.DataFrame(index=orca.get_injectable("net_bike").node_ids),
-    )
 
 
 
