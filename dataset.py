@@ -56,6 +56,7 @@ for name in [
     "mcd_total",
     "dropped_buildings",
     "bg_hh_increase",
+    "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
     if name not in store:
