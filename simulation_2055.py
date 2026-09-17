@@ -92,11 +92,12 @@ run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get
 # =============
 ## Simulation
 # =============
-# run init_taz_hlcm_trend_by_year on baseyear
+# run init_taz_hlcm_trend_by_year before main iter
 orca.run([
     'init_taz_hlcm_trend_by_year',
 ])
-# Start iteration
+
+# main iteration
 orca.run(
     [
         "clear_iteration_cache",  # drop last year's memoized derived cols

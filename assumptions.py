@@ -408,8 +408,8 @@ def verify():
     return hdf_store
 
 
-# 2045 input hdf
-orca.add_injectable('hdf_input_2045', input_paths.HDF_INPUT_2045)
-orca.add_injectable('forecast_input_2040', input_paths.FORECAST_INPUT_2040)
+# historical HDF used for trend derivation
+orca.add_injectable('hdf_input_2045', input_paths.HDF_INPUT_2045)  # 2015 -> 10yr trend
+orca.add_injectable('hdf_input_2050', input_paths.HDF_INPUT_2050)  # 2020 -> 5yr trend
 
 orca.add_injectable("store", verify())

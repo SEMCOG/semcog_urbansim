@@ -17,7 +17,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
-from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_vars_from_hdf, load_2010_taz_vars_from_folder
+from forecast_estimation.utils import load_taz_vars_from_orca, load_taz_vars_from_hdf
 
 import utils
 import lcm_utils
@@ -197,7 +197,7 @@ def clear_iteration_cache(year, base_year):
     Safe because stored tables (add_table) and stored injectables (add_injectable)
     are NOT memoized and are therefore preserved — this includes the base tables,
     the loaded HLCM/ELCM models, and the cross-year trend state
-    (taz_hlcm_trend_by_year, job_btype_baseyear_prob_matrix,
+    (taz_sim_trend_by_year, job_btype_baseyear_prob_matrix,
     tract_hh_type_base_ratios). Cached columns are pure functions of the current
     tables, so recomputing them next access yields identical values.
 
@@ -467,32 +467,33 @@ def update_bg_hh_increase(bg_hh_increase, households):
 
 @orca.step()
 def init_taz_hlcm_trend_by_year():
-    """ Initialize taz_hlcm_trend_by_year injectable objection in orca
-    - load 2045 input hdf 
-    - load households and buildings from orca
-    - compute variables 
-    - saving DF to obj
-    - update injectable
-    """
-    # init taz_hlcm_trend object
-    taz_hlcm_trend_by_year = {}
+    """Initialize the taz_sim_trend_by_year injectable."""
+    # init taz totals object
+    taz_sim_trend_by_year = {}
 
-    # # initiating 2010 attribute df
-    input_2040 = orca.get_injectable('forecast_input_2040')
-    df_2010 = load_2010_taz_vars_from_folder(input_2040)
-    taz_hlcm_trend_by_year['2010'] = df_2010
-    # # initiating 2015 attribute df
-    hdf_input_2045 = orca.get_injectable('hdf_input_2045')
-    df_2015 = load_2015_taz_vars_from_hdf(hdf_input_2045)
-    taz_hlcm_trend_by_year['2015'] = df_2015
-    print('Finishing init TAZ vars from hdf', hdf_input_2045)
+    if orca.is_table('taz_hlcm_trend_by_year'):
+        hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
+        for yr, df in hist.groupby(level='year'):
+            taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
+        print('Loaded TAZ trend bases from input hdf:',
+              sorted(taz_sim_trend_by_year))
+    else:
+        print('WARNING: taz_hlcm_trend_by_year not in the input hdf; rebuilding '
+              'the trend bases from the past-round HDFs. Rebuild the input with '
+              'forecast_data_input to remove this step.')
+        # 10yr trend base: RDF2045 (2015); 5yr trend base: RDF2050 (2020)
+        taz_sim_trend_by_year['2015'] = load_taz_vars_from_hdf(
+            orca.get_injectable('hdf_input_2045'))
+        taz_sim_trend_by_year['2020'] = load_taz_vars_from_hdf(
+            orca.get_injectable('hdf_input_2050'))
+
     # initiating baseyear attribute df
     df_cur = load_taz_vars_from_orca()
-    taz_hlcm_trend_by_year[str(orca.get_injectable("base_year"))] = df_cur
+    taz_sim_trend_by_year[str(orca.get_injectable("base_year"))] = df_cur
     print('Finishing loading TAZ vars from orca...')
 
     # add to injectable
-    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+    orca.add_injectable('taz_sim_trend_by_year', taz_sim_trend_by_year)
 
     # init job sector and building type weights
     job_btype = orca.get_table('jobs').to_frame(['sector_id', 'building_type_id'])
@@ -531,125 +532,49 @@ def init_taz_hlcm_trend_by_year():
     orca.add_table("tract_hh_type_base_ratios", tract_hh_type_base_ratios)
 
 
+def _register_taz_change_col(b_to_taz, diff, var, suffix):
+    """Register one TAZ-change building variable"""
+    @orca.column("buildings", var + suffix)
+    def func():
+        return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+
 @orca.step()
-def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
-    """Update taz_hlcm_trend_by_year for the year
+def update_taz_hlcm_trend(year, households, buildings):
+    """Update taz_sim_trend_by_year for the year
     """
     base_year = orca.get_injectable("base_year")
+    taz_sim_trend_by_year = orca.get_injectable('taz_sim_trend_by_year')
 
     # get current trend df
     df_cur = load_taz_vars_from_orca()
-    
-    # update taz_hlcm_trend_by_year
-    taz_hlcm_trend_by_year[str(year)] = df_cur
-    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+
+    # update taz_sim_trend_by_year
+    taz_sim_trend_by_year[str(year)] = df_cur
+    orca.add_injectable('taz_sim_trend_by_year', taz_sim_trend_by_year)
 
     # load building_id to zone_id mapping
     b_to_taz = buildings.to_frame(['zone_id']).zone_id
 
-    # define 10yr trend variables
-    year_delta = 10
-    # define building variables
-    cur_year = base_year if year <= base_year+10 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
+    for year_delta in (10, 5):
+        cur_year = base_year if year <= base_year + year_delta else year
+        cur_df = taz_sim_trend_by_year[str(cur_year)]
+        # if the lagged base is missing, use a flat trend
+        prev_df = taz_sim_trend_by_year.get(str(cur_year - year_delta), cur_df)
+        diff = cur_df - prev_df
 
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    # N = len(selected_taz_ids) # total number of applicable TAZs
-    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # # increase hh_pop by 100%pp
-    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
-    # # increase with_children hh by 100%
-    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
-    # # reduce one_persons_hh count by 100%
-    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+        # Experimental, disabled: artificially bump Dearborn (TAZ 420-472).
+        # selected_taz_ids = [i for i in range(420, 473) if i in diff.index]
+        # N = len(selected_taz_ids)
+        # diff.loc[selected_taz_ids, 'hh_count'] += max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000) // N
+        # diff.loc[selected_taz_ids, 'hh_pop'] += max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000) // N
+        # diff.loc[selected_taz_ids, 'with_children'] += max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000) // N
+        # diff.loc[selected_taz_ids, 'one_person_hh'] -= max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000) // N
 
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_10yr_change")
-        @orca.column("buildings", var+"_taz_10yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
-
-    # define 5yr trend variables
-    year_delta = 5
-    # define building variables
-    cur_year = base_year if year <= base_year+5 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
-
-
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    N = len(selected_taz_ids) # total number of applicable TAZs
-    # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # increase hh_pop by 100%pp
-    diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000 ) // (N)) 
-    # increase with_children hh by 100%
-    diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000 ) // (N)) 
-    # reduce one_persons_hh count by 50%
-    diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000 ) // (N)) 
-
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_10yr_change")
-        @orca.column("buildings", var+"_taz_10yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
-
-    # define 5yr trend variables
-    year_delta = 5
-    # define building variables
-    cur_year = base_year if year <= base_year+5 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
-
-
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    # N = len(selected_taz_ids) # total number of applicable TAZs
-    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # # increase hh_pop by 100%pp
-    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
-    # # increase with_children hh by 100%
-    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
-    # # reduce one_persons_hh count by 100%
-    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
-
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_5yr_change")
-        @orca.column("buildings", var+"_taz_5yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+        suffix = "_taz_%dyr_change" % year_delta
+        for var in df_cur.columns:
+            print("registering building variable", var + suffix)
+            _register_taz_change_col(b_to_taz, diff, var, suffix)
 
 
 @orca.step()
