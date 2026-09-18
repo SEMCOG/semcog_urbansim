@@ -17,7 +17,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
-from forecast_estimation.utils import load_taz_vars_from_orca, load_2015_taz_vars_from_hdf, load_2010_taz_vars_from_folder
+from forecast_estimation.utils import load_taz_vars_from_orca, load_taz_vars_from_hdf
 
 import utils
 import lcm_utils
@@ -117,7 +117,9 @@ orca.add_injectable(
 )
 
 for name, model in list(hh_location_choice_models.items()):
-    lcm_utils.register_hlcm_model_step(name, alt_capacity=model_configs['hlcm']['vacant_variable'])
+    lcm_utils.register_hlcm_model_step(
+        name, alt_capacity=model_configs['hlcm']['vacant_variable'],
+        hlcm_calibration_config=model_configs['hlcm'].get('calibration'))
 
 for name, model in list(emp_location_choice_models.items()):
     lcm_utils.register_elcm_model_step(
@@ -195,7 +197,7 @@ def clear_iteration_cache(year, base_year):
     Safe because stored tables (add_table) and stored injectables (add_injectable)
     are NOT memoized and are therefore preserved — this includes the base tables,
     the loaded HLCM/ELCM models, and the cross-year trend state
-    (taz_hlcm_trend_by_year, job_btype_baseyear_prob_matrix,
+    (taz_sim_trend_by_year, job_btype_baseyear_prob_matrix,
     tract_hh_type_base_ratios). Cached columns are pure functions of the current
     tables, so recomputing them next access yields identical values.
 
@@ -465,32 +467,33 @@ def update_bg_hh_increase(bg_hh_increase, households):
 
 @orca.step()
 def init_taz_hlcm_trend_by_year():
-    """ Initialize taz_hlcm_trend_by_year injectable objection in orca
-    - load 2045 input hdf 
-    - load households and buildings from orca
-    - compute variables 
-    - saving DF to obj
-    - update injectable
-    """
-    # init taz_hlcm_trend object
-    taz_hlcm_trend_by_year = {}
+    """Initialize the taz_sim_trend_by_year injectable."""
+    # init taz totals object
+    taz_sim_trend_by_year = {}
 
-    # # initiating 2010 attribute df
-    input_2040 = orca.get_injectable('forecast_input_2040')
-    df_2010 = load_2010_taz_vars_from_folder(input_2040)
-    taz_hlcm_trend_by_year['2010'] = df_2010
-    # # initiating 2015 attribute df
-    hdf_input_2045 = orca.get_injectable('hdf_input_2045')
-    df_2015 = load_2015_taz_vars_from_hdf(hdf_input_2045)
-    taz_hlcm_trend_by_year['2015'] = df_2015
-    print('Finishing init TAZ vars from hdf', hdf_input_2045)
+    if orca.is_table('taz_hlcm_trend_by_year'):
+        hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
+        for yr, df in hist.groupby(level='year'):
+            taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
+        print('Loaded TAZ trend bases from input hdf:',
+              sorted(taz_sim_trend_by_year))
+    else:
+        print('WARNING: taz_hlcm_trend_by_year not in the input hdf; rebuilding '
+              'the trend bases from the past-round HDFs. Rebuild the input with '
+              'forecast_data_input to remove this step.')
+        # 10yr trend base: RDF2045 (2015); 5yr trend base: RDF2050 (2020)
+        taz_sim_trend_by_year['2015'] = load_taz_vars_from_hdf(
+            orca.get_injectable('hdf_input_2045'))
+        taz_sim_trend_by_year['2020'] = load_taz_vars_from_hdf(
+            orca.get_injectable('hdf_input_2050'))
+
     # initiating baseyear attribute df
     df_cur = load_taz_vars_from_orca()
-    taz_hlcm_trend_by_year[str(orca.get_injectable("base_year"))] = df_cur
+    taz_sim_trend_by_year[str(orca.get_injectable("base_year"))] = df_cur
     print('Finishing loading TAZ vars from orca...')
 
     # add to injectable
-    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+    orca.add_injectable('taz_sim_trend_by_year', taz_sim_trend_by_year)
 
     # init job sector and building type weights
     job_btype = orca.get_table('jobs').to_frame(['sector_id', 'building_type_id'])
@@ -529,125 +532,49 @@ def init_taz_hlcm_trend_by_year():
     orca.add_table("tract_hh_type_base_ratios", tract_hh_type_base_ratios)
 
 
+def _register_taz_change_col(b_to_taz, diff, var, suffix):
+    """Register one TAZ-change building variable"""
+    @orca.column("buildings", var + suffix)
+    def func():
+        return b_to_taz.map(diff[var]).fillna(0).astype(int)
+
+
 @orca.step()
-def update_taz_hlcm_trend(taz_hlcm_trend_by_year, year, households, buildings):
-    """Update taz_hlcm_trend_by_year for the year
+def update_taz_hlcm_trend(year, households, buildings):
+    """Update taz_sim_trend_by_year for the year
     """
     base_year = orca.get_injectable("base_year")
+    taz_sim_trend_by_year = orca.get_injectable('taz_sim_trend_by_year')
 
     # get current trend df
     df_cur = load_taz_vars_from_orca()
-    
-    # update taz_hlcm_trend_by_year
-    taz_hlcm_trend_by_year[str(year)] = df_cur
-    orca.add_injectable('taz_hlcm_trend_by_year', taz_hlcm_trend_by_year)
+
+    # update taz_sim_trend_by_year
+    taz_sim_trend_by_year[str(year)] = df_cur
+    orca.add_injectable('taz_sim_trend_by_year', taz_sim_trend_by_year)
 
     # load building_id to zone_id mapping
     b_to_taz = buildings.to_frame(['zone_id']).zone_id
 
-    # define 10yr trend variables
-    year_delta = 10
-    # define building variables
-    cur_year = base_year if year <= base_year+10 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
+    for year_delta in (10, 5):
+        cur_year = base_year if year <= base_year + year_delta else year
+        cur_df = taz_sim_trend_by_year[str(cur_year)]
+        # if the lagged base is missing, use a flat trend
+        prev_df = taz_sim_trend_by_year.get(str(cur_year - year_delta), cur_df)
+        diff = cur_df - prev_df
 
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    # N = len(selected_taz_ids) # total number of applicable TAZs
-    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # # increase hh_pop by 100%pp
-    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
-    # # increase with_children hh by 100%
-    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
-    # # reduce one_persons_hh count by 100%
-    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
+        # Experimental, disabled: artificially bump Dearborn (TAZ 420-472).
+        # selected_taz_ids = [i for i in range(420, 473) if i in diff.index]
+        # N = len(selected_taz_ids)
+        # diff.loc[selected_taz_ids, 'hh_count'] += max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000) // N
+        # diff.loc[selected_taz_ids, 'hh_pop'] += max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000) // N
+        # diff.loc[selected_taz_ids, 'with_children'] += max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000) // N
+        # diff.loc[selected_taz_ids, 'one_person_hh'] -= max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000) // N
 
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_10yr_change")
-        @orca.column("buildings", var+"_taz_10yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
-
-    # define 5yr trend variables
-    year_delta = 5
-    # define building variables
-    cur_year = base_year if year <= base_year+5 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
-
-
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    N = len(selected_taz_ids) # total number of applicable TAZs
-    # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # increase hh_pop by 100%pp
-    diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 2000 ) // (N)) 
-    # increase with_children hh by 100%
-    diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 2000 ) // (N)) 
-    # reduce one_persons_hh count by 50%
-    diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum() // 2, 1000 ) // (N)) 
-
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_10yr_change")
-        @orca.column("buildings", var+"_taz_10yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
-
-    # define 5yr trend variables
-    year_delta = 5
-    # define building variables
-    cur_year = base_year if year <= base_year+5 else year
-    
-    # if not exist, use flat trend
-    if str(cur_year-year_delta) in taz_hlcm_trend_by_year:
-        # generate TAZ trend variables
-        prev_df = taz_hlcm_trend_by_year[str(cur_year-year_delta)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    else:
-        prev_df = taz_hlcm_trend_by_year[str(cur_year)]
-        cur_df = taz_hlcm_trend_by_year[str(cur_year)]
-    diff = cur_df - prev_df
-
-
-    # Experimental: 
-    # * For Dearborn, taz zone 420-472,
-    # selected_taz_ids = [idx for idx in range(420, 473) if idx in diff.index]
-    # N = len(selected_taz_ids) # total number of applicable TAZs
-    # # increase hh_count by 50%, (distributed evenly among TAZs, same method below)
-    # diff.loc[selected_taz_ids, 'hh_count'] += (max(diff.loc[selected_taz_ids, 'hh_count'].sum() // 2, 1000 ) // (N)) 
-    # # increase hh_pop by 100%pp
-    # diff.loc[selected_taz_ids, 'hh_pop'] += (max(diff.loc[selected_taz_ids, 'hh_pop'].sum(), 3000 ) // (N)) 
-    # # increase with_children hh by 100%
-    # diff.loc[selected_taz_ids, 'with_children'] += (max(diff.loc[selected_taz_ids, 'with_children'].sum(), 1000 ) // (N)) 
-    # # reduce one_persons_hh count by 100%
-    # diff.loc[selected_taz_ids, 'one_person_hh'] -= (max(diff.loc[selected_taz_ids, 'one_person_hh'].sum(), 1000 ) // (N)) 
-
-    for var in df_cur.columns:
-        print("registering building variable", var+"_taz_5yr_change")
-        @orca.column("buildings", var+"_taz_5yr_change")
-        def func():
-            return b_to_taz.map(diff[var]).fillna(0).astype(int)
+        suffix = "_taz_%dyr_change" % year_delta
+        for var in df_cur.columns:
+            print("registering building variable", var + suffix)
+            _register_taz_change_col(b_to_taz, diff, var, suffix)
 
 
 @orca.step()
@@ -782,7 +709,9 @@ def repm_comparison_log():
 
 # Register XGBoost REPM steps
 repm_step_names = []
-xgb_repm_dir = "configs/repm_xgb"
+if not orca.is_injectable("xgb_repm_dir"):
+    orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
+xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
 # Use absolute path for checking existence
 xgb_model_full_path = os.path.abspath(xgb_repm_dir)
@@ -953,24 +882,10 @@ def households_relocation(households, annual_relocation_rates_for_households):
     relocation_rates = relocation_rates.rename(
         columns={"age_max": "age_of_head_max", "age_min": "age_of_head_min"}
     )
-    relocation_rates.probability_of_relocating *= 0.2
-    reloc = relocation.RelocationModel(relocation_rates, "probability_of_relocating")
-    _print_number_unplaced(households, "building_id")
-    print("un-placing")
-    hh = households.to_frame(households.local_columns)
-    idx_reloc = reloc.find_movers(hh)
-    households.update_col_from_series(
-        "building_id", pd.Series(-1, index=idx_reloc), cast=True
-    )
-    _print_number_unplaced(households, "building_id")
-
-
-@orca.step()
-def households_relocation_2050(households, annual_relocation_rates_for_households):
-    relocation_rates = annual_relocation_rates_for_households.to_frame()
-    relocation_rates = relocation_rates.rename(
-        columns={"age_max": "age_of_head_max", "age_min": "age_of_head_min"}
-    )
+    # find_movers filters households on every column except the rate one, so drop
+    # bookkeeping columns (e.g. probability_of_relocating_orig) households lack
+    relocation_rates = relocation_rates.drop(
+        columns=[c for c in relocation_rates.columns if c.endswith("_orig")])
     relocation_rates.probability_of_relocating *= 0.2
     reloc = relocation.RelocationModel(relocation_rates, "probability_of_relocating")
     _print_number_unplaced(households, "building_id")
@@ -990,7 +905,7 @@ def households_relocation_2050(households, annual_relocation_rates_for_household
 
 
 @orca.step()
-def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
+def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
     relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
     reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
     _print_number_unplaced(jobs, "building_id")
@@ -1002,20 +917,6 @@ def jobs_relocation_2050(jobs, annual_relocation_rates_for_jobs):
     blocklst = bb.loc[bb.sp_filter < 0].index
     j = j.loc[~j.building_id.isin(blocklst)]
 
-    idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
-    jobs.update_col_from_series(
-        "building_id", pd.Series(-1, index=idx_reloc), cast=True
-    )
-    _print_number_unplaced(jobs, "building_id")
-
-
-@orca.step()
-def jobs_relocation(jobs, annual_relocation_rates_for_jobs):
-    relocation_rates = annual_relocation_rates_for_jobs.to_frame().reset_index()
-    reloc = relocation.RelocationModel(relocation_rates, "job_relocation_probability")
-    _print_number_unplaced(jobs, "building_id")
-    print("un-placing")
-    j = jobs.to_frame(jobs.local_columns)
     idx_reloc = reloc.find_movers(j[j.home_based_status <= 0])
     jobs.update_col_from_series(
         "building_id", pd.Series(-1, index=idx_reloc), cast=True
@@ -1357,6 +1258,14 @@ def presses_trans(xxx_todo_changeme1):
     # visible. Log any such cell; see the model wiki transition todo for the
     # fuller fix options.
     la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
+    # a large area can have no open-ended 10+ control cells at all (LA 147 in the
+    # 2055 controls, which also has no 10+ households); nothing to realise here,
+    # and both the lookups and the transition below would raise on the empty frame
+    if iter_var not in ct_inf.index:
+        print(f"[households_transition] LA {la} yr {iter_var}: no open-ended 10+ "
+              f"control cells, skipping the 10+ bin")
+        out.append((hh.loc[[]], p.loc[[]]))
+        return out
     for _, r in ct_inf.loc[iter_var].iterrows():
         if r["total_number_of_households"] <= 0:
             continue
@@ -1930,6 +1839,24 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
 
     # p = p.reset_index().set_index('household_id')
     pg = p.groupby('household_id')
+    hh_person_counts = pg.size()
+    seed_sizes = p_seeds.groupby(level=0).size()
+
+    def _drop_size_mismatch(hh_to_swap, target_seed_ids, ctx):
+        """Keep only households holding as many people as their target seed.
+
+        A household can differ from its seed -- a swap mapping built from other
+        base data, or gap-fill donors that resized persons but kept the seed_id.
+        Copying the seed's person rows onto it would misalign the assignment.
+        """
+        ok = (
+            hh_to_swap.index.to_series().map(hh_person_counts).fillna(0).to_numpy()
+            == target_seed_ids.map(seed_sizes).fillna(-1).to_numpy()
+        )
+        if not ok.all():
+            print(f"[workers_adjustment] {ctx}: skipped {int((~ok).sum())} of {len(ok)} "
+                  f"household(s) whose size differs from the target seed")
+        return hh_to_swap[ok], target_seed_ids[ok]
 
     hh_cols_to_swap = [col for col in hh.columns if col not in ['blkgrp', 'building_id', 'large_area_id']]
     p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'household_id', 'large_area_id', 'weight']]
@@ -1964,6 +1891,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     random_state=utils.step_rng("workers_adjustment_add", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
+                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
+                    hh_to_swap, target_hh_seed_id,
+                    f"LA {large_area_id} age {row.age_min}-{row.age_max} add")
+                if hh_to_swap.empty:
+                    break
                 # overwrite old attributes except building_id, large_area_id, blkgrp
                 hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
                 for _col in hh_cols_to_swap:
@@ -1998,6 +1930,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                     random_state=utils.step_rng("workers_adjustment_drop", large_area_id, row.age_min))
                 # target seed_ids
                 target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
+                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
+                    hh_to_swap, target_hh_seed_id,
+                    f"LA {large_area_id} age {row.age_min}-{row.age_max} drop")
+                if hh_to_swap.empty:
+                    break
                 # overwrite old attributes except building_id, large_area_id, blkgrp
                 hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
                 for _col in hh_cols_to_swap:
@@ -2346,6 +2283,8 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
     refinements = refiner_events.to_frame()
     refinements = refinements[refinements.year == year]
+    # inputs have shipped both "Add" and "add"; actions are matched lower-case below
+    refinements["action"] = refinements.action.str.lower()
     assert refinements.action.isin(
         {"clone", "subtract_pop", "subtract", "add_pop", "add", "target_pop", "target"}
     ).all(), "Unknown action"
@@ -2364,8 +2303,12 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
         new_building_ids = bselect.sample(number_of_agents, replace=True).index.values
         # maybe use job reallocation instead of random
 
-        if len(agents_pool) > 0:
-            agents_sub_pool = agents_pool.query(agent_expression)
+        # the pool only holds agents removed by earlier subtract records of the same
+        # transaction, so it can be non-empty yet hold none matching this expression
+        agents_sub_pool = (
+            agents_pool.query(agent_expression) if len(agents_pool) > 0 else agents_pool
+        )
+        if len(agents_sub_pool) > 0:
             if len(agents_sub_pool) >= number_of_agents:
                 agents_sample = agents_sub_pool.sample(number_of_agents, replace=False)
             else:
@@ -2810,7 +2753,7 @@ def random_demolition_events(
     )
 
     b = buildings.copy()
-    allowed = variables.parcel_is_allowed_2050()
+    allowed = variables.parcel_is_allowed_2055()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
     buildings_idx = []
 
@@ -3079,7 +3022,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     b["nonres_score"] = nonres_score.where(eligible, 0.0)
 
     # ── Sampling ─────────────────────────────────────────────────────────────
-    allowed   = variables.parcel_is_allowed_2050()
+    allowed   = variables.parcel_is_allowed_2055()
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
     buildings_idx = []
@@ -3256,7 +3199,7 @@ def feasibility(parcels, buildings, btype_form_map):
     parcel_utils.run_feasibility(
         parcels,
         _price_with_floor,
-        variables.parcel_is_allowed_2050,
+        variables.parcel_is_allowed_2055,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
     )
@@ -3289,6 +3232,13 @@ def add_extra_columns_nonres(df):
         "mcd_model_quota",
     ]:
         df[col] = 0
+    # new buildings carry no tenure split of their own; split units by the
+    # base-year owner share of the same building type
+    if {"residential_units", "building_type_id"}.issubset(df.columns):
+        share = df["building_type_id"].map(orca.get_injectable("btype_owner_share")).fillna(0)
+        df["owner_units"] = (df["residential_units"] * share).round().astype(int)
+    else:
+        df["owner_units"] = 0
     df["year_built"] = orca.get_injectable("year")
     df["city_id"] = misc.reindex(orca.get_table("parcels").city_id, df.parcel_id)
     # task 2b: assign each new building a MAZ. Non-crossing parcels -> the parcel's
@@ -3347,7 +3297,10 @@ def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
     if "ave_unit_size" in df.columns:
         df["sqft_per_unit"] = df["ave_unit_size"]
     elif ("res_sqft" in df.columns) & ("residential_units" in df.columns):
-        df["sqft_per_unit"] = df["res_sqft"] / df["residential_units"]
+        # some event rows carry res_sqft with 0 units (e.g. parking structures);
+        # dividing by 0 gives inf, which survives fillna and breaks later int casts
+        units_safe = df["residential_units"].where(df["residential_units"] > 0)
+        df["sqft_per_unit"] = (df["res_sqft"] / units_safe).fillna(0)
     else:
         df["sqft_per_unit"] = misc.reindex(
             orca.get_table("parcels").ave_unit_size, df.parcel_id
@@ -4270,60 +4223,6 @@ def build_networks(parcels):
         orca.add_table("parcels", p)
 
 
-@orca.step()
-def build_networks_legacy(parcels):
-    import yaml
-
-    pdna.network.reserve_num_graphs(2)
-
-    # networks in semcog_networks.h5
-    with open(r"configs/available_networks.yaml", "r") as stream:
-        dic_net = yaml.load(stream, Loader=yaml.FullLoader)
-
-    st = pd.HDFStore(os.path.join(misc.data_dir(), "semcog_networks_py3.h5"), "r")
-
-    lstnet = [
-        {
-            "name": "mgf14_ext_walk",
-            "cost": "cost1",
-            "prev": 26500,  # 2 miles
-            "net": "net_walk",
-        },
-        {
-            "name": "tdm_ext",
-            "cost": "cost1",
-            "prev": 60,  # 60 minutes
-            "net": "net_drv",
-        },
-    ]
-
-    for n in lstnet:
-        n_dic_net = dic_net[n["name"]]
-        nodes, edges = st[n_dic_net["nodes"]], st[n_dic_net["edges"]]
-        net = pdna.Network(
-            nodes["x"],
-            nodes["y"],
-            edges["from"],
-            edges["to"],
-            edges[[n_dic_net[n["cost"]]]],
-        )
-        net.precompute(n["prev"])
-        net.init_pois(num_categories=10, max_dist=n["prev"], max_pois=5)
-
-        orca.add_injectable(n["net"], net)
-
-    # spatially join node ids to parcels
-    p = parcels.local
-    p["nodeid_walk"] = orca.get_injectable("net_walk").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    p["nodeid_drv"] = orca.get_injectable("net_drv").get_node_ids(
-        p["centroid_x"], p["centroid_y"]
-    )
-    orca.add_table("parcels", p)
-
-
-@orca.step()
 def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)

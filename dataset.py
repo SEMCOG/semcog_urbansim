@@ -56,6 +56,7 @@ for name in [
     "mcd_total",
     "dropped_buildings",
     "bg_hh_increase",
+    "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
     if name not in store:
@@ -63,13 +64,23 @@ for name in [
         continue
     orca.add_table(name, store[name])
 
-# #35 change csv column name from b_city_id to city_id
-# orca.add_table('extreme_hu_controls', pd.read_csv(
-#     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
-# orca.add_table(
-#     "extreme_hu_controls",
-#     pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
-# )
+
+@orca.table(cache=True)
+def parcel_maz_crossing_shares(store):
+    # parcel->MAZ area shares for parcels spanning MAZ; assign_new_building_maz
+    # reads parcel_id / maz_id / share as columns
+    df = store["parcel_maz_crossing_shares"]
+    return df.rename(columns={"maz_seqid": "maz_id"}).reset_index()
+
+
+@orca.injectable(cache=True)
+def btype_owner_share(store):
+    # base-year owner-occupied share of units by building type; new buildings have
+    # no tenure split of their own (see models.add_extra_columns_nonres)
+    b = store["buildings"]
+    b = b[b.residential_units > 0]
+    g = b.groupby("building_type_id")[["owner_units", "residential_units"]].sum()
+    return (g.owner_units / g.residential_units).to_dict()
 
 
 @orca.table("debug_res_developer")
@@ -153,28 +164,20 @@ def buildings(store):
     df["mcd_model_quota"] = 0
 
     df["hu_filter"] = 0
-    cites = [1155, 1100, 3130, 6020, 6040]
-    sample = df[df.residential_units > 0]
-    sample = sample[~(sample.index.isin(store["households"].building_id))]
-    # #35
-    for c in sample.city_id.unique():
-        frac = 0.8 if c in cites else 0
-        # #35
-        df.loc[
-            sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
-            "hu_filter",
-        ] = 1
+    hu_cities = [1155, 1100, 3130, 6020, 6040]
+    b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    sample = df[(df.residential_units > 0) & ~df.index.isin(store["households"].building_id)]
+    sample_city = b_city_id.reindex(sample.index)
+    for c in hu_cities:
+        city_sample = sample.index[sample_city == c]
+        if len(city_sample):
+            chosen = pd.Series(city_sample).sample(frac=0.8, replace=False).values
+            df.loc[chosen, "hu_filter"] = 1
 
-    # TODO, this is placeholder. will update with special emp buildings lookup later
-
-    df[
-        "sp_filter"
-    ] = 0  # special filter: for event location/buildings, landmark buildings, etc
-    landmark_worksites = store["landmark_worksites"]
-    df.loc[
-        landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
-        "sp_filter",
-    ] = -1  # set landmark building_id as negative for blocking
+    df["sp_filter"] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    # skip if not presented
+    if "landmark_worksites" in store:
+        landmark_worksites = store["landmark_worksites"]
 
     df["event_id"] = 0  # also add event_id for event reference
 
@@ -297,7 +300,6 @@ def base_job_space(buildings):
 # building to its own TAZ on a parcel that straddles a zone boundary -- is subsumed at
 # finer MAZ resolution by building_to_maz_override + the maz->taz crosswalk. See
 # variables/variables_building.py (maz_id / zone_id).
-
 
 @orca.table(cache=True)
 def parcel_maz_crossing_shares(store):

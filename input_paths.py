@@ -35,17 +35,32 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_082426.h5",
-    f"{_LOCAL}/main_082426.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_091626.h5",
+    f"{_LOCAL}/main_091626.h5",
 )
 
+# 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
+# household base trend for bg_hh_increase (see dataset.bg_hh_increase).
+BG_HH_2020_HDF = _p(
+    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
+    f"{_LOCAL}/forecast_data_input.h5",
+    f"{_LOCAL}/forecast_data_input_031523.h5",
+)
+
+# RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    "/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune",
-    f"{_LOCAL}/models/models_survey_finetune",
+    "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
+    "/mnt/hgfs/RDF2055/estimation/models/models_26Sep14_slot_sample",
+    f"{_LOCAL}/models/models_26Sep14_slot_sample",
 )
 ELCM_MODEL_DIR = _p(
-    "/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/",
-    f"{_LOCAL}/models/elcm_models_25May30/",
+    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep10",
+    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep10",
+    f"{_LOCAL}/models/elcm_models_26Sep10",
+)
+REPM_MODEL_DIR = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm",
+    f"{_LOCAL}/models/repm",
 )
 
 
@@ -115,17 +130,14 @@ SCENARIO_EMP_CONTROL_CSV = _p(
 # ---------------------------------------------------------------------------
 # Historical / back-cast (optional analysis, not the forward run)
 # ---------------------------------------------------------------------------
+# Past-round base HDFs, used as the TAZ trend bases (10yr and 5yr) in
+# models.init_taz_hlcm_trend_by_year.
 HDF_INPUT_2045 = _p(
     "/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast-pd3.h5",
     f"{_LOCAL}/all_semcog_data_02-02-18-final-forecast.h5",
 )
-FORECAST_INPUT_2040 = _p(
-    "/mnt/hgfs/urbansim/RDF2050/model_improvements/2024_spring/2010_data",
-    f"{_LOCAL}/model_improvements/2024_spring/2010_data",
-)
-
-# BUILDING_TO_ZONE_CSV retired (Jul 2026) — replaced by building_to_maz_override +
-# the maz->taz crosswalk. See dataset.py / variables/variables_building.py.
+# same store as BG_HH_2020_HDF; aliased so the trend source reads by intent
+HDF_INPUT_2050 = BG_HH_2020_HDF
 
 ACS_BG_HH_CSV = _p(
     os.path.join(os.path.dirname(__file__), "data", "ACS_HH_14_19_BG.csv"),

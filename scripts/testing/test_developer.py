@@ -98,8 +98,8 @@ print(f"  parcel_size > 0:     {(_ps>0).sum():,}")
 _hv = _la5.bldgimprval > (_la5.landvalue / 10)
 print(f"  NOT highval:         {(~_hv).sum():,}")
 
-# parcel_is_allowed_2050("residential") for LA5
-_allowed_res = variables.parcel_is_allowed_2050("apartment")
+# parcel_is_allowed_2055("residential") for LA5
+_allowed_res = variables.parcel_is_allowed_2055("apartment")
 _la5_allowed = _allowed_res.reindex(_la5.index, fill_value=False)
 print(f"  parcel_is_allowed:   {_la5_allowed.sum():,}")
 
