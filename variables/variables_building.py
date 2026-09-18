@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import orca
 import pandas as pd
@@ -355,20 +356,6 @@ def walk_nearest_park(buildings, parcels):
 
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_grocery, buildings.parcel_id)
-
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_library(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_library, buildings.parcel_id)
-
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
-def bike_nearest_park(buildings, parcels):
-    return misc.reindex(parcels.bike_nearest_park, buildings.parcel_id)
-
-@orca.column("buildings", cache=True, cache_scope="iteration")
 def building_age(buildings, year):
     # Retrieve year_built and city_id series
     year_built = buildings.year_built
@@ -711,8 +698,10 @@ for sector in emp_sectors:
 # taz_segments will be like
 # [("children_has_children", "ownership_own", "aoh_lt35"), ...]
 taz_segments = lcm_utils.get_hlcm_segment()
+# names follow the hh_categories order of the HLCM model description
 for seg in taz_segments:
-    make_household_tract_proportion_variable(seg)
+    for order in itertools.permutations(seg):
+        make_household_tract_proportion_variable(order)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):

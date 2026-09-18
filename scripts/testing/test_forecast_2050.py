@@ -26,6 +26,7 @@ run_debug = False
 # All external input locations are centralized in input_paths.py
 orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
 orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
+orca.add_injectable('xgb_repm_dir', input_paths.REPM_MODEL_DIR)
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)
@@ -141,9 +142,9 @@ orca.run(
         "refiner",
         "households_transition",
         "workers_adjustment_model",
-        "households_relocation_2050",
+        "households_relocation",
         "jobs_transition",
-        # "jobs_relocation_2050",
+        # "jobs_relocation",
         "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
@@ -195,7 +196,7 @@ orca.run(
         "transit_stops",
         "crime_rates",
         "schools",
-        "poi",
+        "points_of_interest_by_category",
         "group_quarters",
         "group_quarters_households",
         "group_quarters_control_totals",

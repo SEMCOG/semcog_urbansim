@@ -8,28 +8,19 @@ osm_walk_2024:
   edges: edges_osm_walk_2024
   nodes: nodes_osm_walk_2024
 
-# Bike networks: present in semcog_networks.h5 for future use. Nothing builds them
-# at runtime today -- adding one to lstnet in models.py also needs
-# reserve_num_graphs raised above 2.
-osm_bike_2024:
+# --- 2050  ---
+osm_roads_walk_2020:
   cost1: feet
   cost2: meters
   cost3: minutes
-  edges: edges_osm_bike_2024
-  nodes: nodes_osm_bike_2024
+  edges: edges_osm_walk_2024
+  nodes: nodes_osm_walk_2024
 
-# Bicycle level-of-traffic-stress network. minutes_w1 and minutes_w2 are BOTH
-# stress-penalised times (two formulas, both at 10 mph base) -- neither is real travel
-# time. minutes_w2 is what the accessibility pipeline routes the comfort indicators on
-# (access_config.yaml network_bike_comfort_levels), so it is cost1.
-# feet_weighted = minutes_w2 * 880: a stress-weighted distance, NOT measurable feet.
-# Use osm_bike_2024 when real distance is needed.
-osm_bike_comfort_2024:
-  cost1: minutes_w2
-  cost2: minutes_w1
-  cost3: feet_weighted
-  edges: edges_osm_bike_comfort_2024
-  nodes: nodes_osm_bike_comfort_2024
+# Bike networks retired (Sep 2026): nothing builds them and the bike_nearest_*
+# variables they fed are gone. Bike accessibility comes from the precomputed
+# indicators in access_indicators.h5. The edges_osm_bike_2024 /
+# edges_osm_bike_comfort_2024 layers are still in semcog_networks.h5 if a bike
+# network is ever built again.
 highway_ext_2020:
   cost1: peak_mins
   cost2: nonpk_mins

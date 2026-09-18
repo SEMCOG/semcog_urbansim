@@ -4,7 +4,7 @@ import sys
 import os
 import pandas as pd
 import utils
-import subprocess
+import input_paths
 
 # ===============
 ## Config
@@ -18,47 +18,48 @@ RUN_OUTPUT_INDICATORS = True
 base_year = 2025
 final_year = 2055
 indicator_spacing = 5
+upload_to_carto = False
 run_debug = False
-# LCM configs
-orca.add_injectable('hlcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/models_survey_finetune')
-orca.add_injectable('elcm_model_path', '/mnt/hgfs/RDF2050/estimation/models/elcm_models_25May30/')
+# model paths (all external inputs are centralized in input_paths.py)
+orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
+orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
+orca.add_injectable('xgb_repm_dir', input_paths.REPM_MODEL_DIR)
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 # base/final years
 orca.add_injectable('base_year', base_year)
 orca.add_injectable('final_year', final_year)
 # scenario controls
 orca.add_injectable('ENABLE_SCENARIO', False)
-orca.add_injectable('scenario_hh_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_household_control_totals_2050_07232024.csv')
-orca.add_injectable('scenario_remi_total_pop',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/remi_total_pop_la07232024.csv')
-orca.add_injectable('scenario_emp_control_path',
-    '/mnt/hgfs/urbansim/RDF2050/scenarios/controls/low_immigration/annual_employment_control_totals.csv')
+orca.add_injectable('scenario_hh_control_path', input_paths.SCENARIO_HH_CONTROL_CSV)
+orca.add_injectable('scenario_remi_total_pop', input_paths.SCENARIO_REMI_POP_CSV)
+orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTROL_CSV)
+# household-pop target: inputs provide remi_hh_pop, so no fallback to the legacy
+# total-pop table (households_transition raises if remi_hh_pop is absent)
+orca.add_injectable('allow_total_pop_fallback', False)
+# households matching no control category: warn (False) or raise (True)
+orca.add_injectable('require_full_control_coverage', False)
+# run-level random seed; None draws a fresh one (logged in run_config.yaml)
+RANDOM_SEED = 271828
+if RANDOM_SEED is None:
+    import numpy as _np
+    RANDOM_SEED = int(_np.random.SeedSequence().entropy & 0xFFFFFFFF)
+orca.add_injectable('random_seed', RANDOM_SEED)
+print('using random_seed', RANDOM_SEED)
 # Checkpoint config
 # run starting from last checkpoint year
 orca.add_injectable('use_checkpoint', False)
 orca.add_injectable('runnum_to_resume', 'run1365.h5')
-# dump all setting in yaml in run folder
-if not os.path.exists(orca.get_injectable("data_out_dir")):
-    os.makedirs(orca.get_injectable("data_out_dir"))
-with open(os.path.join(orca.get_injectable("data_out_dir"), "run_config.yaml"), "w+") as f:
-    import yaml
-    yaml.dump({
-            "RUN NUMBER": data_out,
-            "hlcm_model_path": orca.get_injectable("hlcm_model_path") if orca.is_injectable("hlcm_model_path") else "N/A",
-            "elcm_model_path": orca.get_injectable("elcm_model_path") if orca.is_injectable("elcm_model_path") else "N/A",
-            "yaml_configs": orca.get_injectable("yaml_configs") if orca.is_injectable("yaml_configs") else "N/A",
-            "base_year": orca.get_injectable("base_year") if orca.is_injectable("base_year") else "N/A",
-            "final_year": orca.get_injectable("final_year") if orca.is_injectable("final_year") else "N/A",
-            "ENABLE_SCENARIO": orca.get_injectable("ENABLE_SCENARIO") if orca.is_injectable("ENABLE_SCENARIO") else "N/A",
-            "scenario_hh_control_path": orca.get_injectable("scenario_hh_control_path") if orca.is_injectable("scenario_hh_control_path") else "N/A",
-            "scenario_remi_total_pop": orca.get_injectable("scenario_remi_total_pop") if orca.is_injectable("scenario_remi_total_pop") else "N/A",
-            "use_checkpoint": orca.get_injectable("use_checkpoint") if orca.is_injectable("use_checkpoint") else "N/A",
-            "runnum_to_resume": orca.get_injectable("runnum_to_resume") if orca.is_injectable("runnum_to_resume") else "N/A",
-            "repm_model_type": "XGBoost",
-            "git_branch_name": subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode().strip(),
-            "git_commit_id": subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip(),
-        }, f, default_flow_style=False)
+# run_config.yaml and copies of key model configs in run folder
+utils.write_run_metadata(
+    data_out,
+    input_paths.BASE_HDF,
+    {
+        "RUN_OUTPUT_INDICATORS": RUN_OUTPUT_INDICATORS,
+        "indicator_spacing": indicator_spacing,
+        "upload_to_carto": upload_to_carto,
+        "run_debug": run_debug,
+    },
+)
 
 # =================
 ## Initialize Model
@@ -91,40 +92,48 @@ run_start = base_year if not orca.get_injectable('use_checkpoint') else orca.get
 # =============
 ## Simulation
 # =============
-# run init_taz_hlcm_trend_by_year on baseyear
+# run init_taz_hlcm_trend_by_year before main iter
 orca.run([
     'init_taz_hlcm_trend_by_year',
 ])
-# Start iteration
+
+# main iteration
 orca.run(
     [
+        "clear_iteration_cache",  # drop last year's memoized derived cols
         "build_networks",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
+        "log_memory",  # after networks + accessibility
         "cache_hh_seeds", # only run on first year
         "scheduled_demolition_events",
-        "random_demolition_events",
+        "scored_demolition_events",
         "scheduled_development_events",
         "refiner",
         "households_transition",
-        "fix_lpr",
-        "households_relocation_2050",
+        "workers_adjustment_model",
+        "households_relocation",
         "jobs_transition",
-        # "jobs_relocation_2050",
+        # "jobs_relocation",
+        "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
         "non_residential_developer",
         "update_sp_filter",
+        "log_memory",  # after developer
     ]
     + orca.get_injectable("repm_step_names")
     + ["real_estate_adjustment"]
-    + ["refine_housing_units"]
+    # + ["refine_housing_units"]
     # + ["mcd_hu_sampling"]
+    + ["log_memory"]  # after REPM + housing-unit refine
     + orca.get_injectable("hlcm_step_names")
     + orca.get_injectable("elcm_step_names")
     + [
         # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
+        "log_memory",  # after HLCM + ELCM
         "jobs_scaling_model",
+        "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
@@ -162,11 +171,13 @@ orca.run(
         "group_quarters_households",
         "group_quarters_control_totals",
         "annual_household_control_totals",
-        "remi_pop_total",
         "events_addition",
         "events_deletion",
         "refiner_events",
-    ],
+    ]
+    # snapshot whichever HH-population target table is present (remi_pop_total
+    # only exists in scenario runs)
+    + [t for t in ("remi_hh_pop", "remi_pop_total") if orca.is_table(t)],
     out_run_tables=[
         "buildings",
         "jobs",
@@ -206,6 +217,7 @@ if RUN_OUTPUT_INDICATORS:
         base_year,
         final_year,
         spacing=indicator_spacing,
+        upload_to_carto=upload_to_carto,
     )
 
 utils.run_log(

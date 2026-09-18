@@ -162,11 +162,10 @@ def parcel_is_allowed(form=None):
     return (allowed > 0) & (~protected)
 
 
-def parcel_is_allowed_2050(form=None):
+def parcel_is_allowed_2055(form=None):
     # indentify parcels allowed for construction
     # TODO, will replace parcel_is_allowed
     pcl_index = orca.get_table("parcels").index
-    form_to_btype = orca.get_injectable("form_to_btype")
     parcels = orca.get_table("parcels")
     buildings = orca.get_table("buildings").to_frame(
         [
@@ -180,7 +179,6 @@ def parcel_is_allowed_2050(form=None):
             "sp_filter",
         ]
     )
-    zoning = orca.get_table("zoning")
     year = orca.get_injectable("year")
 
     pcl_new_building = buildings.groupby("parcel_id").building_age.min() <= 5
@@ -229,19 +227,17 @@ def parcel_is_allowed_2050(form=None):
         | pcl_landmark_worksite
     )
 
+    # Zoning permission from zoning.future_use (planned use); see
+    # assumptions.form_to_future_use
+    form_to_future_use = orca.get_injectable("form_to_future_use")
     if form:
-        columns = ["type%d" % typ for typ in form_to_btype[form]]
+        uses = form_to_future_use[form]
     else:
-        columns = [
-            "type%d" % typ
-            for typ in set(
-                item for sublist in list(form_to_btype.values()) for item in sublist
-            )
-        ]
+        uses = set().union(*(set(v) for v in form_to_future_use.values()))
+    zoning = orca.get_table("zoning")
+    allowed = zoning.future_use.reindex(pcl_index).isin(uses)
 
-    allowed = zoning.to_frame(columns).max(axis=1).reindex(pcl_index, fill_value=0)
-
-    return (allowed > 0) & (~protected)
+    return allowed & (~protected)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
@@ -453,32 +449,6 @@ def walk_nearest_park(parcels, nodes_walk):
         # if nodes isn't generated yet
         return pd.Series(index=parcels.index)
     return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
-
-
-# the bike_nearest_* columns live on nodes_bike (osm_bike_2024), so they come
-# across on parcels.nodeid_bike rather than nodeid_walk
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(parcels, nodes_bike):
-    if len(nodes_bike) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_bike.bike_nearest_grocery, parcels.nodeid_bike)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_library(parcels, nodes_bike):
-    if len(nodes_bike) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_bike.bike_nearest_library, parcels.nodeid_bike)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_park(parcels, nodes_bike):
-    if len(nodes_bike) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_bike.bike_nearest_park, parcels.nodeid_bike)
 
 
 @orca.column("parcels", cache=True, cache_scope="forever")

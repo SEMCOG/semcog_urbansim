@@ -45,10 +45,10 @@ After container start, mount network drives: `sudo mount -a`
 Primary simulation entry point:
 ```bash
 # Run with full logging in background
-nohup python test_forecast_2050.py >> runs/run_stdout/simulation_log.txt 2>&1 &
+nohup python simulation_2055.py >> runs/run_stdout/simulation_log.txt 2>&1 &
 ```
 
-Run configuration is set at the top of `test_forecast_2050.py`:
+Run configuration is set at the top of `simulation_2055.py`:
 - `base_year`, `final_year`: simulation year range
 - `hlcm_model_path`, `elcm_model_path`: paths to trained PyTorch model files (on mounted network drive `/mnt/hgfs/RDF2050/`)
 - `ENABLE_SCENARIO`: toggle for alternative scenario controls
@@ -60,7 +60,7 @@ Output HDF5 files are written to `runs/runNNN.h5`. Run number increments automat
 
 ### Core Pipeline Files
 
-- **`test_forecast_2050.py`** — Main simulation script. Configures injectables, then calls `orca.run([...], iter_vars=range(run_start+1, final_year+1), ...)`. Each element in the list is a named orca step defined in `models.py`.
+- **`simulation_2055.py`** — Main simulation script (2025→2055). Configures injectables, then calls `orca.run([...], iter_vars=range(run_start+1, final_year+1), ...)`. Each element in the list is a named orca step defined in `models.py`. The 2050-round script is kept as `scripts/testing/test_forecast_2050.py`.
 - **`models.py`** — Defines all orca simulation steps (`@orca.step`). On import, also loads HLCM/ELCM PyTorch models and registers them as injectables. The file is large (~3000+ lines) and contains every model in the pipeline.
 - **`dataset.py`** — Loads all HDF5 tables from `data/` into orca at startup (via `orca.get_injectable("store")`). Also defines derived orca tables and columns used throughout the simulation.
 - **`assumptions.py`** — Registers core orca injectables: `year`, `building_type_map`, `transcad_available`, and other constants used across models.
@@ -71,11 +71,11 @@ Output HDF5 files are written to `runs/runNNN.h5`. Run number increments automat
 
 ### Annual Simulation Step Order
 
-Each simulated year runs these steps in sequence (see `test_forecast_2050.py`):
-1. `build_networks_2050`, `neighborhood_vars`, `update_taz_hlcm_trend`
+Each simulated year runs these steps in sequence (see `simulation_2055.py`):
+1. `clear_iteration_cache`, `build_networks`, `neighborhood_vars`, `update_taz_hlcm_trend`
 2. `cache_hh_seeds` (first year only), demolition/development events, `refiner`
-3. `households_transition`, `fix_lpr`, `households_relocation_2050`
-4. `jobs_transition`, `drop_pseudo_buildings`
+3. `households_transition`, `workers_adjustment_model`, `households_relocation`
+4. `jobs_transition`
 5. `feasibility`, `residential_developer`, `non_residential_developer`, `update_sp_filter`
 6. REPM steps (`repm_step_names` injectable — XGBoost-based price models)
 7. `refine_housing_units`, `mcd_hu_sampling`
@@ -123,13 +123,13 @@ Each simulated year runs these steps in sequence (see `test_forecast_2050.py`):
 - **PostgreSQL**: `plannerprojection:5432/land` — whatnots indicator table
 - **CartoDB**: public interactive map at `maps.semcog.org/forecast/`
 
-### Pseudo-Buildings
+### Pseudo-Buildings (retired)
 
-Households and jobs with invalid `building_id` values are assigned to temporary pseudo-buildings at simulation start. These are removed by `drop_pseudo_buildings()` after location choice models have placed them in real buildings.
+Earlier rounds assigned households and jobs with invalid `building_id` values to temporary pseudo-buildings, removed later by `drop_pseudo_buildings()`. The 2055 inputs carry no pseudo-buildings and that step no longer exists.
 
 ### Checkpoint / Resume
 
-Set in `test_forecast_2050.py`:
+Set in `simulation_2055.py`:
 ```python
 orca.add_injectable('use_checkpoint', True)
 orca.add_injectable('runnum_to_resume', 'run1360.h5')
@@ -138,7 +138,13 @@ When enabled, the simulation starts from the last completed year of the specifie
 
 ### Estimation Scripts
 
-- `HLCM_estimation.py`, `ELCM_estimation.py` — Model estimation scripts
-- `REPM_feature_selection.py` — REPM variable selection
-- `estimation_variables_2050.py` — Variable definitions used during estimation
+- `repm/` — REPM training, diagnostics and specifications. Run from the repo root with `python -m repm.xgb_training`.
+- `scripts/legacy/location_choice/` — legacy MNL/ARD location-choice estimation, superseded by the PyTorch LCMs.
 - `notebooks/` — Jupyter-style analysis notebooks (stored as `.py` files)
+
+### Scripts (`scripts/`)
+
+Non-pipeline code, see `scripts/README.md`. Run from the repo root with `PYTHONPATH=.`, since Python puts the script's own directory on `sys.path`, not the repo root.
+
+- `scripts/testing/` — harnesses that exercise the current pipeline (`test_developer.py`, `test_lcm_simulation.py`, `test_forecast_2050.py`, …)
+- `scripts/legacy/` — superseded or broken scripts kept for reference
