@@ -125,6 +125,6 @@ ACS_BG_HH_CSV = _p(
 # Output destination (optional run-archive copy; consumer guards on existence)
 # ---------------------------------------------------------------------------
 MODEL_RUNS_DIR = _p(
-    "/mnt/hgfs/urbansim/RDF2050/model_runs",
+    "/mnt/hgfs/urbansim/RDF2055/model_runs",
     f"{_LOCAL}/model_runs",
 )

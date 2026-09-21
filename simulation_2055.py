@@ -210,8 +210,27 @@ if orca.get_injectable('use_checkpoint'):
 # load late because of introduce of new vars
 import output_indicators
 if RUN_OUTPUT_INDICATORS:
-    # set up run
-    import output_indicators
+    # Indicators step from base_year by indicator_spacing and read final_year
+    # directly (output_indicators.py:188, no fallback), so check both before
+    # starting a long job that would otherwise die on a KeyError at the end.
+    ind_years = list(range(base_year, final_year + 1, indicator_spacing))
+    if ind_years[-1] != final_year:
+        raise ValueError(
+            "indicator_spacing %d does not divide %d->%d, so %d would be dropped "
+            "from the indicators; use a spacing in %s"
+            % (indicator_spacing, base_year, final_year, final_year,
+               [s for s in (1, 5, 10) if (final_year - base_year) % s == 0])
+        )
+    with pd.HDFStore(data_out, mode="r") as _store:
+        _have = {k.split("/")[1] for k in _store.keys()}
+    _missing = [y for y in ind_years
+                if str(y) not in _have and not (y == base_year and "base" in _have)]
+    if _missing:
+        raise ValueError(
+            "%s has no snapshot for %s (indicator years %s); the run did not "
+            "reach those years" % (data_out, _missing, ind_years)
+        )
+    print("running output_indicators for years", ind_years)
     output_indicators.main(
         data_out,
         base_year,

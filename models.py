@@ -6,7 +6,7 @@ import resource
 import yaml
 import operator
 from multiprocessing import Pool
-from collections import defaultdict
+from collections import Counter, defaultdict
 import pickle
 
 import numpy as np
@@ -683,6 +683,15 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
         # Clamp values (same as old system)
         price_series = price_series.clip(lower=1, upper=700)
 
+        # REPM is trained on base-year prices: inflate non-residential to the current
+        # year with the REMI price index (residential is re-anchored in
+        # real_estate_adjustment, which uses the same index)
+        if dep_var == "sqft_price_nonres" and year is not None:
+            ratios = remi_price_ratios(year)
+            if ratios:
+                la = buildings.large_area_id.reindex(price_series.index)
+                price_series = price_series * la.map(ratios).fillna(1.0)
+
         # Store predictions for comparison (via utils)
         pred_key = 'res' if dep_var == 'sqft_price_res' else 'nonres'
         utils.add_xgb_prediction(pred_key, hedonic_id, price_series, model_name,
@@ -764,17 +773,28 @@ else:
     orca.add_injectable("repm_step_names", [])
 
 
+def remi_price_ratios(year):
+    """Per-LA REMI price-level ratios for `year`, rebased to remi_base_year.
+
+    The same index inflates construction costs (cost_shifter_callback), so prices and
+    costs grow together. None if the year is outside the table.
+    """
+    lpr = orca.get_table("remi_local_price_ratios").to_frame()
+    base = orca.get_injectable("remi_base_year")
+    if year not in lpr.index or base not in lpr.index:
+        return None
+    r0 = lpr.loc[base]
+    return {int(la): float(r / r0[la]) for la, r in lpr.loc[year].items()}
+
+
 @orca.step()
 def real_estate_adjustment(buildings, parcels, year):
     remi_base_year = orca.get_injectable("remi_base_year")
     if year < remi_base_year:
         return
-    income_ratios = orca.get_table("remi_income_ratios").to_frame()
-    if year not in income_ratios.index:
+    la_ratios = remi_price_ratios(year)
+    if la_ratios is None:
         return
-    # use baseyear
-    r0 = income_ratios.loc[remi_base_year]
-    la_ratios = {int(la): float(r / r0[la]) for la, r in income_ratios.loc[year].items()}
 
     # Capture LA-average base prices on first call; flag used below for one-time backfill
     first_call = not orca.is_injectable("remi_base_la_prices")
@@ -874,7 +894,7 @@ def real_estate_adjustment(buildings, parcels, year):
         buildings.update_col_from_series("land_area", land_area, cast=True)
 
     summary = {la: f"{r:.3f}x" for la, r in la_ratios.items() if la in base_la_prices}
-    print(f"  [real_estate_adjustment] year={year} income ratios: {summary}"
+    print(f"  [real_estate_adjustment] year={year} price ratios: {summary}"
           + (f"  new builds assessed: {len(new_build_idx)}" if new_build_idx else ""))
 
 
@@ -1653,76 +1673,57 @@ def households_transition(
     orca.add_table("persons", out_person[persons.local_columns])
 
 def get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds):
-    # get hh swapping mapping
-    # 2hr runtime
-    # recommend using cached result
-    seeds = np.sort(hh.seed_id.unique())
-    # get adding new worker seed_id mapping
-    add_worker_dict = defaultdict(dict) 
-    drop_worker_dict = defaultdict(dict) 
-    for seed in seeds:
-        print('seed: ', seed)
-        # for each seed, find a counter seed which has 1 more worker and similar other attributes
-        seed_hh = hh_seeds[hh_seeds.seed_id== seed].iloc[0]
-        seed_p = p_seeds[p_seeds.seed_id == seed]
-        hh_pool = hh_seeds
-        hh_pool = hh_pool[hh_pool.persons == seed_hh.persons]
-        hh_pool = hh_pool[hh_pool.race_id == seed_hh.race_id]
-        hh_pool = hh_pool[hh_pool.aoh_bin == seed_hh.aoh_bin]
-        hh_pool = hh_pool[hh_pool.children == seed_hh.children]
+    """Map each seed to a counterpart seed with one more / one fewer worker.
 
-        seed_age_dist = np.sort(seed_p.age_bin.values)
+    Returns (add_worker_dict, drop_worker_dict), each {age_bin: {seed_id: target_seed_id}}.
+    A counterpart has the same persons, race, age-of-head bin, children and member
+    age-bin multiset, and differs by exactly one worker in `age_bin`, with every other
+    band's worker count unchanged. Adds also need an income quartile >= the source.
+    A seed gets a counterpart in every band where one exists; the closest income
+    quartile wins (adds: lowest >= source; drops: prefer <= source), ties broken by
+    lowest seed_id, so the result is deterministic. `hh_seeds` / `p_seeds` carry
+    seed_id as a column (the caller resets their index).
+    """
+    hs = hh_seeds.set_index("seed_id")
+    ps = p_seeds[["seed_id", "age_bin", "worker"]]
+    mem = ps.groupby("seed_id").age_bin.apply(lambda x: tuple(sorted(x)))
+    wv = ps[ps.worker == 1].groupby("seed_id").age_bin.apply(
+        lambda x: tuple(sorted(Counter(x).items())))
+    s = pd.DataFrame(index=hs.index)
+    s["inc_qt"] = hs.inc_qt.astype(int)
+    s["key"] = list(zip(hs.persons, hs.race_id, hs.aoh_bin.astype(int), hs.children,
+                        mem.reindex(hs.index)))
+    s["wv"] = [v if isinstance(v, tuple) else () for v in wv.reindex(hs.index)]
 
-        if seed_hh.workers + seed_hh.children < seed_hh.persons:
-            hh_pool_add_worker = hh_pool[hh_pool.workers == seed_hh.workers + 1]
-            # add worker with more hh income
-            hh_pool_add_worker = hh_pool_add_worker[hh_pool_add_worker.inc_qt >= seed_hh.inc_qt]
-            N = hh_pool_add_worker.shape[0]
-            for i in range(N):
-                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_add_worker['seed_id'].iloc[i]]
-                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
-                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
-                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
-                    for k, v in new_age_bins.items():
-                        if k in prev_age_bins and v <= prev_age_bins[k]:
-                            continue
-                        add_age_bin = k
-                    add_worker_dict[add_age_bin][seed] = hh_pool_add_worker.iloc[i].seed_id
-                    break
-        if seed_hh.workers > 0:
-            hh_pool_drop_worker = hh_pool[hh_pool.workers == seed_hh.workers - 1]
-            N = hh_pool_drop_worker.shape[0]
-            for i in range(N):
-                local_p_seeds = p_seeds[p_seeds.seed_id == hh_pool_drop_worker['seed_id'].iloc[i]]
-                if all(np.sort(local_p_seeds.age_bin.values) == seed_age_dist):
-                    new_age_bins = local_p_seeds.query('worker==1').age_bin.value_counts()
-                    prev_age_bins = seed_p.query('worker==1').age_bin.value_counts()
-                    for k, v in prev_age_bins.items():
-                        if k in new_age_bins and v <= new_age_bins[k]:
-                            continue
-                        drop_age_bin = k
-                    drop_worker_dict[drop_age_bin][seed] = hh_pool_drop_worker.iloc[i].seed_id
-                    break
-    # clean up some key with more than 1 worker added/removed in a single hh
-    add_list = defaultdict(list)
-    for age, add_swappable in add_worker_dict.items():
-        for orig, target in add_swappable.items():
-            q = '(worker == 1)&(age_bin==%s)'%age
-            if p_seeds.loc[[orig]].query(q).shape[0]+1 != p_seeds.loc[[target]].query(q).shape[0]:
-                add_list[age].append(orig)
-    for age, ll in add_list.items():
-        for dk in ll:
-            del add_worker_dict[age][dk]
-    drop_list = defaultdict(list)
-    for age, drop_swappable in drop_worker_dict.items():
-        for orig, target in drop_swappable.items():
-            q = '(worker == 1)&(age_bin==%s)'%age
-            if p_seeds.loc[[orig]].query(q).shape[0] != p_seeds.loc[[target]].query(q).shape[0]+1:
-                drop_list[age].append(orig)
-    for age, ll in drop_list.items():
-        for dk in ll:
-            del drop_worker_dict[age][dk]
+    # (composition key, worker vector) -> [(inc_qt, seed_id), ...]
+    by_vec = defaultdict(list)
+    for sid, k, v, q in zip(s.index, s.key, s.wv, s.inc_qt):
+        by_vec[(k, v)].append((q, sid))
 
+    def shifted(v, b, d):
+        c = Counter(dict(v))
+        c[b] += d
+        return tuple(sorted((x, n) for x, n in c.items() if n > 0))
+
+    add_worker_dict = defaultdict(dict)
+    drop_worker_dict = defaultdict(dict)
+    for sid in np.sort(hh.seed_id.unique()):
+        if sid not in s.index:
+            continue
+        k, v, q = s.at[sid, "key"], s.at[sid, "wv"], s.at[sid, "inc_qt"]
+        members, workers = Counter(k[4]), Counter(dict(v))
+        for b in members:
+            if b == 0:  # under 16: no employment band
+                continue
+            if members[b] > workers[b]:
+                cands = [c for c in by_vec.get((k, shifted(v, b, 1)), []) if c[0] >= q]
+                if cands:
+                    add_worker_dict[b][sid] = min(cands)[1]
+            if workers[b] > 0:
+                cands = by_vec.get((k, shifted(v, b, -1)), [])
+                if cands:
+                    drop_worker_dict[b][sid] = min(
+                        cands, key=lambda c: (c[0] > q, abs(c[0] - q), c[1]))[1]
     return add_worker_dict, drop_worker_dict
 
 @orca.step()
@@ -1811,10 +1812,8 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     hh_seeds = hh_seeds.reset_index()
     p_seeds = p_seeds.reset_index()
 
-    # Worker-swap seed mappings are expensive to build (~2h); cache as CSV and
-    # reuse. (Previously the existence check looked for .pkl files that were
-    # never written, and the drop-worker table overwrote the add-worker file,
-    # so the cache could never activate.)
+    # Worker-swap seed mappings are cached as CSV and reused; delete the CSVs to
+    # rebuild them (takes a few seconds).
     USE_SWAPPING_SEED_MAPPING = True
     aw_path = 'data/add_worker_dict.csv'
     dw_path = 'data/drop_worker_dict.csv'
@@ -3160,6 +3159,10 @@ def feasibility(parcels, buildings, btype_form_map):
 
     # Build per-nodes-column floor data: {col: (parcel_thr, parcel_rep, reg_avg)}
     form_to_col = {f: col for col, v in btype_form_map.items() for f in v["forms"]}
+    # residential parcels below this share of their LA average are lifted to that
+    # share of the LA replacement price (1.0 = lift every below-average parcel)
+    with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
+        res_floor_share = yaml.load(f, Loader=yaml.FullLoader).get("res_price_floor_share", 1.0)
     _floor = {}
     for col, v in btype_form_map.items():
         bld = bldgs[bldgs["building_type_id"].isin(v["btypes"]) & (bldgs[v["price_col"]] > 0)]
@@ -3172,9 +3175,10 @@ def feasibility(parcels, buildings, btype_form_map):
             la_rep[5] = float(la_avg.get(3, reg_avg))
         else:
             la_rep = la_avg.copy()
+        share = res_floor_share if col == "residential" else 1.0
         _floor[col] = (
-            pcl_la_s.map(la_avg),
-            pcl_la_s.map(la_rep).fillna(reg_avg),
+            pcl_la_s.map(la_avg) * share,
+            pcl_la_s.map(la_rep).fillna(reg_avg) * share,
             reg_avg,
         )
 
@@ -3184,7 +3188,7 @@ def feasibility(parcels, buildings, btype_form_map):
     n_below = (raw_res < thr_res.reindex(raw_res.index)).sum()
     bld_res = bldgs[bldgs["building_type_id"].isin(btype_form_map["residential"]["btypes"]) & (bldgs["sqft_price_res"] > 0)]
     la_avg_res = bld_res.groupby("large_area_id")["sqft_price_res"].mean()
-    print(f"  [feasibility] res: {n_below:,} parcels below LA avg → floored; "
+    print(f"  [feasibility] res: {n_below:,} parcels below {res_floor_share:.0%} of LA avg → floored; "
           f"LA5 replacement=${la_avg_res.get(3, reg_avg_res):.0f} (=LA3 avg); "
           f"reg avg=${reg_avg_res:.0f}")
 
@@ -3758,6 +3762,9 @@ def residential_developer(
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
     hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
+    # defaults reproduce the earlier behavior; res_developer.yaml tunes them down
+    la_max_scale         = _res_cfg.get("la_max_scale", la_max_ratio)
+    hist_floor_profitable_only = _res_cfg.get("hist_floor_profitable_only", False)
     demo_rebuild_boost     = _res_cfg.get("demo_rebuild_boost", 20.0)
     demo_rebuild_decay     = _res_cfg.get("demo_rebuild_decay", 0.6)
     demo_rebuild_window    = _res_cfg.get("demo_rebuild_window", 5)
@@ -3895,9 +3902,10 @@ def residential_developer(
         floor = int(hist_rate * hist_floor_factor)
         if d["target_units"] < floor:
             prev = d["target_units"]
-            # use all_feasible_units (incl. suboptimal) so distressed markets aren't
-            # blocked by the profitable-only cap
-            d["target_units"] = min(floor, d["all_feasible_units"])
+            # all_feasible_units (incl. suboptimal) lets distressed markets build at a
+            # loss; hist_floor_profitable_only restricts the floor to profitable units
+            cap = d["feasible_units"] if hist_floor_profitable_only else d["all_feasible_units"]
+            d["target_units"] = min(floor, cap)
             if d["target_units"] > prev:
                 n_floored += 1
     if n_floored:
@@ -3926,7 +3934,7 @@ def residential_developer(
             print("  LA {}: events={:.0f} ≥ cap={:.0f} → dev=0 (all MCD targets zeroed)".format(
                 la_id, la_ev, la_rate * la_max_ratio))
             continue
-        scale = float(min(la_allowed / la_sum, la_max_ratio))
+        scale = float(min(la_allowed / la_sum, la_max_scale))
         if abs(scale - 1.0) < 1e-4:
             continue
         print("  LA {}: raw_sum={:,} la_rate={:.0f} la_ev={:.0f} → scale={:.3f}".format(
