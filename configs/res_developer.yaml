@@ -13,16 +13,24 @@ keep_suboptimal: True
 noise_scale: 100000
 
 target_weight_vacancy_gap: 1.0
-target_weight_demand: 1.3
+target_weight_demand: 0.7
 
 la_max_ratio: 1.2
+# largest factor LA alignment may scale MCD targets by; above 1.0 the cap pushes
+# targets up as well as down (was la_max_ratio, i.e. 1.2)
+la_max_scale: 1.0
 
 # recent mover rate decay factor
 mover_decay_final: 0.9
 
 # Historical minimum build floor
-hist_floor_factor: 0.7
+hist_floor_factor: 0.5
 hist_floor_min_rate: 30
+hist_floor_profitable_only: True
+
+# Feasibility residential price floor: parcels priced below this share of their LA
+# average are lifted to that share of the LA replacement price
+res_price_floor_share: 0.8
 
 # Rebuild priority for orphaned demolished SF parcels (demolished, empty, no future event).
 # Site-selection weight = boost * decay^(years_since_demo), capped at max_share of the mass.
