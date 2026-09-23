@@ -603,11 +603,11 @@ def make_building_employment_variable(sector_id):
     var_name = "bldg_jobs_sector_%s" % sector_id
 
     @orca.column("buildings", var_name, cache=True, cache_scope="iteration")
-    def func():
+    def func(buildings):
         jobs = orca.get_table("jobs")
         jobs = jobs.to_frame(jobs.local_columns)
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
-        return jobs_sector.fillna(0)
+        return jobs_sector.reindex(buildings.index).fillna(0)
 
 def make_employment_node_ratio_variable(sector_id):
     """
