@@ -162,7 +162,7 @@ def parcel_is_allowed(form=None):
     return (allowed > 0) & (~protected)
 
 
-def parcel_is_allowed_2055(form=None):
+def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
     # indentify parcels allowed for construction
     # TODO, will replace parcel_is_allowed
     pcl_index = orca.get_table("parcels").index
@@ -211,8 +211,8 @@ def parcel_is_allowed_2055(form=None):
             parcel_refin |= s
     pcl_refiner = pcl_index.isin(parcel_refin)
 
-    # parcels with building improvement value > 10% of landvalue
-    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue / 10)
+    # parcels whose improvement value exceeds landvalue * impr_to_land_ratio
+    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue * impr_to_land_ratio)
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
 

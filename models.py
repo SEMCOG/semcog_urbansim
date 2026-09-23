@@ -2952,6 +2952,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     nonres_calibrated = cfg.get("nonresidential", {}).get("is_calibrated", False)
     rate_mult         = cfg.get("scenario_rate_multiplier", 1.0)
     min_age           = cfg.get("min_age_eligible", 10)
+    impr_to_land      = cfg.get("max_impr_to_land_ratio", 0.1)
     max_res_occ       = cfg.get("max_res_occupancy_eligible")
     max_nonres_occ    = cfg.get("max_nonres_occupancy_eligible")
     any_calibrated    = res_calibrated or nonres_calibrated
@@ -3023,7 +3024,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     b["nonres_score"] = nonres_score.where(eligible, 0.0)
 
     # ── Sampling ─────────────────────────────────────────────────────────────
-    allowed   = variables.parcel_is_allowed_2055()
+    allowed   = variables.parcel_is_allowed_2055(impr_to_land_ratio=impr_to_land)
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
     buildings_idx = []
