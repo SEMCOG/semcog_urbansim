@@ -178,6 +178,10 @@ def buildings(store):
     # skip if not presented
     if "landmark_worksites" in store:
         landmark_worksites = store["landmark_worksites"]
+        df.loc[
+            landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
+            "sp_filter",
+        ] = -1  # set landmark building_id as negative for blocking
 
     df["event_id"] = 0  # also add event_id for event reference
 
