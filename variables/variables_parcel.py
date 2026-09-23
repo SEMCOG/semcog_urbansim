@@ -162,11 +162,10 @@ def parcel_is_allowed(form=None):
     return (allowed > 0) & (~protected)
 
 
-def parcel_is_allowed_2050(form=None):
+def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
     # indentify parcels allowed for construction
     # TODO, will replace parcel_is_allowed
     pcl_index = orca.get_table("parcels").index
-    form_to_btype = orca.get_injectable("form_to_btype")
     parcels = orca.get_table("parcels")
     buildings = orca.get_table("buildings").to_frame(
         [
@@ -180,7 +179,6 @@ def parcel_is_allowed_2050(form=None):
             "sp_filter",
         ]
     )
-    zoning = orca.get_table("zoning")
     year = orca.get_injectable("year")
 
     pcl_new_building = buildings.groupby("parcel_id").building_age.min() <= 5
@@ -213,12 +211,10 @@ def parcel_is_allowed_2050(form=None):
             parcel_refin |= s
     pcl_refiner = pcl_index.isin(parcel_refin)
 
-    # parcels with building improvement value > 10% of landvalue
-    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue / 10)
+    # parcels whose improvement value exceeds landvalue * impr_to_land_ratio
+    pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue * impr_to_land_ratio)
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
-
-    pcl_pseudo_blds = pcl_index.isin(buildings[buildings.sp_filter == -2].parcel_id)
 
     protected = (
         pcl_new_building
@@ -229,22 +225,19 @@ def parcel_is_allowed_2050(form=None):
         | pcl_gq
         | pcl_highval_blds
         | pcl_landmark_worksite
-        | pcl_pseudo_blds
     )
 
+    # Zoning permission from zoning.future_use (planned use); see
+    # assumptions.form_to_future_use
+    form_to_future_use = orca.get_injectable("form_to_future_use")
     if form:
-        columns = ["type%d" % typ for typ in form_to_btype[form]]
+        uses = form_to_future_use[form]
     else:
-        columns = [
-            "type%d" % typ
-            for typ in set(
-                item for sublist in list(form_to_btype.values()) for item in sublist
-            )
-        ]
+        uses = set().union(*(set(v) for v in form_to_future_use.values()))
+    zoning = orca.get_table("zoning")
+    allowed = zoning.future_use.reindex(pcl_index).isin(uses)
 
-    allowed = zoning.to_frame(columns).max(axis=1).reindex(pcl_index, fill_value=0)
-
-    return (allowed > 0) & (~protected)
+    return allowed & (~protected)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
@@ -458,30 +451,6 @@ def walk_nearest_park(parcels, nodes_walk):
     return misc.reindex(nodes_walk.walk_nearest_park, parcels.nodeid_walk)
 
 
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_grocery(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_grocery, parcels.nodeid_walk)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_library(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_library, parcels.nodeid_walk)
-
-
-@orca.column("parcels", cache=True, cache_scope="iteration")
-def bike_nearest_park(parcels, nodes_walk):
-    if len(nodes_walk) == 0:
-        # if nodes isn't generated yet
-        return pd.Series(index=parcels.index)
-    return misc.reindex(nodes_walk.bike_nearest_park, parcels.nodeid_walk)
-
-
 @orca.column("parcels", cache=True, cache_scope="forever")
 def crime_ucr_rate(crime_rates):
     return crime_rates["ucr_crime_rate"]
@@ -565,6 +534,7 @@ SURVEY_VARS = [
     "recent_mover_rate",     # % HHs that moved in <= 10 years
     "ev_hybrid_rate",        # % vehicles that are EV/PHEV/HEV
     "median_commute_dist",   # mean work-trip distance in miles
+    "avg_hh_income",         # mean household income
 ]
 
 
@@ -575,6 +545,9 @@ def _make_parcel_survey_var(var_name):
     def _col(parcels, travel_survey_bg_vars):
         bg_vals = travel_survey_bg_vars.to_frame([var_name])
         if bg_vals.empty or var_name not in bg_vals.columns:
+            print(f"  WARNING [travel_survey] '{var_name}' not in travel_survey_bg_vars "
+                  f"(has: {sorted(travel_survey_bg_vars.columns)}) -- parcels.{var_name} "
+                  f"will be NaN/0.")
             return pd.Series(np.nan, index=parcels.index)
         # survey index is full 12-digit Census FIPS BG; parcels store only
         # the 7-digit internal ID, so reconstruct: state(26) + county*1e7 + bg_id

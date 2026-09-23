@@ -15,11 +15,11 @@ warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 table_dir = "data"
 
 for name in [
-    "remi_hh_pop",     # household population target (total - GQ); preferred
-    "remi_pop_total",  # legacy TOTAL population — fallback only (see households_transition)
+    "remi_hh_pop",
+    "remi_income_ratios",       # per-LA cumulative income ratios (base yr 2022)
+    "remi_local_price_ratios",  # per-LA cumulative price ratios (base yr 2022)
     "persons",
     "parcels",
-    "pseudo_building_2020",
     "zones",
     "semmcds",
     "counties",
@@ -29,7 +29,9 @@ for name in [
     "annual_relocation_rates_for_jobs",
     "annual_employment_control_totals",
     "travel_data",
-    "travel_data_2030",
+    "travel_survey_bg_vars",  # block-group travel-survey aggregates for parcel/building variables
+    "micro_zones",               # MAZ->TAZ crosswalk (zone_id column); anchor geography
+    "building_to_maz_override",  # base-year building->MAZ override for straddling parcels
     "zoning",
     "large_areas",
     "building_types",
@@ -39,7 +41,7 @@ for name in [
     "transit_stops",
     "crime_rates",
     "schools",
-    # "poi",
+    "points_of_interest_by_category",
     "group_quarters",
     "group_quarters_households",
     "group_quarters_control_totals",
@@ -47,7 +49,6 @@ for name in [
     "events_addition",
     "events_deletion",
     "refiner_events",
-    "income_growth_rates",
     "target_vacancies",
     "target_vacancies_mcd",
     "demolition_rates",
@@ -55,6 +56,7 @@ for name in [
     "mcd_total",
     "dropped_buildings",
     "bg_hh_increase",
+    "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
     if name not in store:
@@ -62,13 +64,23 @@ for name in [
         continue
     orca.add_table(name, store[name])
 
-# #35 change csv column name from b_city_id to city_id
-# orca.add_table('extreme_hu_controls', pd.read_csv(
-#     path.join(table_dir, "extreme_hu_controls.csv"), index_col='b_city_id'))
-# orca.add_table(
-#     "extreme_hu_controls",
-#     pd.read_csv(path.join(table_dir, "extreme_hu_controls.csv"), index_col="city_id"),
-# )
+
+@orca.table(cache=True)
+def parcel_maz_crossing_shares(store):
+    # parcel->MAZ area shares for parcels spanning MAZ; assign_new_building_maz
+    # reads parcel_id / maz_id / share as columns
+    df = store["parcel_maz_crossing_shares"]
+    return df.rename(columns={"maz_seqid": "maz_id"}).reset_index()
+
+
+@orca.injectable(cache=True)
+def btype_owner_share(store):
+    # base-year owner-occupied share of units by building type; new buildings have
+    # no tenure split of their own (see models.add_extra_columns_nonres)
+    b = store["buildings"]
+    b = b[b.residential_units > 0]
+    g = b.groupby("building_type_id")[["owner_units", "residential_units"]].sum()
+    return (g.owner_units / g.residential_units).to_dict()
 
 
 @orca.table("debug_res_developer")
@@ -76,43 +88,56 @@ def debug_res_developer():
     return pd.DataFrame(columns=["year", "mcd", "target_units", "units_added"])
 
 
-@orca.table("bg_hh_increase")
+@orca.table("bg_hh_increase", cache=True)
 def bg_hh_increase():
-    bg_hh_inc = pd.read_csv(input_paths.ACS_BG_HH_CSV)
-    bg_hh_inc["GEOID"] = bg_hh_inc["GEOID"].astype(int)
-    # initialized iteration variable
-    bg_hh_inc["occupied"] = bg_hh_inc["OccupiedHU19"]
-    bg_hh_inc["previous_occupied"] = bg_hh_inc["OccupiedHU14"]
-    bg_hh_inc["occupied_year_minus_1"] = -1
-    bg_hh_inc["occupied_year_minus_2"] = -1
-    bg_hh_inc["occupied_year_minus_3"] = -1
-    return bg_hh_inc[
-        [
-            "GEOID",
-            "OccupiedHU19",
-            "OccupiedHU14",
-            "occupied",
-            "previous_occupied",
-            "occupied_year_minus_1",
-            "occupied_year_minus_2",
-            "occupied_year_minus_3",
-        ]
-    ].set_index("GEOID")
+    # Base block-group household trend = 2020 -> 2025 household change, computed
+    # from the 2020 base (BG_HH_2020_HDF) and the 2025 base
+    def bg_hh_counts(hdf):
+        h = pd.read_hdf(hdf, "households")
+        b = pd.read_hdf(hdf, "buildings")
+        p = pd.read_hdf(hdf, "parcels")
+        pgeo = (26 * 10**10
+                + p["county_id"].astype("int64") * 10**7
+                + p["census_bg_id"].astype("int64"))
+        hgeo = h["building_id"].map(b["parcel_id"].map(pgeo))
+        return hgeo.dropna().astype("int64").value_counts()
+
+    occ_2025 = bg_hh_counts(input_paths.BASE_HDF)        # 2055 base year (2025)
+    occ_2020 = bg_hh_counts(input_paths.BG_HH_2020_HDF)  # 2050 base year (2020)
+    bg = pd.DataFrame(
+        {"occupied": occ_2025, "previous_occupied": occ_2020}
+    ).fillna(0).astype(int)
+    bg.index.name = "GEOID"
+    bg["occupied_year_minus_1"] = -1
+    bg["occupied_year_minus_2"] = -1
+    bg["occupied_year_minus_3"] = -1
+    return bg
 
 
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
-    # Skip recalculation when resuming from checkpoint - use checkpoint data as-is
-    if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
+    # City is anchored to the parcel for both base and forecast buildings.
+    df["city_id"] = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    # Existing checkpoints already contain the local MAZ column. Older checkpoints
+    # can be upgraded below without rerunning the rest of the base-year cleanup.
+    is_checkpoint = orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint')
+    if is_checkpoint and "maz_id" in df.columns:
         return df
-    pseudo_buildings = store["pseudo_building_2020"]
-    pseudo_buildings = pseudo_buildings[
-        [col for col in df.columns if col in pseudo_buildings]
-    ]
-    if pseudo_buildings[pseudo_buildings.index.isin(df.index)].shape[0] == 0:
-        # if no pseudo parcel in, add them
-        df = pd.concat([df, pseudo_buildings], axis=0)
+    # MAZ is a building attribute for the entire forecast. Initialize every
+    # base-year building from its parcel, then apply the building-level spatial
+    # override for structures on parcels that cross a MAZ boundary. Keeping the
+    # result as a local column lets developer and event-created buildings retain
+    # their own drawn MAZ through merge_buildings and checkpoints.
+    parcel_maz = misc.reindex(store["parcels"]["maz_id"], df["parcel_id"])
+    overrides = store["building_to_maz_override"]["maz_id"]
+    overrides = overrides[~overrides.index.duplicated(keep="first")]
+    overrides = overrides.reindex(df.index).dropna()
+    if len(overrides):
+        parcel_maz.loc[overrides.index] = overrides.astype(parcel_maz.dtype)
+    df["maz_id"] = parcel_maz.astype("int64")
+    if is_checkpoint:
+        return df
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.market_value < 0, "market_value"] = 0
@@ -140,39 +165,29 @@ def buildings(store):
 
     df["mcd_model_quota"] = 0
 
-    df = pd.merge(
-        df,
-        store["parcels"][["city_id"]],
-        left_on="parcel_id",
-        right_index=True,
-        how="left",
-    )
-    df["city_id"] = df["city_id"].fillna(0)
+    # drop city_id if exists
+    df = df.drop(columns=["city_id"], errors="ignore")
+
+    # hu_filter assignment
     df["hu_filter"] = 0
-    cites = [551, 1155, 1100, 3130, 6020, 6040]
-    sample = df[df.residential_units > 0]
-    sample = sample[~(sample.index.isin(store["households"].building_id))]
-    # #35
-    for c in sample.city_id.unique():
-        frac = 0.8 if c in cites else 0
-        # #35
+    hu_cities = [1155, 1100, 3130, 6020, 6040]
+    b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    sample = df[(df.residential_units > 0) & ~df.index.isin(store["households"].building_id)]
+    sample_city = b_city_id.reindex(sample.index)
+    for c in hu_cities:
+        city_sample = sample.index[sample_city == c]
+        if len(city_sample):
+            chosen = pd.Series(city_sample).sample(frac=0.8, replace=False).values
+            df.loc[chosen, "hu_filter"] = 1
+
+    df["sp_filter"] = 0  # special filter: for event location/buildings, landmark buildings, etc
+    # skip if not presented
+    if "landmark_worksites" in store:
+        landmark_worksites = store["landmark_worksites"]
         df.loc[
-            sample[sample.city_id == c].sample(frac=frac, replace=False).index.values,
-            "hu_filter",
-        ] = 1
-
-    # TODO, this is placeholder. will update with special emp buildings lookup later
-
-    df[
-        "sp_filter"
-    ] = 0  # special filter: for event location/buildings, landmark buildings, etc
-    landmark_worksites = store["landmark_worksites"]
-    df.loc[
-        landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
-        "sp_filter",
-    ] = -1  # set landmark building_id as negative for blocking
-    # !!important set pseudo buildings to -2 sp_filter
-    df.loc[df.index > 90000000, "sp_filter"] = -2
+            landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
+            "sp_filter",
+        ] = -1  # set landmark building_id as negative for blocking
 
     df["event_id"] = 0  # also add event_id for event reference
 
@@ -262,13 +277,7 @@ def parcels(store, zoning):
     # Skip recalculation when resuming from checkpoint
     if orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint'):
         return parcels_df
-    # Added parcels from pseudo buildings
-    pseudo_parcels = store["pseudo_parcel_2020"]
-    if pseudo_parcels[pseudo_parcels.index.isin(parcels_df.index)].shape[0] == 0:
-        # if no pseudo parcel in, add them
-        parcels_df = pd.concat([parcels_df, pseudo_parcels], axis=0)
-    # concat pseudo buildings parcels
-    #  based on zoning.is_developable, adjust parcels pct_undev
+    # Based on zoning.is_developable, adjust parcels pct_undev
     pct_undev = zoning.pct_undev.copy()
     # Parcel is NOT developable, leave as is unless events are present (173,616 parcels)
     pct_undev[zoning.is_developable == 0] = 100
@@ -297,17 +306,6 @@ def census_tracts(store):
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
 
-@orca.table(cache=True)
-def building_to_zone_baseyear():
-    # baseyear building_id to zone_id mapping
-    # fix the issue where one parcel could have multiple TAZ zone
-    return pd.read_csv(input_paths.BUILDING_TO_ZONE_CSV).set_index('building_id')
-
-### TODO: have data moved inside HDF input before 2055 forecast
-@orca.table(cache=True)
-def poi():
-    # baseyear POI dataset from 2025 Transportation Accessibility Analysis
-    return pd.read_csv(input_paths.POIS_CSV).set_index('index')
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
@@ -341,49 +339,4 @@ orca.broadcast(
 )
 orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
 orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
-
-
-def _load_remi_growth_rates():
-    """Per-large-area personal-income and PCE growth rates, used by increase_property_values."""
-    base = input_paths.LFPR_INCOME_DIR
-    geo_to_la = {
-        "rest of wayne": 3,
-        "detroit":       5,
-        "livingston":    93,
-        "macomb":        99,
-        "monroe":        115,
-        "oakland":       125,
-        "stclair":       147,
-        "washtenaw":     161,
-    }
-    years = list(range(2020, 2051))
-    remi_base_year = 2022
-    base_idx = years.index(remi_base_year)
-
-    pi_vals_by_la = {}
-    pce_vals = None
-    for geo, la in geo_to_la.items():
-        fpath = path.join(base, f"lfpr income {geo}.xlsx")
-        df = pd.read_excel(fpath, header=None, sheet_name=0)
-        pi_vals_by_la[la] = df.iloc[24, 9:40].values.astype(float)  # Personal Income
-        if pce_vals is None:
-            pce_vals = df.iloc[34, 9:40].values.astype(float)       # PCE-Price Index
-
-    pi_base  = {la: pi_vals_by_la[la][base_idx] for la in geo_to_la.values()}
-    pce_base = pce_vals[base_idx]
-
-    # Cumulative ratios relative to 2022 calibration year
-    income_ratios = {
-        years[i]: {la: pi_vals_by_la[la][i] / pi_base[la] for la in geo_to_la.values()}
-        for i in range(len(years))
-    }
-    pce_ratios = {years[i]: pce_vals[i] / pce_base for i in range(len(years))}
-
-    return income_ratios, pce_ratios
-
-
-_remi_income, _remi_pce = _load_remi_growth_rates()
-orca.add_injectable("remi_income_ratios", _remi_income)
-orca.add_injectable("remi_pce_ratios", _remi_pce)
-orca.add_injectable("remi_base_year", 2022)
-print(f"REMI growth rates loaded: {len(_remi_income)} years")
+orca.add_injectable("remi_base_year", 2025)

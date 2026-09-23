@@ -17,6 +17,7 @@ import scipy
 import time
 import yaml
 from tqdm import tqdm
+from pathlib import Path
 
 from utils import apply_filter_query
 
@@ -30,7 +31,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import Lasso
 
-REPM_PATH = "./configs/repm_2050/"
+REPM_PATH = str(Path(__file__).resolve().parents[1] / "configs" / "repm_2050")
 VARS_TO_SKIP = [
     "large_area_id",
     "county_id",
@@ -141,7 +142,7 @@ def generate_repm_config(mat:scipy.sparse.csr_matrix, vars_used:[str]):
         config["fit_filters"].append("hedonic_id == " + str(hid))
         config["target_variable"] = "np.log1p(%s)" % price_col
         config_name = prefix + str(hid)
-        with open("configs/repm_2050/%s.yaml" % config_name, "w") as f:
+        with open(os.path.join(REPM_PATH, "%s.yaml" % config_name), "w") as f:
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
     return
 

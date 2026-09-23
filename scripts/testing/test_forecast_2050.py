@@ -25,6 +25,7 @@ run_debug = False
 # All external input locations are centralized in input_paths.py
 orca.add_injectable('hlcm_model_path', input_paths.HLCM_MODEL_DIR)
 orca.add_injectable('elcm_model_path', input_paths.ELCM_MODEL_DIR)
+orca.add_injectable('xgb_repm_dir', input_paths.REPM_MODEL_DIR)
 orca.add_injectable('yaml_configs', 'yaml_configs_elcm_hlcm.yaml')
 
 orca.add_injectable('base_year', base_year)
@@ -129,7 +130,7 @@ orca.run([
 orca.run(
     [
         "clear_iteration_cache",  # Tier-1: drop last year's memoized derived cols
-        "build_networks_2050",
+        "build_networks",
         "neighborhood_vars",
         "update_taz_hlcm_trend",
         "log_memory",  # after networks + accessibility
@@ -140,10 +141,9 @@ orca.run(
         "refiner",
         "households_transition",
         "workers_adjustment_model",
-        "households_relocation_2050",
+        "households_relocation",
         "jobs_transition",
-        # "jobs_relocation_2050",
-        "drop_pseudo_buildings",
+        # "jobs_relocation",
         "log_memory",  # after transition/relocation
         "feasibility",
         "residential_developer",
@@ -162,6 +162,7 @@ orca.run(
         # "elcm_home_based", # disable elcm_home_based due the the new NN based elcm
         "log_memory",  # after HLCM + ELCM
         "jobs_scaling_model",
+        "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
         "update_bg_hh_increase",
@@ -177,7 +178,6 @@ orca.run(
         "persons",
         "annual_relocation_rates_for_households",
         "buildings",
-        "pseudo_building_2020",
         "parcels",
         "zones",
         "semmcds",
@@ -187,7 +187,6 @@ orca.run(
         "building_sqft_per_job",
         "annual_employment_control_totals",
         "travel_data",
-        "travel_data_2030",
         "zoning",
         "large_areas",
         "building_types",
@@ -196,7 +195,7 @@ orca.run(
         "transit_stops",
         "crime_rates",
         "schools",
-        "poi",
+        "points_of_interest_by_category",
         "group_quarters",
         "group_quarters_households",
         "group_quarters_control_totals",

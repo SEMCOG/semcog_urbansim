@@ -807,6 +807,7 @@ def write_run_metadata(data_out, input_hdf_path, run_options, repm_model_type="X
             ),
             "hlcm_model_path": orca.get_injectable("hlcm_model_path"),
             "elcm_model_path": orca.get_injectable("elcm_model_path"),
+            "xgb_repm_dir": orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb",
         },
         "switches": {
             **run_options,
@@ -893,12 +894,21 @@ _xgb_predictions = {'res': {}, 'nonres': {}}
 # Cache for buildings features - load ALL features once per year
 _xgb_features_cache = {'year': None, 'df': None, 'all_features': None}
 
+# Retired from REPM because bike mode share is too small for these to be
+# defensible regional price indicators. New estimates exclude them; zeros keep
+# pre-existing artifacts usable until they are retrained.
+RETIRED_REPM_FEATURES = {
+    'bike_nearest_grocery',
+    'bike_nearest_library',
+    'bike_nearest_park',
+}
+
 
 def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
 
-    model_dir = "configs/repm_xgb"
+    model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb"
     all_features = set()
 
     if not os.path.exists(model_dir):
@@ -910,6 +920,7 @@ def get_all_xgb_features():
             meta = joblib.load(metadata_path)
             all_features.update(meta['feature_names'])
 
+    all_features.difference_update(RETIRED_REPM_FEATURES)
     return all_features
 
 
@@ -1243,4 +1254,3 @@ def log_res_developer_year(year, reg_7yr, reg_dev, la_hist_rate, la_dev, la_even
             f"  btype×LA:\n{bt}\n\n"
         )
     print(f"  res_developer log → {log_path}")
-
