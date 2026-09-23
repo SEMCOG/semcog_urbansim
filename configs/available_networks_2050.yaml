@@ -1,9 +1,25 @@
+# 2055 network bundle layers (semcog_networks.h5)
+osm_walk_2024:
+  cost1: feet
+  cost2: meters
+  cost3: minutes
+  edges: edges_osm_walk_2024
+  nodes: nodes_osm_walk_2024
+
+# --- 2050  ---
 osm_roads_walk_2020:
   cost1: feet
   cost2: meters
   cost3: minutes
-  edges: edges_osm_roads_walk_2020
-  nodes: nodes_osm_roads_walk_2020
+  edges: edges_osm_walk_2024
+  nodes: nodes_osm_walk_2024
+
+# Bike networks retired (Sep 2026): nothing builds them and the bike_nearest_*
+# variables they fed are gone. Bike accessibility comes from the precomputed
+# indicators in access_indicators.h5. The edges_osm_bike_2024 /
+# edges_osm_bike_comfort_2024 layers are still in semcog_networks.h5 if a bike
+# network is ever built again.
+
 highway_ext_2020:
   cost1: peak_mins
   cost2: nonpk_mins
@@ -12,14 +28,34 @@ highway_ext_2020:
   nodes: nodes_highway_ext_2020
   local_edges: edges_highway_ext_2020_local
   local_nodes: nodes_highway_ext_2020_local
-highway_ext_2030:
+
+# highway_ext_2025 (Aug 2026): built from the boundary-snapped highway_ext_2025.shp
+# (SEMCOG/TMACOG/surrounding-MI-counties sub-networks reconnected at their shared
+# edges). Identical content to highway_ext_2020 above as of this writing -- both
+# were rebuilt from the same 2025 source and added to semcog_networks.h5 side by
+# side so existing highway_ext_2020-based testing keeps working unaffected. This is
+# the active drive network used by build_networks.
+highway_ext_2025:
   cost1: peak_mins
   cost2: nonpk_mins
   cost3: miles
-  edges: edges_highway_ext_2030
-  nodes: nodes_highway_ext_2030
-  local_edges: edges_highway_ext_2030_local
-  local_nodes: nodes_highway_ext_2030_local
+  edges: edges_highway_ext_2025
+  nodes: nodes_highway_ext_2025
+  local_edges: edges_highway_ext_2025_local
+  local_nodes: nodes_highway_ext_2025_local
+
+# highway_ext_2030 retired (Jul 2026): it was largely the same as the 2020 network,
+# 2030 is close, and there is no updated 2030 build to match the UPDATED 2020 one now
+# in semcog_networks.h5. models.py uses highway_ext_2020 for all years, and the 2030
+# tables have been dropped from the HDF. Restore both together if a 2030 build returns.
+# highway_ext_2030:
+#   cost1: peak_mins
+#   cost2: nonpk_mins
+#   cost3: miles
+#   edges: edges_highway_ext_2030
+#   nodes: nodes_highway_ext_2030
+#   local_edges: edges_highway_ext_2030_local
+#   local_nodes: nodes_highway_ext_2030_local
 
 #/edges_highway_ext_2020    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')
 #/edges_highway_ext_2020_local    |    Index(['from', 'to', 'peak_mins', 'nonpk_mins', 'miles'], dtype='object')

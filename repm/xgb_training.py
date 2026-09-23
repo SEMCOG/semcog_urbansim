@@ -2,8 +2,8 @@
 """
 REPM XGBoost Training - Train real estate price models with XGBoost.
 
-Run in background:
-nohup python REPM_xgb_training.py > \
+Run from the repository root:
+nohup python -m repm.xgb_training > \
   runs/training_logs/repm_train_$(date +%Y%m%d_%H%M%S).txt 2>&1 &
 """
 
@@ -18,6 +18,8 @@ import joblib
 import pickle
 from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from utils import apply_filter_query
 
@@ -37,17 +39,43 @@ from sklearn.dummy import DummyRegressor
 # CONFIGURATION - Edit these settings as needed
 # ==============================================================================
 
-# Output directory for trained models
-REPM_XGB_PATH = "./configs/repm_xgb/"
+# Estimation outputs are saved to a dated archive. Grid-search baselines remain
+# in the versioned config directory and can be reused by later estimations.
+REPM_OUTPUT_ROOT = Path(
+    os.environ.get("REPM_ESTIMATION_OUTPUT_DIR", "/home/da/RDF2055/d_drive/estimation/REPM")
+)
+REPM_DIR = Path(__file__).resolve().parent
+REPO_ROOT = REPM_DIR.parent
+GRID_SEARCH_BASELINE_DIR = REPO_ROOT / "configs" / "repm_xgb"
+REPM_XGB_PATH = None
+EASTERN = ZoneInfo("America/Detroit")
+FIXED_FEATURES_FILE = os.environ.get("REPM_FIXED_FEATURES_FILE")
 
 # Grid search settings
-USE_GRID_SEARCH = True  # Set to True for hyperparameter tuning (slower)
+USE_GRID_SEARCH = os.environ.get("REPM_USE_GRID_SEARCH", "1").lower() in {"1", "true", "yes"}
 # GRID_SEARCH_BASELINE options:
 #   - None: Use default grid search parameters
 #   - "auto": Automatically load existing grid_search_{model_name}.yaml for each segment
 #   - "/path/to/dir/": Load from specified directory (auto per segment)
 #   - "/path/to/file.yaml": Use single baseline for all segments (not recommended)
 GRID_SEARCH_BASELINE = "auto"  # Auto-load per-segment baselines for refined search
+
+
+def _load_fixed_feature_specs():
+    """Read optional, per-hedonic fixed feature lists for production refits."""
+    if not FIXED_FEATURES_FILE:
+        return {}
+    with open(FIXED_FEATURES_FILE, "r") as stream:
+        specs = yaml.safe_load(stream) or {}
+    return {int(hedonic_id): list(features) for hedonic_id, features in specs.items()}
+
+
+FIXED_FEATURE_SPECS = _load_fixed_feature_specs()
+
+
+def _make_output_path(started_at):
+    """Create a unique, Eastern-time-dated output directory for one estimation."""
+    return REPM_OUTPUT_ROOT / f"repm_{started_at.strftime('%Y%m%d_%H%M%S')}"
 
 # ==============================================================================
 # ADVANCED CONFIGURATION (usually doesn't need to be changed)
@@ -59,6 +87,8 @@ CORRELATION_THRESHOLD = 0.95  # Remove features with correlation > 0.95
 
 # Simple model threshold: use Ridge regression for samples below this size
 SIMPLE_MODEL_THRESHOLD = 100  # Samples below this use Ridge instead of XGBoost
+MIN_SAMPLES_FOR_RIDGE = 4  # mutual-information feature selection needs >= 4 records
+REGIONAL_DUMMY_HEDONIC_IDS = {96}  # Data Center: 31 regional records, not enough for a hedonic fit
 
 # Feature selection based on sample size (reduce features when data is limited)
 # Returns max features to keep based on sample size
@@ -88,6 +118,12 @@ def _should_skip_var(var: str) -> bool:
 
     var_lower = var.lower()
 
+    # Bike mode share is too small for bike accessibility indicators to be a
+    # defensible regional price driver.  Accessibility exports use both
+    # bike_nearest_* and names with _bike_ in the middle.
+    if var_lower.startswith('bike_') or '_bike_' in var_lower:
+        return True
+
     # === SKIP: All parcels_ variables (duplicates of building vars) ===
     if var_lower.startswith('parcels_'):
         return True
@@ -106,7 +142,55 @@ def _should_skip_var(var: str) -> bool:
         return True
 
     # === SKIP: Target variables ===
-    if 'sqft_price' in var_lower:
+    if 'sqft_price' in var_lower and not var_lower.endswith('_excl_self'):
+        return True
+
+    # === SKIP: Price-derived and self-referential price fields ===
+    # The price targets are calculated from market_value. improvement_value is
+    # a closely related assessed-value component and can be generated from the
+    # predicted price during simulation. Raw node price means include the focal
+    # building's target price; use their leave-one-out versions instead.
+    if var in {
+        'market_value',
+        'improvement_value',
+        'impr_value_per_sqft',
+        'nodes_walk_residential',
+        'nodes_walk_housing_cost',
+        'nodes_walk_residential_price_observations',
+        'nodes_walk_ave_nonres_sqft_price',
+        'nodes_walk_ave_nonres_sqft_price_observations',
+        'nodes_walk_retail',
+        'nodes_walk_retail_price_observations',
+        'nodes_walk_office',
+        'nodes_walk_office_price_observations',
+        'nodes_walk_industrial',
+        'nodes_walk_industrial_price_observations',
+        'nodes_walk_medical',
+        'nodes_walk_medical_price_observations',
+        'nodes_walk_entertainment',
+        'nodes_walk_entertainment_price_observations',
+        'nodes_walk_hospitality',
+        'nodes_walk_hospitality_price_observations',
+    }:
+        return True
+
+    # === SKIP: Zoning capacity and unreviewed intensity variables ===
+    # Southeast Michigan zoning FAR is not a reliable non-residential market
+    # signal.  Height/stories and remaining capacity are retained as candidate
+    # columns for data review, but excluded from the baseline estimation.
+    # Observed FAR and site coverage need a documented outlier treatment first.
+    if var in {
+        'zoning_max_far',
+        'zoning_avg_far',
+        'zoning_far_headroom',
+        'zoning_max_height',
+        'zoning_max_stories',
+        'zoning_pct_undev',
+        'zoning_developable',
+        'nonres_far',
+        'building_site_coverage',
+        'nodes_walk_max_industrial_far',
+    }:
         return True
 
     # === SKIP: Standardized, log-transformed, tract, zone lowercase ===
@@ -326,19 +410,92 @@ def _train_xgboost_model(mat, segment, vars_used, use_grid_search=False, grid_se
     if sample_size == 0:
         return None
 
-    # Feature selection: remove low variance and correlated features
-    X_all, feat_names = _remove_low_variance(X_all, feat_names)
-    X_all, feat_names = _remove_correlated(X_all, feat_names)
+    if segment["hedonic_id"] in REGIONAL_DUMMY_HEDONIC_IDS:
+        return _train_constant_dummy_model(
+            X_all, y, feat_names, segment, t0, "regional_data_center"
+        )
+
+    # Very small segments cannot support feature selection, a train/test split,
+    # or a fitted hedonic relationship. Keep a simulation-ready constant-price
+    # fallback instead of failing the entire estimation run.
+    if sample_size < MIN_SAMPLES_FOR_RIDGE:
+        fallback_reason = "one_record_segment" if sample_size == 1 else "insufficient_records"
+        return _train_constant_dummy_model(
+            X_all, y, feat_names, segment, t0, fallback_reason
+        )
+
+    fixed_features = FIXED_FEATURE_SPECS.get(segment["hedonic_id"])
+    if fixed_features:
+        missing = sorted(set(fixed_features) - set(feat_names))
+        if missing:
+            raise ValueError(
+                f"Fixed REPM features missing for hedonic_id={segment['hedonic_id']}: {missing}"
+            )
+        indices = [feat_names.index(name) for name in fixed_features]
+        X_all = X_all[:, indices]
+        feat_names = fixed_features
+        print(f"  Using fixed compact specification ({len(feat_names)} features)")
+    else:
+        # The existing path screens the full candidate set before fitting.
+        X_all, feat_names = _remove_low_variance(X_all, feat_names)
+        X_all, feat_names = _remove_correlated(X_all, feat_names)
 
     # Use Ridge regression for small samples
     use_simple_model = sample_size < SIMPLE_MODEL_THRESHOLD
 
     if use_simple_model:
         print(f"  Using Ridge for small sample ({sample_size} < {SIMPLE_MODEL_THRESHOLD})")
-        return _train_ridge_model(X_all, y, feat_names, sample_size, segment, t0)
+        artifacts = _train_ridge_model(X_all, y, feat_names, sample_size, segment, t0)
     else:
-        return _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
-                                         use_grid_search, grid_search_baseline, t0)
+        artifacts = _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
+                                              use_grid_search, grid_search_baseline, t0)
+    if fixed_features:
+        artifacts["fixed_feature_specification"] = True
+    return artifacts
+
+
+def _train_constant_dummy_model(X, y, feat_names, segment, start_time, fallback_reason):
+    """Create a simulation-ready constant-price model without validation."""
+    # DummyRegressor still validates feature shape at prediction time. Use a
+    # stable existing building column rather than preserving every candidate.
+    feature_index = feat_names.index("market_value") if "market_value" in feat_names else 0
+    feature_names = [feat_names[feature_index]]
+    X = X[:, [feature_index]]
+
+    model = DummyRegressor(strategy="mean")
+    model.fit(X, y)
+    prediction = model.predict(X)
+    unavailable = float("nan")
+    metrics = {
+        "r2_test": unavailable,
+        "rmse_test": unavailable,
+        "mae_test": unavailable,
+        "mape_test": unavailable,
+        "r2_train": unavailable,
+        "rmse_train": unavailable,
+        "mae_train": unavailable,
+        "r2_val": unavailable,
+        "r2_adj_val": unavailable,
+        "rmse_val": unavailable,
+        "mae_val": unavailable,
+        "sample_size": len(y),
+        "n_features": len(feature_names),
+    }
+    print(f"  Using constant-price Dummy fallback ({len(y)} valid records; {fallback_reason})")
+    return {
+        "model": model,
+        "feature_names": feature_names,
+        "feature_importance": {feature_names[0]: 0.0},
+        "metrics": metrics,
+        "segment": segment,
+        "y_test": y,
+        "y_pred_test": prediction,
+        "training_time": time.time() - start_time,
+        "using_grid_search": False,
+        "using_gs_baseline": False,
+        "model_type": "dummy",
+        "fallback_reason": fallback_reason,
+    }
 
 
 def _select_features_by_importance(X, y, feat_names, sample_size, model_type='ridge'):
@@ -500,7 +657,8 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
                                use_grid_search, grid_search_baseline, start_time):
     """Train XGBoost model (internal implementation)."""
     model_name = f"{segment['prefix']}{segment['hedonic_id']}"
-    gs_path = Path(REPM_XGB_PATH) / f"grid_search_{model_name}.yaml"
+    gs_output_path = Path(REPM_XGB_PATH) / f"grid_search_{model_name}.yaml"
+    gs_baseline_path = GRID_SEARCH_BASELINE_DIR / f"grid_search_{model_name}.yaml"
     using_gs = False
     using_gs_baseline = False
 
@@ -508,8 +666,8 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
     params = _get_xgb_params(sample_size)
 
     # Load existing grid search params if available and not doing new grid search
-    if not use_grid_search and gs_path.exists():
-        with open(gs_path, 'r') as f:
+    if not use_grid_search and gs_baseline_path.exists():
+        with open(gs_baseline_path, 'r') as f:
             gs_results = yaml.load(f, Loader=yaml.FullLoader)
             best_params = gs_results.get('best_params', {})
             if best_params:
@@ -531,7 +689,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
         baseline_path = None
         if grid_search_baseline:
             if grid_search_baseline == "auto":
-                baseline_path = gs_path if gs_path.exists() else None
+                baseline_path = gs_baseline_path if gs_baseline_path.exists() else None
             elif Path(grid_search_baseline).is_dir():
                 baseline_path = Path(grid_search_baseline) / f"grid_search_{model_name}.yaml"
                 baseline_path = baseline_path if baseline_path.exists() else None
@@ -581,7 +739,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
             'best_cv_mean': float(cv_results['mean_test_score'][gs.best_index_]),
             'best_cv_std': float(cv_results['std_test_score'][gs.best_index_]),
             'model_name': model_name,
-            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
             'sample_size': sample_size,
             'n_features': len(feat_names),
             'all_results': {
@@ -592,7 +750,7 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
         }
 
         # Save to file
-        with open(gs_path, 'w') as f:
+        with open(gs_output_path, 'w') as f:
             yaml.dump(grid_search_results, f, default_flow_style=False, sort_keys=False)
 
         # Update params with grid search best params for final training
@@ -675,8 +833,15 @@ def _save_model(model_artifacts, model_name):
         'n_features': len(model_artifacts['feature_names']),
         'feature_importance': model_artifacts['feature_importance'],
         'metrics': model_artifacts['metrics'],
-        'trained_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'trained_at': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
     }
+    if model_artifacts.get('fallback_reason'):
+        metadata['fallback_reason'] = model_artifacts['fallback_reason']
+    if model_artifacts.get('fixed_feature_specification'):
+        metadata['fixed_feature_specification'] = True
+
+    def format_metric(value):
+        return f"{value:.4f}" if np.isfinite(value) else "not_available"
 
     metadata_path = model_dir / "metadata.pkl"
     joblib.dump(metadata, metadata_path)
@@ -690,14 +855,24 @@ def _save_model(model_artifacts, model_name):
         'sample_size': metadata['metrics']['sample_size'],
         'n_features': metadata['n_features'],
         'performance': {
-            'r2_train': f"{metadata['metrics']['r2_train']:.4f}",
-            'r2_val': f"{metadata['metrics']['r2_val']:.4f}",
-            'r2_adj_val': f"{metadata['metrics']['r2_adj_val']:.4f}",
-            'rmse_val': f"{metadata['metrics']['rmse_val']:.4f}",
-            'mae_val': f"{metadata['metrics']['mae_val']:.4f}",
+            'r2_train': format_metric(metadata['metrics']['r2_train']),
+            'r2_val': format_metric(metadata['metrics']['r2_val']),
+            'r2_adj_val': format_metric(metadata['metrics']['r2_adj_val']),
+            'rmse_val': format_metric(metadata['metrics']['rmse_val']),
+            'mae_val': format_metric(metadata['metrics']['mae_val']),
         },
-        'top_features': dict(list(metadata['feature_importance'].items())[:10]),
+        'top_features': dict(
+            sorted(
+                metadata['feature_importance'].items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:10]
+        ),
     }
+    if metadata.get('fallback_reason'):
+        summary['fallback_reason'] = metadata['fallback_reason']
+    if metadata.get('fixed_feature_specification'):
+        summary['fixed_feature_specification'] = True
 
     summary_path = model_dir / "summary.yaml"
     with open(summary_path, 'w') as f:
@@ -748,7 +923,10 @@ def _remove_correlated(X, names, threshold=None):
 
 def run_repm_training():
     """Run REPM XGBoost training pipeline with modern best practices."""
+    global REPM_XGB_PATH
     overall_start = time.time()
+    started_at = datetime.now(EASTERN)
+    REPM_XGB_PATH = str(_make_output_path(started_at))
 
     # Header
     print("\n" + "="*80)
@@ -756,20 +934,33 @@ def run_repm_training():
     print("="*80)
     print(f"Output:     {REPM_XGB_PATH}")
     print(f"Grid Search:{' Yes' if USE_GRID_SEARCH else ' No'}")
-    print(f"Timestamp:  {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Timestamp:  {started_at.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("="*80 + "\n")
 
     Path(REPM_XGB_PATH).mkdir(parents=True, exist_ok=True)
 
     # Stage 1: Load data
-    print("[1/4] Loading data and building networks...")
-    import models
-    orca.run(["build_networks"])
-    orca.run(["neighborhood_vars"])
+    from repm import neighborhood_vars_cache as nvcache
 
-    buildings = orca.get_table("buildings")
-    vars_used, mat, load_time = _load_data(buildings, buildings.columns)
-    print(f"       Loaded {len(vars_used)} variables in {load_time:.1f}s\n")
+    if nvcache.is_valid():
+        print("[1/4] Loading cached buildings + accessibility variables...")
+        t0 = time.time()
+        vars_used, mat = nvcache.load()
+        load_time = time.time() - t0
+        print(f"       Loaded {len(vars_used)} variables from cache in {load_time:.1f}s\n")
+    else:
+        print("[1/4] Loading data and building networks...")
+        orca.add_injectable("repm_estimation_only", True)
+        if not orca.is_injectable("data_out_dir"):
+            orca.add_injectable("data_out_dir", REPM_XGB_PATH)
+        import models
+        orca.run(["build_networks"])
+        orca.run(["neighborhood_vars"])
+
+        buildings = orca.get_table("buildings")
+        vars_used, mat, load_time = _load_data(buildings, buildings.columns)
+        print(f"       Loaded {len(vars_used)} variables in {load_time:.1f}s\n")
+        nvcache.save(vars_used, mat)
 
     # Stage 2: Identify segments
     print("[2/4] Identifying hedonic segments...")
@@ -857,7 +1048,7 @@ def run_repm_training():
     n_dummy = sum(1 for r in results.values() if r.get('model_type', 'xgboost') == 'dummy')
 
     summary = {
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': datetime.now(EASTERN).strftime('%Y-%m-%d %H:%M:%S %Z'),
         'training_time_seconds': round(training_time_total, 2),
         'grid_search_used': USE_GRID_SEARCH,
         'grid_search_baseline': GRID_SEARCH_BASELINE,
@@ -904,18 +1095,27 @@ def run_repm_training():
         nonres_results = [r for r in results.values() if not r['is_residential']]
 
         if res_results:
-            r2_res = [r['r2_val'] for r in res_results]
+            r2_res = [r['r2_val'] for r in res_results if np.isfinite(r['r2_val'])]
             print(f"\nResidential Models (n={len(res_results)}):")
-            print(f"  R²:     {np.mean(r2_res):.4f} ± {np.std(r2_res):.4f}  [{np.min(r2_res):.4f}, {np.max(r2_res):.4f}]")
+            if r2_res:
+                print(f"  R²:     {np.mean(r2_res):.4f} ± {np.std(r2_res):.4f}  [{np.min(r2_res):.4f}, {np.max(r2_res):.4f}]")
+            else:
+                print("  R²:     not available (no validated models)")
 
         if nonres_results:
-            r2_nonres = [r['r2_val'] for r in nonres_results]
+            r2_nonres = [r['r2_val'] for r in nonres_results if np.isfinite(r['r2_val'])]
             print(f"\nNon-Residential Models (n={len(nonres_results)}):")
-            print(f"  R²:     {np.mean(r2_nonres):.4f} ± {np.std(r2_nonres):.4f}  [{np.min(r2_nonres):.4f}, {np.max(r2_nonres):.4f}]")
+            if r2_nonres:
+                print(f"  R²:     {np.mean(r2_nonres):.4f} ± {np.std(r2_nonres):.4f}  [{np.min(r2_nonres):.4f}, {np.max(r2_nonres):.4f}]")
+            else:
+                print("  R²:     not available (no validated models)")
 
-        all_r2 = [r['r2_val'] for r in results.values()]
+        all_r2 = [r['r2_val'] for r in results.values() if np.isfinite(r['r2_val'])]
         print(f"\nAll Models:")
-        print(f"  R²:     {np.mean(all_r2):.4f} ± {np.std(all_r2):.4f}")
+        if all_r2:
+            print(f"  R²:     {np.mean(all_r2):.4f} ± {np.std(all_r2):.4f}")
+        else:
+            print("  R²:     not available (no validated models)")
 
         total_time = sum(r['training_time'] for r in results.values())
         print(f"  Time:   {total_time:.1f}s training, {training_time_total:.1f}s total")
