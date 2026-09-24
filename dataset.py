@@ -306,13 +306,6 @@ def base_job_space(buildings):
 # variables/variables_building.py (maz_id / zone_id).
 
 @orca.table(cache=True)
-def parcel_maz_crossing_shares(store):
-    # New-construction MAZ allocation weights for parcels that cross a MAZ boundary.
-    # Read only from the main HDF so the forecast has one release-controlled source.
-    df = store["parcel_maz_crossing_shares"]
-    return df.rename(columns={"maz_seqid": "maz_id"})
-
-@orca.table(cache=True)
 def poi(store):
     return store["points_of_interest_by_category"]
 

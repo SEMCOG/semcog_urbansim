@@ -54,9 +54,9 @@ HLCM_MODEL_DIR = _p(
     f"{_LOCAL}/models/models_26Sep14_slot_sample",
 )
 ELCM_MODEL_DIR = _p(
-    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep10",
-    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep10",
-    f"{_LOCAL}/models/elcm_models_26Sep10",
+    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep11",
+    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep11",
+    f"{_LOCAL}/models/elcm_models_26Sep11",
 )
 REPM_MODEL_DIR = _p(
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm",

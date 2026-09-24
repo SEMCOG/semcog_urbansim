@@ -194,7 +194,9 @@ def county_id(buildings, parcels):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def geoid(buildings, parcels):
     # geoid = parcels[['county_id', 'census_bg_id']].apply(lambda x: 26*10000000000 + x.county_id*10000000 + x.census_bg_id, axis=1)
-    geoid = 26 * 10000000000 + parcels.county_id * 10000000 + parcels.census_bg_id
+    geoid = (26 * 10_000_000_000
+             + parcels.county_id.astype(np.int64) * 10_000_000
+             + parcels.census_bg_id.astype(np.int64))
     return misc.reindex(geoid.fillna(0).astype(int), buildings.parcel_id)
 
 

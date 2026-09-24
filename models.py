@@ -4223,6 +4223,7 @@ def build_networks(parcels):
         orca.add_table("parcels", p)
 
 
+@orca.step()
 def neighborhood_vars(jobs, households, buildings):
     b = buildings.to_frame(["large_area_id"])
     j = jobs.to_frame(jobs.local_columns)
