@@ -759,17 +759,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#remi_pce_growth_rate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        remi_pce_growth_rate
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#update-checklist-new-forecast-cycle" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -960,6 +949,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1068,11 +1085,6 @@
 <td>Building construction costs</td>
 <td>Per-sqft cost inputs for the developer feasibility model</td>
 <td>Construction cost estimates → CSV</td>
-</tr>
-<tr>
-<td><code>remi_pce_growth_rate</code></td>
-<td>Annual PCE price index growth rate, region-wide × year; applied to construction costs only</td>
-<td><code>development_context/PCE_growth_rate.py</code> → HDF</td>
 </tr>
 </tbody>
 </table>
@@ -1325,7 +1337,7 @@ in <code>location_expression</code>:</p>
 </table>
 <p>For the second case, schedule the refiner event in the same year as, or a later
 year than, the building addition. Scheduled development runs before <code>refiner</code> in
-<code>semcog_urbansim/test_forecast_2050.py:130</code>; <code>refiner</code> applies this expression
+<code>semcog_urbansim/simulation_2055.py:111</code>; <code>refiner</code> applies this expression
 to the runtime buildings table in <code>semcog_urbansim/models.py:2353</code>.</p>
 <p>Examples from the current data:</p>
 <table>
@@ -1679,47 +1691,6 @@ analyses.</p>
 - Building types missing from the cost table will have zero construction cost — the model will treat them as infinitely profitable; verify all developable types are covered
 - Large cost differences between pricing areas should be reviewed for plausibility</p>
 <hr />
-<h2 id="remi_pce_growth_rate"><code>remi_pce_growth_rate</code><a class="headerlink" href="#remi_pce_growth_rate" title="Permanent link">&para;</a></h2>
-<p>Annual PCE (Personal Consumption Expenditure) price index growth rate for the region, by forecast year. PCE is a standard measure of economy-wide price change — think of it as the REMI-projected inflation rate for the Southeast Michigan economy. <strong>The simulation uses it in exactly one place:</strong> <code>cost_shifter_callback</code> in <code>models.py</code>, which inflates new-construction costs forward from the base year before the proforma feasibility calculation. It does <strong>not</strong> drive property-value appreciation — that's a separate series (<code>remi_pi_growth_rates</code>, personal income, computed per large area) consumed by <code>increase_property_values</code>. An earlier version of this page conflated the two; it doesn't.</p>
-<p><strong>Structure:</strong> One row per forecast year</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>year</code></td>
-<td>int16</td>
-<td>Forecast year — index</td>
-</tr>
-<tr>
-<td><code>pce_growth_rate</code></td>
-<td>float64</td>
-<td>Annual growth rate as a fraction (e.g., 0.023 = 2.3%); applied cumulatively — each year's cost compounds the previous</td>
-</tr>
-</tbody>
-</table>
-<p>A rate of 0.0 means no price change that year. The simulation can fall back to a default
-rate when a year is missing, but a complete year range is required: a fallback rate is not
-a substitute for the adopted forecast series.</p>
-<p><strong>Data principle:</strong> Use a regional series when the construction-cost basis does not support a
-meaningful smaller-area distinction. A 2025-base example aggregates source forecasts to one
-regional rate because the available construction-cost inputs use broader pricing areas.</p>
-<p><strong>Data principle:</strong> Derive the regional series from a documented economic forecast source,
-using a consistent aggregation method whenever the source is segmented geographically.
-Preserve the adopted annual values and identify any interpolation explicitly.</p>
-<p><strong>2025-base example:</strong> The current series aggregates large-area REMI PCE forecasts with
-household-population weights and interpolates years that are only reported at multi-year
-intervals. This is an example of the required documentation, not a prescribed source or
-method for future forecast cycles.</p>
-<p><strong>Common issues:</strong>
-- Year range must cover all forecast years — verify full coverage rather than relying on a fallback value
-- Rates above 5% or below 0% are unusual and should be reviewed against REMI documentation before use
-- If the source is reported at multi-year intervals, document and review the interpolation used to create annual values</p>
 <hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <p><strong>Events:</strong>
@@ -1740,7 +1711,6 @@ method for future forecast cycles.</p>
 - [ ] Verify all developable building types are covered in the cost table
 - [ ] Coordinate with modeling team to update proforma configuration with new costs</p>
 <p><strong>Price growth (REMI):</strong>
-- [ ] Update <code>remi_pce_growth_rate</code> by re-running <code>development_context/PCE_growth_rate.py</code> against the latest REMI preliminary-forecast workbooks (independent of <code>income_growth_rates</code> — different REMI export)
 - [ ] Verify year range covers all forecast years; confirm no years are missing</p>
 
 

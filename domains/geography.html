@@ -820,6 +820,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1262,7 +1290,7 @@ non-crossing parcels are implicit (single dominant MAZ).</p>
 </tr>
 </tbody>
 </table>
-<p><strong>Data note:</strong> Presence in this table is the indicator that a parcel crosses a MAZ boundary. Parcels not in this table are non-crossing (single dominant MAZ from their centroid).</p>
+<p><strong>Data note:</strong> Presence in this table is the indicator that a parcel crosses a MAZ boundary. Parcels not in this table are non-crossing (single dominant MAZ from their centroid). The current forecast loader reads this table from the main HDF. The input-development pipeline may use a CSV as an intermediate source, but that CSV is not a runtime dependency.</p>
 <hr />
 <h2 id="update-notes">Update Notes<a class="headerlink" href="#update-notes" title="Permanent link">&para;</a></h2>
 <p><strong><code>zones</code> and <code>semmcds</code></strong> — update when TAZ or MCD boundaries change (typically when census boundaries are updated or new municipalities form or dissolve).</p>

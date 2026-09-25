@@ -586,17 +586,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#mcd_total" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        mcd_total
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -625,11 +614,28 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#income_growth_rates" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historical-taz-trend-sources-external-runtime-inputs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        income_growth_rates
+        Historical TAZ Trend Sources (External Runtime Inputs)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Historical TAZ Trend Sources (External Runtime Inputs)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remi_income_ratios-and-remi_local_price_ratios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remi_income_ratios and remi_local_price_ratios
       
     </span>
   </a>
@@ -660,28 +666,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#taz_demographic_snapshots" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        taz_demographic_snapshots
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#acs_household_change_by_block_group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        acs_household_change_by_block_group
-      
-    </span>
-  </a>
   
 </li>
       
@@ -982,6 +966,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1008,7 +1020,7 @@
 
 <h1 id="demographics">Demographics<a class="headerlink" href="#demographics" title="Permanent link">&para;</a></h1>
 <p><strong>Primary sources:</strong> Population synthesis outputs, REMI model exports, ACS data, rate tables</p>
-<p>This domain covers the base-year synthetic population (households, persons, group quarters), annual household growth control totals from REMI, block group household trend data from ACS, historical TAZ demographic snapshots that seed the HLCM trend features, and supporting rate and target tables.</p>
+<p>This domain covers the base-year synthetic population (households, persons, group quarters), annual household growth control totals from REMI, the REMI ratio tables used to update incomes, prices, and construction costs, and supporting rate and target tables.</p>
 <hr />
 <h2 id="tables-in-this-domain">Tables in This Domain<a class="headerlink" href="#tables-in-this-domain" title="Permanent link">&para;</a></h2>
 <table>
@@ -1046,14 +1058,14 @@
 <td>Excel rate table</td>
 </tr>
 <tr>
-<td><code>income_growth_rates</code></td>
-<td>Annual personal income growth rate by large area × year</td>
+<td><code>remi_income_ratios</code></td>
+<td>Income multiplier by large area × year</td>
 <td>REMI extract → HDF</td>
 </tr>
 <tr>
-<td><code>taz_demographic_snapshots</code></td>
-<td>Historical TAZ-level demographic counts for pre-simulation reference years; seeds the HLCM neighborhood change trend features</td>
-<td>Derived from historical data → HDF</td>
+<td><code>remi_local_price_ratios</code></td>
+<td>Local price multiplier by large area × year</td>
+<td>REMI extract → HDF</td>
 </tr>
 <tr>
 <td><code>target_vacancies</code></td>
@@ -1064,16 +1076,6 @@
 <td><code>target_vacancies_mcd</code></td>
 <td>City-level residential vacancy targets</td>
 <td>Excel</td>
-</tr>
-<tr>
-<td><code>mcd_total</code></td>
-<td>Target household counts by MCD × year</td>
-<td>Forecast controls pipeline</td>
-</tr>
-<tr>
-<td><code>acs_household_change_by_block_group</code></td>
-<td>Block group occupied housing unit counts for two ACS vintages; signals neighborhood-level growth or decline trends</td>
-<td>ACS → HDF</td>
 </tr>
 <tr>
 <td><code>group_quarters</code></td>
@@ -1298,14 +1300,6 @@
     HHC --&gt; HT[households_transition\nstep]
     RHP --&gt; HT
     GQ_CT[group_quarters_\ncontrol_totals] --&gt; GQ[gq_pop_scaling_model]</code></pre>
-<p><strong>MCD sampling pipeline</strong> — how city-level growth targets and block group trends feed the housing unit sampler:</p>
-<pre class="mermaid"><code>flowchart LR
-    REMI[REMI County\nForecast] --&gt; MCD_PROC[MCD Projection\nProcess]
-    HIST[Historical MCD\nGrowth Trends] --&gt; MCD_PROC
-    MCD_PROC --&gt; MCD[mcd_total]
-    ACS[ACS Block Group\nOccupancy Data] --&gt; BGH[acs_household_change_by_block_group]
-    MCD --&gt; T2[mcd_hu_sampling\nstep]
-    BGH --&gt; T2</code></pre>
 <h3 id="annual_household_control_totals"><code>annual_household_control_totals</code><a class="headerlink" href="#annual_household_control_totals" title="Permanent link">&para;</a></h3>
 <p>Drives how many households exist in each large area × demographic segment each year. The most critical table for forecast outcomes.</p>
 <p><strong>Index:</strong> <code>year</code><br />
@@ -1578,61 +1572,6 @@
 <p><strong>Common issues:</strong>
 - Missing large areas — all 8 must be present
 - Year columns must cover the full simulation range</p>
-<h3 id="mcd_total"><code>mcd_total</code><a class="headerlink" href="#mcd_total" title="Permanent link">&para;</a></h3>
-<p>Target household counts by MCD × year. Used by the <code>mcd_hu_sampling</code> model step to control city-level household growth.</p>
-<p><strong>Index:</strong> <code>mcd</code> (SEMMCD code)<br />
-<strong>Structure:</strong> One row per MCD, year columns<br />
-<strong>Derived from:</strong> A separate MCD projection process that combines historical MCD household growth trends with REMI county-level forecasts as constraints. MCD-level 5-year benchmarks are developed independently and then interpolated to annual values.</p>
-<p><strong>Sample rows</strong> — growing, stable, and declining MCDs (selected years):</p>
-<table>
-<thead>
-<tr>
-<th>mcd</th>
-<th>2020</th>
-<th>2025</th>
-<th>2030</th>
-<th>2040</th>
-<th>2050</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>3060</td>
-<td>31,543</td>
-<td>33,044</td>
-<td>35,704</td>
-<td>38,658</td>
-<td>39,133</td>
-</tr>
-<tr>
-<td>2040</td>
-<td>16,788</td>
-<td>16,858</td>
-<td>17,013</td>
-<td>17,131</td>
-<td>17,264</td>
-</tr>
-<tr>
-<td>5</td>
-<td>254,275</td>
-<td>251,513</td>
-<td>250,539</td>
-<td>248,911</td>
-<td>251,519</td>
-</tr>
-<tr>
-<td>1115</td>
-<td>15,614</td>
-<td>15,468</td>
-<td>15,487</td>
-<td>15,439</td>
-<td>15,171</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Common issues:</strong>
-- All MCDs in the region (238 rows) must be present
-- Year columns must cover the full simulation range</p>
 <hr />
 <h2 id="rate-target-tables">Rate &amp; Target Tables<a class="headerlink" href="#rate-target-tables" title="Permanent link">&para;</a></h2>
 <h3 id="annual_relocation_rates_for_households"><code>annual_relocation_rates_for_households</code><a class="headerlink" href="#annual_relocation_rates_for_households" title="Permanent link">&para;</a></h3>
@@ -1715,35 +1654,18 @@
 </tbody>
 </table>
 <p><strong>Note:</strong> In the simulation this rate is scaled by 0.2 (only 20% of households flagged as potential movers actually relocate). Brackets must be exhaustive — every age/income combination a household could have must fall into exactly one row.</p>
-<h3 id="income_growth_rates"><code>income_growth_rates</code><a class="headerlink" href="#income_growth_rates" title="Permanent link">&para;</a></h3>
-<p>Annual personal income growth rate by large area × year, derived from REMI regional economic forecasts. Used by <code>increase_property_values</code> to appreciate residential and commercial property values each simulation year at a rate that varies by county.</p>
-<p><strong>Structure:</strong> One row per forecast year, one column per large area (8 columns)</p>
-<p><strong>Index:</strong> <code>year</code></p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>year</code></td>
-<td>int16</td>
-<td>Forecast year — index</td>
-</tr>
-<tr>
-<td><code>3</code>, <code>5</code>, <code>93</code>, <code>99</code>, <code>115</code>, <code>125</code>, <code>147</code>, <code>161</code></td>
-<td>float64</td>
-<td>Annual income growth rate as a fraction (e.g., 0.025 = 2.5%), one column per large area ID</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Update:</strong> Regenerate from the same REMI run as <code>remi_pce_growth_rate</code> — both come from the same REMI extract and must be updated together whenever REMI is refreshed or the forecast horizon extends (e.g., adding years through 2055).</p>
+<h2 id="historical-taz-trend-sources-external-runtime-inputs">Historical TAZ Trend Sources (External Runtime Inputs)<a class="headerlink" href="#historical-taz-trend-sources-external-runtime-inputs" title="Permanent link">&para;</a></h2>
+<p>Historical zonal change data remains an active forecast input. It is <strong>not</strong> a table in the current main HDF. At forecast initialization, <code>init_taz_hlcm_trend_by_year</code> loads a 2010 TAZ snapshot from the configured historical-input folder and a 2015 snapshot from a separate prior-model HDF; it then adds the current base-year TAZ aggregates. <code>update_taz_hlcm_trend</code> retains the annual forecast aggregates and creates building-level <code>*_taz_5yr_change</code> and <code>*_taz_10yr_change</code> features. See <code>semcog_urbansim/models.py:460-640</code>.</p>
+<p>The historical sources and the current base-year HDF must use compatible TAZ identifiers and contain the same aggregate concepts: households, household population, housing units, jobs, non-residential square footage, and household-composition counts. These trend features are also part of the location-choice estimation data-preparation workflow, so retain and validate the historical sources whenever models are re-estimated.</p>
+<p><strong>Tract level:</strong> the active code derives <code>tract_hh_type_base_ratios</code> from the current base-year households and their <code>tract_id</code>; it does not load a separate historical tract-trend table. See <code>semcog_urbansim/models.py:499-522</code>.</p>
+<hr />
+<h3 id="remi_income_ratios-and-remi_local_price_ratios"><code>remi_income_ratios</code> and <code>remi_local_price_ratios</code><a class="headerlink" href="#remi_income_ratios-and-remi_local_price_ratios" title="Permanent link">&para;</a></h3>
+<p>Annual REMI multipliers by large area. <code>remi_income_ratios</code> updates household income and anchors residential price adjustment. <code>remi_local_price_ratios</code> is averaged across large areas to form the regional PCE multiplier used for construction-cost adjustment. The current forecast loads both tables at startup in <code>semcog_urbansim/dataset.py:347</code>.</p>
+<p><strong>Structure:</strong> One row per forecast year, one column per large area. The row index is <code>year</code>; column names are the large-area IDs.</p>
+<p><strong>Update:</strong> Regenerate both tables from the same reviewed REMI release. Preserve the base-year convention used to calculate each multiplier and cover every simulation year and all eight large areas.</p>
 <p><strong>Common issues:</strong>
-- All 8 large area columns must be present
-- Year range must cover all simulation years; missing years skip property value appreciation for that year</p>
+- A missing year falls back to a multiplier of 1.0 in the forecast.
+- A missing large-area column prevents the input from loading.</p>
 <h3 id="target_vacancies"><code>target_vacancies</code><a class="headerlink" href="#target_vacancies" title="Permanent link">&para;</a></h3>
 <p>Target residential and non-residential vacancy rates by large area × year. Used by the developer model to determine how much new construction to generate.</p>
 <table>
@@ -1805,110 +1727,6 @@
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="taz_demographic_snapshots"><code>taz_demographic_snapshots</code><a class="headerlink" href="#taz_demographic_snapshots" title="Permanent link">&para;</a></h2>
-<p>TAZ-level demographic counts for historical reference years. Used to compute neighborhood change trend features in the HLCM — specifically, the 5-year and 10-year change in household counts, population, jobs, housing units, and household composition by TAZ.</p>
-<p>The simulation tracks these counts annually in memory (the <code>taz_hlcm_trend_by_year</code> injectable), building up a record year by year as it runs forward. This table seeds that record for years before the simulation starts, making historical change visible at the start of the forecast.</p>
-<p><strong>Index:</strong> Composite — <code>taz_id</code> × <code>snapshot_year</code></p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>snapshot_year</code></td>
-<td>int16</td>
-<td>Historical reference year (e.g., 2010, 2015)</td>
-</tr>
-<tr>
-<td><code>taz_id</code></td>
-<td>int32</td>
-<td>Traffic analysis zone ID</td>
-</tr>
-<tr>
-<td><code>hh_count</code></td>
-<td>int32</td>
-<td>Number of households</td>
-</tr>
-<tr>
-<td><code>hh_pop</code></td>
-<td>int32</td>
-<td>Household population</td>
-</tr>
-<tr>
-<td><code>hu_count</code></td>
-<td>int32</td>
-<td>Housing units</td>
-</tr>
-<tr>
-<td><code>nonres_sqft</code></td>
-<td>int32</td>
-<td>Non-residential square footage</td>
-</tr>
-<tr>
-<td><code>job_count</code></td>
-<td>int32</td>
-<td>Jobs</td>
-</tr>
-<tr>
-<td><code>with_children</code></td>
-<td>int32</td>
-<td>Households with children</td>
-</tr>
-<tr>
-<td><code>with_senior</code></td>
-<td>int32</td>
-<td>Households with seniors</td>
-</tr>
-<tr>
-<td><code>one_person_hh</code></td>
-<td>int32</td>
-<td>Single-person households</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Currently included years:</strong> 2010 (seeds the 10-year lookback) and 2015 (seeds the 5-year lookback). Source: 2010 data extracted from base tables in <code>model_improvements/2024_spring/2010_data/</code>; 2015 data extracted from the 2045 forecast HDF.</p>
-<p><strong>Extend when needed:</strong> The available <code>snapshot_year</code> values determine which trend lags the HLCM can use. As the forecast horizon extends (e.g., to 2055), the simulation builds up its own annual record, so no additional historical rows are required for the forecast itself. Add earlier snapshots (e.g., 2005) only if longer lookback windows are introduced.</p>
-<hr />
-<h2 id="acs_household_change_by_block_group"><code>acs_household_change_by_block_group</code><a class="headerlink" href="#acs_household_change_by_block_group" title="Permanent link">&para;</a></h2>
-<p>Block group occupied housing unit counts from two ACS survey vintages. Used by the <code>mcd_hu_sampling</code> step to distribute city-level household growth sub-city: block groups where occupancy has been growing attract proportionally more new households; block groups where occupancy has been declining attract fewer.</p>
-<p><strong>Index:</strong> <code>block_group_geoid</code> (Census block group GEOID, integer — leading zeros removed)</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>block_group_geoid</code></td>
-<td>int64</td>
-<td>Census block group GEOID — unique index</td>
-</tr>
-<tr>
-<td><code>occupied_hu_current</code></td>
-<td>int32</td>
-<td>Occupied housing units, more recent ACS vintage</td>
-</tr>
-<tr>
-<td><code>occupied_hu_prior</code></td>
-<td>int32</td>
-<td>Occupied housing units, earlier ACS vintage</td>
-</tr>
-</tbody>
-</table>
-<p>The model computes <code>occupied_hu_current − occupied_hu_prior</code> as the trend signal. Column names are vintage-neutral — when updating, replace the values in both columns and record the survey years in the update notes. <strong>Current vintage:</strong> 2019 (current) and 2014 (prior), ACS 5-year estimates.</p>
-<p><strong>Update:</strong> When starting a new forecast cycle, pull occupied housing unit counts from ACS (5-year estimates) for all block groups in the 7-county region. Shift the old <code>occupied_hu_current</code> values into <code>occupied_hu_prior</code>, then populate <code>occupied_hu_current</code> with the new vintage. Document which ACS years are in use.</p>
-<p><strong>Common issues:</strong>
-- Missing block groups — all block groups in the model region must be present; gaps produce fill-rate anomalies in sampling
-- <code>block_group_geoid</code> must be stored as integer (leading zeros removed); verify dtype after loading
-- Block groups that were split or merged between ACS vintages must be resolved before use</p>
 <hr />
 <h2 id="group-quarters">Group Quarters<a class="headerlink" href="#group-quarters" title="Permanent link">&para;</a></h2>
 <p>Group quarters (GQ) data represents people living in non-household facilities, such as
@@ -2091,13 +1909,9 @@ translate broader-area controls to cities.</p>
 <ul>
 <li>[ ] Get new REMI population export by large area × age × gender; run forecast controls pipeline to produce <code>annual_household_control_totals</code></li>
 <li>[ ] Update <code>remi_hh_pop</code> with new REMI household population (total − GQ) by large area × year</li>
-<li>[ ] Update <code>mcd_total</code> via the separate MCD projection process (historical growth trends + REMI county forecasts → 5-year benchmarks → annual interpolation)</li>
 <li>[ ] Review and update vacancy rate tables if market conditions warrant</li>
 <li>[ ] Update GQ control totals and re-run GQ synthesis if base year changes</li>
-<li>[ ] Update <code>acs_household_change_by_block_group</code> — shift current vintage to prior column, load new ACS occupied HU counts into current column; document survey years used</li>
-<li>[ ] Update <code>taz_demographic_snapshots</code> if new historical reference years are needed (typically not required for a horizon extension)</li>
 <li>[ ] Confirm all forecast years have rows in <code>annual_household_control_totals</code> for all 8 large areas</li>
-<li>[ ] Confirm <code>mcd_total</code> covers all 238 MCDs × all forecast years</li>
 <li>[ ] Confirm <code>remi_hh_pop</code> has all 8 large area rows and all forecast year columns</li>
 <li>[ ] Confirm GQ <code>building_id</code> values exist in <code>buildings</code></li>
 </ul>

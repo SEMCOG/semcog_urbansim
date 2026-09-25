@@ -410,10 +410,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-files" class="md-nav__link">
+  <a href="#core-data-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output Files
+        Core Data Files
       
     </span>
   </a>
@@ -802,6 +802,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -849,7 +877,7 @@
 </tr>
 <tr>
 <td><strong>Base year</strong></td>
-<td>The starting year of the simulation. All input tables represent conditions as of this year. The base year is 2020 for the RDF2050 forecast and is expected to be 2024 or 2025 for the RDF2055 forecast</td>
+<td>The starting year of the simulation. All input tables represent conditions as of this year. The current RDF2055 forecast uses a 2025 base year.</td>
 </tr>
 <tr>
 <td><strong>HDF5 / HDF</strong></td>
@@ -913,7 +941,7 @@
     PG   --&gt; ASSM[Data Assembly]
     CSV  --&gt; ASSM
     PHDF --&gt; ASSM
-    ASSM --&gt; HDF[forecast_data_input.h5]
+    ASSM --&gt; HDF[main_{date}.h5]
     HDF  --&gt; SIM[UrbanSim Simulation]
     NET  --&gt; SIM
     ACC  --&gt; SIM
@@ -957,7 +985,7 @@
 <li><strong>TAZ–parcel boundary mismatch</strong> — TAZ boundaries are designed for travel modeling and do not always align with parcel boundaries. A parcel that physically straddles two TAZ zones is assigned to one TAZ based on its centroid location.</li>
 <li><strong>MAZ/TAZ–building override</strong> — because MAZ is the anchor unit, a building on a parcel that straddles a MAZ (and therefore TAZ) boundary can be assigned its own <code>maz_id</code>/<code>zone_id</code> by building location via the <code>building_to_maz_override</code> table, overriding the parcel-inherited value.</li>
 <li><strong>MCD–parcel boundary mismatch</strong> — A small number of parcels may physically cross a municipal boundary. These are assigned to the MCD containing their centroid, which may not reflect the parcel's full extent.</li>
-<li><strong>Multi-parcel buildings</strong> — A single building can span multiple parcels (large campuses, industrial complexes). These are tracked separately in the <code>multi_parcel_buildings</code> table.</li>
+<li><strong>Multi-parcel buildings</strong> — A single building can span multiple parcels (large campuses, industrial complexes). The forward forecast uses the building's assigned <code>parcel_id</code>; resolve or document these source-data cases during assembly.</li>
 </ul>
 <p>These edge cases are small in number but can affect spatial aggregation and model outputs. <strong>Follow the centroid-based assignment scheme as the standard approach.</strong> When exceptions or unusual cases are encountered during data preparation, document them with a note so the modeling team can assess the impact and develop targeted solutions if needed.</p>
 </blockquote>
@@ -975,18 +1003,18 @@
 <tbody>
 <tr>
 <td><a href="domains/geography.html">Geography</a></td>
-<td><code>zones</code>, <code>micro_zones</code>, <code>building_to_maz_override</code>, <code>semmcds</code>, <code>counties</code>, <code>large_areas</code></td>
+<td><code>zones</code>, <code>micro_zones</code>, <code>building_to_maz_override</code>, <code>parcel_maz_crossing_shares</code>, <code>semmcds</code>, <code>counties</code>, <code>large_areas</code></td>
 <td>PostgreSQL (boundary tables) / constant</td>
 </tr>
 <tr>
 <td><a href="domains/land-use.html">Land Use</a></td>
-<td><code>parcels</code>, <code>buildings</code>, <code>zoning</code>, <code>land_use_types</code>, <code>building_types</code>, <code>multi_parcel_buildings</code></td>
+<td><code>parcels</code>, <code>buildings</code>, <code>zoning</code>, <code>land_use_types</code>, <code>building_types</code></td>
 <td>PostgreSQL (parcel/building database)</td>
 </tr>
 <tr>
 <td><a href="domains/demographics.html">Demographics</a></td>
-<td><code>households</code>, <code>persons</code>, <code>annual_household_control_totals</code>, <code>remi_hh_pop</code>, relocation rates, <code>target_vacancies</code>, <code>mcd_total</code>, <code>acs_household_change_by_block_group</code>, <code>taz_demographic_snapshots</code>, <code>income_growth_rates</code>, group quarters tables</td>
-<td>Population synthesis, REMI, ACS</td>
+<td><code>households</code>, <code>persons</code>, annual household controls, <code>remi_hh_pop</code>, <code>remi_income_ratios</code>, <code>remi_local_price_ratios</code>, relocation rates, vacancy targets, and group quarters tables</td>
+<td>Population synthesis, REMI</td>
 </tr>
 <tr>
 <td><a href="domains/employment.html">Employment</a></td>
@@ -995,8 +1023,8 @@
 </tr>
 <tr>
 <td><a href="domains/development-context.html">Development &amp; Context</a></td>
-<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code>, building construction costs, <code>remi_pce_growth_rate</code></td>
-<td>PostgreSQL (event/demo tables), CSV, construction cost estimates, REMI</td>
+<td><code>events_addition</code>, <code>events_deletion</code>, <code>refiner_events</code>, <code>demolition_rates</code>, <code>landmark_worksites</code>, <code>schools</code>, <code>crime_rates</code>, building construction costs</td>
+<td>PostgreSQL (event/demo tables), CSV, construction cost estimates</td>
 </tr>
 <tr>
 <td><a href="domains/networks.html">Street Networks</a></td>
@@ -1026,8 +1054,8 @@
 </ul>
 <p>Each domain's data developer is responsible for producing their data to the specifications in this wiki. The assembly and final validation steps are handled outside individual domain procedures.</p>
 <hr />
-<h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">&para;</a></h2>
-<p>The data preparation pipeline delivers three HDF files to the simulation. All three must be present at simulation startup.</p>
+<h2 id="core-data-files">Core Data Files<a class="headerlink" href="#core-data-files" title="Permanent link">&para;</a></h2>
+<p>The data preparation pipeline supplies three core HDF inputs to the simulation. The runtime also requires trained model artifacts and configuration files; see <a href="reference/runtime-input-files.html">Runtime Input Files</a>.</p>
 <table>
 <thead>
 <tr>
@@ -1038,14 +1066,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>forecast_data_input.h5</code></td>
+<td><code>main_{date}.h5</code></td>
 <td><strong>Main simulation database</strong> — the primary output of the data assembly pipeline</td>
-<td>All base-year agent and geography tables (households, buildings, parcels, jobs, persons, zones, etc.) plus supplemental reference tables: <code>income_growth_rates</code>, <code>remi_pce_growth_rate</code>, <code>taz_demographic_snapshots</code>, <code>acs_household_change_by_block_group</code>, <code>points_of_interest_by_category</code>. See domain pages for the full table list and <a href="reference/table-catalog.html">Table Catalog</a> for a complete index.</td>
+<td>Base-year agents, geography, land use, controls, events, POIs and travel skims, plus <code>remi_hh_pop</code>, <code>remi_income_ratios</code>, <code>remi_local_price_ratios</code>, and <code>parcel_maz_crossing_shares</code>. See domain pages and the <a href="reference/table-catalog.html">Table Catalog</a>.</td>
 </tr>
 <tr>
 <td><code>semcog_networks.h5</code></td>
 <td><strong>Pandana street network bundle</strong> — produced by a separate network build step; not assembled from domain data</td>
-<td><code>osm_walk_2024</code>, <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code>, <code>highway_ext_2020</code> (+ <code>_local</code>). Used by the simulation each year to recompute dynamic neighborhood accessibility as households and jobs shift. Only walk and highway are built at runtime. The 2030 highway network and the retired <code>osm_roads_walk_2020</code> were dropped Jul 2026 — see <a href="domains/networks.html">Street Networks</a>.</td>
+<td><code>osm_walk_2024</code>, <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code>, and highway network tables. The current forward forecast builds walk and <code>highway_ext_2025</code> at runtime to recompute dynamic neighborhood accessibility as households and jobs shift.</td>
 </tr>
 <tr>
 <td><code>access_indicators.h5</code></td>
@@ -1055,13 +1083,13 @@
 </tbody>
 </table>
 <blockquote>
-<p><strong>Filename note:</strong> These names are stable conventions — they do not encode dates, vintages, or forecast horizons. Version control and provenance are tracked in the data development pipeline, not in the filename.</p>
+<p><strong>Filename note:</strong> The names shown here are the files selected for the current forecast. Record their version and provenance in the data development pipeline.</p>
 </blockquote>
 <hr />
 <h2 id="table-count">Table Count<a class="headerlink" href="#table-count" title="Permanent link">&para;</a></h2>
 <p>The main model input file contains <strong>40+ tables</strong>. See the <a href="reference/table-catalog.html">Table Catalog</a> for a complete alphabetical list with source and index information.</p>
 <hr />
-<p><small>Last updated: August 2026</small></p>
+<p><small>Last updated: September 2026</small></p>
 
 
 

@@ -604,10 +604,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#drive-highway_ext_2020" class="md-nav__link">
+  <a href="#drive-highway_ext_2025" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Drive — highway_ext_2020
+        Drive — highway_ext_2025
       
     </span>
   </a>
@@ -837,6 +837,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -864,7 +892,7 @@
 <h1 id="street-networks">Street Networks<a class="headerlink" href="#street-networks" title="Permanent link">&para;</a></h1>
 <p><strong>Primary source:</strong> OpenStreetMap (walk network), SEMCOG highway/TDM network (drive network)<br />
 <strong>File:</strong> <code>semcog_networks.h5</code> — a separate HDF5 from the main model input file</p>
-<p>The street network file provides the road and path geometry used by <a href="https://udst.github.io/pandana/">Pandana</a> to compute dynamic neighborhood accessibility variables during the simulation. Each year, the <code>build_networks_2050</code> step loads these networks, snaps parcels and buildings to the nearest node, and aggregates nearby jobs, households, and amenities into building-level variables used by the location choice models.</p>
+<p>The street network file provides the road and path geometry used by <a href="https://udst.github.io/pandana/">Pandana</a> to compute dynamic neighborhood accessibility variables during the simulation. Each year, the <code>build_networks</code> step loads these networks, snaps parcels and buildings to the nearest node, and aggregates nearby jobs, households, and amenities into building-level variables used by the location choice models.</p>
 <p>This file is distinct from the <a href="accessibility.html">pre-computed accessibility indicators</a> — those are static parcel-level outputs. The network file enables the simulation to recompute dynamic, year-varying accessibility each year as the distribution of jobs and households shifts.</p>
 <hr />
 <h2 id="file-structure">File Structure<a class="headerlink" href="#file-structure" title="Permanent link">&para;</a></h2>
@@ -916,9 +944,9 @@
 <td><strong>yes</strong></td>
 </tr>
 <tr>
-<td><code>highway_ext_2020</code> (+ <code>_local</code>)</td>
-<td><code>highway_ext_2020_UPDATED.shp</code> (SEMCOG TDM)</td>
-<td>44,866 / 63,690</td>
+<td><code>highway_ext_2025</code> (+ <code>_local</code>)</td>
+<td>SEMCOG highway / TDM network</td>
+<td>current bundle</td>
 <td><code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
 <td><strong>yes</strong></td>
 </tr>
@@ -945,8 +973,8 @@ compare against a previous run before relying on them.</p>
 <p><strong>Cost used for queries:</strong> <code>feet</code> (distance) or <code>minutes</code> (time, at 3 mph)
 <strong>Typical query radius:</strong> 500 m (neighborhood density), 1,500 m (local population/jobs)</p>
 <p><code>feet</code> = <code>meters × 3.280839895</code>.</p>
-<h3 id="drive-highway_ext_2020">Drive — <code>highway_ext_2020</code><a class="headerlink" href="#drive-highway_ext_2020" title="Permanent link">&para;</a></h3>
-<p>SEMCOG highway / TDM road network, built from <strong><code>highway_ext_2020_UPDATED.shp</code></strong>.</p>
+<h3 id="drive-highway_ext_2025">Drive — <code>highway_ext_2025</code><a class="headerlink" href="#drive-highway_ext_2025" title="Permanent link">&para;</a></h3>
+<p>SEMCOG highway / TDM road network used for every simulation year.</p>
 <table>
 <thead>
 <tr>
@@ -956,19 +984,19 @@ compare against a previous run before relying on them.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>nodes_highway_ext_2020</code></td>
+<td><code>nodes_highway_ext_2025</code></td>
 <td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
 </tr>
 <tr>
-<td><code>edges_highway_ext_2020</code></td>
+<td><code>edges_highway_ext_2025</code></td>
 <td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
 </tr>
 <tr>
-<td><code>nodes_highway_ext_2020_local</code></td>
+<td><code>nodes_highway_ext_2025_local</code></td>
 <td><code>x</code>, <code>y</code>, <code>nodeid</code></td>
 </tr>
 <tr>
-<td><code>edges_highway_ext_2020_local</code></td>
+<td><code>edges_highway_ext_2025_local</code></td>
 <td><code>from</code>, <code>to</code>, <code>peak_mins</code>, <code>nonpk_mins</code>, <code>miles</code></td>
 </tr>
 </tbody>
@@ -984,9 +1012,7 @@ is a stress-weighted distance rather than measurable feet. Use <code>osm_bike_20
 distance is needed.</p>
 <h3 id="retired">Retired<a class="headerlink" href="#retired" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>highway_ext_2030</code></strong> — dropped Jul 2026. It was largely the same as the 2020 network,
-  2030 is near, and there is no updated 2030 build to pair with the updated 2020 one. All
-  years now use <code>highway_ext_2020</code>.</li>
+<li><strong><code>highway_ext_2030</code></strong> — retired. All simulation years use <code>highway_ext_2025</code>.</li>
 <li><strong><code>osm_roads_walk_2020</code></strong> — replaced by <code>osm_walk_2024</code>.</li>
 </ul>
 <hr />
@@ -1022,8 +1048,8 @@ network builds produced for the accessibility analysis:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>highway_ext_2020</code> (+ <code>_local</code>)</td>
-<td><code>network_highway_2024_aug2025.h5</code></td>
+<td><code>highway_ext_2025</code> (+ <code>_local</code>)</td>
+<td>Current SEMCOG highway / TDM network export</td>
 </tr>
 <tr>
 <td><code>osm_walk_2024</code>, <code>osm_bike_2024</code>, <code>osm_bike_comfort_2024</code></td>
@@ -1059,7 +1085,7 @@ above rather than by table name alone.</p>
 <ul>
 <li><strong>Parcels not snapping to network</strong> — parcel coordinates outside the network coverage area; check for projection mismatches (all data should be in Michigan state plane)</li>
 <li><strong>Missing local edges</strong> — the local network subset must fully cover the 7-county region; edges that cross county boundaries may be clipped</li>
-<li><strong>Expecting a 2030 network</strong> — it was retired in Jul 2026; all years use <code>highway_ext_2020</code>. If planned improvements need representing again, restore both the HDF tables and the <code>available_networks_2050.yaml</code> entry, and reinstate the year-based branch in <code>models.py</code></li>
+<li><strong>Expecting a 2030 network</strong> — it is retired; all years use <code>highway_ext_2025</code>. If planned improvements need representation, add the required HDF tables and update <code>available_networks_2050.yaml</code> and <code>models.py</code> together.</li>
 </ul>
 
 

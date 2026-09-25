@@ -586,17 +586,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi_parcel_buildings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        multi_parcel_buildings
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#update-checklist-new-forecast-cycle" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -871,6 +860,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -933,11 +950,6 @@
 <td><code>building_types</code></td>
 <td>Building type code definitions</td>
 <td>CSV</td>
-</tr>
-<tr>
-<td><code>multi_parcel_buildings</code></td>
-<td>Buildings spanning multiple parcels</td>
-<td>SQL</td>
 </tr>
 </tbody>
 </table>
@@ -1512,26 +1524,6 @@ was assembled by advancing the 2024 building view with 2025 events.</p>
 </tbody>
 </table>
 <hr />
-<h2 id="multi_parcel_buildings"><code>multi_parcel_buildings</code><a class="headerlink" href="#multi_parcel_buildings" title="Permanent link">&para;</a></h2>
-<p>Buildings that span multiple parcels (large industrial complexes, campuses). Only update when new multi-parcel projects are added or removed.</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Rules</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>building_id</code></td>
-<td>join → <code>buildings</code></td>
-</tr>
-<tr>
-<td><code>parcel_id</code></td>
-<td>join → <code>parcels</code></td>
-</tr>
-</tbody>
-</table>
 <hr />
 <h2 id="update-checklist-new-forecast-cycle">Update Checklist (New Forecast Cycle)<a class="headerlink" href="#update-checklist-new-forecast-cycle" title="Permanent link">&para;</a></h2>
 <ul>

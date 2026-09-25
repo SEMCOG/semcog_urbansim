@@ -16,6 +16,8 @@
         <link rel="prev" href="../domains/travel.html">
       
       
+        <link rel="next" href="runtime-input-files.html">
+      
       
         
       
@@ -730,6 +732,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="runtime-input-files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Input Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -784,12 +814,6 @@
 <td><code>parcel_id</code></td>
 <td>Accessibility analysis → <code>access_indicators.h5</code></td>
 <td><a href="../domains/accessibility.html">Accessibility</a></td>
-</tr>
-<tr>
-<td><code>acs_household_change_by_block_group</code></td>
-<td><code>block_group_geoid</code></td>
-<td>ACS → HDF</td>
-<td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
 <td><code>annual_employment_control_totals</code></td>
@@ -906,12 +930,6 @@
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
-<td><code>income_growth_rates</code></td>
-<td><code>year</code></td>
-<td>REMI extract → HDF</td>
-<td><a href="../domains/demographics.html">Demographics</a></td>
-</tr>
-<tr>
 <td><code>jobs</code></td>
 <td><code>job_id</code></td>
 <td>CSV</td>
@@ -936,22 +954,16 @@
 <td><a href="../domains/geography.html">Geography</a></td>
 </tr>
 <tr>
-<td><code>mcd_total</code></td>
-<td><code>mcd</code></td>
-<td>CSV (controls pipeline)</td>
-<td><a href="../domains/demographics.html">Demographics</a></td>
-</tr>
-<tr>
 <td><code>micro_zones</code></td>
 <td><code>maz_id</code></td>
 <td>SQL (<code>terminus_maz_v3</code>)</td>
 <td><a href="../domains/geography.html">Geography</a></td>
 </tr>
 <tr>
-<td><code>multi_parcel_buildings</code></td>
-<td>—</td>
-<td>SQL</td>
-<td><a href="../domains/land-use.html">Land Use</a></td>
+<td><code>parcel_maz_crossing_shares</code></td>
+<td><code>parcel_id</code> (non-unique)</td>
+<td>Parcel/MAZ overlay → main HDF</td>
+<td><a href="../domains/geography.html">Geography</a></td>
 </tr>
 <tr>
 <td><code>parcels</code></td>
@@ -984,10 +996,16 @@
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
-<td><code>remi_pce_growth_rate</code></td>
+<td><code>remi_income_ratios</code></td>
 <td><code>year</code></td>
-<td><code>development_context/PCE_growth_rate.py</code> → HDF</td>
-<td><a href="../domains/development-context.html">Development &amp; Context</a></td>
+<td>REMI extract → HDF</td>
+<td><a href="../domains/demographics.html">Demographics</a></td>
+</tr>
+<tr>
+<td><code>remi_local_price_ratios</code></td>
+<td><code>year</code></td>
+<td>REMI extract → HDF</td>
+<td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
 <td><code>schools</code></td>
@@ -1011,12 +1029,6 @@
 <td><code>target_vacancies_mcd</code></td>
 <td><code>cityid</code></td>
 <td>Rate table</td>
-<td><a href="../domains/demographics.html">Demographics</a></td>
-</tr>
-<tr>
-<td><code>taz_demographic_snapshots</code></td>
-<td><code>taz_id × snapshot_year</code></td>
-<td>Historical data → HDF</td>
 <td><a href="../domains/demographics.html">Demographics</a></td>
 </tr>
 <tr>
