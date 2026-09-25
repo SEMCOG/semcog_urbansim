@@ -55,9 +55,6 @@ for name in [
     "landmark_worksites",
     "mcd_total",
     "dropped_buildings",
-    # No MCD household forecast is used for RDF2055, so do not load its
-    # legacy block-group trend state from an input HDF.
-    # "bg_hh_increase",
     "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
@@ -88,30 +85,6 @@ def btype_owner_share(store):
 @orca.table("debug_res_developer")
 def debug_res_developer():
     return pd.DataFrame(columns=["year", "mcd", "target_units", "units_added"])
-
-
-@orca.table("bg_hh_increase")
-def bg_hh_increase():
-    bg_hh_inc = pd.read_csv(input_paths.ACS_BG_HH_CSV)
-    bg_hh_inc["GEOID"] = bg_hh_inc["GEOID"].astype(int)
-    # initialized iteration variable
-    bg_hh_inc["occupied"] = bg_hh_inc["OccupiedHU19"]
-    bg_hh_inc["previous_occupied"] = bg_hh_inc["OccupiedHU14"]
-    bg_hh_inc["occupied_year_minus_1"] = -1
-    bg_hh_inc["occupied_year_minus_2"] = -1
-    bg_hh_inc["occupied_year_minus_3"] = -1
-    return bg_hh_inc[
-        [
-            "GEOID",
-            "OccupiedHU19",
-            "OccupiedHU14",
-            "occupied",
-            "previous_occupied",
-            "occupied_year_minus_1",
-            "occupied_year_minus_2",
-            "occupied_year_minus_3",
-        ]
-    ].set_index("GEOID")
 
 
 @orca.table(cache=True)
