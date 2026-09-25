@@ -55,7 +55,9 @@ for name in [
     "landmark_worksites",
     "mcd_total",
     "dropped_buildings",
-    "bg_hh_increase",
+    # No MCD household forecast is used for RDF2055, so do not load its
+    # legacy block-group trend state from an input HDF.
+    # "bg_hh_increase",
     "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
