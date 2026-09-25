@@ -39,14 +39,6 @@ BASE_HDF = _p(
     f"{_LOCAL}/main_091626.h5",
 )
 
-# 2020 base- RDF2050 — used only to derive the 2020->2025 block-group
-# household base trend for bg_hh_increase (see dataset.bg_hh_increase).
-BG_HH_2020_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2050/model_inputs/base_hdf/forecast_data_input_031523.h5",
-    f"{_LOCAL}/forecast_data_input.h5",
-    f"{_LOCAL}/forecast_data_input_031523.h5",
-)
-
 # RDF2055 estimation
 HLCM_MODEL_DIR = _p(
     "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
@@ -125,23 +117,6 @@ SCENARIO_REMI_POP_CSV = _p(
 SCENARIO_EMP_CONTROL_CSV = _p(
     f"{_SCEN}/annual_employment_control_totals.csv",
     f"{_SCEN_LOCAL}/annual_employment_control_totals.csv",
-)
-
-# ---------------------------------------------------------------------------
-# Historical / back-cast (optional analysis, not the forward run)
-# ---------------------------------------------------------------------------
-# Past-round base HDFs, used as the TAZ trend bases (10yr and 5yr) in
-# models.init_taz_hlcm_trend_by_year.
-HDF_INPUT_2045 = _p(
-    "/mnt/hgfs/urbansim/RDF2045/data/base_year/all_semcog_data_02-02-18-final-forecast-pd3.h5",
-    f"{_LOCAL}/all_semcog_data_02-02-18-final-forecast.h5",
-)
-# same store as BG_HH_2020_HDF; aliased so the trend source reads by intent
-HDF_INPUT_2050 = BG_HH_2020_HDF
-
-ACS_BG_HH_CSV = _p(
-    os.path.join(os.path.dirname(__file__), "data", "ACS_HH_14_19_BG.csv"),
-    f"{_LOCAL}/ACS_HH_14_19_BG.csv",
 )
 
 # ---------------------------------------------------------------------------

@@ -17,7 +17,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
-from forecast_estimation.utils import load_taz_vars_from_orca, load_taz_vars_from_hdf
+from forecast_estimation.utils import load_taz_vars_from_orca
 
 import utils
 import lcm_utils
@@ -471,21 +471,16 @@ def init_taz_hlcm_trend_by_year():
     # init taz totals object
     taz_sim_trend_by_year = {}
 
-    if orca.is_table('taz_hlcm_trend_by_year'):
-        hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
-        for yr, df in hist.groupby(level='year'):
-            taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
-        print('Loaded TAZ trend bases from input hdf:',
-              sorted(taz_sim_trend_by_year))
-    else:
-        print('WARNING: taz_hlcm_trend_by_year not in the input hdf; rebuilding '
-              'the trend bases from the past-round HDFs. Rebuild the input with '
-              'forecast_data_input to remove this step.')
-        # 10yr trend base: RDF2045 (2015); 5yr trend base: RDF2050 (2020)
-        taz_sim_trend_by_year['2015'] = load_taz_vars_from_hdf(
-            orca.get_injectable('hdf_input_2045'))
-        taz_sim_trend_by_year['2020'] = load_taz_vars_from_hdf(
-            orca.get_injectable('hdf_input_2050'))
+    if not orca.is_table('taz_hlcm_trend_by_year'):
+        raise RuntimeError(
+            "Input HDF must include taz_hlcm_trend_by_year with the 2015 and "
+            "2020 trend bases."
+        )
+    hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
+    for yr, df in hist.groupby(level='year'):
+        taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
+    print('Loaded TAZ trend bases from input hdf:',
+          sorted(taz_sim_trend_by_year))
 
     # initiating baseyear attribute df
     df_cur = load_taz_vars_from_orca()
