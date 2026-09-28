@@ -136,7 +136,8 @@ orca.run(
         "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
-        "update_bg_hh_increase",
+        # No MCD household forecast is used for RDF2055.
+        # "update_bg_hh_increase",
     ],
     iter_vars=list(range(run_start + 1, final_year + 1)),
     data_out=data_out,
@@ -187,7 +188,7 @@ orca.run(
         "persons",
         "group_quarters",
         "dropped_buildings",
-        "bg_hh_increase",
+        # "bg_hh_increase",  # legacy MCD sampling state; inactive for RDF2055
     ],
     out_interval=1,
     compress=True,

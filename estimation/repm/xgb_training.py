@@ -3,7 +3,7 @@
 REPM XGBoost Training - Train real estate price models with XGBoost.
 
 Run from the repository root:
-nohup python -m repm.xgb_training > \
+nohup python -m estimation.repm.xgb_training > \
   runs/training_logs/repm_train_$(date +%Y%m%d_%H%M%S).txt 2>&1 &
 """
 
@@ -45,7 +45,7 @@ REPM_OUTPUT_ROOT = Path(
     os.environ.get("REPM_ESTIMATION_OUTPUT_DIR", "/home/da/RDF2055/d_drive/estimation/REPM")
 )
 REPM_DIR = Path(__file__).resolve().parent
-REPO_ROOT = REPM_DIR.parent
+REPO_ROOT = REPM_DIR.parents[1]
 GRID_SEARCH_BASELINE_DIR = REPO_ROOT / "configs" / "repm_xgb"
 REPM_XGB_PATH = None
 EASTERN = ZoneInfo("America/Detroit")
@@ -940,7 +940,7 @@ def run_repm_training():
     Path(REPM_XGB_PATH).mkdir(parents=True, exist_ok=True)
 
     # Stage 1: Load data
-    from repm import neighborhood_vars_cache as nvcache
+    from estimation.repm import neighborhood_vars_cache as nvcache
 
     if nvcache.is_valid():
         print("[1/4] Loading cached buildings + accessibility variables...")

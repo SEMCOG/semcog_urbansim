@@ -17,7 +17,7 @@ import pandas as pd
 from urbansim.models import transition, relocation
 from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
-from forecast_estimation.utils import load_taz_vars_from_orca, load_taz_vars_from_hdf
+from forecast_estimation.utils import load_taz_vars_from_orca
 
 import utils
 import lcm_utils
@@ -471,21 +471,16 @@ def init_taz_hlcm_trend_by_year():
     # init taz totals object
     taz_sim_trend_by_year = {}
 
-    if orca.is_table('taz_hlcm_trend_by_year'):
-        hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
-        for yr, df in hist.groupby(level='year'):
-            taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
-        print('Loaded TAZ trend bases from input hdf:',
-              sorted(taz_sim_trend_by_year))
-    else:
-        print('WARNING: taz_hlcm_trend_by_year not in the input hdf; rebuilding '
-              'the trend bases from the past-round HDFs. Rebuild the input with '
-              'forecast_data_input to remove this step.')
-        # 10yr trend base: RDF2045 (2015); 5yr trend base: RDF2050 (2020)
-        taz_sim_trend_by_year['2015'] = load_taz_vars_from_hdf(
-            orca.get_injectable('hdf_input_2045'))
-        taz_sim_trend_by_year['2020'] = load_taz_vars_from_hdf(
-            orca.get_injectable('hdf_input_2050'))
+    if not orca.is_table('taz_hlcm_trend_by_year'):
+        raise RuntimeError(
+            "Input HDF must include taz_hlcm_trend_by_year with the 2015 and "
+            "2020 trend bases."
+        )
+    hist = orca.get_table('taz_hlcm_trend_by_year').to_frame()
+    for yr, df in hist.groupby(level='year'):
+        taz_sim_trend_by_year[str(int(yr))] = df.reset_index(level='year', drop=True)
+    print('Loaded TAZ trend bases from input hdf:',
+          sorted(taz_sim_trend_by_year))
 
     # initiating baseyear attribute df
     df_cur = load_taz_vars_from_orca()
@@ -621,7 +616,7 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
     @orca.step(model_name)
     def func():
-        from repm.xgb_utils import load_repm_xgb_model
+        from estimation.repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
 
@@ -3122,10 +3117,8 @@ def shifters():
 
 def cost_shifter_callback(self, form, df, costs):
     yr = orca.get_injectable("year")
-    # region-wide price multiplier = cross-LA mean of remi_local_price_ratios for
-    # the year (cost shifter is city_id-calibrated, so apply a single scalar).
-    lpr = orca.get_table("remi_local_price_ratios").to_frame()
-    costs = costs * (float(lpr.loc[yr].mean()) if yr in lpr.index else 1.0)
+    pce_ratios = orca.get_injectable("remi_pce_ratios")
+    costs = costs * pce_ratios.get(yr, 1.0)
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
@@ -3619,7 +3612,6 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
     if len(new_b) == 0:
         return
     new_b["building_sqft"] = (
-        #  Cast to int64 to prevent overflow
         new_b["residential_units"].astype("int64")
         * new_b["sqft_per_unit"].astype("int64")
         + new_b["non_residential_sqft"]
@@ -4178,7 +4170,7 @@ def build_networks(parcels):
         {
             "name": "osm_walk_2024",
             "cost": "cost1",
-            "prev": 16400,  # 3.1 miles
+            "prev": 16400,
             "net": "net_walk",
             "nodeid_col": "nodeid_walk",
         },
@@ -4207,7 +4199,7 @@ def build_networks(parcels):
     ]
     if missing_networks:
         st = pd.HDFStore(input_paths.NETWORKS_2050_H5, "r")
-        pdna.network.reserve_num_graphs(len(lstnet))
+        pdna.network.reserve_num_graphs(2)
 
         for n in missing_networks:
             n_dic_net = dic_net[n["name"]]

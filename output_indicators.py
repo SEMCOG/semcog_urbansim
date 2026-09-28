@@ -72,7 +72,38 @@ def add_legislative_ids(parcels):
     parcels['us_congress_id'] = p2l['us_congress_id']
     parcels['us_congress_id'] = parcels['us_congress_id'].fillna(-1).astype(int)
     return parcels
-    
+
+
+def _prepare_year_indicator_frame(frame):
+    """Normalize one geography/year frame once for the year-sheet workbook."""
+    return frame.dropna(axis=1, how="all").fillna(0).sort_index().sort_index(axis=1)
+
+
+def _prepare_indicator_year_panel(frames, year_names, indicators):
+    """Build the shared year-by-indicator panel for one geography.
+
+    The legacy exporter concatenated, filled, and sorted this same data once
+    per indicator worksheet.  Keep the two workbook views, but prepare the
+    common panel once and select each indicator from it below.
+    """
+    panel = pd.concat(
+        [frame.reindex(columns=indicators) for frame in frames],
+        axis=1,
+        keys=year_names,
+        copy=False,
+    )
+    panel.columns.names = ["year", "indicator"]
+    return panel.fillna(0).sort_index()
+
+
+def _indicator_year_view(panel, indicator, year_names, geography_label=None):
+    """Return one indicator's existing year-by-geography Excel view."""
+    frame = panel.xs(indicator, axis=1, level="indicator").reindex(columns=year_names)
+    if geography_label is not None:
+        frame = frame.join(geography_label)
+        frame = frame.set_index(geography_label.name, append=True)
+    return frame.fillna(0).sort_index().sort_index(axis=1)
+
 
 def upload_whatnots_to_postgres(run_name, whatnots):
     table_name = "whatnots_" + run_name
@@ -371,6 +402,11 @@ def main(
     start = time.time()
     geom = ["cities", "large_areas", "us_congress", "mi_senate", "mi_house", "semmcds", "schools", "zones"]
     y5 = year_names[0::5]
+    indicators = list_indicators()
+    year_indicator_frames = {
+        tab: [_prepare_year_indicator_frame(frame) for frame in dict_ind[tab]]
+        for tab in geom
+    }
 
     for tab in geom:
         print(tab)
@@ -382,10 +418,7 @@ def main(
 
         writer = pd.ExcelWriter(os.path.join(all_years_dir, xls_name))
         for i, y in enumerate(year_names):
-            df = dict_ind[tab][i]
-            df = df.dropna(axis=1, how="all")
-            df = df.fillna(0)
-            df = df.sort_index().sort_index(axis=1)
+            df = year_indicator_frames[tab][i]
 
             df.to_excel(writer, sheet_name=y)
             if (spacing == 1) & (y in y5):  # 5-year indicator files
@@ -406,19 +439,20 @@ def main(
             # name = orca.get_table(tab).city_name
         if tab == "large_areas":
             name = orca.get_table(tab).large_area_name
-        for ind in list_indicators():
-            df = pd.concat([df[ind] for df in dict_ind[tab]], axis=1)
-            df.columns = year_names
-            if tab == "cities" or tab == "semmcds":
-                df["large_area_id"] = la_id
-                df.set_index("large_area_id", append=True, inplace=True)
-            if tab == "large_areas":
-                df["large_area_name"] = name
-                df.set_index("large_area_name", append=True, inplace=True)
+        geography_label = None
+        if tab == "cities" or tab == "semmcds":
+            geography_label = la_id
+        if tab == "large_areas":
+            geography_label = name
+        panel = _prepare_indicator_year_panel(
+            dict_ind[tab], year_names, indicators
+        )
+        for ind in indicators:
+            df = _indicator_year_view(
+                panel, ind, year_names, geography_label
+            )
             if len(df.columns) > 0:
                 print("saving:", ind)
-                df = df.fillna(0)
-                df = df.sort_index().sort_index(axis=1)
                 df.to_excel(writer, sheet_name=ind)
                 if spacing == 1:
                     df[y5].to_excel(writer5, sheet_name=ind)
@@ -517,4 +551,3 @@ if __name__ == "__main__":
         spacing=5,
         upload_to_carto=False,
     )
-

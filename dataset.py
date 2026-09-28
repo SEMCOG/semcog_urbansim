@@ -15,9 +15,9 @@ warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
 table_dir = "data"
 
 for name in [
-    "remi_hh_pop",
-    "remi_income_ratios",       # per-LA cumulative income ratios (base yr 2022)
-    "remi_local_price_ratios",  # per-LA cumulative price ratios (base yr 2022)
+    "remi_hh_pop",     # household population target (total - GQ); preferred
+    "remi_pop_total",  # legacy TOTAL population — fallback only (see households_transition)
+    "remi_local_price_ratios",  # per-LA cumulative price ratios; rebased in models.remi_price_ratios
     "persons",
     "parcels",
     "zones",
@@ -49,13 +49,13 @@ for name in [
     "events_addition",
     "events_deletion",
     "refiner_events",
+    "income_growth_rates",
     "target_vacancies",
     "target_vacancies_mcd",
     "demolition_rates",
     "landmark_worksites",
     "mcd_total",
     "dropped_buildings",
-    "bg_hh_increase",
     "taz_hlcm_trend_by_year",
 ]:
     store = orca.get_injectable("store")
@@ -86,32 +86,6 @@ def btype_owner_share(store):
 @orca.table("debug_res_developer")
 def debug_res_developer():
     return pd.DataFrame(columns=["year", "mcd", "target_units", "units_added"])
-
-
-@orca.table("bg_hh_increase", cache=True)
-def bg_hh_increase():
-    # Base block-group household trend = 2020 -> 2025 household change, computed
-    # from the 2020 base (BG_HH_2020_HDF) and the 2025 base
-    def bg_hh_counts(hdf):
-        h = pd.read_hdf(hdf, "households")
-        b = pd.read_hdf(hdf, "buildings")
-        p = pd.read_hdf(hdf, "parcels")
-        pgeo = (26 * 10**10
-                + p["county_id"].astype("int64") * 10**7
-                + p["census_bg_id"].astype("int64"))
-        hgeo = h["building_id"].map(b["parcel_id"].map(pgeo))
-        return hgeo.dropna().astype("int64").value_counts()
-
-    occ_2025 = bg_hh_counts(input_paths.BASE_HDF)        # 2055 base year (2025)
-    occ_2020 = bg_hh_counts(input_paths.BG_HH_2020_HDF)  # 2050 base year (2020)
-    bg = pd.DataFrame(
-        {"occupied": occ_2025, "previous_occupied": occ_2020}
-    ).fillna(0).astype(int)
-    bg.index.name = "GEOID"
-    bg["occupied_year_minus_1"] = -1
-    bg["occupied_year_minus_2"] = -1
-    bg["occupied_year_minus_3"] = -1
-    return bg
 
 
 @orca.table(cache=True)
@@ -165,10 +139,6 @@ def buildings(store):
 
     df["mcd_model_quota"] = 0
 
-    # drop city_id if exists
-    df = df.drop(columns=["city_id"], errors="ignore")
-
-    # hu_filter assignment
     df["hu_filter"] = 0
     hu_cities = [1155, 1100, 3130, 6020, 6040]
     b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
@@ -306,6 +276,14 @@ def census_tracts(store):
 def base_job_space(buildings):
     return buildings.jobs_non_home_based.to_frame("base_job_space")
 
+# building_to_zone_baseyear retired (Jul 2026): its job -- correcting a base-year
+# building to its own TAZ on a parcel that straddles a zone boundary -- is subsumed at
+# finer MAZ resolution by building_to_maz_override + the maz->taz crosswalk. See
+# variables/variables_building.py (maz_id / zone_id).
+
+@orca.table(cache=True)
+def poi(store):
+    return store["points_of_interest_by_category"]
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():
@@ -339,4 +317,29 @@ orca.broadcast(
 )
 orca.broadcast("zones", "parcels", cast_index=True, onto_on="zone_id")
 orca.broadcast("schools", "parcels", cast_on="parcel_id", onto_index=True)
+
+
+def _load_remi_ratios_from_hdf(store):
+    """Load pre-computed REMI growth ratios from HDF.
+
+    All data comes from the base HDF (forecast_data_input.h5):
+      remi_income_ratios      -- {year: {large_area_id(int): ratio vs 2022}}
+      remi_local_price_ratios -- per-LA price ratios; averaged to region-wide PCE
+    """
+    income_df = store["remi_income_ratios"]
+    income_ratios = {int(y): {int(la): float(income_df.at[y, la]) for la in income_df.columns}
+                     for y in income_df.index}
+
+    # Region-wide PCE: average the per-LA local price ratios (variation ~1%, negligible)
+    price_df = store["remi_local_price_ratios"]
+    pce_ratios = {int(y): float(price_df.loc[y].mean()) for y in price_df.index}
+
+    print(f"REMI growth rates loaded from HDF: {len(income_ratios)} years, "
+          f"{len(next(iter(income_ratios.values())))} large areas")
+    return income_ratios, pce_ratios
+
+
+_remi_income, _remi_pce = _load_remi_ratios_from_hdf(orca.get_injectable("store"))
+orca.add_injectable("remi_income_ratios", _remi_income)
+orca.add_injectable("remi_pce_ratios", _remi_pce)
 orca.add_injectable("remi_base_year", 2025)
