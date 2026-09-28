@@ -6,6 +6,7 @@ import pandas as pd
 import utils
 import input_paths
 
+os.environ['DATA_HOME'] = '/home/da/RDF2055/d_drive/runs'
 # get run number and set up log file
 data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
