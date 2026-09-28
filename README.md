@@ -1,83 +1,50 @@
 SEMCOG
 ======
 
-[UrbanSim2][] implementation for [SEMCOG][].
+[UrbanSim][] implementation for [SEMCOG][], used to produce the Regional Development Forecast (RDF) for Southeast Michigan. The current forecast cycle is RDF 2055.
 
-[SEMCOG 2050 forecast][].
+Published forecast: [SEMCOG 2050 forecast][].
 
-[UrbanSim2]: https://github.com/synthicity/urbansim
-[SEMCOG]: http://www.semcog.org/
+[UrbanSim]: https://github.com/UDST/urbansim
+[SEMCOG]: https://www.semcog.org/
 [SEMCOG 2050 forecast]: https://maps.semcog.org/forecast/
 
 ### Documentation
 
-- [Model Wiki](docs/index.md) — simulation architecture, model components, configuration, and how to run
-- [Input Data Wiki](data_wiki/index.md) — reference for data developers: all input tables, schemas, validation, and update procedures
+- [SEMCOG 2055 Model Input Wiki](https://semcog.github.io/semcog_urbansim/) — reference for data developers: input tables, schemas, validation, and update procedures
 
-### Locate `semcog_urbansim` project folder
-#### Project folder and data
-Make sure folder `D:\projects\semcog_urbansim` has both repo and `data` in it.
-(Copy from `urbansim4`)
+### Computing environment
 
-#### Required libraries
-Make sure folder `D:\RDF2055\libs` exist and contains all required libs
-(Copy from `urbansim4`)
+The model runs inside a Docker container built from the included `Dockerfile`. The image provides a micromamba environment named `forecast` with the Python packages listed in `requirements.txt`. GPU support is used for location choice model estimation and simulation when available.
 
-### Docker Image loading
-`forecast-sim-image.tar` is located in `urbansim4` `D:\docker`. Inside the folder, do
-```
-docker load -i forecast-sim-image.tar
-```
+### Data organization
 
-### Docker Run Script
-```
-docker run \
-  --gpus all \
-  --name forecast-sim \
-  --dns 192.168.182.10 \
-  --dns-search semcogdom.local \
-  --privileged \
-  --cap-add SYS_ADMIN \
-  --device /dev/fuse \
-  -v D:\:/mnt/D \
-  -v D:\RDF2050:/mnt/hgfs/RDF2050 \
-  -v "U:\:/mnt/hgfs/urbansim" \
-  -v D:\projects\semcog_urbansim:/mnt/semcog_urbansim \
-  -itd forecast_simulation
-```
+Input data and model outputs are kept outside the repository and mounted into the container:
 
-### After creating container
-#### Mount all network drive
-mount via fstab, do
-```
-sudo mount -a
-```
-#### Check if drives mounted correctly
-```
-ls -l /mnt/semcog_urbansim
-ls -l /mnt/hgfs/RDF2050
-ls -l /mnt/hgfs/urbansim
-```
+- **Base-year inputs** — a single HDF5 store with households, persons, jobs, buildings, parcels, zones, and related tables (see the Model Input Wiki).
+- **Control totals** — regional household and employment forecasts by large area.
+- **Estimated models** — household and employment location choice models and real estate price models.
+- **Accessibility and network data** — parcel-level accessibility indicators and travel networks.
+- **Outputs** — simulation results written per run under `runs/`.
 
-### Development
-Project folder will be located in `/mnt/semcog_urbansim`
-#### Activate `forecast` env
+Input file locations are set in `input_paths.py`.
+
+### Repository layout
+
+| Path | Contents |
+|---|---|
+| `simulation_2055.py` | Main simulation entry point |
+| `models.py`, `dataset.py`, `variables/` | Model steps, data tables, and computed variables |
+| `configs/` | Model configuration (YAML) |
+| `estimation/` | Model estimation code |
+| `indicators/` | Output indicator summaries |
+| `scripts/` | Data preparation and testing utilities |
+
+### Running a simulation
+
+From the project folder inside the container:
+
 ```
 micromamba activate forecast
-```
-
-#### Running similation with complete loggings
-```
-nohup python simulation_2055.py >> runs/run_stdout/simulation_log.txt 2>&1 &
-```
-
-### Commit, Export and Load
-```
-docker commit forecast-sim forecast_simulation
-```
-```
-docker save -o forecast-sim-image.tar forecast_simulation
-```
-```
-docker load -i forecast_simulation_final.tar
+python simulation_2055.py
 ```
