@@ -907,6 +907,7 @@ RETIRED_REPM_FEATURES = {
 def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
+    from estimation.repm.city_effects import city_id_from_feature
 
     model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb"
     all_features = set()
@@ -921,6 +922,12 @@ def get_all_xgb_features():
             all_features.update(meta['feature_names'])
 
     all_features.difference_update(RETIRED_REPM_FEATURES)
+    # City fixed effects are reconstructed from city_id by models.py rather
+    # than requested as physical building-table columns.
+    all_features = {
+        feature for feature in all_features
+        if city_id_from_feature(feature) is None
+    }
     return all_features
 
 
@@ -945,7 +952,7 @@ def get_cached_buildings_df(buildings, needed_cols, year):
 
         # Also add filter columns
         filter_cols = {'hedonic_id', 'residential_units', 'non_residential_sqft',
-                      'sqft_price_res', 'sqft_price_nonres'}
+                      'sqft_price_res', 'sqft_price_nonres', 'city_id'}
         all_features.update(filter_cols)
 
         print(f"  Loading {len(all_features)} features for caching...")

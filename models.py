@@ -616,6 +616,7 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
     @orca.step(model_name)
     def func():
+        from estimation.repm.city_effects import city_id_from_feature
         from estimation.repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
@@ -635,10 +636,27 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
         # Get all feature names needed by model
         feature_names = model_wrapper.feature_names
+        city_feature_ids = {
+            feature: city_id_from_feature(feature)
+            for feature in feature_names
+        }
+        city_feature_ids = {
+            feature: city_id for feature, city_id in city_feature_ids.items()
+            if city_id is not None
+        }
 
         # Load all needed columns from buildings table (with caching via utils)
-        needed_cols = list(set(['hedonic_id', size_col, price_col] + feature_names))
+        needed_cols = ['hedonic_id', size_col, price_col] + feature_names
+        if city_feature_ids:
+            needed_cols.append('city_id')
+        needed_cols = list(set(needed_cols))
         buildings_df = utils.get_cached_buildings_df(buildings, needed_cols, year)
+
+        # City fixed-effect features are stored in REPM metadata, rather than
+        # as permanent building columns.  Recreate their one-hot values from
+        # the stable building city ID before prediction.
+        for feature, city_id in city_feature_ids.items():
+            buildings_df[feature] = (buildings_df['city_id'] == city_id).astype(float)
 
         # Filter to this hedonic segment with valid space.
         # Do NOT filter on price_col — new buildings start at 0 and need pricing.
@@ -772,12 +790,15 @@ def remi_price_ratios(year):
     """Per-LA REMI price-level ratios for `year`, rebased to remi_base_year.
 
     The same index inflates construction costs (cost_shifter_callback), so prices and
-    costs grow together. None if the year is outside the table.
+    costs grow together. None if the year is outside the table. With remi_price_growth
+    off every ratio is 1.0, so real_estate_adjustment holds LA averages at base level.
     """
     lpr = orca.get_table("remi_local_price_ratios").to_frame()
     base = orca.get_injectable("remi_base_year")
     if year not in lpr.index or base not in lpr.index:
         return None
+    if not orca.get_injectable("remi_price_growth"):
+        return {int(la): 1.0 for la in lpr.columns}
     r0 = lpr.loc[base]
     return {int(la): float(r / r0[la]) for la, r in lpr.loc[year].items()}
 
@@ -3117,8 +3138,9 @@ def shifters():
 
 def cost_shifter_callback(self, form, df, costs):
     yr = orca.get_injectable("year")
-    pce_ratios = orca.get_injectable("remi_pce_ratios")
-    costs = costs * pce_ratios.get(yr, 1.0)
+    if orca.get_injectable("remi_price_growth"):
+        pce_ratios = orca.get_injectable("remi_pce_ratios")
+        costs = costs * pce_ratios.get(yr, 1.0)
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
