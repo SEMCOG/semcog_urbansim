@@ -38,6 +38,10 @@ orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTRO
 orca.add_injectable('allow_total_pop_fallback', False)
 # households matching no control category: warn (False) or raise (True)
 orca.add_injectable('require_full_control_coverage', False)
+# REMI growth on real-estate prices and construction costs together; False keeps
+# both in base-year dollars (real_estate_adjustment still anchors LA price averages)
+REMI_PRICE_GROWTH = True
+orca.add_injectable('remi_price_growth', REMI_PRICE_GROWTH)
 # run-level random seed; None draws a fresh one (logged in run_config.yaml)
 RANDOM_SEED = 271828
 if RANDOM_SEED is None:
@@ -58,6 +62,7 @@ utils.write_run_metadata(
         "indicator_spacing": indicator_spacing,
         "upload_to_carto": upload_to_carto,
         "run_debug": run_debug,
+        "REMI_PRICE_GROWTH": REMI_PRICE_GROWTH,
     },
 )
 

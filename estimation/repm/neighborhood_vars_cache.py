@@ -33,7 +33,7 @@ CACHE_META_PATH = CACHE_DIR / "repm_training_matrix.meta.json"
 # variable_definitions entry added inline in models.py, a change to
 # _should_skip_var, a change to how nodeid_walk/nodeid_drv are assigned).
 # The fingerprint below only watches *data and config* files, not code.
-CACHE_SCHEMA_VERSION = 5
+CACHE_SCHEMA_VERSION = 6
 
 _CONFIG_YAMLS = [
     "configs/networks_walk.yaml",
