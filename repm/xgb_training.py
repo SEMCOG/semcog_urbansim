@@ -3,7 +3,7 @@
 REPM XGBoost Training - Train real estate price models with XGBoost.
 
 Run from the repository root:
-nohup python -m repm.xgb_training > \
+nohup python -m estimation.repm.xgb_training > \
   runs/training_logs/repm_train_$(date +%Y%m%d_%H%M%S).txt 2>&1 &
 """
 
@@ -22,6 +22,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from utils import apply_filter_query
+from estimation.repm.city_effects import city_feature_name
 
 # Suppress warnings
 warnings = __import__('warnings')
@@ -45,11 +46,26 @@ REPM_OUTPUT_ROOT = Path(
     os.environ.get("REPM_ESTIMATION_OUTPUT_DIR", "/home/da/RDF2055/d_drive/estimation/REPM")
 )
 REPM_DIR = Path(__file__).resolve().parent
-REPO_ROOT = REPM_DIR.parent
+REPO_ROOT = REPM_DIR.parents[1]
 GRID_SEARCH_BASELINE_DIR = REPO_ROOT / "configs" / "repm_xgb"
 REPM_XGB_PATH = None
 EASTERN = ZoneInfo("America/Detroit")
 FIXED_FEATURES_FILE = os.environ.get("REPM_FIXED_FEATURES_FILE")
+
+
+def _parse_int_set(value):
+    return {int(item) for item in value.split(",") if item.strip()}
+
+
+# Optional, targeted city fixed-effect experiment.  A selected large area gets
+# one categorical indicator per city with adequate observations in that model;
+# smaller city samples remain in the reference group.  Defaults preserve the
+# standard production specification.
+CITY_EFFECT_LARGE_AREAS = _parse_int_set(
+    os.environ.get("REPM_CITY_EFFECT_LARGE_AREAS", "")
+)
+CITY_EFFECT_MIN_SAMPLES = int(os.environ.get("REPM_CITY_EFFECT_MIN_SAMPLES", "30"))
+TARGET_LARGE_AREAS = _parse_int_set(os.environ.get("REPM_TARGET_LARGE_AREAS", ""))
 
 # Grid search settings
 USE_GRID_SEARCH = os.environ.get("REPM_USE_GRID_SEARCH", "1").lower() in {"1", "true", "yes"}
@@ -107,7 +123,13 @@ def get_max_features(sample_size):
 
 # Filter columns needed for model training (never skip these)
 FILTER_COLS = ["sqft_price_nonres", "sqft_price_res", "non_residential_sqft",
-               "hedonic_id", "residential_units"]
+               "hedonic_id", "residential_units", "city_id"]
+
+
+def _segment_large_area_id(segment):
+    """Return a large-area ID for standard (not regional) hedonic segments."""
+    hedonic_id = int(segment["hedonic_id"])
+    return hedonic_id // 100 if hedonic_id >= 100 else None
 
 
 def _should_skip_var(var: str) -> bool:
@@ -321,10 +343,27 @@ def _prepare_training_data(mat, segment, vars_used):
         return None, None, None, 0
 
     # Get features (exclude filter columns)
-    feat_idx = [i for i in range(mat.shape[0]) if i not in filter_idx]
+    # `vars_used` can contain the same column name more than once.  Exclude
+    # filter/metadata columns by name rather than just by their first index so
+    # `city_id` cannot become a spurious numeric predictor alongside city
+    # fixed-effect indicators.
+    feat_idx = [i for i, name in enumerate(vars_used) if name not in FILTER_COLS]
     feat_names = [vars_used[i] for i in feat_idx]
     X = mat.toarray()[:, df_filtered.index].T[:, feat_idx]
     y = np.log1p(df_filtered[segment["price_col"]].values)
+
+    if _segment_large_area_id(segment) in CITY_EFFECT_LARGE_AREAS:
+        city_counts = df_filtered["city_id"].astype(int).value_counts()
+        city_ids = sorted(
+            city_counts[city_counts >= CITY_EFFECT_MIN_SAMPLES].index.tolist()
+        )
+        if city_ids:
+            city_dummies = np.column_stack(
+                [(df_filtered["city_id"].values == city_id).astype(float)
+                 for city_id in city_ids]
+            )
+            X = np.column_stack((X, city_dummies))
+            feat_names.extend(city_feature_name(city_id) for city_id in city_ids)
 
     return np.nan_to_num(X, copy=False), y, feat_names, len(df_filtered)
 
@@ -934,13 +973,19 @@ def run_repm_training():
     print("="*80)
     print(f"Output:     {REPM_XGB_PATH}")
     print(f"Grid Search:{' Yes' if USE_GRID_SEARCH else ' No'}")
+    if TARGET_LARGE_AREAS:
+        print(f"Large areas: {sorted(TARGET_LARGE_AREAS)}")
+    if CITY_EFFECT_LARGE_AREAS:
+        print("City effects: "
+              f"LAs {sorted(CITY_EFFECT_LARGE_AREAS)}, "
+              f"minimum {CITY_EFFECT_MIN_SAMPLES} records")
     print(f"Timestamp:  {started_at.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     print("="*80 + "\n")
 
     Path(REPM_XGB_PATH).mkdir(parents=True, exist_ok=True)
 
     # Stage 1: Load data
-    from repm import neighborhood_vars_cache as nvcache
+    from estimation.repm import neighborhood_vars_cache as nvcache
 
     if nvcache.is_valid():
         print("[1/4] Loading cached buildings + accessibility variables...")
@@ -965,6 +1010,11 @@ def run_repm_training():
     # Stage 2: Identify segments
     print("[2/4] Identifying hedonic segments...")
     segments = _get_hedonic_segments(mat, vars_used)
+    if TARGET_LARGE_AREAS:
+        segments = [
+            segment for segment in segments
+            if _segment_large_area_id(segment) in TARGET_LARGE_AREAS
+        ]
     n_res = sum(1 for s in segments if s['is_residential'])
     n_nonres = len(segments) - n_res
     print(f"       Found {len(segments)} segments ({n_res} residential, {n_nonres} non-residential)\n")
@@ -1062,6 +1112,9 @@ def run_repm_training():
         'n_residential': n_res,
         'n_non_residential': n_nonres,
         'n_variables': len(vars_used),
+        'target_large_areas': sorted(TARGET_LARGE_AREAS),
+        'city_effect_large_areas': sorted(CITY_EFFECT_LARGE_AREAS),
+        'city_effect_min_samples': CITY_EFFECT_MIN_SAMPLES,
         'results': results,
         'failed_segments': failed_segments,
     }
