@@ -6,7 +6,7 @@ import resource
 import yaml
 import operator
 from multiprocessing import Pool
-from collections import Counter, defaultdict
+from collections import defaultdict
 import pickle
 
 import numpy as np
@@ -1694,59 +1694,58 @@ def households_transition(
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
 
-def get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds):
-    """Map each seed to a counterpart seed with one more / one fewer worker.
+def _swap_key_arrays(hh, p, hh_id_col, bins):
+    """Worker-swap composition keys, one int16 row per household in `hh` order.
 
-    Returns (add_worker_dict, drop_worker_dict), each {age_bin: {seed_id: target_seed_id}}.
-    A counterpart has the same persons, race, age-of-head bin, children and member
-    age-bin multiset, and differs by exactly one worker in `age_bin`, with every other
-    band's worker count unchanged. Adds also need an income quartile >= the source.
-    A seed gets a counterpart in every band where one exists; the closest income
-    quartile wins (adds: lowest >= source; drops: prefer <= source), ties broken by
-    lowest seed_id, so the result is deterministic. `hh_seeds` / `p_seeds` carry
-    seed_id as a column (the caller resets their index).
+    Row layout: [persons, race_id, aoh_bin, children | members per age bin |
+    workers per age bin]. Member/worker counts come from the person rows, linked to
+    `hh.index` through `p[hh_id_col]`; `bins` are the age_bin labels.
     """
-    hs = hh_seeds.set_index("seed_id")
-    ps = p_seeds[["seed_id", "age_bin", "worker"]]
-    mem = ps.groupby("seed_id").age_bin.apply(lambda x: tuple(sorted(x)))
-    wv = ps[ps.worker == 1].groupby("seed_id").age_bin.apply(
-        lambda x: tuple(sorted(Counter(x).items())))
-    s = pd.DataFrame(index=hs.index)
-    s["inc_qt"] = hs.inc_qt.astype(int)
-    s["key"] = list(zip(hs.persons, hs.race_id, hs.aoh_bin.astype(int), hs.children,
-                        mem.reindex(hs.index)))
-    s["wv"] = [v if isinstance(v, tuple) else () for v in wv.reindex(hs.index)]
+    rows = hh.index.get_indexer(p[hh_id_col])
+    cols = pd.Index(bins).get_indexer(p["age_bin"])
+    ok = (rows >= 0) & (cols >= 0)
+    rows, cols = rows[ok], cols[ok]
+    mem = np.zeros((len(hh), len(bins)), dtype=np.int16)
+    np.add.at(mem, (rows, cols), 1)
+    wrk = np.zeros_like(mem)
+    np.add.at(wrk, (rows, cols), p["worker"].to_numpy()[ok].astype(np.int16))
+    comp = np.column_stack(
+        [hh.persons, hh.race_id, hh.aoh_bin.astype(int), hh.children]).astype(np.int16)
+    return np.ascontiguousarray(np.hstack([comp, mem, wrk]))
 
-    # (composition key, worker vector) -> [(inc_qt, seed_id), ...]
-    by_vec = defaultdict(list)
-    for sid, k, v, q in zip(s.index, s.key, s.wv, s.inc_qt):
-        by_vec[(k, v)].append((q, sid))
 
-    def shifted(v, b, d):
-        c = Counter(dict(v))
-        c[b] += d
-        return tuple(sorted((x, n) for x, n in c.items() if n > 0))
+def _seed_swap_index(seed_keys, seed_inc_qt, seed_ids):
+    """{composition key bytes: [(inc_qt, seed_id), ...] sorted} over the seeds."""
+    index = defaultdict(list)
+    for k, q, s in zip(map(bytes, seed_keys), seed_inc_qt, seed_ids):
+        index[k].append((int(q), int(s)))
+    for v in index.values():
+        v.sort()
+    return index
 
-    add_worker_dict = defaultdict(dict)
-    drop_worker_dict = defaultdict(dict)
-    for sid in np.sort(hh.seed_id.unique()):
-        if sid not in s.index:
+
+def _swap_targets(keys, inc_qt, col, step, seed_index):
+    """Swap target seed per household, or -1 if none.
+
+    A target has the household's exact composition key except one worker more
+    (step=1) or fewer (step=-1) in key column `col`. Adds take the lowest income
+    quartile >= the household's; drops prefer <= it, then the closest; ties go to
+    the lowest seed_id, so the result is deterministic.
+    """
+    shifted = keys.copy()
+    shifted[:, col] += step
+    out = np.full(len(keys), -1, dtype=np.int64)
+    for i, (k, q) in enumerate(zip(map(bytes, shifted), inc_qt)):
+        cands = seed_index.get(k)
+        if not cands:
             continue
-        k, v, q = s.at[sid, "key"], s.at[sid, "wv"], s.at[sid, "inc_qt"]
-        members, workers = Counter(k[4]), Counter(dict(v))
-        for b in members:
-            if b == 0:  # under 16: no employment band
-                continue
-            if members[b] > workers[b]:
-                cands = [c for c in by_vec.get((k, shifted(v, b, 1)), []) if c[0] >= q]
-                if cands:
-                    add_worker_dict[b][sid] = min(cands)[1]
-            if workers[b] > 0:
-                cands = by_vec.get((k, shifted(v, b, -1)), [])
-                if cands:
-                    drop_worker_dict[b][sid] = min(
-                        cands, key=lambda c: (c[0] > q, abs(c[0] - q), c[1]))[1]
-    return add_worker_dict, drop_worker_dict
+        if step > 0:
+            cands = [c for c in cands if c[0] >= q]
+            if cands:
+                out[i] = cands[0][1]
+        else:
+            out[i] = min(cands, key=lambda c: (c[0] > q, abs(c[0] - q), c[1]))[1]
+    return out
 
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
@@ -1797,8 +1796,8 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     closes the gap by swapping households with a counterpart seed household
     that has one more (or one fewer) worker and matched persons / race /
     age-bin / children. Household `workers` is then recomputed from the person
-    `worker` flags, and income/cars of changed households are resampled from
-    peers with the same composition and new worker count.
+    `worker` flags. A swapped household takes every attribute (incl. income and
+    cars) from its target seed, a real record with the new worker count.
 
     Formerly named `fix_lpr`; renamed 2026-06. Note the rates are employed-
     worker rates (employment), not labor-force participation rates.
@@ -1821,66 +1820,29 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     p = p.join(hh.seed_id, on='household_id')
     lpr = employed_workers_rate.to_frame(["age_min", "age_max", str(iter_var)])
 
-    colls = [
-        "persons",
-        "race_id",
-        "workers",
-        "children",
-        "large_area_id",
-    ]  # , 'age_of_head'
-    same = {tuple(idx): df[["income", "cars"]] for idx, df in hh.groupby(colls)}
-
-    # reset seeds index for generating mappings
-    hh_seeds = hh_seeds.reset_index()
+    # Swap targets are matched on each household's OWN composition (persons, race,
+    # head-age bin, children, members and workers per age bin), not on its seed_id,
+    # so a household that no longer matches its seed (e.g. a gap-fill clone) still
+    # swaps to a seed that shares its attributes. Every target differs by exactly
+    # one worker in the band, so each swap moves the count by one.
+    bins = age_bin_labels[:-1]
+    n_comp = 4
     p_seeds = p_seeds.reset_index()
+    seed_keys = _swap_key_arrays(hh_seeds, p_seeds, "seed_id", bins)
+    seed_inc_qt = hh_seeds.inc_qt.astype(int).to_numpy()
+    seed_index = _seed_swap_index(seed_keys, seed_inc_qt, hh_seeds.index.to_numpy())
+    seed_pos = pd.Series(np.arange(len(hh_seeds)), index=hh_seeds.index)
+    p_seeds = p_seeds.set_index("seed_id")
 
-    # Worker-swap seed mappings are cached as CSV and reused; delete the CSVs to
-    # rebuild them (takes a few seconds).
-    USE_SWAPPING_SEED_MAPPING = True
-    aw_path = 'data/add_worker_dict.csv'
-    dw_path = 'data/drop_worker_dict.csv'
-    if not os.path.exists(aw_path):
-        USE_SWAPPING_SEED_MAPPING = False
-        print(aw_path, ' not found. running get_worker_swap_seed_mapping')
-    if not os.path.exists(dw_path):
-        USE_SWAPPING_SEED_MAPPING = False
-        print(dw_path, ' not found. running get_worker_swap_seed_mapping')
-    if USE_SWAPPING_SEED_MAPPING:
-        add_worker_df = pd.read_csv(aw_path, index_col=0)
-        add_worker_df.columns = add_worker_df.columns.astype(int)
-        drop_worker_df = pd.read_csv(dw_path, index_col=0)
-        drop_worker_df.columns = drop_worker_df.columns.astype(int)
-    else:
-        add_worker_dict, drop_worker_dict = get_worker_swap_seed_mapping(hh, p, hh_seeds, p_seeds)
-        add_worker_df = pd.DataFrame(add_worker_dict)
-        add_worker_df.to_csv(aw_path, index=True)
-        drop_worker_df = pd.DataFrame(drop_worker_dict)
-        drop_worker_df.to_csv(dw_path, index=True)
+    hh_keys = _swap_key_arrays(hh, p, "household_id", bins)
+    hh_inc_qt = hh.inc_qt.astype(int).to_numpy(copy=True)
+    hh_la = hh.large_area_id.to_numpy()
+    swapped = np.zeros(len(hh), dtype=bool)
 
-    hh_seeds = hh_seeds.set_index('seed_id')
-    p_seeds = p_seeds.set_index('seed_id')
-
-    # p = p.reset_index().set_index('household_id')
-    pg = p.groupby('household_id')
-    hh_person_counts = pg.size()
-    seed_sizes = p_seeds.groupby(level=0).size()
-
-    def _drop_size_mismatch(hh_to_swap, target_seed_ids, ctx):
-        """Keep only households holding as many people as their target seed.
-
-        A household can differ from its seed -- e.g. a swap mapping built from
-        other base data. (Gap-fill clones carry a negative seed_id and never
-        reach this point.)
-        Copying the seed's person rows onto it would misalign the assignment.
-        """
-        ok = (
-            hh_to_swap.index.to_series().map(hh_person_counts).fillna(0).to_numpy()
-            == target_seed_ids.map(seed_sizes).fillna(-1).to_numpy()
-        )
-        if not ok.all():
-            print(f"[workers_adjustment] {ctx}: skipped {int((~ok).sum())} of {len(ok)} "
-                  f"household(s) whose size differs from the target seed")
-        return hh_to_swap[ok], target_seed_ids[ok]
+    # person rows grouped by household (stable, so each household keeps its member
+    # order); household_id never changes in this step, so compute once
+    p_order = np.argsort(p.household_id.to_numpy(), kind="stable")
+    p_hid_sorted = p.household_id.to_numpy()[p_order]
 
     hh_cols_to_swap = [col for col in hh.columns if col not in ['blkgrp', 'building_id', 'large_area_id']]
     p_cols_to_swap = [col for col in p.columns if col not in ['person_id', 'household_id', 'large_area_id', 'weight']]
@@ -1895,89 +1857,54 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
         lpr_workers = int(select.sum() * emp_wokers_rate)
         num_workers = (select & (p.worker == 1)).sum()
 
-        # get dict for seeds mapping
-        add_swappable = add_worker_df[row.age_min]
-        add_swappable = add_swappable[add_swappable.notna()].astype(int).to_dict()
-        drop_swappable = drop_worker_df[row.age_min]
-        drop_swappable = drop_swappable[drop_swappable.notna()].astype(int).to_dict()
-
-        if lpr_workers > num_workers:
-            # employ some persons
-            num_new_employ = int(lpr_workers - num_workers)
-            while num_new_employ > 0:
-                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(add_swappable))]
-                if hh_swap_pool.shape[0] == 0:
-                    break
-                to_add = min(hh_swap_pool.shape[0], num_new_employ)
-                # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(
-                    to_add, replace=False,
-                    random_state=utils.step_rng("workers_adjustment_add", large_area_id, row.age_min))
-                # target seed_ids
-                target_hh_seed_id = hh_to_swap.seed_id.map(add_swappable)
-                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
-                    hh_to_swap, target_hh_seed_id,
-                    f"LA {large_area_id} age {row.age_min}-{row.age_max} add")
-                if hh_to_swap.empty:
-                    break
-                # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
-                for _col in hh_cols_to_swap:
-                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
-                # hh persons overwrite
-                p_idx_to_update = np.array([], dtype=int)
-                for hh_id in hh_to_swap.index:
-                    hh_members = pg.get_group(hh_id)
-                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
-                for _col in p_cols_to_swap:
-                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
-                # update added_employ
-                num_new_employ = int(lpr_workers - (
-                    (p.large_area_id == large_area_id)
-                    & (p.age >= row.age_min)
-                    & (p.age <= row.age_max)
-                    & (p.worker == 1)
-                ).sum())
-
-        else:
-            # unemploy some persons
-            num_drop_employ = int(num_workers - lpr_workers)
-            while num_drop_employ > 0:
-                hh_swap_pool = hh[(hh.large_area_id == large_area_id) & (hh.seed_id.isin(drop_swappable))]
-                if hh_swap_pool.shape[0] == 0:
-                    break
-                to_drop = min(hh_swap_pool.shape[0], num_drop_employ)
-                # sample num_new_employ
-                hh_to_swap = hh_swap_pool.sample(
-                    to_drop, replace=False,
-                    random_state=utils.step_rng("workers_adjustment_drop", large_area_id, row.age_min))
-                # target seed_ids
-                target_hh_seed_id = hh_to_swap.seed_id.map(drop_swappable)
-                hh_to_swap, target_hh_seed_id = _drop_size_mismatch(
-                    hh_to_swap, target_hh_seed_id,
-                    f"LA {large_area_id} age {row.age_min}-{row.age_max} drop")
-                if hh_to_swap.empty:
-                    break
-                # overwrite old attributes except building_id, large_area_id, blkgrp
-                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
-                for _col in hh_cols_to_swap:
-                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
-                # hh persons overwrite
-                p_idx_to_update = np.array([], dtype=int)
-                for hh_id in hh_to_swap.index:
-                    hh_members = pg.get_group(hh_id)
-                    p_idx_to_update = np.concatenate((p_idx_to_update, hh_members.index))
-                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
-                for _col in p_cols_to_swap:
-                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
-                # update num_drop_employ
-                num_drop_employ = int((
-                    (p.large_area_id == large_area_id)
-                    & (p.age >= row.age_min)
-                    & (p.age <= row.age_max)
-                    & (p.worker == 1)
-                ).sum() - lpr_workers)
+        band = bins.index(row.age_min)
+        mem_col, wrk_col = n_comp + band, n_comp + len(bins) + band
+        step = 1 if lpr_workers > num_workers else -1
+        need = abs(int(lpr_workers - num_workers))
+        rng = utils.step_rng("workers_adjustment_add" if step > 0 else "workers_adjustment_drop",
+                             large_area_id, row.age_min)
+        while need > 0:
+            # employ (step=1) a non-working member, or unemploy (step=-1) a worker
+            in_la = hh_la == large_area_id
+            has_room = (hh_keys[:, mem_col] > hh_keys[:, wrk_col]) if step > 0 \
+                else (hh_keys[:, wrk_col] > 0)
+            # walk the eligible households in random order and keep the first `need`
+            # that have a target (a uniform sample of the swappable ones); targets are
+            # looked up in chunks so a small `need` doesn't scan the whole large area
+            order = np.flatnonzero(in_la & has_room)
+            order = order[rng.permutation(len(order))]
+            got_rows, got_targets, n_got, start = [], [], 0, 0
+            while n_got < need and start < len(order):
+                chunk = order[start:start + max(2 * need, 1000)]
+                t = _swap_targets(hh_keys[chunk], hh_inc_qt[chunk], wrk_col, step, seed_index)
+                got_rows.append(chunk[t >= 0])
+                got_targets.append(t[t >= 0])
+                n_got += int((t >= 0).sum())
+                start += len(chunk)
+            if n_got == 0:
+                break
+            rows = np.concatenate(got_rows)[:need]
+            targets = np.concatenate(got_targets)[:need]
+            hh_to_swap = hh.iloc[rows]
+            target_hh_seed_id = pd.Series(targets, index=hh_to_swap.index)
+            # overwrite old attributes except building_id, large_area_id, blkgrp
+            hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+            for _col in hh_cols_to_swap:
+                hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
+            # hh persons overwrite
+            starts = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "left")
+            lens = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "right") - starts
+            within = np.arange(lens.sum()) - np.repeat(np.cumsum(lens) - lens, lens)
+            p_idx_to_update = p.index[p_order[np.repeat(starts, lens) + within]]
+            p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+            for _col in p_cols_to_swap:
+                p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
+            # swapped households now carry their target seed's composition
+            src = seed_pos[targets].to_numpy()
+            hh_keys[rows] = seed_keys[src]
+            hh_inc_qt[rows] = seed_inc_qt[src]
+            swapped[rows] = True
+            need -= len(rows)
 
         achieved = int((
             (p.large_area_id == large_area_id)
@@ -1995,35 +1922,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
                   f"(achieved {achieved}, target {lpr_workers}, "
                   f"shortfall {lpr_workers - achieved}) — swap pool likely exhausted")
 
-    hh["old_workers"] = hh.workers
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
-    changed = hh.workers != hh.old_workers
-    print(f"worker counts changed for {int(changed.sum())} of {len(changed)} households")
-
-    # NOTE (2026-06): the changed_hhs/changed_ps tables that were saved here as
-    # extra transition donors were removed together with the blanket seed
-    # append in households_transition — fill_control_gaps now guarantees donor
-    # availability in the transition directly.
-
-    # Resample income/cars for changed households from peers with the same
-    # (persons, race, NEW worker count, children, large area), so household
-    # economics stay consistent with the adjusted worker count.
-    resample_missed = 0
-    resample_rng = utils.step_rng("workers_adjustment_resample")
-    for match_colls, chh in hh[changed].groupby(colls):
-        try:
-            match = same[tuple(match_colls)]
-            new_workers = resample_rng.choice(match.index, len(chh), True)
-            hh.loc[chh.index, ["income", "cars"]] = match.loc[
-                new_workers, ["income", "cars"]
-            ].values
-        except KeyError:
-            # no peer group with this combination — income/cars kept as-is
-            resample_missed += len(chh)
-    if resample_missed:
-        print(f"income/cars resample: no peer group for {resample_missed} "
-              "changed households (values left unchanged)")
+    # a swapped household takes all its attributes (incl. income and cars) from its
+    # target seed, so its economics already match the new worker count
+    print(f"[workers_adjustment] swapped {int(swapped.sum())} of {len(hh)} households")
 
     orca.add_table("households", hh[households.local_columns])
     orca.add_table("persons", p[persons.local_columns])
