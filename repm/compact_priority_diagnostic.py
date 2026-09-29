@@ -14,8 +14,8 @@ from sklearn.feature_selection import SelectKBest, VarianceThreshold, mutual_inf
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import RepeatedKFold, train_test_split
 
-from estimation.repm import neighborhood_vars_cache as nvcache
-from estimation.repm import xgb_training as training
+from repm import neighborhood_vars_cache as nvcache
+from repm import xgb_training as training
 
 
 EASTERN = ZoneInfo("America/Detroit")
