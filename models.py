@@ -616,8 +616,8 @@ def make_xgb_repm_func(model_name, xgb_model_dir, dep_var):
 
     @orca.step(model_name)
     def func():
-        from estimation.repm.city_effects import city_id_from_feature
-        from estimation.repm.xgb_utils import load_repm_xgb_model
+        from repm.city_effects import city_id_from_feature
+        from repm.xgb_utils import load_repm_xgb_model
 
         buildings = orca.get_table("buildings")
 
