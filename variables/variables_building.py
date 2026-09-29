@@ -194,7 +194,9 @@ def county_id(buildings, parcels):
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def geoid(buildings, parcels):
     # geoid = parcels[['county_id', 'census_bg_id']].apply(lambda x: 26*10000000000 + x.county_id*10000000 + x.census_bg_id, axis=1)
-    geoid = 26 * 10000000000 + parcels.county_id * 10000000 + parcels.census_bg_id
+    geoid = (26 * 10_000_000_000
+             + parcels.county_id.astype(np.int64) * 10_000_000
+             + parcels.census_bg_id.astype(np.int64))
     return misc.reindex(geoid.fillna(0).astype(int), buildings.parcel_id)
 
 
@@ -205,7 +207,6 @@ def popden(buildings, zones):
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def residential_sqft(buildings):
-    #  Cast to int64 to prevent overflow
     return (buildings.sqft_per_unit.astype("int64")
             * buildings.residential_units.astype("int64"))
 
@@ -440,8 +441,6 @@ def b_total_households(households, buildings):
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def jobs_home_based(jobs, buildings):
-    # groupby().size() is indexed only by buildings that HAVE home-based jobs;
-    # reindex to the full buildings index so the rest are 0, not NaN.
     jobs = jobs.to_frame(["building_id", "home_based_status"])
     return pd.Series(
         index=buildings.index,
@@ -613,9 +612,6 @@ def make_building_employment_variable(sector_id):
         jobs = orca.get_table("jobs")
         jobs = jobs.to_frame(jobs.local_columns)
         jobs_sector = jobs[jobs.sector_id == sector_id].building_id.value_counts()
-        # value_counts is indexed only by buildings that HAVE this sector, so the
-        # bare .fillna(0) was a no-op -- NaNs appeared later when orca aligned the
-        # short Series to the buildings index. Reindex first, then fill.
         return jobs_sector.reindex(buildings.index).fillna(0)
 
 def make_employment_node_ratio_variable(sector_id):
@@ -792,6 +788,11 @@ def us_congress_id(buildings, parcels):
     return misc.reindex(parcels.us_congress_id, buildings.parcel_id).fillna(0)
     
 
+@orca.column("buildings", cache=True, cache_scope="iteration")
+def city_id(buildings, parcels):
+    return misc.reindex(parcels.city_id, buildings.parcel_id).fillna(0)
+
+
 # @orca.column("buildings", cache=True, cache_scope="forever")
 # def hu_filter(buildings, households, parcels):
 #     """ move hu_filter code from dataset.py to here """
@@ -910,10 +911,10 @@ for mode, config in CUMULATIVE_VARS.items():
 def impr_value_per_sqft(buildings, parcels):
     """Parcel improvement value per building sqft — low value flags blight risk."""
     bldgimpr = misc.reindex(parcels.bldgimprval, buildings.parcel_id).fillna(0)
-    # reuse building_sqft (= residential_sqft + non_residential_sqft) rather than
-    # recomputing the int16 product, which wrapped for ~2k buildings; the clips
-    # below hid the damage instead of preventing it.
-    total_sqft = buildings.building_sqft.clip(lower=1)
+    total_sqft = (
+        buildings.residential_units * buildings.sqft_per_unit
+        + buildings.non_residential_sqft
+    ).clip(lower=1)
     return (bldgimpr / total_sqft).clip(lower=0, upper=500)
 
 

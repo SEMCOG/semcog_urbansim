@@ -8,7 +8,10 @@ import pandas as pd
 import yaml
 
 
-RUN = Path("/home/da/RDF2055/d_drive/estimation/REPM/repm_20260904_102106")
+RUN = Path(os.environ.get(
+    "REPM_DASHBOARD_RUN",
+    "/home/da/RDF2055/d_drive/estimation/REPM/repm_20260904_102106",
+))
 INPUT_HDF = Path(os.environ.get(
     "SEMCOG_INPUT_HDF", "/home/da/RDF2055/d_drive/forecast_inputs/base_year/main_082426.h5"
 ))
@@ -71,7 +74,11 @@ def load_models():
             "fixed_compact": bool(summary.get("fixed_feature_specification", False)),
             "large_area": area, "building_type": building_type, "label": label,
             "short_id": f"repm{hid}",
-            "decision": COMPACT_DECISIONS.get(hid, {}).get("decision", "Standard specification"),
+            "decision": (
+                COMPACT_DECISIONS.get(hid, {}).get("decision", "Compact specification")
+                if summary.get("fixed_feature_specification", False)
+                else "Standard specification"
+            ),
             "top_features": [{"name": name, "label": friendly(name), "importance": value}
                              for name, value in summary.get("top_features", {}).items()],
         })
@@ -92,7 +99,8 @@ def main():
     compact = [{"hedonic_id": hid, **COMPACT_DECISIONS[hid],
                 "broad_r2": COMPACT_CV[hid][0], "compact_r2": COMPACT_CV[hid][1],
                 "broad_features": COMPACT_CV[hid][2], "compact_features": COMPACT_CV[hid][3]}
-               for hid in sorted(COMPACT_DECISIONS)]
+               for hid in sorted(COMPACT_DECISIONS)
+               if any(row["hedonic_id"] == hid and row["fixed_compact"] for row in models)]
     payload = json.dumps({"models": models, "overview": overview, "compact": compact}).replace("</", "<\\/")
     page = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>REPM Estimation Results</title><style>
@@ -110,7 +118,7 @@ table{{border-collapse:collapse;width:100%;font-size:.9rem}} th,td{{padding:8px;
 @media(max-width:900px){{main{{padding:18px}}.cards{{grid-template-columns:repeat(2,1fr)}}.grid{{grid-template-columns:1fr}}}}
 </style></head><body><main>
 <h1>Real Estate Price Model estimation results</h1><p class="sub">Production candidate · {html.escape(overview['timestamp'])} · final estimation package</p>
-<div class="cards"><div class="card"><div class="value">{overview['successful']} / {overview['models']}</div><div class="label">models trained successfully</div></div><div class="card"><div class="value">{overview['res_r2']:.3f}</div><div class="label">mean residential validation R²</div></div><div class="card"><div class="value">{overview['nonres_r2']:.3f}</div><div class="label">mean non-residential validation R²</div></div><div class="card"><div class="value">{overview['variables']}</div><div class="label">candidate input variables</div></div><div class="card"><div class="value">17.7 min</div><div class="label">training time; cached inputs</div></div></div>
+<div class="cards"><div class="card"><div class="value">{overview['successful']} / {overview['models']}</div><div class="label">models trained successfully</div></div><div class="card"><div class="value">{overview['res_r2']:.3f}</div><div class="label">mean residential validation R²</div></div><div class="card"><div class="value">{overview['nonres_r2']:.3f}</div><div class="label">mean non-residential validation R²</div></div><div class="card"><div class="value">{overview['variables']}</div><div class="label">candidate input variables</div></div><div class="card"><div class="value">{overview['seconds'] / 60:.1f} min</div><div class="label">training time; cached inputs</div></div></div>
 <section><h2>How to read this dashboard</h2><p>Validation R² is the primary fit measure: higher is better. Validation RMSE and MAE are errors on the log(price-per-square-foot) target scale: lower is better. Feature importance shows each XGBoost model’s relative reliance on a feature; it does <strong>not</strong> show a positive/negative effect, causality, or statistical significance.</p><div class="callout"><strong>Important:</strong> compare model scores mainly within the same hedonic segment. Residential and non-residential markets have different price dispersion and sample sizes. The model explorer shows the final 80/20 holdout metrics; compact decisions use the repeated-CV comparison shown below.</div></section>
 <div class="grid"><section class="chart"><h2>Validation R² by model</h2><div class="legend"><span><i class="dot res"></i>Residential</span><span><i class="dot nonres"></i>Non-residential</span></div><div id="r2chart"></div></section><section><h2>Compact-model decisions</h2><p class="muted">Repeated 5×5 CV used for the specification decision.</p><div id="compact"></div></section></div>
 <section><h2>Model explorer</h2><div class="controls"><select id="modelSelect"></select></div><div id="modelDetail"></div></section>

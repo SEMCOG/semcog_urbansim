@@ -38,6 +38,8 @@ orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTRO
 orca.add_injectable('allow_total_pop_fallback', False)
 # households matching no control category: warn (False) or raise (True)
 orca.add_injectable('require_full_control_coverage', False)
+REMI_PRICE_GROWTH = True
+orca.add_injectable('remi_price_growth', REMI_PRICE_GROWTH)
 # run-level random seed; None draws a fresh one (logged in run_config.yaml)
 RANDOM_SEED = 271828
 if RANDOM_SEED is None:
@@ -58,6 +60,7 @@ utils.write_run_metadata(
         "indicator_spacing": indicator_spacing,
         "upload_to_carto": upload_to_carto,
         "run_debug": run_debug,
+        "REMI_PRICE_GROWTH": REMI_PRICE_GROWTH,
     },
 )
 
@@ -136,7 +139,6 @@ orca.run(
         "seed_new_gq_buildings",  # must run immediately before gq_pop_scaling_model
         "gq_pop_scaling_model",
         # "travel_model", #Fixme: on hold
-        "update_bg_hh_increase",
     ],
     iter_vars=list(range(run_start + 1, final_year + 1)),
     data_out=data_out,
@@ -187,7 +189,6 @@ orca.run(
         "persons",
         "group_quarters",
         "dropped_buildings",
-        "bg_hh_increase",
     ],
     out_interval=1,
     compress=True,
