@@ -1192,6 +1192,12 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
 
         for old_hid, donor in donor_sample.iterrows():
             clone = donor.to_dict()
+            # The clone's attributes no longer match its donor's seed, so relabel it
+            # -(seed + 1): workers_adjustment_model then never swaps it back to the
+            # donor's attributes, and exports decode the donor as -(seed_id + 1).
+            # A donor that is itself a clone is already negative; keep it as is.
+            if clone["seed_id"] >= 0:
+                clone["seed_id"] = -(int(clone["seed_id"]) + 1)
             dp = p[p["household_id"] == old_hid].copy()
 
             if "income" in dropped:
@@ -1862,8 +1868,9 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     def _drop_size_mismatch(hh_to_swap, target_seed_ids, ctx):
         """Keep only households holding as many people as their target seed.
 
-        A household can differ from its seed -- a swap mapping built from other
-        base data, or gap-fill donors that resized persons but kept the seed_id.
+        A household can differ from its seed -- e.g. a swap mapping built from
+        other base data. (Gap-fill clones carry a negative seed_id and never
+        reach this point.)
         Copying the seed's person rows onto it would misalign the assignment.
         """
         ok = (
