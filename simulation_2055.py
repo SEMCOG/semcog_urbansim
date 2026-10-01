@@ -14,7 +14,10 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 # run config
-RUN_OUTPUT_INDICATORS = True
+# Temporarily disabled: the current parcel-to-legislative-district crosswalk
+# has not been generated for the base-year parcel universe. The forecast HDF
+# remains complete and indicators can be generated after that input is restored.
+RUN_OUTPUT_INDICATORS = False
 base_year = 2025
 final_year = 2055
 indicator_spacing = 5
@@ -197,7 +200,7 @@ orca.run(
 # if use checkpoint to resume run, add result from previous year back
 if orca.get_injectable('use_checkpoint'):
     store_la = pd.HDFStore(data_out, mode="a")
-    run_path = "/mnt/semcog_urbansim/runs"
+    run_path = utils.get_runs_dir()
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
     old_result = pd.HDFStore(hdf_path, "r")
     for k in old_result:
