@@ -1138,9 +1138,16 @@ def _gap_category_presence(ct, hh):
     return row_is_empty
 
 
-def fill_control_gaps(ct, hh, p, iter_var, seed=0):
-    """Inject attribute-overridden donor households for empty control rows so
-    TabularTotalsTransition can fill them. Returns (hh, p, diagnostics)."""
+def fill_control_gaps(
+    ct, hh, p, iter_var, seed=0, local_seed_hh=None,
+    regional_seed_hh=None, seed_persons=None,
+):
+    """Inject donors for empty *current-year* control rows.
+
+    Exact base-year seed donors are used first: the target large area, then the
+    rest of the region.  Only cells with no current-year household donor reach
+    this function, so seed households never enter the normal transition pool.
+    """
     rng = np.random.default_rng(seed)
     la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
     next_hid = int(hh.index.max()) + 1
@@ -1165,16 +1172,32 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             & (hh["age_of_head"] < row["age_of_head_max"])
         ]) == 0
 
-        dropped, donors, ignore = [], None, {"total_number_of_households"}
-        for attr in GAP_RELAX_ORDER:
-            if attr == "race_id" and not race_cell_empty:
-                continue  # don't relabel race for a populated (LA, age, race) cell
-            dropped.append(attr)
-            ignore |= set(GAP_RELAX_COLS[attr])
-            cand = utils.filter_table(hh, row, ignore=ignore)
+        donor_source, donors = None, None
+        if local_seed_hh is not None:
+            cand = utils.filter_table(
+                local_seed_hh, row, ignore={"total_number_of_households"}
+            )
             if len(cand) > 0:
-                donors = cand
-                break
+                donors, donor_source = cand, "LOCAL_BASE_SEED"
+        if donors is None and regional_seed_hh is not None:
+            cand = utils.filter_table(
+                regional_seed_hh, row,
+                ignore={"large_area_id", "total_number_of_households"},
+            )
+            if len(cand) > 0:
+                donors, donor_source = cand, "REGIONAL_BASE_SEED"
+
+        dropped, ignore = [], {"total_number_of_households"}
+        if donors is None:
+            for attr in GAP_RELAX_ORDER:
+                if attr == "race_id" and not race_cell_empty:
+                    continue  # don't relabel race for a populated (LA, age, race) cell
+                dropped.append(attr)
+                ignore |= set(GAP_RELAX_COLS[attr])
+                cand = utils.filter_table(hh, row, ignore=ignore)
+                if len(cand) > 0:
+                    donors, donor_source = cand, "+".join(dropped)
+                    break
 
         if donors is None or len(donors) == 0:
             # Empty even after relaxing every dim except large_area and
@@ -1196,9 +1219,15 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             # -(seed + 1): workers_adjustment_model then never swaps it back to the
             # donor's attributes, and exports decode the donor as -(seed_id + 1).
             # A donor that is itself a clone is already negative; keep it as is.
-            if clone["seed_id"] >= 0:
-                clone["seed_id"] = -(int(clone["seed_id"]) + 1)
-            dp = p[p["household_id"] == old_hid].copy()
+            if donor_source in {"LOCAL_BASE_SEED", "REGIONAL_BASE_SEED"}:
+                clone["large_area_id"] = la
+                clone["seed_id"] = -(int(old_hid) + 1)
+                dp = seed_persons[seed_persons["seed_id"] == old_hid].copy()
+                dp = dp.drop(columns=["seed_id"], errors="ignore")
+            else:
+                if clone["seed_id"] >= 0:
+                    clone["seed_id"] = -(int(clone["seed_id"]) + 1)
+                dp = p[p["household_id"] == old_hid].copy()
 
             if "income" in dropped:
                 clone["income"] = _gap_rand_income(row["income_min"], row["income_max"], rng)
@@ -1240,7 +1269,7 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             hh_ids.append(new_hid)
             p_chunks.append(dp)
 
-        diags.append({"row": ridx, "rung": "+".join(dropped),
+        diags.append({"row": ridx, "rung": donor_source,
                       "target": int(row["total_number_of_households"]), "donors": k})
 
     if hh_records:
@@ -1266,7 +1295,8 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
 
 
 def presses_trans(xxx_todo_changeme1):
-    (ct, hh, p, target, iter_var, la_seed) = xxx_todo_changeme1
+    (ct, hh, p, target, iter_var, la_seed, local_seed_hh,
+     regional_seed_hh, seed_persons) = xxx_todo_changeme1
     # Seed this worker's global NumPy RNG from the per-(large_area, year) seed
     # derived in the parent (see households_transition). The UrbanSim core
     # transition draws from the global RNG, so seeding it here makes each LA's
@@ -1277,10 +1307,15 @@ def presses_trans(xxx_todo_changeme1):
     np.random.seed(la_seed)
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
-    # Inject donor households for any finite control cell with no match, so the
-    # transition below can realise it instead of silently skipping it. The
-    # gap-filler uses its own stream derived from the same per-LA seed.
-    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var, seed=la_seed)[:2]
+    # Stage donors only for this year's empty cells.  Earlier code passed all
+    # forecast years here, which needlessly made future control cells candidates
+    # in the current transition.
+    ct_finite_year = ct_finite.loc[[iter_var]] if iter_var in ct_finite.index else ct_finite.iloc[0:0]
+    hh, p = fill_control_gaps(
+        ct_finite_year, hh, p, iter_var, seed=la_seed,
+        local_seed_hh=local_seed_hh, regional_seed_hh=regional_seed_hh,
+        seed_persons=seed_persons,
+    )[:2]
     tran = transition.TabularTotalsTransition(ct_finite, "total_number_of_households")
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = model.transition(
@@ -1532,7 +1567,8 @@ def _resolve_hh_pop_target():
 
 @orca.step()
 def households_transition(
-    households, persons, annual_household_control_totals, iter_var
+    households, persons, annual_household_control_totals, hh_seeds, p_seeds,
+    iter_var,
 ):
     region_ct = annual_household_control_totals.to_frame()
     max_cols = region_ct.columns[region_ct.columns.str.endswith("_max")]
@@ -1545,6 +1581,8 @@ def households_transition(
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
     _downcast_ints(region_p)
+    seed_hh = hh_seeds.to_frame()
+    seed_persons = p_seeds.to_frame().reset_index()
 
     # P2 guard: warn (or raise) if any household matches no control category and
     # would be silently dropped by the totals transition (see function docstring).
@@ -1576,7 +1614,11 @@ def households_transition(
         # no orca access.
         la_seed = int(utils.get_rng("households_transition", iter_var, large_area_id)
                       .integers(0, 2**32))
-        return ct, hh, p, target, iter_var, la_seed
+        local_seed_hh = seed_hh[seed_hh["large_area_id"] == large_area_id]
+        return (
+            ct, hh, p, target, iter_var, la_seed, local_seed_hh, seed_hh,
+            seed_persons,
+        )
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
     del cut_to_la
