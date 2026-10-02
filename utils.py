@@ -916,7 +916,7 @@ RETIRED_REPM_FEATURES = {
 def get_all_xgb_features():
     """Get union of all features used by any XGBoost model."""
     import joblib
-    from estimation.repm.city_effects import city_id_from_feature
+    from repm.city_effects import city_id_from_feature
 
     model_dir = orca.get_injectable("xgb_repm_dir") if orca.is_injectable("xgb_repm_dir") else "configs/repm_xgb"
     all_features = set()
