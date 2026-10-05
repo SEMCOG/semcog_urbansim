@@ -215,7 +215,7 @@ def load_latest_input_hdf():
 
 def load_last_checkpoint(runnum):
     # example runnum run1001.h5
-    run_path = "runs"
+    run_path = utils.get_runs_dir()
     hdf_path = os.path.join(run_path, runnum)
     utils.run_log(f"Loading checkpoint data: {hdf_path}")
     saved_run = pd.HDFStore(hdf_path, "r")
