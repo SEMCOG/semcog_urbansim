@@ -35,24 +35,24 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_091626.h5",
-    f"{_LOCAL}/main_091626.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100226.h5",
+    f"{_LOCAL}/main_100226.h5",
 )
 
 # RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
-    "/mnt/hgfs/RDF2055/estimation/models/models_26Sep14_slot_sample",
-    f"{_LOCAL}/models/models_26Sep14_slot_sample",
+    "/mnt/D/RDF2055/estimation/models/models_26Oct02",
+    "/mnt/hgfs/RDF2055/estimation/models/models_26Oct02",
+    f"{_LOCAL}/models/models_26Oct02",
 )
 ELCM_MODEL_DIR = _p(
-    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep11",
-    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep11",
-    f"{_LOCAL}/models/elcm_models_26Sep11",
+    "/mnt/D/RDF2055/estimation/models/elcm_models_26Oct02",
+    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Oct02",
+    f"{_LOCAL}/models/elcm_models_26Oct02",
 )
 REPM_MODEL_DIR = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_sep28",
-    f"{_LOCAL}/models/repm_sep28",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_oct03 ",
+    f"{_LOCAL}/models/repm_oct03",
 )
 
 
