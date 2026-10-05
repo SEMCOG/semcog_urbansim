@@ -3726,6 +3726,12 @@ def run_developer(
     """
     copied form parcel_utils and modified
     """
+    # A zero target is a normal outcome of the vacancy, feasibility, or LA-cap
+    # calculations.  Do not call Developer.pick(): it reports this as "no
+    # feasible buildings," although no development was requested.
+    if target_units <= 0:
+        return 0, []
+
     from developer import develop
 
     print(f"developing {str(forms)} for geography {geoid}")
