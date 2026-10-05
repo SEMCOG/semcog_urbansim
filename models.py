@@ -735,12 +735,24 @@ if not orca.is_injectable("xgb_repm_dir"):
     orca.add_injectable("xgb_repm_dir", "configs/repm_xgb")
 xgb_repm_dir = orca.get_injectable("xgb_repm_dir")
 
-# Use absolute path for checking existence
+# A stray space in the configured path silently cost run1506 17 hours on the
+# stale in-repo models, so strip and say so rather than quietly repairing it.
+_raw_repm_dir = xgb_repm_dir
+xgb_repm_dir = str(xgb_repm_dir).strip()
+if xgb_repm_dir != _raw_repm_dir:
+    print("WARNING: xgb_repm_dir had surrounding whitespace, stripped: %r -> %r"
+          % (_raw_repm_dir, xgb_repm_dir))
+    orca.add_injectable("xgb_repm_dir", xgb_repm_dir)
+
+# Use absolute path for checking existence. No fallback: an unreadable model
+# directory is fatal, because substituting a different set changes every price.
 xgb_model_full_path = os.path.abspath(xgb_repm_dir)
 if not os.path.exists(xgb_model_full_path):
-    # Try relative to models directory
-    xgb_model_full_path = os.path.join(misc.models_dir(), "repm_xgb")
-    xgb_repm_dir = os.path.join(misc.models_dir(), "repm_xgb")
+    raise RuntimeError(
+        "xgb_repm_dir does not exist: %s (resolved from %r). Refusing to fall "
+        "back to another model set -- fix the path." % (xgb_model_full_path, xgb_repm_dir)
+    )
+print("Loading XGBoost REPM models from", xgb_model_full_path)
 
 if os.path.exists(xgb_model_full_path):
     for model_dir in sorted(os.listdir(xgb_model_full_path)):
@@ -780,10 +792,18 @@ if os.path.exists(xgb_model_full_path):
     # Add comparison step after REPM models (disabled for speed)
     # repm_step_names.append("repm_comparison_log")
 
-    print(f"Registered {len(repm_step_names)} XGBoost REPM models (comparison step disabled)")
+    if not repm_step_names:
+        raise RuntimeError(
+            "No XGBoost REPM models registered from %s -- the directory holds no "
+            "res_*/nonres_* folders with a metadata.pkl." % xgb_model_full_path
+        )
+
+    print(f"Registered {len(repm_step_names)} XGBoost REPM models from "
+          f"{xgb_model_full_path} (comparison step disabled)")
 else:
-    print("ERROR: XGBoost REPM directory not found at", xgb_model_full_path)
-    orca.add_injectable("repm_step_names", [])
+    raise RuntimeError(
+        "XGBoost REPM directory not found at %s" % xgb_model_full_path
+    )
 
 
 def remi_price_ratios(year):
