@@ -3504,6 +3504,11 @@ def build_parcel_selection_features(parcels_df, buildings_df, zones_df, year,
     return feat
 
 
+def _proposal_parcel_ids(df):
+    """Parcel id of each proposal row: the parcel_id column if present, else the index."""
+    return df["parcel_id"].to_numpy() if "parcel_id" in df.columns else df.index.to_numpy()
+
+
 def _score_with_model(feasibility, model_entry, parcel_features_df):
     """Score a feasibility slice using one serialised logistic regression model.
 
@@ -3515,13 +3520,9 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     mean_arr     = np.array(model_entry["scaler_mean"])
     std_arr      = np.array(model_entry["scaler_std"])
 
-    feat = pd.DataFrame(index=feasibility.index)
-
-    avail = [c for c in feature_cols if c in parcel_features_df.columns]
-    if avail:
-        feat = feat.join(parcel_features_df[avail], how="left")
-
-    feat = feat.reindex(columns=feature_cols).fillna(0.0)
+    # keep_suboptimal proposals carry parcel_id as a column over a RangeIndex
+    pids = _proposal_parcel_ids(feasibility)
+    feat = parcel_features_df.reindex(index=pids, columns=feature_cols).fillna(0.0)
     X_sc = (feat.values.astype(float) - mean_arr) / np.where(std_arr > 0, std_arr, 1.0)
     utility = X_sc.dot(coef_arr) + intercept
     u_shifted = utility - utility.max()
@@ -3630,9 +3631,12 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
         from developer import proposal_select
 
         probs = pd.Series(0.0, index=df.index)
+        pids = _proposal_parcel_ids(df)
 
         if "land_use_type_id" in parcel_features_df.columns and per_lut:
-            lut_col = parcel_features_df["land_use_type_id"].reindex(df.index)
+            lut_col = pd.Series(
+                parcel_features_df["land_use_type_id"].reindex(pids).to_numpy(), index=df.index
+            )
             for lut_id, grp_idx in lut_col.groupby(lut_col).groups.items():
                 model_entry = per_lut.get(int(lut_id), fallback)
                 slice_probs = _score_with_model(df.loc[grp_idx], model_entry, parcel_features_df)
@@ -3645,7 +3649,7 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
         # Time-decayed rebuild priority for orphaned demolished SF parcels
         boosted = None
         if demo_boost is not None and len(demo_boost):
-            mult = demo_boost.reindex(df.index).fillna(1.0).values
+            mult = demo_boost.reindex(pids).fillna(1.0).values
             p_arr = p_arr * mult
             boosted = mult > 1.0
 
