@@ -1138,9 +1138,16 @@ def _gap_category_presence(ct, hh):
     return row_is_empty
 
 
-def fill_control_gaps(ct, hh, p, iter_var, seed=0):
-    """Inject attribute-overridden donor households for empty control rows so
-    TabularTotalsTransition can fill them. Returns (hh, p, diagnostics)."""
+def fill_control_gaps(
+    ct, hh, p, iter_var, seed=0, local_seed_hh=None,
+    regional_seed_hh=None, seed_persons=None,
+):
+    """Inject donors for empty *current-year* control rows.
+
+    Exact base-year seed donors are used first: the target large area, then the
+    rest of the region.  Only cells with no current-year household donor reach
+    this function, so seed households never enter the normal transition pool.
+    """
     rng = np.random.default_rng(seed)
     la = int(hh["large_area_id"].iloc[0]) if "large_area_id" in hh.columns and len(hh) else -1
     next_hid = int(hh.index.max()) + 1
@@ -1165,16 +1172,32 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             & (hh["age_of_head"] < row["age_of_head_max"])
         ]) == 0
 
-        dropped, donors, ignore = [], None, {"total_number_of_households"}
-        for attr in GAP_RELAX_ORDER:
-            if attr == "race_id" and not race_cell_empty:
-                continue  # don't relabel race for a populated (LA, age, race) cell
-            dropped.append(attr)
-            ignore |= set(GAP_RELAX_COLS[attr])
-            cand = utils.filter_table(hh, row, ignore=ignore)
+        donor_source, donors = None, None
+        if local_seed_hh is not None:
+            cand = utils.filter_table(
+                local_seed_hh, row, ignore={"total_number_of_households"}
+            )
             if len(cand) > 0:
-                donors = cand
-                break
+                donors, donor_source = cand, "LOCAL_BASE_SEED"
+        if donors is None and regional_seed_hh is not None:
+            cand = utils.filter_table(
+                regional_seed_hh, row,
+                ignore={"large_area_id", "total_number_of_households"},
+            )
+            if len(cand) > 0:
+                donors, donor_source = cand, "REGIONAL_BASE_SEED"
+
+        dropped, ignore = [], {"total_number_of_households"}
+        if donors is None:
+            for attr in GAP_RELAX_ORDER:
+                if attr == "race_id" and not race_cell_empty:
+                    continue  # don't relabel race for a populated (LA, age, race) cell
+                dropped.append(attr)
+                ignore |= set(GAP_RELAX_COLS[attr])
+                cand = utils.filter_table(hh, row, ignore=ignore)
+                if len(cand) > 0:
+                    donors, donor_source = cand, "+".join(dropped)
+                    break
 
         if donors is None or len(donors) == 0:
             # Empty even after relaxing every dim except large_area and
@@ -1196,9 +1219,15 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             # -(seed + 1): workers_adjustment_model then never swaps it back to the
             # donor's attributes, and exports decode the donor as -(seed_id + 1).
             # A donor that is itself a clone is already negative; keep it as is.
-            if clone["seed_id"] >= 0:
-                clone["seed_id"] = -(int(clone["seed_id"]) + 1)
-            dp = p[p["household_id"] == old_hid].copy()
+            if donor_source in {"LOCAL_BASE_SEED", "REGIONAL_BASE_SEED"}:
+                clone["large_area_id"] = la
+                clone["seed_id"] = -(int(old_hid) + 1)
+                dp = seed_persons[seed_persons["seed_id"] == old_hid].copy()
+                dp = dp.drop(columns=["seed_id"], errors="ignore")
+            else:
+                if clone["seed_id"] >= 0:
+                    clone["seed_id"] = -(int(clone["seed_id"]) + 1)
+                dp = p[p["household_id"] == old_hid].copy()
 
             if "income" in dropped:
                 clone["income"] = _gap_rand_income(row["income_min"], row["income_max"], rng)
@@ -1240,7 +1269,7 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
             hh_ids.append(new_hid)
             p_chunks.append(dp)
 
-        diags.append({"row": ridx, "rung": "+".join(dropped),
+        diags.append({"row": ridx, "rung": donor_source,
                       "target": int(row["total_number_of_households"]), "donors": k})
 
     if hh_records:
@@ -1266,7 +1295,8 @@ def fill_control_gaps(ct, hh, p, iter_var, seed=0):
 
 
 def presses_trans(xxx_todo_changeme1):
-    (ct, hh, p, target, iter_var, la_seed) = xxx_todo_changeme1
+    (ct, hh, p, target, iter_var, la_seed, local_seed_hh,
+     regional_seed_hh, seed_persons) = xxx_todo_changeme1
     # Seed this worker's global NumPy RNG from the per-(large_area, year) seed
     # derived in the parent (see households_transition). The UrbanSim core
     # transition draws from the global RNG, so seeding it here makes each LA's
@@ -1277,10 +1307,15 @@ def presses_trans(xxx_todo_changeme1):
     np.random.seed(la_seed)
     ct_finite = ct[ct.persons_max <= 100]
     ct_inf = ct[ct.persons_max > 100]
-    # Inject donor households for any finite control cell with no match, so the
-    # transition below can realise it instead of silently skipping it. The
-    # gap-filler uses its own stream derived from the same per-LA seed.
-    hh, p = fill_control_gaps(ct_finite, hh, p, iter_var, seed=la_seed)[:2]
+    # Stage donors only for this year's empty cells.  Earlier code passed all
+    # forecast years here, which needlessly made future control cells candidates
+    # in the current transition.
+    ct_finite_year = ct_finite.loc[[iter_var]] if iter_var in ct_finite.index else ct_finite.iloc[0:0]
+    hh, p = fill_control_gaps(
+        ct_finite_year, hh, p, iter_var, seed=la_seed,
+        local_seed_hh=local_seed_hh, regional_seed_hh=regional_seed_hh,
+        seed_persons=seed_persons,
+    )[:2]
     tran = transition.TabularTotalsTransition(ct_finite, "total_number_of_households")
     model = transition.TransitionModel(tran)
     new, added_hh_idx, new_linked = model.transition(
@@ -1532,7 +1567,8 @@ def _resolve_hh_pop_target():
 
 @orca.step()
 def households_transition(
-    households, persons, annual_household_control_totals, iter_var
+    households, persons, annual_household_control_totals, hh_seeds, p_seeds,
+    iter_var,
 ):
     region_ct = annual_household_control_totals.to_frame()
     max_cols = region_ct.columns[region_ct.columns.str.endswith("_max")]
@@ -1545,6 +1581,8 @@ def households_transition(
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
     _downcast_ints(region_p)
+    seed_hh = hh_seeds.to_frame()
+    seed_persons = p_seeds.to_frame().reset_index()
 
     # P2 guard: warn (or raise) if any household matches no control category and
     # would be silently dropped by the totals transition (see function docstring).
@@ -1576,7 +1614,11 @@ def households_transition(
         # no orca access.
         la_seed = int(utils.get_rng("households_transition", iter_var, large_area_id)
                       .integers(0, 2**32))
-        return ct, hh, p, target, iter_var, la_seed
+        local_seed_hh = seed_hh[seed_hh["large_area_id"] == large_area_id]
+        return (
+            ct, hh, p, target, iter_var, la_seed, local_seed_hh, seed_hh,
+            seed_persons,
+        )
 
     arg_per_la = list(map(cut_to_la, region_hh.groupby("large_area_id")))
     del cut_to_la
@@ -1694,7 +1736,7 @@ def households_transition(
     orca.add_table("households", out_hh[households.local_columns])
     orca.add_table("persons", out_person[persons.local_columns])
 
-def _swap_key_arrays(hh, p, hh_id_col, bins):
+def _swap_key_arrays(hh, p, hh_id_col, bins, include_member_counts=True):
     """Worker-swap composition keys, one int16 row per household in `hh` order.
 
     Row layout: [persons, race_id, aoh_bin, children | members per age bin |
@@ -1710,8 +1752,13 @@ def _swap_key_arrays(hh, p, hh_id_col, bins):
     wrk = np.zeros_like(mem)
     np.add.at(wrk, (rows, cols), p["worker"].to_numpy()[ok].astype(np.int16))
     comp = np.column_stack(
-        [hh.persons, hh.race_id, hh.aoh_bin.astype(int), hh.children]).astype(np.int16)
-    return np.ascontiguousarray(np.hstack([comp, mem, wrk]))
+        [hh.persons, hh.race_id, hh.aoh_bin.astype(int), hh.children]
+    ).astype(np.int16)
+    parts = [comp]
+    if include_member_counts:
+        parts.append(mem)
+    parts.append(wrk)
+    return np.ascontiguousarray(np.hstack(parts))
 
 
 def _seed_swap_index(seed_keys, seed_inc_qt, seed_ids):
@@ -1746,6 +1793,7 @@ def _swap_targets(keys, inc_qt, col, step, seed_index):
         else:
             out[i] = min(cands, key=lambda c: (c[0] > q, abs(c[0] - q), c[1]))[1]
     return out
+
 
 @orca.step()
 def cache_hh_seeds(households, persons, iter_var):
@@ -1788,16 +1836,17 @@ def cache_hh_seeds(households, persons, iter_var):
     orca.add_table('p_seeds', p_seeds)
 
 @orca.step()
-def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, employed_workers_rate):
+def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var,
+                             employed_workers_rate):
     """Adjust household/person worker counts to employed-worker rate targets.
 
     For each large area and age band, compares the current number of employed
     workers against the target implied by the `employed_workers_rate` table and
     closes the gap by swapping households with a counterpart seed household
     that has one more (or one fewer) worker and matched persons / race /
-    age-bin / children. Household `workers` is then recomputed from the person
-    `worker` flags. A swapped household takes every attribute (incl. income and
-    cars) from its target seed, a real record with the new worker count.
+    age-bin / children. Controlled response preserves the receiving household's
+    location, tenure, structure, and person attributes; it updates one eligible
+    person worker flag plus household income and cars from the matched seed.
 
     Formerly named `fix_lpr`; renamed 2026-06. Note the rates are employed-
     worker rates (employment), not labor-force participation rates.
@@ -1826,18 +1875,58 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
     # swaps to a seed that shares its attributes. Every target differs by exactly
     # one worker in the band, so each swap moves the count by one.
     bins = age_bin_labels[:-1]
-    n_comp = 4
     p_seeds = p_seeds.reset_index()
+    worker_adjustment_mode = (orca.get_injectable("worker_adjustment_mode")
+                              if orca.is_injectable("worker_adjustment_mode")
+                              else "controlled_response")
+    if worker_adjustment_mode not in {"legacy_full_profile", "controlled_response"}:
+        raise ValueError(
+            "worker_adjustment_mode must be 'legacy_full_profile' or "
+            f"'controlled_response', not {worker_adjustment_mode!r}"
+        )
+    n_comp = 4
     seed_keys = _swap_key_arrays(hh_seeds, p_seeds, "seed_id", bins)
+    near_seed_keys = _swap_key_arrays(
+        hh_seeds, p_seeds, "seed_id", bins, include_member_counts=False,
+    )
     seed_inc_qt = hh_seeds.inc_qt.astype(int).to_numpy()
     seed_index = _seed_swap_index(seed_keys, seed_inc_qt, hh_seeds.index.to_numpy())
-    seed_pos = pd.Series(np.arange(len(hh_seeds)), index=hh_seeds.index)
+    seed_scope = (orca.get_injectable("worker_adjustment_seed_scope")
+                  if orca.is_injectable("worker_adjustment_seed_scope")
+                  else "regional")
+    if seed_scope not in {"regional", "large_area"}:
+        raise ValueError(
+            "worker_adjustment_seed_scope must be 'regional' or 'large_area', "
+            f"not {seed_scope!r}"
+        )
+    if seed_scope == "large_area" or worker_adjustment_mode == "controlled_response":
+        seed_la = hh_seeds.large_area_id.to_numpy()
+        seed_index_by_la = {
+            int(large_area_id): _seed_swap_index(
+                seed_keys[seed_la == large_area_id],
+                seed_inc_qt[seed_la == large_area_id],
+                hh_seeds.index.to_numpy()[seed_la == large_area_id],
+            )
+            for large_area_id in np.unique(seed_la)
+        }
+        near_seed_index_by_la = {
+            int(large_area_id): _seed_swap_index(
+                near_seed_keys[seed_la == large_area_id],
+                seed_inc_qt[seed_la == large_area_id],
+                hh_seeds.index.to_numpy()[seed_la == large_area_id],
+            )
+            for large_area_id in np.unique(seed_la)
+        }
     p_seeds = p_seeds.set_index("seed_id")
 
     hh_keys = _swap_key_arrays(hh, p, "household_id", bins)
+    near_hh_keys = _swap_key_arrays(
+        hh, p, "household_id", bins, include_member_counts=False,
+    )
     hh_inc_qt = hh.inc_qt.astype(int).to_numpy(copy=True)
     hh_la = hh.large_area_id.to_numpy()
     swapped = np.zeros(len(hh), dtype=bool)
+    rung_counts = {"same_la_exact": 0, "same_la_near": 0, "regional_exact": 0}
 
     # person rows grouped by household (stable, so each household keeps its member
     # order); household_id never changes in this step, so compute once
@@ -1861,6 +1950,11 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
         mem_col, wrk_col = n_comp + band, n_comp + len(bins) + band
         step = 1 if lpr_workers > num_workers else -1
         need = abs(int(lpr_workers - num_workers))
+        local_seed_index = seed_index_by_la.get(int(large_area_id), {}) \
+            if seed_scope == "large_area" or worker_adjustment_mode == "controlled_response" else None
+        local_near_seed_index = near_seed_index_by_la.get(int(large_area_id), {}) \
+            if worker_adjustment_mode == "controlled_response" else None
+        exact_seed_index = local_seed_index if local_seed_index is not None else seed_index
         rng = utils.step_rng("workers_adjustment_add" if step > 0 else "workers_adjustment_drop",
                              large_area_id, row.age_min)
         while need > 0:
@@ -1873,36 +1967,90 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
             # looked up in chunks so a small `need` doesn't scan the whole large area
             order = np.flatnonzero(in_la & has_room)
             order = order[rng.permutation(len(order))]
-            got_rows, got_targets, n_got, start = [], [], 0, 0
+            got_rows, got_targets, got_rungs, n_got, start = [], [], [], 0, 0
             while n_got < need and start < len(order):
                 chunk = order[start:start + max(2 * need, 1000)]
-                t = _swap_targets(hh_keys[chunk], hh_inc_qt[chunk], wrk_col, step, seed_index)
-                got_rows.append(chunk[t >= 0])
-                got_targets.append(t[t >= 0])
-                n_got += int((t >= 0).sum())
+                t = _swap_targets(hh_keys[chunk], hh_inc_qt[chunk], wrk_col, step,
+                                  exact_seed_index)
+                rung = np.full(len(chunk), -1, dtype=np.int8)
+                rung[t >= 0] = 0
+                if worker_adjustment_mode == "controlled_response":
+                    # Same-LA near match relaxes donor person-age membership
+                    # counts; receiving-person records are preserved.
+                    missing = t < 0
+                    if missing.any():
+                        t[missing] = _swap_targets(
+                            near_hh_keys[chunk][missing], hh_inc_qt[chunk][missing],
+                            n_comp + band, step, local_near_seed_index,
+                        )
+                        rung[missing & (t >= 0)] = 1
+                    # Regional exact match is the last donor rung. It changes
+                    # neither household location nor detailed person attributes.
+                    missing = t < 0
+                    if missing.any():
+                        t[missing] = _swap_targets(
+                            hh_keys[chunk][missing], hh_inc_qt[chunk][missing],
+                            wrk_col, step, seed_index,
+                        )
+                        rung[missing & (t >= 0)] = 2
+                found = t >= 0
+                got_rows.append(chunk[found])
+                got_targets.append(t[found])
+                got_rungs.append(rung[found])
+                n_got += int(found.sum())
                 start += len(chunk)
             if n_got == 0:
                 break
             rows = np.concatenate(got_rows)[:need]
             targets = np.concatenate(got_targets)[:need]
+            rungs = np.concatenate(got_rungs)[:need]
             hh_to_swap = hh.iloc[rows]
             target_hh_seed_id = pd.Series(targets, index=hh_to_swap.index)
-            # overwrite old attributes except building_id, large_area_id, blkgrp
-            hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
-            for _col in hh_cols_to_swap:
-                hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
-            # hh persons overwrite
-            starts = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "left")
-            lens = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "right") - starts
-            within = np.arange(lens.sum()) - np.repeat(np.cumsum(lens) - lens, lens)
-            p_idx_to_update = p.index[p_order[np.repeat(starts, lens) + within]]
-            p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
-            for _col in p_cols_to_swap:
-                p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
-            # swapped households now carry their target seed's composition
-            src = seed_pos[targets].to_numpy()
-            hh_keys[rows] = seed_keys[src]
-            hh_inc_qt[rows] = seed_inc_qt[src]
+            target_inc_qt = hh_seeds.loc[target_hh_seed_id, "inc_qt"].to_numpy()
+            if worker_adjustment_mode == "legacy_full_profile":
+                # Retained only for comparison diagnostics.  It replaces the
+                # whole profile, including tenure and detailed person fields.
+                hh_src = hh_seeds.loc[target_hh_seed_id].reset_index()[hh_cols_to_swap]
+                starts = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "left")
+                lens = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "right") - starts
+                within = np.arange(lens.sum()) - np.repeat(np.cumsum(lens) - lens, lens)
+                p_idx_to_update = p.index[p_order[np.repeat(starts, lens) + within]]
+                p_src = p_seeds.loc[target_hh_seed_id].reset_index()[p_cols_to_swap]
+                for _col in hh_cols_to_swap:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
+                for _col in p_cols_to_swap:
+                    p.loc[p_idx_to_update, _col] = p_src[_col].values.astype(p[_col].dtype)
+            else:
+                # Worker adjustment is a controlled response: only the worker
+                # pattern and closely related travel inputs respond.  Keep tenure,
+                # household structure, location, and detailed person attributes.
+                hh_src = hh_seeds.loc[target_hh_seed_id, ["income", "cars"]]
+                for _col in ["income", "cars"]:
+                    hh.loc[hh_to_swap.index, _col] = hh_src[_col].values.astype(hh[_col].dtype)
+                starts = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "left")
+                lens = np.searchsorted(p_hid_sorted, hh_to_swap.index.to_numpy(), "right") - starts
+                within = np.arange(lens.sum()) - np.repeat(np.cumsum(lens) - lens, lens)
+                p_idx_to_update = p.index[p_order[np.repeat(starts, lens) + within]]
+                # Change one eligible *receiving* person in the requested age
+                # band.  Member IDs do not identify comparable people across
+                # households, so donor worker flags must not be copied by row or
+                # member ID when detailed recipient ages are preserved.
+                band_people = p.loc[p_idx_to_update]
+                band_people = band_people[
+                    (band_people.age >= row.age_min)
+                    & (band_people.age <= row.age_max)
+                    & ((band_people.worker == 0) if step > 0 else (band_people.worker == 1))
+                ]
+                chosen_people = band_people.groupby("household_id", sort=False).head(1).index
+                p.loc[chosen_people, "worker"] = 1 if step > 0 else 0
+                hh.loc[hh_to_swap.index, "workers"] += step
+                for rung_id, rung_name in enumerate(rung_counts):
+                    rung_counts[rung_name] += int((rungs == rung_id).sum())
+            # Every donor differs by exactly one worker in this age band. Keep
+            # the receiving household's own detailed membership counts in state.
+            hh_keys[rows, wrk_col] += step
+            near_hh_keys[rows, n_comp + band] += step
+            hh_inc_qt[rows] = target_inc_qt
             swapped[rows] = True
             need -= len(rows)
 
@@ -1924,9 +2072,9 @@ def workers_adjustment_model(households, persons, hh_seeds, p_seeds, iter_var, e
 
     hh.workers = p.groupby("household_id").worker.sum()
     hh.workers = hh.workers.fillna(0)
-    # a swapped household takes all its attributes (incl. income and cars) from its
-    # target seed, so its economics already match the new worker count
     print(f"[workers_adjustment] swapped {int(swapped.sum())} of {len(hh)} households")
+    if worker_adjustment_mode == "controlled_response":
+        print(f"[workers_adjustment] donor rungs {rung_counts}")
 
     orca.add_table("households", hh[households.local_columns])
     orca.add_table("persons", p[persons.local_columns])
@@ -3356,6 +3504,11 @@ def build_parcel_selection_features(parcels_df, buildings_df, zones_df, year,
     return feat
 
 
+def _proposal_parcel_ids(df):
+    """Parcel id of each proposal row: the parcel_id column if present, else the index."""
+    return df["parcel_id"].to_numpy() if "parcel_id" in df.columns else df.index.to_numpy()
+
+
 def _score_with_model(feasibility, model_entry, parcel_features_df):
     """Score a feasibility slice using one serialised logistic regression model.
 
@@ -3367,13 +3520,9 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     mean_arr     = np.array(model_entry["scaler_mean"])
     std_arr      = np.array(model_entry["scaler_std"])
 
-    feat = pd.DataFrame(index=feasibility.index)
-
-    avail = [c for c in feature_cols if c in parcel_features_df.columns]
-    if avail:
-        feat = feat.join(parcel_features_df[avail], how="left")
-
-    feat = feat.reindex(columns=feature_cols).fillna(0.0)
+    # keep_suboptimal proposals carry parcel_id as a column over a RangeIndex
+    pids = _proposal_parcel_ids(feasibility)
+    feat = parcel_features_df.reindex(index=pids, columns=feature_cols).fillna(0.0)
     X_sc = (feat.values.astype(float) - mean_arr) / np.where(std_arr > 0, std_arr, 1.0)
     utility = X_sc.dot(coef_arr) + intercept
     u_shifted = utility - utility.max()
@@ -3482,9 +3631,12 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
         from developer import proposal_select
 
         probs = pd.Series(0.0, index=df.index)
+        pids = _proposal_parcel_ids(df)
 
         if "land_use_type_id" in parcel_features_df.columns and per_lut:
-            lut_col = parcel_features_df["land_use_type_id"].reindex(df.index)
+            lut_col = pd.Series(
+                parcel_features_df["land_use_type_id"].reindex(pids).to_numpy(), index=df.index
+            )
             for lut_id, grp_idx in lut_col.groupby(lut_col).groups.items():
                 model_entry = per_lut.get(int(lut_id), fallback)
                 slice_probs = _score_with_model(df.loc[grp_idx], model_entry, parcel_features_df)
@@ -3497,7 +3649,7 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
         # Time-decayed rebuild priority for orphaned demolished SF parcels
         boosted = None
         if demo_boost is not None and len(demo_boost):
-            mult = demo_boost.reindex(df.index).fillna(1.0).values
+            mult = demo_boost.reindex(pids).fillna(1.0).values
             p_arr = p_arr * mult
             boosted = mult > 1.0
 
@@ -3578,6 +3730,12 @@ def run_developer(
     """
     copied form parcel_utils and modified
     """
+    # A zero target is a normal outcome of the vacancy, feasibility, or LA-cap
+    # calculations.  Do not call Developer.pick(): it reports this as "no
+    # feasible buildings," although no development was requested.
+    if target_units <= 0:
+        return 0, []
+
     from developer import develop
 
     print(f"developing {str(forms)} for geography {geoid}")

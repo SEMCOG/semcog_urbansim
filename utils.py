@@ -83,8 +83,19 @@ def first_existing_path(*paths):
     return paths[0]
 
 
+DEFAULT_RUNS_DIR = "/mnt/semcog_urbansim/runs"
+
+
+def get_runs_dir():
+    """Return the run directory, with an optional machine-local override.
+    """
+    runs_dir = os.environ.get("SEMCOG_RUNS_DIR") or DEFAULT_RUNS_DIR
+    os.makedirs(runs_dir, exist_ok=True)
+    return runs_dir
+
+
 def get_run_filename():
-    return os.path.join(misc.runs_dir(), "run%d.h5" % misc.get_run_number())
+    return os.path.join(get_runs_dir(), "run%d.h5" % misc.get_run_number())
 
 
 def change_store(store_name):

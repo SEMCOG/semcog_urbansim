@@ -197,7 +197,7 @@ orca.run(
 # if use checkpoint to resume run, add result from previous year back
 if orca.get_injectable('use_checkpoint'):
     store_la = pd.HDFStore(data_out, mode="a")
-    run_path = "/mnt/semcog_urbansim/runs"
+    run_path = utils.get_runs_dir()
     hdf_path = os.path.join(run_path, orca.get_injectable('runnum_to_resume'))
     old_result = pd.HDFStore(hdf_path, "r")
     for k in old_result:
