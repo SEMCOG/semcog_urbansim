@@ -1578,6 +1578,14 @@ def households_transition(
     region_hh.index = region_hh.index.astype(int)
     _downcast_ints(region_hh)
 
+    # Placed households by MCD before transition churn. residential_developer
+    # starts from these counts: households added below stay unplaced until HLCM.
+    hh_mcd = households.semmcd
+    orca.add_injectable(
+        "hh_by_mcd_pre_transition",
+        (iter_var, hh_mcd[hh_mcd.notna()].astype(int).value_counts()),
+    )
+
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
     _downcast_ints(region_p)
@@ -3530,6 +3538,33 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
+def mcd_households_for_developer(hh_large_area, mcd_to_la, snapshot):
+    """Households per MCD for the residential developer's vacancy gap.
+
+    At developer time, households added by transition (and movers) are unplaced
+    and have no MCD, so counting placed households understates demand. Start
+    from the MCD counts placed before transition (`snapshot`) and spread each
+    large area's change since then across its MCDs by snapshot share.
+
+    Parameters
+    ----------
+    hh_large_area : pd.Series
+        large_area_id of every current household, placed or not.
+    mcd_to_la : pd.Series
+        large_area_id indexed by semmcd.
+    snapshot : pd.Series
+        Placed household count indexed by semmcd.
+
+    Returns
+    -------
+    pd.Series of (fractional) household counts indexed by semmcd.
+    """
+    la = mcd_to_la.reindex(snapshot.index)
+    snap_la = snapshot.groupby(la).sum()
+    la_change = hh_large_area.value_counts().reindex(snap_la.index, fill_value=0) - snap_la
+    return snapshot + snapshot / la.map(snap_la) * la.map(la_change)
+
+
 def compute_demo_rebuild_boost(parcels, year, boost, decay, window, scheduled_factor=1.0):
     """Time-decayed site-selection boost for orphaned demolished SF parcels.
 
@@ -3922,6 +3957,22 @@ def residential_developer(
         .groupby("large_area_id")["residential_units"].sum()
     )
 
+    # MCD households: pre-transition placed counts plus each LA's change since,
+    # so unplaced (transition-added, displaced, moving) households still count.
+    # Standalone runs without households_transition fall back to placed counts now.
+    snap = (orca.get_injectable("hh_by_mcd_pre_transition")
+            if orca.is_injectable("hh_by_mcd_pre_transition") else None)
+    if snap is not None and snap[0] == year:
+        mcd_hh_snapshot = snap[1]
+    else:
+        hh_mcd = households.semmcd
+        mcd_hh_snapshot = hh_mcd[hh_mcd.notna()].astype(int).value_counts()
+    mcd_hh = mcd_households_for_developer(
+        households.large_area_id, mcd_to_la, mcd_hh_snapshot
+    )
+    print("  MCD households: {:,} placed (snapshot), {:+,.0f} LA change spread by share".format(
+        int(mcd_hh_snapshot.sum()), mcd_hh.sum() - mcd_hh_snapshot.sum()))
+
     # compute per-MCD target_units
     mcd_data = {}
     for mcdid, _ in parcels.semmcd.to_frame().groupby("semmcd"):
@@ -3932,7 +3983,7 @@ def residential_developer(
             continue
         target_vacancy = float(target_vacancies[mcdid])
 
-        cur_agents = int((households.semmcd == mcdid).sum())
+        cur_agents = int(round(mcd_hh.get(mcdid, 0)))
         num_units  = int(mcd_orig_buildings.residential_units.sum())
         assert target_vacancy < 1.0
 
