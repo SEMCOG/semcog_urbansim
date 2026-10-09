@@ -2943,21 +2943,22 @@ def _load_demolition_cfg():
     return _DEMO_CFG_CACHE["cfg"]
 
 
-def _logistic_score(df, section, features):
-    """Return a Series of logistic probabilities for rows in df."""
-    means     = section["feature_mean"]
-    stds      = section["feature_std"]
-    coefs     = section["coef"]
-    intercept = section["intercept"]
-    score     = np.full(len(df), intercept, dtype=float)
-    for feat in features:
-        if feat not in df.columns:
-            continue
-        x = (df[feat].fillna(means.get(feat, 0.0)) - means.get(feat, 0.0)) \
-            / max(stds.get(feat, 1.0), 1e-8)
-        score += coefs.get(feat, 0.0) * x
-    prob = 1.0 / (1.0 + np.exp(-np.clip(score, -15.0, 15.0)))
-    return pd.Series(prob, index=df.index)
+def _odds_score(df, section):
+    """Selection weight exp(sum coef * standardized feature) for rows in df.
+
+    The weight is used only to rank buildings inside one sampling stratum, so
+    it has no intercept. A feature that the yaml names but df lacks is an error:
+    skipping it would silently change the model.
+    """
+    missing = [f for f in section["coef"] if f not in df.columns]
+    if missing:
+        raise KeyError(f"demolition model features missing from buildings: {missing}")
+    z = sum(
+        section["coef"][f] * (df[f].fillna(section["feature_mean"][f]) - section["feature_mean"][f])
+        / section["feature_std"][f]
+        for f in section["coef"]
+    )
+    return pd.Series(np.exp(np.clip(z, -50.0, 50.0)), index=df.index)
 
 
 _DEMO_PRESSURE_CACHE = {}   # per-city baseline + rolling history for the dynamic pressure index
@@ -3017,13 +3018,15 @@ def _demolition_pressure_ratio(b_eligible, year, base_year, window=5):
 
 
 @orca.step()
-def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year, final_year):
+def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year):
     """
     Scored replacement for random_demolition_events.
 
-    Buildings are ranked by a logistic regression score (age, improvement value
-    per sqft, land-to-improvement ratio, tax-exempt status, Wayne County flag)
-    and sampled to hit city-level control totals from demolition_rates.
+    Buildings are weighted by exp(coef . standardized features) from a logit
+    with stratum fixed effects (demolition_calibration.py): residential uses
+    age, improvement value per sqft and land-to-improvement ratio, with one
+    model for Detroit and one for the other areas; non-residential uses age.
+    They are sampled to hit city-level control totals from demolition_rates.
 
     When configs/demolition_model.yaml has is_calibrated=false the function
     falls back to the original inverse-log-occupancy weights so the simulation
@@ -3048,9 +3051,9 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         ]
     )
 
-    # Wayne County flag needed by logistic model (large_area_id is on parcels)
+    # Detroit (large_area_id 5) has its own residential model (large_area_id is on parcels)
     pcl = parcels.to_frame(["large_area_id"])
-    b["is_wayne"]  = b.parcel_id.map(pcl.large_area_id).eq(5).astype(float)
+    is_detroit = b.parcel_id.map(pcl.large_area_id).eq(5)
 
     # ── Eligibility ──────────────────────────────────────────────────────────
     not_eligible = pd.Series(False, index=b.index)
@@ -3064,13 +3067,9 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             not_eligible |= (b.non_residential_sqft > 0) & (nonres_occ > max_nonres_occ)
     eligible = ~not_eligible
 
-    # ── Control totals: taper × scenario multiplier × dynamic pressure ──────
-    # Taper matches random_demolition_events: demolition volume scales from
-    # ~100% at base_year down to 10% at final_year; scenario_rate_multiplier
-    # layers on top (defaults to 1.0, so fallback mode reproduces the legacy
-    # trajectory exactly). Uses orca's base_year/final_year injectables rather
-    # than hardcoded 2020/2050 so this still works on the forecast_2055 horizon.
-    taper = 0.1 + (1.0 - 0.1) * (final_year - year) / (final_year - base_year)
+    # ── Control totals: scenario multiplier × dynamic pressure ──────────────
+    # demolition_rates is the average annual volume of 2021-2024 (from
+    # demolition_calibration.py), held constant over the forecast.
 
     # demolition_rates is a STATIC city-level snapshot with no year dimension --
     # on its own it reproduces the SAME relative geography for every simulated
@@ -3078,7 +3077,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     # conditions the simulation already tracks each year (aging stock,
     # vacancy, land-to-improvement value), anchored to the calibrated
     # baseline so it only shifts RELATIVE emphasis across cities, not the
-    # overall volume (the taper still governs that). See "Dynamic Pressure
+    # overall volume. See "Dynamic Pressure
     # Index" in docs/models/demolition.md for the full rationale.
     demolition_rates = demolition_rates.to_frame()
     if any_calibrated:
@@ -3087,17 +3086,18 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         base_totals = demolition_rates.sum(axis=0)
         adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
         demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
-    demolition_rates = demolition_rates * taper * rate_mult
+    demolition_rates = demolition_rates * rate_mult
 
     # ── Demolition scores ────────────────────────────────────────────────────
     if res_calibrated:
-        res_score    = _logistic_score(b, cfg["residential"],    ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+        res_score    = _odds_score(b, cfg["residential"]).where(
+            ~is_detroit, _odds_score(b, cfg["residential_detroit"]))
     else:
         # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
         res_score    = 1.0 / (1.0 + np.log1p(b["b_total_households"]))
 
     if nonres_calibrated:
-        nonres_score = _logistic_score(b, cfg["nonresidential"], ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+        nonres_score = _odds_score(b, cfg["nonresidential"])
     else:
         # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
         nonres_score = 1.0 / (1.0 + np.log1p(b["b_total_jobs"]))
@@ -3111,10 +3111,17 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
 
     buildings_idx = []
 
-    def sample(targets, type_b, accounting, score_col):
+    # Step-by-step volume per stratum, to find which rule limits demolition
+    volume_log = []
+
+    def sample(targets, type_b, accounting, score_col, category):
         for city_id, target in targets[targets > 0].items():
             rel_b = type_b[type_b.city_id == city_id]
+            row = {"year": year, "category": category, "city_id": city_id, "target": target,
+                   "eligible": rel_b[accounting].sum()}
             rel_b = rel_b[rel_b[accounting] <= target]
+            row.update(after_size_filter=rel_b[accounting].sum(), demolished=0)
+            volume_log.append(row)
             if len(rel_b) == 0:
                 continue
             w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
@@ -3129,6 +3136,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
                 chosen = rng.choice(len(rel_b), size=size, replace=False, p=w_arr)
                 sampled = rel_b.iloc[chosen]
                 sampled = sampled[sampled[accounting].cumsum() <= int(target)]
+                row["demolished"] = sampled[accounting].sum()
                 buildings_idx.append(sampled)
 
     nonres_eligible = b.loc[allowed_b & eligible]
@@ -3137,11 +3145,17 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         nonres_eligible[nonres_eligible.non_residential_sqft > 0],
         "non_residential_sqft",
         "nonres_score",
+        "typenonsqft",
     )
     res_eligible = b.loc[allowed_b & eligible & (b.non_residential_sqft == 0)]
-    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score")
-    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score")
-    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score")
+    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score", "type81units")
+    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score", "type82units")
+    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score", "type83units")
+
+    run_name = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
+    log_path = os.path.join("runs", "simulate_logs", f"demolition_volume_{run_name}.csv")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    pd.DataFrame(volume_log).to_csv(log_path, mode="a", header=not os.path.exists(log_path), index=False)
 
     if not buildings_idx:
         return
