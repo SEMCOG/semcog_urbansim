@@ -52,6 +52,7 @@ for name in [
     "income_growth_rates",
     "target_vacancies",
     "target_vacancies_mcd",
+    "target_nonres_vacancies_mcd",
     "demolition_rates",
     "landmark_worksites",
     "mcd_total",

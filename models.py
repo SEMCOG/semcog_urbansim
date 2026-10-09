@@ -3316,6 +3316,12 @@ def feasibility(parcels, buildings, btype_form_map):
         orca.add_table(
             "feasibility_" + str(lid), feasibility[feasibility.index.isin(df.index)]
         )
+    # city feasibility for nonres developer model
+    for cid, df in parcels.city_id.to_frame().groupby("city_id"):
+        orca.add_table(
+            "feasibility_city_" + str(int(cid)),
+            feasibility[feasibility.index.isin(df.index)],
+        )
 
 
 def add_extra_columns_nonres(df):
@@ -3746,6 +3752,7 @@ def run_developer(
     profit_to_prob_func=None,
     custom_selection_func=None,
     pipeline=False,
+    bldg_sqft_per_job=None,
 ):
     """
     copied form parcel_utils and modified
@@ -3770,6 +3777,13 @@ def run_developer(
         orca.get_injectable("year"),
         str_or_buffer=cfg,
     )
+
+    # The yaml carries a flat bldg_sqft_per_job (400) that Developer applies to
+    # every proposal as job_spaces = non_residential_sqft / bldg_sqft_per_job.
+    # Callers that know the building type pass its own rate instead; forms map
+    # 1:1 to a building_type_id, so a per-call scalar is exact.
+    if bldg_sqft_per_job is not None and bldg_sqft_per_job > 0:
+        dev.bldg_sqft_per_job = float(bldg_sqft_per_job)
 
     print("{:,} feasible buildings before running developer".format(len(dev.feasibility)))
 
@@ -4129,66 +4143,97 @@ def residential_developer(
 
 
 @orca.step()
-def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
+def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
+                              btype_form_map, building_sqft_per_job):
     """
-    Non-residential space developer step.
+    Non-residential space developer step, by city and building form.
 
-    This Orca step handles the development of non-residential spaces in different large areas based on target
-    vacancy rates and job demand. It calculates the necessary number of non-residential spaces to achieve the
-    target vacancy rate and then runs the non-residential developer model.
+    Targets come from target_nonres_vacancies_mcd, a (cityid, form) x year table
+    whose `form` axis is the btype_form_map group (retail, office, industrial,
+    medical, entertainment, hospitality, other), not a proforma form.
+
+    Vacancy is measured on that same grouping, because make_target_vacancies.py
+    anchors each rate on the group's aggregate base-year vacancy
+    (sum(jobs) / sum(job_spaces) over every btype in the group). One target is
+    derived per city x group and the group's proforma forms are handed to the
+    developer together, which then picks among them on profit.
+
+    `other` covers the building types outside btype_form_map (educational,
+    religious, governmental, TCU, agricultural, parking...). The proforma has no
+    form for them, so they carry a target that cannot be built; they are skipped
+    and counted.
 
     Parameters:
     jobs (orca.DataFrameWrapper): Jobs
     parcels (orca.DataFrameWrapper): Parcels
-    target_vacancies (orca.DataFrameWrapper): target vacancy rates for large areas.
+    target_nonres_vacancies_mcd (orca.DataFrameWrapper): (cityid, form) x year
+        target vacancy rates.
 
     Returns:
     None
     """
     year = orca.get_injectable("year")
-    # get target vacancies
-    target_vacancies = target_vacancies.to_frame()
-    target_vacancies = target_vacancies[
-        target_vacancies.year == year
-    ]
+    year_col = str(year)
+    tgt = target_nonres_vacancies_mcd.to_frame()
+    if year_col not in tgt.columns:
+        raise RuntimeError(
+            "target_nonres_vacancies_mcd has no column %r (has %s..%s)"
+            % (year_col, tgt.columns[1], tgt.columns[-1])
+        )
+
+    # The target GROUP aggregate vacancy
+    groups = {
+        grp: v for grp, v in btype_form_map.items() if grp != "residential"
+    }
+    sqft_per_job = building_sqft_per_job.to_frame()["building_sqft_per_job"]
 
     # get original buildings table
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["job_spaces", "large_area_id", "building_type_id"]
+        ["job_spaces", "city_id", "building_type_id", "non_residential_sqft"]
     )
 
-    orig_jobs = jobs.to_frame(['building_id', 'home_based_status', 'large_area_id'])
+    orig_jobs = jobs.to_frame(['building_id', 'home_based_status', 'city_id'])
     orig_jobs = orig_jobs[orig_jobs.home_based_status == 0]
 
-    # loop through large area
-    for lid, _ in parcels.large_area_id.to_frame().groupby("large_area_id"):
-        # get large area buildings
-        la_orig_buildings = orig_buildings[orig_buildings.large_area_id == lid]
+    skipped_no_target = 0
+    skipped_no_stock = 0
 
-        # get current large area vacancy target
-        target_vacancy = float(
-            target_vacancies[
-                target_vacancies.large_area_id == lid
-            ].non_res_target_vacancy_rate.iloc[0]
-        )
+    # loop through cities
+    for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
+        cityid = int(cityid)
+        city_buildings = orig_buildings[orig_buildings.city_id == cityid]
+        city_jobs = orig_jobs[orig_jobs.city_id == cityid]
 
-        # loop through non-residential building forms (1:1 with building_type_id)
-        for form in nonres_forms:
-            form_btype_ids = orca.get_injectable("form_to_btype")[form]
-            form_blds = la_orig_buildings[la_orig_buildings.building_type_id.isin(form_btype_ids)]
-            # number of non-homebased jobs in the large area
-            num_agents = (
-                    (orig_jobs.large_area_id == lid) & 
-                    (orig_jobs.building_id.isin(form_blds.index))
-                ).sum()
-            # number of total job spaces for LA
-            num_units = form_blds.job_spaces.sum()
+        # loop through building-form groups, the grouping the targets are built on
+        for group, gdef in groups.items():
+            if (cityid, group) not in tgt.index:
+                skipped_no_target += 1
+                continue
+            target_vacancy = float(tgt.loc[(cityid, group), year_col])
+            if not (0.0 <= target_vacancy < 1.0):
+                raise RuntimeError(
+                    "target_nonres_vacancies_mcd[(%s,%s)][%s] = %r is outside [0,1)"
+                    % (cityid, group, year_col, target_vacancy)
+                )
 
-            print(f"Developing {form} spaces for large area {lid}:")
+            # every btype in the group, so the denominator matches the target
+            grp_blds = city_buildings[
+                city_buildings.building_type_id.isin(gdef["btypes"])
+            ]
+            num_units = grp_blds.job_spaces.sum()
+            if num_units <= 0:
+                # no existing stock of this group here: no vacancy to measure
+                skipped_no_stock += 1
+                continue
+            num_agents = city_jobs.building_id.isin(grp_blds.index).sum()
+
+            target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+            if target_units <= 0:
+                continue
+
+            print(f"Developing {group} spaces for city {cityid}:")
             print("Number of agents: {:,}".format(num_agents))
             print("Number of agent spaces: {:,}".format(int(num_units)))
-            assert target_vacancy < 1.0
-            target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
             print("Current vacancy = {:.2f}".format(1 - num_agents / float(num_units)))
             print(
                 "Target vacancy = {:.2f}, target of new units = {:,}".format(
@@ -4196,11 +4241,20 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
                 )
             )
 
+            # Group sqft per job rate 
+            gs = grp_blds.groupby("building_type_id")["non_residential_sqft"].sum()
+            rates = sqft_per_job.reindex(gs.index)
+            ok = rates.notna() & (rates > 0) & (gs > 0)
+            group_sqft_per_job = (
+                float(gs[ok].sum() / (gs[ok] / rates[ok]).sum())
+                if ok.any() and (gs[ok] / rates[ok]).sum() > 0 else None
+            )
+
             # run nonres developer step
             spaces_added, parcels_idx_to_update = run_developer(
                 target_units,
-                lid,
-                [form],
+                "city_%d" % cityid,
+                gdef["forms"],
                 orca.get_table("buildings"),
                 "job_spaces",
                 parcels.parcel_size,
@@ -4208,9 +4262,18 @@ def non_residential_developer(jobs, parcels, target_vacancies, nonres_forms):
                 parcels.total_job_spaces,
                 "nonres_developer.yaml",
                 add_more_columns_callback=add_extra_columns_nonres,
+                bldg_sqft_per_job=group_sqft_per_job,
             )
 
             _calculate_pct_undev(parcels, parcels_idx_to_update, year)
+
+    if skipped_no_target:
+        print("  [nonres] %d city x group combinations had no target "
+              "(the 'other' group has no proforma form and is not buildable)"
+              % skipped_no_target)
+    if skipped_no_stock:
+        print("  [nonres] %d city x group combinations skipped: no existing job spaces"
+              % skipped_no_stock)
 
 
 @orca.step()
