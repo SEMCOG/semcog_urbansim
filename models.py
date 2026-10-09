@@ -4280,12 +4280,14 @@ def update_sp_filter(buildings):
         13: "Religious and Civic",
         14: "Governmental",
         52: "Hospital",
-        53: "Residential Care Facility",
         92: "Library",
         93: "Dormitory Quarters",
         94: "Death Care Services",
         95: "Parking Garage",
+        96: "Data Center",
     }
+    # 53 Residential Care Facility is not protected: its jobs (mostly sector 14)
+    # are not refilled by jobs_scaling_model, and the developer builds this type.
 
     updated_buildings = buildings.to_frame(buildings.local_columns)
     print(

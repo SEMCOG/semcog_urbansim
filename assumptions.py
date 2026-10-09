@@ -156,7 +156,10 @@ orca.add_injectable(
         "medical": {
             "btypes":     [51, 52, 53],
             "price_col":  "sqft_price_nonres",
-            "forms":      ["health-care", "hospital", "residential-care"],
+            # no "hospital" form: only scheduled events build hospitals. Hospital
+            # jobs (sector 15) are placed only by jobs_scaling_model, which never
+            # fills a new building, so a developer-built hospital would stay empty.
+            "forms":      ["health-care", "residential-care"],
         },
         "entertainment": {
             "btypes":     [61, 91],
