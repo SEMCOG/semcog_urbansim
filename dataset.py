@@ -52,7 +52,6 @@ for name in [
     "income_growth_rates",
     "target_vacancies",
     "target_vacancies_mcd",
-    "demolition_rates",
     "landmark_worksites",
     "mcd_total",
     "dropped_buildings",
@@ -63,6 +62,13 @@ for name in [
         print('skip loading %s while adding table to orca' % name)
         continue
     orca.add_table(name, store[name])
+
+
+@orca.table(cache=True)
+def demolition_rates():
+    # Annual demolition volume by city (2021-2024 average), written by
+    # demolition_calibration.py. Replaces the base HDF table of the old view.
+    return pd.read_csv(path.join(misc.configs_dir(), "demolition_rates.csv"), index_col="city_id")
 
 
 @orca.table(cache=True)
