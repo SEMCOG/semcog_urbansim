@@ -38,8 +38,8 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100826.h5",
-    f"{_LOCAL}/main_100826.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100926.h5",
+    f"{_LOCAL}/main_100926.h5",
 )
 
 # RDF2055 estimation
@@ -109,8 +109,8 @@ MODEL_RUNS_DIR = _p(
 # A full SHA-256 pass over large HDFs is intentionally a preflight operation.
 MIRROR_PAIRS = {
     "base HDF": (
-        f"{_LOCAL}/main_100826.h5",
-        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100826.h5"],
+        f"{_LOCAL}/main_100926.h5",
+        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100926.h5"],
     ),
     "accessibility HDF": (
         f"{_LOCAL}/access_indicators.h5",
