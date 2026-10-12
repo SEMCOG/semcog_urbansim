@@ -156,10 +156,7 @@ orca.add_injectable(
         "medical": {
             "btypes":     [51, 52, 53],
             "price_col":  "sqft_price_nonres",
-            # no "hospital" form: only scheduled events build hospitals. Hospital
-            # jobs (sector 15) are placed only by jobs_scaling_model, which never
-            # fills a new building, so a developer-built hospital would stay empty.
-            "forms":      ["health-care", "residential-care"],
+            "forms":      ["health-care", "hospital", "residential-care"],
         },
         "entertainment": {
             "btypes":     [61, 91],
@@ -181,7 +178,11 @@ def res_forms(btype_form_map):
 
 @orca.injectable("nonres_forms")
 def nonres_forms(btype_form_map):
-    return [f for col, v in btype_form_map.items() if col != "residential" for f in v["forms"]]
+    # No "hospital": only scheduled events build hospitals. Hospital jobs
+    # (sector 15) are placed only by jobs_scaling_model, which never fills a new
+    # building. The form stays in btype_form_map for feasibility prices.
+    return [f for col, v in btype_form_map.items() if col != "residential"
+            for f in v["forms"] if f != "hospital"]
 
 
 # Run-level random seed (single source of truth). A run script may set the
