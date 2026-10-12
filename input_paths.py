@@ -38,25 +38,24 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    f"{_LOCAL}/main_091626.h5",
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_091626.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100926.h5",
+    f"{_LOCAL}/main_100926.h5",
 )
 
 # RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    f"{_LOCAL}/models/models_26Sep14_slot_sample",
-    "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
-    "/mnt/hgfs/RDF2055/estimation/models/models_26Sep14_slot_sample",
+    "/mnt/D/RDF2055/estimation/models/models_26Oct09",
+    "/mnt/hgfs/urbansim/RDF2055/estimation/models/models_26Oct09",
+    f"{_LOCAL}/models/models_26Oct09",
 )
 ELCM_MODEL_DIR = _p(
-    f"{_LOCAL}/models/elcm_models_26Sep11",
-    "/mnt/D/RDF2055/estimation/models/elcm_models_26Sep11",
-    "/mnt/hgfs/RDF2055/estimation/models/elcm_models_26Sep11",
+    "/mnt/D/RDF2055/estimation/models/elcm_models_26Oct02",
+    "/mnt/hgfs/urbansim/RDF2055/estimation/models/elcm_models_26Oct02",
+    f"{_LOCAL}/models/elcm_models_26Oct02",
 )
 REPM_MODEL_DIR = _p(
-    os.environ.get("SEMCOG_REPM_MODEL_DIR", f"{_LOCAL}/models/repm_sep28"),
-    f"{_LOCAL}/models/repm_sep28",
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_sep28",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_oct03",
+    f"{_LOCAL}/models/repm_oct03",
 )
 
 
@@ -68,11 +67,7 @@ ACCESS_INDICATORS_H5 = _p(
 # Pandana network bundle — normally in the local `data/` dir; fall back to copy.
 NETWORKS_2050_H5 = _p(
     f"{_LOCAL}/semcog_networks.h5",
-    os.path.join(os.path.dirname(__file__), "data", "semcog_networks.h5"),
     "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/semcog_networks.h5",
-    # legacy filename, fallback only -- identical content
-    os.path.join(os.path.dirname(__file__), "data", "semcog_2050_networks.h5"),
-    f"{_LOCAL}/semcog_2050_networks.h5",
 )
 
 # ---------------------------------------------------------------------------
@@ -114,8 +109,8 @@ MODEL_RUNS_DIR = _p(
 # A full SHA-256 pass over large HDFs is intentionally a preflight operation.
 MIRROR_PAIRS = {
     "base HDF": (
-        f"{_LOCAL}/main_091626.h5",
-        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_091626.h5"],
+        f"{_LOCAL}/main_100926.h5",
+        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_100926.h5"],
     ),
     "accessibility HDF": (
         f"{_LOCAL}/access_indicators.h5",
@@ -126,10 +121,10 @@ MIRROR_PAIRS = {
         ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/semcog_networks.h5"],
     ),
     "HLCM package": (
-        f"{_LOCAL}/models/models_26Sep14_slot_sample",
+        f"{_LOCAL}/models/models_26Oct09",
         [
-            "/mnt/D/RDF2055/estimation/models/models_26Sep14_slot_sample",
-            "/mnt/hgfs/RDF2055/estimation/models/models_26Sep14_slot_sample",
+            "/mnt/D/RDF2055/estimation/models/models_26Oct09",
+            "/mnt/hgfs/RDF2055/estimation/models/models_26Oct09",
         ],
     ),
     "ELCM package": (
