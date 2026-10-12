@@ -3578,13 +3578,14 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
-def city_households_for_developer(hh_large_area, city_to_la, snapshot):
+def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None):
     """Households per city for the residential developer's vacancy gap.
 
     At developer time, households added by transition (and movers) are unplaced
     and have no city, so counting placed households understates demand. Start
-    from the city counts placed before transition (`snapshot`) and spread each
-    large area's change since then across its cities by snapshot share.
+    from the city counts placed before transition (`snapshot`), add each city's
+    trend, and spread the rest of each large area's change since then across
+    its cities by snapshot share. Large-area totals equal the current count.
 
     Parameters
     ----------
@@ -3594,6 +3595,8 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot):
         large_area_id indexed by city_id.
     snapshot : pd.Series
         Placed household count indexed by city_id.
+    trend : pd.Series, optional
+        Expected yearly household change indexed by city_id (0 if omitted).
 
     Returns
     -------
@@ -3602,7 +3605,33 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot):
     la = city_to_la.reindex(snapshot.index)
     snap_la = snapshot.groupby(la).sum()
     la_change = hh_large_area.value_counts().reindex(snap_la.index, fill_value=0) - snap_la
-    return snapshot + snapshot / la.map(snap_la) * la.map(la_change)
+    trend = (pd.Series(0.0, index=snapshot.index) if trend is None
+             else trend.reindex(snapshot.index, fill_value=0.0))
+    rest = la_change - trend.groupby(la).sum()
+    return snapshot + trend + snapshot / la.map(snap_la) * la.map(rest)
+
+
+def city_household_trend(year, snapshot):
+    """Average yearly household change per city over the last 5 years.
+
+    The history is indexed by data year: the snapshot taken in simulation year
+    `year` holds the households of `year - 1`. At the first call it starts from
+    the 2020 households (configs/households_by_city_2020.csv) and this snapshot,
+    with straight-line values for the years between; each later simulation year
+    adds its own snapshot.
+    """
+    history = (orca.get_injectable("city_hh_history")
+               if orca.is_injectable("city_hh_history") else None)
+    if history is None:
+        hh_2020 = pd.read_csv(
+            os.path.join(misc.configs_dir(), "households_by_city_2020.csv"), index_col="city_id"
+        )["households"].reindex(snapshot.index).fillna(snapshot)
+        first = year - 1
+        history = {y: hh_2020 + (snapshot - hh_2020) * (y - 2020) / (first - 2020)
+                   for y in range(2020, first)}
+    history[year - 1] = snapshot
+    orca.add_injectable("city_hh_history", history)
+    return (snapshot - history[year - 6].reindex(snapshot.index).fillna(snapshot)) / 5.0
 
 
 def compute_demo_rebuild_boost(parcels, year, boost, decay, window, scheduled_factor=1.0):
@@ -3907,10 +3936,10 @@ def residential_developer(
     """
     Simulate residential development per city in three steps:
 
-    1. Target units for city: blend two signals in housing units
-         target_raw = w_gap*V + w_demand*R
-         V = vacancy_gap_signed, R = mover_index × decay(year)
-         decay: 1.0 in base_year → mover_decay_final in final_year, linear
+    1. Target units for city: the vacancy gap in housing units
+         target_raw = households / (1 - target_vacancy) - units
+         households = pre-transition snapshot + city trend + share of the
+         rest of the large area's change (city_households_for_developer)
        Hard ceiling: feasible_units from pro-forma feasibility.
 
     2. LA alignment: scale each large_area's city targets so total built
@@ -3925,20 +3954,16 @@ def residential_developer(
     target_vacancies = target_res_vacancies_mcd.to_frame()[str(year)]
 
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "city_id", "building_type_id",
-         "year_built", "recent_mover_rate"]
+        ["residential_units", "city_id", "building_type_id", "year_built"]
     )
 
     with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
         _res_cfg = yaml.load(f, Loader=yaml.FullLoader)
-    w_gap    = _res_cfg.get("target_weight_vacancy_gap", 0.5)
-    w_demand = _res_cfg.get("target_weight_demand",      0.5)
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
+    # minimum of the LA cap, as a share of the LA's base-year build rate
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
-    hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
     # defaults reproduce the earlier behavior; res_developer.yaml tunes them down
     la_max_scale         = _res_cfg.get("la_max_scale", la_max_ratio)
-    hist_floor_profitable_only = _res_cfg.get("hist_floor_profitable_only", False)
     demo_rebuild_boost     = _res_cfg.get("demo_rebuild_boost", 20.0)
     demo_rebuild_decay     = _res_cfg.get("demo_rebuild_decay", 0.6)
     demo_rebuild_window    = _res_cfg.get("demo_rebuild_window", 5)
@@ -3946,14 +3971,7 @@ def residential_developer(
     demo_rebuild_sched_factor = _res_cfg.get("demo_rebuild_scheduled_factor", 3.0)
     lookback_year = year - 7
 
-    mover_decay_final = _res_cfg.get("mover_decay_final", 0.5)
     base_year  = orca.get_injectable("base_year")
-    # C signal decays linearly from full weight in base year to mover_decay_final by final year
-    mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
-
-    # compute per-city build rates for hist_floor (7-year window ending at base year)
-    _hist = orig_buildings[orig_buildings.year_built.between(base_year - 6, base_year)]
-    city_hist_rate = (_hist.groupby("city_id")["residential_units"].sum() / 7.0).to_dict()
 
     # rebuild-priority weight for orphaned demolished SF parcels
     recent_demo_boost = compute_demo_rebuild_boost(
@@ -4023,11 +4041,12 @@ def residential_developer(
     else:
         hh_city = households.city_id
         city_hh_snapshot = hh_city[hh_city.notna()].astype(int).value_counts()
+    city_trend = city_household_trend(year, city_hh_snapshot)
     city_hh = city_households_for_developer(
-        households.large_area_id, city_to_la, city_hh_snapshot
+        households.large_area_id, city_to_la, city_hh_snapshot, city_trend
     )
-    print("  City households: {:,} placed (snapshot), {:+,.0f} LA change spread by share".format(
-        int(city_hh_snapshot.sum()), city_hh.sum() - city_hh_snapshot.sum()))
+    print("  City households: {:,} placed (snapshot), trend {:+,.0f}, LA change {:+,.0f}".format(
+        int(city_hh_snapshot.sum()), city_trend.sum(), city_hh.sum() - city_hh_snapshot.sum()))
 
     # compute per-city target_units
     city_data = {}
@@ -4045,12 +4064,7 @@ def residential_developer(
         assert target_vacancy < 1.0
 
         vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
-        mover_index = (city_orig_buildings.recent_mover_rate * city_orig_buildings.residential_units).sum()
-        mover_index /= 10 # 10yr avg
-
-        V_units = vacancy_gap_signed
-        R_units = max(0, mover_index) * mover_decay
-        target_units_raw = w_gap * V_units + w_demand * R_units
+        target_units_raw = vacancy_gap_signed
 
         feas_df   = orca.get_table("feasibility_city_" + str(cityid)).to_frame()
         res_feas  = feas_df[feas_df["form"].isin(res_forms)]
@@ -4062,48 +4076,17 @@ def residential_developer(
             )
         else:
             feasible_units = 0
-        # all_feasible: includes suboptimal proposals (keep_suboptimal=True)
-        # used by historical floor to allow distressed-market builds
-        if len(res_feas) > 0:
-            ave_unit_sz_all = parcels.ave_unit_size.reindex(res_feas.index).fillna(1000)
-            all_feasible_units = int(
-                (res_feas["residential_sqft"] / ave_unit_sz_all).clip(lower=0).sum()
-            )
-        else:
-            all_feasible_units = 0
-
         target_units = int(np.clip(target_units_raw, 0, feasible_units))
 
         city_data[cityid] = {
             "target_units": target_units, "feasible_units": feasible_units,
-            "all_feasible_units": all_feasible_units,
             "cur_agents": cur_agents,
             "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
-            "mover_index": mover_index, "V_units": V_units,
-            "R_units": R_units,
+            "trend": float(city_trend.get(cityid, 0.0)),
             "target_raw": target_units_raw, "la_scale": 1.0,
         }
 
-    # historical minimum floor — before LA alignment so LA cap is the hard ceiling
-    n_floored = 0
-    for cityid, d in city_data.items():
-        hist_rate = city_hist_rate.get(cityid, 0)
-        if hist_rate < hist_floor_min_rate:
-            continue
-        floor = int(hist_rate * hist_floor_factor)
-        if d["target_units"] < floor:
-            prev = d["target_units"]
-            # all_feasible_units (incl. suboptimal) lets distressed markets build at a
-            # loss; hist_floor_profitable_only restricts the floor to profitable units
-            cap = d["feasible_units"] if hist_floor_profitable_only else d["all_feasible_units"]
-            d["target_units"] = min(floor, cap)
-            if d["target_units"] > prev:
-                n_floored += 1
-    if n_floored:
-        print(f"  Historical floor applied to {n_floored} cities "
-              f"(factor={hist_floor_factor}, min_rate={hist_floor_min_rate})")
-
-    # LA alignment — hard ceiling applied after hist_floor
+    # LA alignment — hard ceiling
     for la_id, la_city_ids in city_to_la.groupby(city_to_la).groups.items():
         active = [m for m in la_city_ids if m in city_data]
         if not active:
@@ -4147,11 +4130,11 @@ def residential_developer(
         print(
             "developing residential for city {} | "
             "agents={:,} units={:,} vac_gap={:+,} | "
-            "V={:+.0f} R={:.0f} raw={:.0f} | "
+            "trend={:+.0f} raw={:.0f} | "
             "feasible={:,} la_scale={:.3f} target={:,}\n".format(
                 cityid,
                 d["cur_agents"], d["num_units"], d["vacancy_gap"],
-                d["V_units"], d["R_units"], d["target_raw"],
+                d["trend"], d["target_raw"],
                 feasible_units, d["la_scale"], target_units,
             )
         )
@@ -4179,9 +4162,7 @@ def residential_developer(
                 "cur_agents":    d["cur_agents"],
                 "num_units":     d["num_units"],
                 "vacancy_gap":   d["vacancy_gap"],
-                "mover_index":   round(d["mover_index"], 3),
-                "V_units":       round(d["V_units"], 1),
-                "R_units":       round(d["R_units"], 1),
+                "trend":         round(d["trend"], 1),
                 "target_raw":    round(d["target_raw"], 1),
                 "la_scale":      d["la_scale"],
                 "feasible_units": feasible_units,

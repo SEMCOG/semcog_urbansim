@@ -45,3 +45,30 @@ def test_no_change_returns_snapshot():
     out = models.city_households_for_developer(hh_la, CITY_TO_LA, SNAPSHOT)
 
     assert out.equals(SNAPSHOT.astype(float))
+
+
+def test_trend_with_large_area_total_kept():
+    # The worked example: LA 3 loses 100 households; city trends +300, +100, -200
+    city_to_la = pd.Series({1: 3, 2: 3, 3: 3})
+    snapshot = pd.Series({1: 50_000, 2: 30_000, 3: 20_000})
+    trend = pd.Series({1: 300.0, 2: 100.0, 3: -200.0})
+    hh_la = pd.Series([3] * 99_900)
+    out = models.city_households_for_developer(hh_la, city_to_la, snapshot, trend)
+
+    assert out.round().to_dict() == {1: 50_150, 2: 30_010, 3: 19_740}
+    assert round(out.sum()) == 99_900
+
+
+def test_trend_history_starts_from_2020():
+    hh_2020 = pd.read_csv("configs/households_by_city_2020.csv", index_col="city_id")["households"]
+    city = hh_2020.index[0]
+    if orca.is_injectable("city_hh_history"):
+        orca.add_injectable("city_hh_history", None)
+
+    snap_2025 = pd.Series({city: hh_2020[city] + 500.0})
+    t_2026 = models.city_household_trend(2026, snap_2025)
+    assert t_2026[city] == 100.0  # (2025 - 2020) / 5
+
+    snap_2026 = pd.Series({city: hh_2020[city] + 700.0})
+    t_2027 = models.city_household_trend(2027, snap_2026)
+    assert t_2027[city] == (700.0 - 100.0) / 5  # 2021 is the straight-line value: 2020 + 100
