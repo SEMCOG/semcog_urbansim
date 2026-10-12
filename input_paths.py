@@ -44,9 +44,9 @@ BASE_HDF = _p(
 
 # RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    "/mnt/D/RDF2055/estimation/models/models_26Oct08",
-    "/mnt/hgfs/urbansim/RDF2055/estimation/models/models_26Oct08",
-    f"{_LOCAL}/models/models_26Oct08",
+    "/mnt/D/RDF2055/estimation/models/models_26Oct09",
+    "/mnt/hgfs/urbansim/RDF2055/estimation/models/models_26Oct09",
+    f"{_LOCAL}/models/models_26Oct09",
 )
 ELCM_MODEL_DIR = _p(
     "/mnt/D/RDF2055/estimation/models/elcm_models_26Oct02",
@@ -121,10 +121,10 @@ MIRROR_PAIRS = {
         ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/semcog_networks.h5"],
     ),
     "HLCM package": (
-        f"{_LOCAL}/models/models_26Oct08",
+        f"{_LOCAL}/models/models_26Oct09",
         [
-            "/mnt/D/RDF2055/estimation/models/models_26Oct08",
-            "/mnt/hgfs/RDF2055/estimation/models/models_26Oct08",
+            "/mnt/D/RDF2055/estimation/models/models_26Oct09",
+            "/mnt/hgfs/RDF2055/estimation/models/models_26Oct09",
         ],
     ),
     "ELCM package": (
