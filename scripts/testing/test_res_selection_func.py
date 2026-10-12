@@ -40,7 +40,7 @@ def _probs(df, demo_boost=None, monkeypatch=None):
     """Run the selection closure and capture the probabilities it hands to the sampler."""
     captured = {}
 
-    def fake_choice(d, p, target_units):
+    def fake_choice(d, p, target_units, tolerance=None):
         captured["p"] = p
         return d.index.values[:1]
 

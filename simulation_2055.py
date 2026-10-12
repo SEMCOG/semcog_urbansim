@@ -14,10 +14,7 @@ data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 print(data_out)
 # run config
-# Temporarily disabled: the current parcel-to-legislative-district crosswalk
-# has not been generated for the base-year parcel universe. The forecast HDF
-# remains complete and indicators can be generated after that input is restored.
-RUN_OUTPUT_INDICATORS = False
+RUN_OUTPUT_INDICATORS = True
 base_year = 2025
 final_year = 2055
 indicator_spacing = 5
@@ -158,8 +155,8 @@ orca.run(
         "zones",
         "semmcds",
         "counties",
-        "target_vacancies_mcd",
-        "target_vacancies",
+        "target_res_vacancies_mcd",
+        "target_nonres_vacancies_mcd",
         "building_sqft_per_job",
         "annual_employment_control_totals",
         "travel_data",
