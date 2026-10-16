@@ -164,6 +164,9 @@ def buildings(store):
             landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
             "sp_filter",
         ] = -1  # set landmark building_id as negative for blocking
+    # protected building types are blocked from the start, before the first
+    # year's demolition (update_sp_filter repeats this for new buildings)
+    df.loc[df.building_type_id.isin(assumptions.PROTECTED_BTYPES), "sp_filter"] = -1
 
     df["event_id"] = 0  # also add event_id for event reference
 
