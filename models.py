@@ -3069,7 +3069,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     )
 
     # Wayne County flag needed by logistic model (large_area_id is on parcels)
-    pcl = parcels.to_frame(["large_area_id"])
+    pcl = parcels.to_frame(["large_area_id", "parcel_sqft"])
     b["is_wayne"]  = b.parcel_id.map(pcl.large_area_id).eq(5).astype(float)
 
     # ── Eligibility ──────────────────────────────────────────────────────────
@@ -3082,7 +3082,19 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         if max_nonres_occ is not None:
             nonres_occ = b["b_total_jobs"] / b["job_spaces"].clip(lower=1)
             not_eligible |= (b.non_residential_sqft > 0) & (nonres_occ > max_nonres_occ)
+
+    # Main-street storefronts. Shops, restaurants and leisure buildings on a small
+    # commercially zoned lot are the walkable downtown pattern, and the score goes
+    # after them first
+    storefront = (
+        b.building_type_id.isin([21, 61, 65]) # retail, leisure, restaurant
+        & b.parcel_id.map(orca.get_table("zoning").future_use).isin(
+            ["MIXED USE", "COMMERCIAL"])
+        & (b.parcel_id.map(pcl.parcel_sqft) <= 15000) # small parcel gate
+    )
+    not_eligible |= storefront
     eligible = ~not_eligible
+    print("  [demolition] %d main-street storefronts protected" % storefront.sum())
 
     # ── Control totals: taper × scenario multiplier × dynamic pressure ──────
     # Taper matches random_demolition_events: demolition volume scales from
