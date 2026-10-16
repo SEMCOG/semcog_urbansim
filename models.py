@@ -933,6 +933,8 @@ def real_estate_adjustment(buildings, parcels, year):
     print(f"  [real_estate_adjustment] year={year} price ratios: {summary}"
           + (f"  new builds assessed: {len(new_build_idx)}" if new_build_idx else ""))
 
+    sync_parcel_improvement_values()
+
 
 @orca.step()
 def households_relocation(households, annual_relocation_rates_for_households):
@@ -2774,6 +2776,7 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
             % (all_buildings.shape[0] - b.shape[0])
         )
         orca.add_table("buildings", all_buildings)
+        sync_parcel_improvement_values()
 
         # Todo: maybe we need to impute some columns
         # Todo: parcel use need to be updated
@@ -2789,6 +2792,9 @@ def scheduled_demolition_events(
     iter_var,
     events_deletion,
 ):
+    # record baseline impr value
+    sync_parcel_improvement_values()
+
     sched_dev = events_deletion.to_frame()
     sched_dev = sched_dev[sched_dev.year_demo == iter_var].reset_index(drop=True)
     buildings_columns = buildings.local_columns
@@ -2832,6 +2838,7 @@ def scheduled_demolition_events(
         ]
         pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
         parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+        sync_parcel_improvement_values()
 
 
 @orca.step()
@@ -2848,7 +2855,7 @@ def random_demolition_events(
     )
 
     b = buildings.copy()
-    allowed = variables.parcel_is_allowed_2055()
+    allowed = variables.parcel_is_allowed_2055(purpose="demolition")
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
     buildings_idx = []
 
@@ -2939,6 +2946,7 @@ def random_demolition_events(
     ]
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+    sync_parcel_improvement_values()
 
 
 # ── Demolition scoring helpers ────────────────────────────────────────────────
@@ -3046,7 +3054,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     nonres_calibrated = cfg.get("nonresidential", {}).get("is_calibrated", False)
     rate_mult         = cfg.get("scenario_rate_multiplier", 1.0)
     min_age           = cfg.get("min_age_eligible", 10)
-    impr_to_land      = cfg.get("max_impr_to_land_ratio", 0.1)
+    impr_to_land      = cfg.get("max_impr_to_land_ratio", 1)
     max_res_occ       = cfg.get("max_res_occupancy_eligible")
     max_nonres_occ    = cfg.get("max_nonres_occupancy_eligible")
     any_calibrated    = res_calibrated or nonres_calibrated
@@ -3118,7 +3126,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     b["nonres_score"] = nonres_score.where(eligible, 0.0)
 
     # ── Sampling ─────────────────────────────────────────────────────────────
-    allowed   = variables.parcel_is_allowed_2055(impr_to_land_ratio=impr_to_land)
+    allowed   = variables.parcel_is_allowed_2055(
+        impr_to_land_ratio=impr_to_land, purpose="demolition")
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
     buildings_idx = []
@@ -3190,6 +3199,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     ]
     pct_undev_update = pd.Series(0, index=parcels_idx_to_update)
     parcels.update_col_from_series("pct_undev", pct_undev_update, cast=True)
+
+    sync_parcel_improvement_values()
 
     print(
         f"scored_demolition_events {year}: dropped {len(buildings_idx):,} buildings "
@@ -3324,6 +3335,97 @@ def feasibility(parcels, buildings, btype_form_map):
         )
 
 
+def impr_value_rates():
+    """Improvement value per building sqft, for assessing newly built buildings.
+
+    Fallback order: (city_id, building_type_id) -> building_type_id -> region.
+    """
+    if orca.is_injectable("impr_value_rates_cache"):
+        return orca.get_injectable("impr_value_rates_cache")
+
+    b = orca.get_table("buildings").to_frame(
+        ["city_id", "building_type_id", "improvement_value",
+         "residential_units", "sqft_per_unit", "non_residential_sqft"]
+    )
+    sqft = (b.residential_units.astype("int64") * b.sqft_per_unit.astype("int64")
+            + b.non_residential_sqft)
+    rate = (b.improvement_value / sqft.where(sqft > 0)).replace([np.inf, -np.inf], np.nan)
+    rate = rate.where(rate > 0)
+    df = pd.DataFrame({"city_id": b.city_id,
+                       "building_type_id": b.building_type_id,
+                       "rate": rate}).dropna()
+    # A cell with a handful of buildings produces a rate that is not
+    # representative of its type -- a 3-building hotel cell came out at
+    # $8/sqft against $96/sqft for office -- so a cell has to be populated
+    # before it is trusted, otherwise the broader median stands in.
+    min_n = 5
+    g = df.groupby(["city_id", "building_type_id"]).rate.agg(["median", "size"])
+    gb = df.groupby("building_type_id").rate.agg(["median", "size"])
+    rates = {
+        "city_btype": g.loc[g["size"] >= min_n, "median"],
+        "btype": gb.loc[gb["size"] >= min_n, "median"],
+        "overall": float(df.rate.median()),
+    }
+    orca.add_injectable("impr_value_rates_cache", rates)
+    print("  [improvement_value] rates from {:,} buildings: region median "
+          "${:.2f}/sqft, {:,} of {:,} city x type cells and {:,} of {:,} type "
+          "medians above n={}".format(
+              len(df), rates["overall"], len(rates["city_btype"]), len(g),
+              len(rates["btype"]), len(gb), min_n))
+    return rates
+
+
+def assign_new_building_improvement_value(df):
+    """Assess newly created buildings on the same basis as the input data.
+    """
+    if len(df) == 0:
+        return df
+    rates = impr_value_rates()
+    units = df["residential_units"] if "residential_units" in df else 0
+    per_unit = df["sqft_per_unit"] if "sqft_per_unit" in df else 0
+    nonres = df["non_residential_sqft"] if "non_residential_sqft" in df else 0
+    sqft = (units * per_unit + nonres)
+
+    key = pd.MultiIndex.from_arrays([df["city_id"], df["building_type_id"]])
+    r = pd.Series(rates["city_btype"].reindex(key).to_numpy(), index=df.index)
+    ref = df["building_type_id"].map(rates["btype"]).fillna(rates["overall"])
+    r = r.fillna(ref)
+    r = r.clip(lower=ref * 0.25, upper=ref * 4.0)
+    df["improvement_value"] = (
+        pd.Series(sqft, index=df.index).clip(lower=0) * r
+    ).fillna(0).round()
+    return df
+
+
+def sync_parcel_improvement_values():
+    """Carry simulated construction and demolition into parcels.bldgimprval.
+    """
+    parcels = orca.get_table("parcels")
+    b = orca.get_table("buildings").to_frame(["parcel_id", "improvement_value"])
+    cur = b.groupby("parcel_id").improvement_value.sum()
+
+    if not orca.is_injectable("parcel_impr_shares"):
+        orca.add_injectable("parcel_impr_shares", cur)
+        return
+
+    prev = orca.get_injectable("parcel_impr_shares")
+    orca.add_injectable("parcel_impr_shares", cur)
+
+    idx = cur.index.union(prev.index)
+    delta = cur.reindex(idx, fill_value=0) - prev.reindex(idx, fill_value=0)
+    delta = delta[delta.abs() >= 1]
+    delta = delta[delta.index.isin(parcels.index)]
+    if len(delta) == 0:
+        return
+
+    prior = parcels.bldgimprval.reindex(delta.index).fillna(0)
+    updated = (prior + delta).clip(lower=0, upper=np.iinfo("int32").max).round()
+    parcels.update_col_from_series("bldgimprval", updated, cast=True)
+    print("  [improvement_value] bldgimprval updated on {:,} parcels "
+          "({:,} up, {:,} down), net ${:,.0f}".format(
+              len(delta), (delta > 0).sum(), (delta < 0).sum(), delta.sum()))
+
+
 def add_extra_columns_nonres(df):
     # type: (pd.DataFrame) -> pd.DataFrame
     for col in [
@@ -3357,6 +3459,8 @@ def add_extra_columns_nonres(df):
     df["maz_id"] = assign_new_building_maz(df)
     micro_zones = orca.get_table("micro_zones").to_frame(["zone_id"])
     df["zone_id"] = df["maz_id"].map(micro_zones.zone_id)
+    # calculate new building impr value
+    df = assign_new_building_improvement_value(df)
     return df.fillna(0)
 
 
@@ -3420,6 +3524,9 @@ def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
 
     # set default mcd quota to 0
     df["mcd_model_quota"] = 0
+
+    # sqft_per_unit is known now, so re-assess with the residential sqft included
+    df = assign_new_building_improvement_value(df)
 
     return df.fillna(0)
 
@@ -4150,6 +4257,8 @@ def residential_developer(
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
 
+    sync_parcel_improvement_values()
+
 
 @orca.step()
 def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
@@ -4283,6 +4392,8 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
     if skipped_no_stock:
         print("  [nonres] %d city x group combinations skipped: no existing job spaces"
               % skipped_no_stock)
+
+    sync_parcel_improvement_values()
 
 
 @orca.step()
