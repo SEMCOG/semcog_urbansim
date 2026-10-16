@@ -19,6 +19,7 @@ from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
 from forecast_estimation.utils import load_taz_vars_from_orca
 
+import assumptions
 import utils
 import lcm_utils
 import input_paths
@@ -4348,19 +4349,7 @@ def update_sp_filter(buildings):
     None
     """
     # update sp_filter to -1 for selected building_types
-    selected_btypes = {
-        11: "Educational",
-        13: "Religious and Civic",
-        14: "Governmental",
-        52: "Hospital",
-        92: "Library",
-        93: "Dormitory Quarters",
-        94: "Death Care Services",
-        95: "Parking Garage",
-        96: "Data Center",
-    }
-    # 53 Residential Care Facility is not protected: its jobs (mostly sector 14)
-    # are not refilled by jobs_scaling_model, and the developer builds this type.
+    selected_btypes = assumptions.PROTECTED_BTYPES
 
     updated_buildings = buildings.to_frame(buildings.local_columns)
     print(
