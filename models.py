@@ -837,8 +837,8 @@ def real_estate_adjustment(buildings, parcels, year):
     # Capture LA-average base prices on first call; flag used below for one-time backfill
     first_call = not orca.is_injectable("remi_base_la_prices")
     if first_call:
-        bd0 = buildings.to_frame(["large_area_id", "sqft_price_res"])
-        base = (bd0[bd0["sqft_price_res"] > 0]
+        bd0 = buildings.to_frame(["large_area_id", "sqft_price_res", "residential_units"])
+        base = (bd0[(bd0["sqft_price_res"] > 0) & (bd0["residential_units"] > 0)]
                 .groupby("large_area_id")["sqft_price_res"].mean()
                 .to_dict())
         orca.add_injectable("remi_base_la_prices", base)
@@ -849,7 +849,9 @@ def real_estate_adjustment(buildings, parcels, year):
     bd = buildings.to_frame(["large_area_id", "sqft_price_res", "year_built",
                               "residential_units", "sqft_per_unit", "parcel_id",
                               "building_type_id"])
-    bd_pos = bd[bd["sqft_price_res"] > 0]
+    # Housing only: REPM does not re-predict buildings without units, so a price
+    # left on them would be scaled again every year and absorb the LA growth
+    bd_pos = bd[(bd["sqft_price_res"] > 0) & (bd["residential_units"] > 0)]
     updated = bd_pos["sqft_price_res"].copy()
     new_build_idx = []
 
