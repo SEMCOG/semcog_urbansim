@@ -140,13 +140,16 @@ def buildings(store):
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
     )
-    # fill out-of-bound sqft_price_res with la avg
+    # fill out-of-bound sqft_price_res with la avg -- housing only: a building
+    # without units has no residential price (its 0 units give inf here)
+    has_units = df.residential_units > 0
     oob = (df.sqft_price_res > 1500) | (df.sqft_price_res < 0) | df.sqft_price_res.isna()
     df.loc[oob, "sqft_price_res"] = np.nan
+    df.loc[~has_units, "sqft_price_res"] = 0
     la_id = store["parcels"]["large_area_id"].reindex(df["parcel_id"].values).values
     df["_la"] = la_id
-    la_avg = df[~oob].groupby("_la")["sqft_price_res"].mean()
-    region_avg = df.loc[~oob, "sqft_price_res"].mean()
+    la_avg = df[has_units & ~oob].groupby("_la")["sqft_price_res"].mean()
+    region_avg = df.loc[has_units & ~oob, "sqft_price_res"].mean()
     df["sqft_price_res"] = df["sqft_price_res"].fillna(
         df["_la"].map(la_avg).fillna(region_avg)
     )
