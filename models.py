@@ -3818,6 +3818,24 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
     parcels.update_col_from_series("pct_undev", new_pct, cast=True)
 
 
+def _label_developer_removals():
+    """Label buildings the developer removed this year (redevelopment).
+
+    urbansim_parcels adds them to dropped_buildings without a step, so they
+    could not be told apart from demolitions in the outputs.
+    """
+    if not orca.is_table("dropped_buildings"):
+        return
+    d = orca.get_table("dropped_buildings").local.copy()
+    if "step" not in d.columns:
+        d["step"] = np.nan
+    new = d["year_demo"].eq(orca.get_injectable("year")) & d["step"].isna()
+    if new.any():
+        d["step"] = d["step"].astype(object)
+        d.loc[new, "step"] = "developer_redevelopment"
+        orca.add_table("dropped_buildings", d)
+
+
 def run_developer(
     target_units,
     geoid,
@@ -3908,6 +3926,7 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
+    _label_developer_removals()
     # calculate spaces_added
     if supply_fname == 'job_spaces':
         spaces_added = new_buildings.job_spaces.sum() - new_buildings.current_units.sum()
