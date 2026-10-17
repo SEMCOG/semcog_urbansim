@@ -179,7 +179,6 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
             "sp_filter",
         ]
     )
-    year = orca.get_injectable("year")
 
     pcl_new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     pcl_new_building = pcl_new_building.reindex(pcl_index, fill_value=False)
@@ -192,9 +191,9 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
         ].parcel_id
     )
 
-    pcl_big_nonres = (parcels.non_residential_sqft >= 50000) & (
-        year <= 2050 # this rule only apply for year before 20**
-    )
+    # big non-res parcels are protected in every year (an old `year <= 2050`
+    # cap ended the protection in 2051)
+    pcl_big_nonres = parcels.non_residential_sqft >= 50000
     pcl_big_nonres = pcl_big_nonres.reindex(pcl_index, fill_value=False)
 
     pcl_gq = pcl_index.isin(
