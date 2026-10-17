@@ -23,9 +23,13 @@ land_to_impr_ratio  : parcel land_value / building_value
 is_exempt           : parcel tax-exempt status (proxy for delinquency/public ownership)
 is_wayne            : Wayne County indicator (large_area_id = 5)
 
+Stock-based rates (step 7): city demolition rate per unit of old stock (or, in
+Detroit, per unit of the vacant pool), written to configs/demolition_stock_rates.csv.
+
 Run from semcog_urbansim/ directory:
     micromamba activate forecast
-    python demolition_calibration.py
+    python demolition_calibration.py                      # all steps
+    python demolition_calibration.py --stock-rates-only   # step 7 only
 """
 
 import os
@@ -39,6 +43,8 @@ from sklearn.metrics import roc_auc_score
 from scipy import sparse
 from urbansim.utils import misc
 
+from demolition_stock import CATEGORIES, NONRES_CATEGORY, RES_CATEGORIES, stock_by_city, stock_rate_cfg
+
 CONFIG_PATH = os.path.join(misc.configs_dir(), "demolition_model.yaml")
 
 # Connection string is read at run time; never write credentials in this file
@@ -46,6 +52,7 @@ SQL_YAML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                         "forecast_data_input", "config", "sql.yaml")
 
 RES_TYPES = [81, 82, 83]
+LARGE_AREAS = [3, 5, 93, 99, 115, 125, 147, 161]
 
 # Same names and formulas as the simulation building columns (variables_building.py)
 RES_FEATURES    = ["building_age", "impr_value_per_sqft", "land_to_impr_ratio"]
@@ -109,13 +116,56 @@ GROUP BY c.city_id
 ORDER BY c.city_id
 """
 
+# Stock-based targets (configs/demolition_stock_rates.csv): demolitions and
+# stock by city and year. Stock at the end of year t = buildings built by t and
+# not demolished by t. Old stock: residential built before 1950 (same type),
+# non-residential sqft built before 1970 (demolition_stock.stock_rate_cfg).
+STOCK_RATES_PATH = os.path.join(misc.configs_dir(), "demolition_stock_rates.csv")
+HISTORY_FIRST_YEAR, HISTORY_LAST_YEAR = 2010, 2024
+HISTORY_SKIP_YEARS = [2020]  # pandemic
+
+QUERY_CITY_DEMOLITIONS = """
+SELECT b.city_id, date_part('year', b.demolished)::int AS year,
+       COALESCE(SUM(b.nonres_sqft), 0)                                     AS typenonsqft,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 81), 0) AS type81units,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 82), 0) AS type82units,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 83), 0) AS type83units
+FROM creator.terra_buildings b
+WHERE b.demolished IS NOT NULL
+  AND (b.apn)::text <> 'CONDO BUILDING'
+  AND date_part('year', b.demolished) BETWEEN {first} AND {last}
+GROUP BY 1, 2
+"""
+
+QUERY_CITY_STOCK = """
+SELECT b.city_id, t.year,
+       COALESCE(SUM(b.nonres_sqft) FILTER (WHERE b.year_built > 0 AND b.year_built <= {nonres_cut}), 0) AS typenonsqft,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 81 AND b.year_built > 0 AND b.year_built <= {res_cut}), 0) AS type81units,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 82 AND b.year_built > 0 AND b.year_built <= {res_cut}), 0) AS type82units,
+       COALESCE(SUM(b.housing_units) FILTER (WHERE b.build_type = 83 AND b.year_built > 0 AND b.year_built <= {res_cut}), 0) AS type83units
+FROM generate_series({first}, {last}) AS t(year)
+JOIN creator.terra_buildings b
+  ON (b.demolished IS NULL OR date_part('year', b.demolished) > t.year)
+ AND (b.housing_units > 0 OR b.nonres_sqft > 0)
+ AND (b.apn)::text <> 'CONDO BUILDING'
+GROUP BY 1, 2
+"""
+
+QUERY_CITY_LA = """
+SELECT city_id, large_area_id FROM creator.terminus_city_id
+"""
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Data loading
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_engine():
+    # Read-only session: this script never writes to the database
     with open(SQL_YAML) as f:
-        return sqlalchemy.create_engine(yaml.safe_load(f)["db_pgforecast_connection_str"])
+        return sqlalchemy.create_engine(
+            yaml.safe_load(f)["db_pgforecast_connection_str"],
+            connect_args={"options": "-c default_transaction_read_only=on"},
+        )
 
 
 def load_inputs(engine):
@@ -284,6 +334,166 @@ def build_volume_table(engine):
     """Average annual demolition volume by city (step 6)."""
     total = pd.read_sql(QUERY_VOLUME, engine).set_index("city_id")
     return (total / (VOLUME_LAST_YEAR - VOLUME_FIRST_YEAR + 1)).round().astype(int)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stock-based rates (configs/demolition_stock_rates.csv)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# target[c,k] = rate[c,k] x stock[c,k] each simulated year (scored_demolition_events).
+# rate = m x level. m: city rate shrunk toward its large-area rate (empirical
+# Bayes), from 2010-2024 history. level: outside Detroit, so the base-year stock
+# gives the 2021-2024 volume; Detroit residential: rate_per_vacant_unit on the
+# vacant pool, m only splits it between neighborhoods.
+
+KAPPA_GRID = [0, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10]
+# Categories whose level outside Detroit is the 2010-2024 average, not 2021-2024:
+# apartment demolitions are single large projects (Washtenaw 2023: 1,004 units)
+LONG_LEVEL_CATEGORIES = ["type83units"]
+
+# Fewer city-years with a demolition than this in the tuning years: kappa cannot be
+# tuned, use the large-area rate for every city (m = 1)
+MIN_TUNING_CITY_YEARS = 20
+
+
+def load_history(engine, p):
+    """Demolitions and start-of-year stock by city, year and category (long table)."""
+    first, last = HISTORY_FIRST_YEAR, HISTORY_LAST_YEAR
+    dem = pd.read_sql(QUERY_CITY_DEMOLITIONS.format(first=first, last=last), engine)
+    stock = pd.read_sql(QUERY_CITY_STOCK.format(first=first - 1, last=last - 1,
+                                                res_cut=p["res_max_year_built"],
+                                                nonres_cut=p["nonres_max_year_built"]), engine)
+    stock["year"] += 1  # end of year t-1 = start of year t
+    la = pd.read_sql(QUERY_CITY_LA, engine).set_index("city_id")["large_area_id"]
+
+    key = ["city_id", "year"]
+    dem = dem.melt(key, CATEGORIES, "category", "demolished")
+    stock = stock.melt(key, CATEGORIES, "category", "stock")
+    hist = stock.merge(dem, on=key + ["category"], how="left").fillna({"demolished": 0})
+    hist["large_area_id"] = hist["city_id"].map(la)
+    hist = hist[hist["large_area_id"].isin(LARGE_AREAS) & ~hist["year"].isin(HISTORY_SKIP_YEARS)]
+    hist["group"] = np.where(hist["large_area_id"].isin(p["detroit_la_ids"]), "detroit", "other")
+    return hist
+
+
+def _shrunk_rates(df, kappa):
+    """City rate shrunk toward its large-area rate: (D + kappa r_la) / (E + kappa)."""
+    c = df.groupby("city_id").agg(D=("demolished", "sum"), E=("stock", "sum"),
+                                  large_area_id=("large_area_id", "first"))
+    la = c.groupby("large_area_id")[["D", "E"]].sum()
+    c["r_la"] = c["large_area_id"].map(la["D"] / la["E"].where(la["E"] > 0))
+    if np.isinf(kappa):
+        c["r_city"], c["own_weight"] = c["r_la"], 0.0
+    else:
+        c["r_city"] = (c["D"] + kappa * c["r_la"]) / (c["E"] + kappa).where(c["E"] + kappa > 0)
+        c["own_weight"] = c["E"] / (c["E"] + kappa).where(c["E"] + kappa > 0)
+    return c
+
+
+def choose_kappa(df):
+    """Shrinkage strength with the lowest Poisson deviance on an inner split (2010-14 -> 2015-19).
+
+    Deviance, not absolute error: most city-years have 0 demolitions, and absolute
+    error rewards predicting 0 for every city without history.
+    """
+    fit, val = df[df["year"].between(2010, 2014)], df[df["year"].between(2015, 2019)]
+    if (fit["demolished"] > 0).sum() < MIN_TUNING_CITY_YEARS:
+        return np.inf
+    y = val.groupby("city_id")["demolished"].sum()
+    exposure = val.groupby("city_id")["stock"].sum()
+    deviance = {}
+    for kappa in KAPPA_GRID:
+        mu = (_shrunk_rates(fit, kappa)["r_city"].reindex(y.index).fillna(0) * exposure).clip(lower=1e-9)
+        deviance[kappa] = 2 * (np.where(y > 0, y * np.log(y / mu), 0) - (y - mu)).sum()
+    return min(deviance, key=deviance.get)
+
+
+def city_factors(hist):
+    """m = shrunk city rate / large-area rate, per category; Detroit and the other areas
+    get their own kappa. A city without history or stock gets m = 1."""
+    rows = []
+    for (category, group), df in hist.groupby(["category", "group"]):
+        kappa = choose_kappa(df)
+        c = _shrunk_rates(df, kappa)
+        c["m"] = (c["r_city"] / c["r_la"]).where(c["r_la"] > 0).fillna(1.0)
+        c["category"], c["group"], c["kappa"] = category, group, kappa
+        rows.append(c.reset_index())
+    return pd.concat(rows).set_index(["city_id", "category"])
+
+
+def model_buildings(base_hdf, year):
+    """Base-year buildings with the columns the simulation uses for the stock."""
+    with pd.HDFStore(base_hdf, "r") as s:
+        b = s["buildings"]
+        parcels = s["parcels"][["city_id", "large_area_id"]]
+        households = s["households"][["building_id"]]
+    b["city_id"] = b["parcel_id"].map(parcels["city_id"])
+    b["households"] = households.groupby("building_id").size().reindex(b.index).fillna(0)
+    b["building_age"] = year - b["year_built"]
+    b["sp_filter"], b["event_id"] = 0, 0  # protected types and events are not residential pool types
+    la = b["parcel_id"].map(parcels["large_area_id"])
+    return b, la
+
+
+def detroit_floor_base(b, la, p):
+    """Vacancy floor per Detroit neighborhood: max(floor_min, floor_share x base vacancy)."""
+    d = b[la.isin(p["detroit_la_ids"]) & (b["residential_units"] > 0)]
+    g = d.groupby("city_id")[["residential_units", "households"]].sum()
+    vac = (1 - g["households"] / g["residential_units"]).clip(lower=0)
+    return pd.DataFrame({"vac_base": vac, "floor": np.maximum(p["floor_min"], p["floor_share"] * vac)})
+
+
+def build_stock_rates(engine, base_hdf, cfg, first_sim_year):
+    """Rates per city and category; returns (rates table, summary by large area)."""
+    p = stock_rate_cfg(cfg)
+    hist = load_history(engine, p)
+    factors = city_factors(hist)
+    long_volume = hist.groupby(["category", "city_id"])["demolished"].sum() / hist["year"].nunique()
+    b, la = model_buildings(base_hdf, first_sim_year)
+    stock = stock_by_city(b, la, p)
+    city_la = la.groupby(b["city_id"]).first()
+    volume = pd.read_sql(QUERY_VOLUME, engine).set_index("city_id") / (VOLUME_LAST_YEAR - VOLUME_FIRST_YEAR + 1)
+    stock_base = {c: "pre%d_units" % (p["res_max_year_built"] + 1) for c in RES_CATEGORIES}
+    stock_base[NONRES_CATEGORY] = "pre%d_sqft" % (p["nonres_max_year_built"] + 1)
+
+    rows, summary = [], []
+    for category in CATEGORIES:
+        f = factors.xs(category, level="category").reindex(stock.index)
+        t = pd.DataFrame({"large_area_id": city_la.reindex(stock.index), "stock": stock[category],
+                          "m": f["m"].fillna(1.0), "own_weight": f["own_weight"], "kappa": f["kappa"]})
+        t["volume_2021_2024"] = volume[category].reindex(stock.index).fillna(0)
+        t["level_volume"] = t["volume_2021_2024"]
+        if category in LONG_LEVEL_CATEGORIES:
+            t["level_volume"] = long_volume.xs(category).reindex(stock.index).fillna(0)
+        t["stock_base"] = stock_base[category]
+        for la_id, g in t.groupby("large_area_id"):
+            ms = (g["m"] * g["stock"]).sum()
+            if la_id in p["detroit_la_ids"] and category in RES_CATEGORIES:
+                # 4.2% of the pool in total; m only splits it between neighborhoods
+                t.loc[g.index, "stock_base"] = "vacant_pool"
+                mean_m = ms / g["stock"].sum() if g["stock"].sum() > 0 else 1.0
+                t.loc[g.index, "level"] = p["rate_per_vacant_unit"] / mean_m
+            else:
+                t.loc[g.index, "level"] = g["level_volume"].sum() / ms if ms > 0 else 0.0
+            summary.append({"large_area_id": la_id, "category": category,
+                            "volume_2021_2024": g["volume_2021_2024"].sum(),
+                            "level_volume": g["level_volume"].sum(), "stock": g["stock"].sum(),
+                            "lost_volume_no_stock": g["level_volume"].sum() if ms == 0 else 0.0})
+        t["rate"] = t["m"] * t["level"]
+        t["target_first_year"] = t["rate"] * t["stock"]
+        t["category"] = category
+        rows.append(t)
+
+    rates = pd.concat(rows).rename_axis("city_id").reset_index()
+    floor = detroit_floor_base(b, la, p)
+    rates = rates.join(floor, on="city_id")
+    summary = pd.DataFrame(summary)
+    summary["target_first_year"] = summary.apply(
+        lambda r: rates.loc[(rates.large_area_id == r.large_area_id) & (rates.category == r.category),
+                            "target_first_year"].sum(), axis=1)
+    cols = ["city_id", "large_area_id", "category", "stock_base", "stock", "m", "own_weight", "kappa",
+            "level", "rate", "target_first_year", "volume_2021_2024", "level_volume", "vac_base", "floor"]
+    return rates[cols].sort_values(["category", "city_id"]), summary
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -468,7 +678,30 @@ def save_config(fits):
 # Main
 # ─────────────────────────────────────────────────────────────────────────────
 
-def main(save=True):
+def run_stock_rates(save, base_hdf, first_sim_year):
+    """Step 7: stock-based rates (configs/demolition_stock_rates.csv)."""
+    if base_hdf is None:
+        import input_paths
+        base_hdf = input_paths.BASE_HDF
+    with open(CONFIG_PATH) as f:
+        cfg = yaml.safe_load(f)
+    print(f"\nStock rates from base HDF {base_hdf} (stock measured for {first_sim_year})...")
+    rates, summary = build_stock_rates(get_engine(), base_hdf, cfg, first_sim_year)
+    print("\n=== KAPPA (shrinkage strength) by category and group ===")
+    detroit = rates["large_area_id"].isin(stock_rate_cfg(cfg)["detroit_la_ids"])
+    print(rates.groupby(["category", detroit.map({True: "Detroit", False: "other"})])["kappa"].first().to_string())
+    print("\n=== FIRST-YEAR TARGET vs 2021-2024 VOLUME by large area ===")
+    print(summary.round(1).to_string(index=False))
+    if save:
+        rates.to_csv(STOCK_RATES_PATH, index=False)
+        print(f"Saved → {STOCK_RATES_PATH}")
+    return rates, summary
+
+
+def main(save=True, stock_rates_only=False, base_hdf=None, first_sim_year=2026):
+    if stock_rates_only:
+        return run_stock_rates(save, base_hdf, first_sim_year)
+
     print("Loading data from postgres...")
     bldg, assess, parcels = load_inputs(get_engine())
     p1, p2 = build_training_data(bldg, assess, parcels)
@@ -503,7 +736,17 @@ def main(save=True):
         save_config(final)
         volume.to_csv(VOLUME_PATH)
         print(f"Saved → {VOLUME_PATH}")
+    run_stock_rates(save, base_hdf, first_sim_year)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--stock-rates-only", action="store_true",
+                    help="only rebuild configs/demolition_stock_rates.csv (skip the score models)")
+    ap.add_argument("--base-hdf", default=None, help="base-year HDF (default: input_paths.BASE_HDF)")
+    ap.add_argument("--first-sim-year", type=int, default=2026)
+    ap.add_argument("--no-save", action="store_true", help="print results, write nothing")
+    a = ap.parse_args()
+    main(save=not a.no_save, stock_rates_only=a.stock_rates_only, base_hdf=a.base_hdf,
+         first_sim_year=a.first_sim_year)

@@ -72,6 +72,16 @@ def demolition_rates():
 
 
 @orca.table(cache=True)
+def demolition_stock_rates():
+    # Demolition rate per unit of stock by city and category (volume_method
+    # stock_rate), written by demolition_calibration.py --stock-rates-only.
+    f = path.join(misc.configs_dir(), "demolition_stock_rates.csv")
+    if not path.exists(f):
+        return pd.DataFrame(columns=["city_id", "large_area_id", "category", "rate", "floor"])
+    return pd.read_csv(f)
+
+
+@orca.table(cache=True)
 def parcel_maz_crossing_shares(store):
     # parcel->MAZ area shares for parcels spanning MAZ; assign_new_building_maz
     # reads parcel_id / maz_id / share as columns

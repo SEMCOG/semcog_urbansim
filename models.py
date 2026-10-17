@@ -20,6 +20,7 @@ from urbansim_parcels import utils as parcel_utils
 from forecast_estimation.utils import load_taz_vars_from_orca
 
 import assumptions
+import demolition_stock
 import utils
 import lcm_utils
 import input_paths
@@ -3039,7 +3040,8 @@ def _demolition_pressure_ratio(b_eligible, year, base_year, window=5):
 
 
 @orca.step()
-def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year):
+def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year,
+                             demolition_stock_rates):
     """
     Scored replacement for random_demolition_events.
 
@@ -3047,7 +3049,11 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     with stratum fixed effects (demolition_calibration.py): residential uses
     age, improvement value per sqft and land-to-improvement ratio, with one
     model for Detroit and one for the other areas; non-residential uses age.
-    They are sampled to hit city-level control totals from demolition_rates.
+    They are sampled to hit city-level control totals: with volume_method
+    fixed_volume, the 2021-2024 volumes in demolition_rates; with stock_rate,
+    rate x current stock from demolition_stock_rates (demolition_stock.py), plus
+    the Detroit vacant-house exemption and vacancy floor; fractional targets are
+    rounded with a seeded draw.
 
     When configs/demolition_model.yaml has is_calibrated=false the function
     falls back to the original inverse-log-occupancy weights so the simulation
@@ -3062,6 +3068,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     max_res_occ       = cfg.get("max_res_occupancy_eligible")
     max_nonres_occ    = cfg.get("max_nonres_occupancy_eligible")
     any_calibrated    = res_calibrated or nonres_calibrated
+    method            = cfg.get("volume_method", "fixed_volume")
+    stock_mode        = method == "stock_rate"
 
     buildings_columns = buildings.local_columns
     b = buildings.to_frame(
@@ -3074,7 +3082,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
 
     # Detroit (large_area_id 5) has its own residential model (large_area_id is on parcels)
     pcl = parcels.to_frame(["large_area_id"])
-    is_detroit = b.parcel_id.map(pcl.large_area_id).eq(5)
+    la_b = b.parcel_id.map(pcl.large_area_id)
+    is_detroit = la_b.eq(5)
 
     # ── Eligibility ──────────────────────────────────────────────────────────
     not_eligible = pd.Series(False, index=b.index)
@@ -3100,14 +3109,28 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     # baseline so it only shifts RELATIVE emphasis across cities, not the
     # overall volume. See "Dynamic Pressure
     # Index" in docs/models/demolition.md for the full rationale.
-    demolition_rates = demolition_rates.to_frame()
-    if any_calibrated:
-        pressure = _demolition_pressure_ratio(b[eligible], year, base_year)
-        adjusted_rates = demolition_rates.mul(pressure, axis=0).fillna(demolition_rates)
-        base_totals = demolition_rates.sum(axis=0)
-        adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
-        demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
-    demolition_rates = demolition_rates * rate_mult
+    if stock_mode:
+        # Stock measured here, after scheduled demolition. The stock changes every
+        # year, so the pressure ratio is not used (it moved < 2% of the volume).
+        sp = demolition_stock.stock_rate_cfg(cfg)
+        b_stock = b.assign(households=b["b_total_households"])
+        stock = demolition_stock.stock_by_city(b_stock, la_b, sp)
+        if len(demolition_stock_rates) == 0:
+            raise FileNotFoundError(
+                "volume_method stock_rate needs configs/demolition_stock_rates.csv "
+                "(python demolition_calibration.py --stock-rates-only)")
+        rates, city_la, city_floor = demolition_stock.rates_by_city(demolition_stock_rates.to_frame())
+        demolition_rates = demolition_stock.stock_targets(stock, rates, rate_mult)
+    else:
+        demolition_rates = demolition_rates.to_frame()
+        if any_calibrated:
+            pressure = _demolition_pressure_ratio(b[eligible], year, base_year)
+            adjusted_rates = demolition_rates.mul(pressure, axis=0).fillna(demolition_rates)
+            base_totals = demolition_rates.sum(axis=0)
+            adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
+            demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
+        demolition_rates = demolition_rates * rate_mult
+    pre_floor_targets = demolition_rates.copy()
 
     # ── Demolition scores ────────────────────────────────────────────────────
     if res_calibrated:
@@ -3130,6 +3153,14 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     allowed   = variables.parcel_is_allowed_2055(impr_to_land_ratio=impr_to_land)
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
+    # Detroit vacant houses skip the value rule (improvement > ratio x land):
+    # Detroit land values are near zero, so the rule blocks almost every house.
+    exempt = pd.Series(False, index=b.index)
+    if stock_mode:
+        exempt = demolition_stock.vacant_pool_mask(b_stock, la_b, sp)
+        allowed_nv = variables.parcel_is_allowed_2055(impr_to_land_ratio=np.inf)
+        allowed_b = allowed_b | (exempt & b.parcel_id.isin(allowed_nv[allowed_nv].index))
+
     buildings_idx = []
 
     # Step-by-step volume per stratum, to find which rule limits demolition
@@ -3138,29 +3169,41 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     def sample(targets, type_b, accounting, score_col, category):
         for city_id, target in targets[targets > 0].items():
             rel_b = type_b[type_b.city_id == city_id]
-            row = {"year": year, "category": category, "city_id": city_id, "target": target,
-                   "eligible": rel_b[accounting].sum()}
-            rel_b = rel_b[rel_b[accounting] <= target]
+            if stock_mode:
+                u = utils.step_rng("demolition_rounding", city_id, category).random()
+                limit = demolition_stock.round_target(target, u)
+            else:
+                limit = target  # unchanged fixed-volume rule
+            row = {"year": year, "method": method, "category": category, "city_id": city_id,
+                   "stock": stock.at[city_id, category] if stock_mode and city_id in stock.index else np.nan,
+                   "rate": rates.at[city_id, category] if stock_mode and city_id in rates.index else np.nan,
+                   "target": pre_floor_targets.at[city_id, category], "post_floor_target": target,
+                   "rounded": limit if stock_mode else np.nan,
+                   "eligible": rel_b[accounting].sum(),
+                   "exempt_eligible": rel_b.loc[exempt.reindex(rel_b.index, fill_value=False), accounting].sum()}
+            rel_b = rel_b[rel_b[accounting] <= limit]
             row.update(after_size_filter=rel_b[accounting].sum(), demolished=0)
             volume_log.append(row)
-            if len(rel_b) == 0:
-                continue
-            w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
-            size = min(len(rel_b), int(target))
+            size = min(len(rel_b), int(limit))
             if size > 0:
                 # Use numpy Generator.choice for weighted sampling without
                 # replacement; pandas 3 imposes size*max_weight<=1 which
                 # fails when one building has a dominant score.
+                w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
                 rng = utils.step_rng("mcd_hu_sampling_nonres", city_id)
                 w_arr = w.to_numpy(dtype=float, copy=True)
                 w_arr /= w_arr.sum()
                 chosen = rng.choice(len(rel_b), size=size, replace=False, p=w_arr)
                 sampled = rel_b.iloc[chosen]
-                sampled = sampled[sampled[accounting].cumsum() <= int(target)]
+                sampled = sampled[sampled[accounting].cumsum() <= int(limit)]
                 row["demolished"] = sampled[accounting].sum()
                 buildings_idx.append(sampled)
 
-    nonres_eligible = b.loc[allowed_b & eligible]
+    nonres_ok = allowed_b & eligible
+    if stock_mode:
+        # Detroit mixed-use buildings with households are not demolished either
+        nonres_ok &= ~la_b.isin(sp["detroit_la_ids"]) | (b["b_total_households"] == 0)
+    nonres_eligible = b.loc[nonres_ok]
     sample(
         demolition_rates.typenonsqft,
         nonres_eligible[nonres_eligible.non_residential_sqft > 0],
@@ -3168,7 +3211,26 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         "nonres_score",
         "typenonsqft",
     )
-    res_eligible = b.loc[allowed_b & eligible & (b.non_residential_sqft == 0)]
+    res_ok = allowed_b & eligible & (b.non_residential_sqft == 0)
+    if stock_mode:
+        # In Detroit only fully vacant pool buildings: demolition moves no households
+        res_ok &= ~la_b.isin(sp["detroit_la_ids"]) | exempt
+    res_eligible = b.loc[res_ok]
+    if stock_mode:
+        # Detroit vacancy floor: the residential targets of a neighborhood share
+        # one cap, so its vacancy does not fall below floor_c.
+        res_cats = list(demolition_stock.RES_CATEGORIES)
+        res_b = b[b.residential_units > 0]
+        units = res_b.groupby("city_id")["residential_units"].sum()
+        vacant = res_b["vacant_residential_units"].clip(lower=0).groupby(res_b["city_id"]).sum()
+        avail = (res_eligible.groupby(["city_id", "building_type_id"])["residential_units"].sum()
+                 .unstack().rename(columns={v: k for k, v in demolition_stock.RES_CATEGORIES.items()}))
+        for city_id in city_la[city_la.isin(sp["detroit_la_ids"])].index.intersection(demolition_rates.index):
+            cap = float(demolition_stock.floor_cap(vacant.get(city_id, 0), units.get(city_id, 0),
+                                                   city_floor.get(city_id, sp["floor_min"])))
+            have = avail.loc[city_id] if city_id in avail.index else pd.Series(0.0, index=res_cats)
+            demolition_rates.loc[city_id, res_cats] = demolition_stock.allocate_cap(
+                demolition_rates.loc[city_id, res_cats], cap, have).values
     sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score", "type81units")
     sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score", "type82units")
     sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score", "type83units")
