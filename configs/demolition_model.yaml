@@ -26,6 +26,20 @@ min_age_eligible: 10
 max_res_occupancy_eligible: 0.85
 max_nonres_occupancy_eligible: 0.85
 scenario_rate_multiplier: 1.0
+# Yearly target: fixed_volume = 2021-2024 city volumes (demolition_rates.csv);
+# stock_rate = rate x current stock (demolition_stock_rates.csv, demolition_stock.py)
+volume_method: stock_rate
+stock_rate:
+  res_stock_max_year_built: 1949
+  nonres_stock_max_year_built: 1969
+detroit:
+  large_area_ids: [5]
+  rate_per_vacant_unit: 0.042          # 2021-2024 demolitions per ACS "other vacant" unit
+  vacancy_floor_min: 0.05              # floor = max(min, share x 2025 neighborhood vacancy)
+  vacancy_floor_share_of_base: 0.5
+  value_rule_exempt:                   # vacant pool: skip the improvement/land value rule
+    building_types: [81, 82, 83]
+    max_units: 4
 max_impr_to_land_ratio: 5
 residential_detroit:
   is_calibrated: true
