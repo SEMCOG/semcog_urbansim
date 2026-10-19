@@ -178,7 +178,11 @@ def res_forms(btype_form_map):
 
 @orca.injectable("nonres_forms")
 def nonres_forms(btype_form_map):
-    return [f for col, v in btype_form_map.items() if col != "residential" for f in v["forms"]]
+    # No "hospital": only scheduled events build hospitals. Hospital jobs
+    # (sector 15) are placed only by jobs_scaling_model, which never fills a new
+    # building. The form stays in btype_form_map for feasibility prices.
+    return [f for col, v in btype_form_map.items() if col != "residential"
+            for f in v["forms"] if f != "hospital"]
 
 
 # Run-level random seed (single source of truth). A run script may set the
@@ -254,6 +258,23 @@ def update_store_from_checkpoint(store, checkpoint):
         else:
             store[tb] = checkpoint[k]
     return store
+
+# Building types blocked from demolition and the LCMs (sp_filter = -1).
+# Set at data load (dataset.buildings) and on new buildings each year
+# (models.update_sp_filter).
+PROTECTED_BTYPES = {
+    11: "Educational",
+    13: "Religious and Civic",
+    14: "Governmental",
+    52: "Hospital",
+    92: "Library",
+    93: "Dormitory Quarters",
+    94: "Death Care Services",
+    95: "Parking Garage",
+    96: "Data Center",
+}
+# 53 Residential Care Facility is not protected: its jobs (mostly sector 14)
+# are not refilled by jobs_scaling_model, and the developer builds this type.
 
 ### Transportation accessibility variables
 NEAR_MAX_VARS = {

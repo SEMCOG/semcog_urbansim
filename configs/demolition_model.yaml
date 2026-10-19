@@ -1,47 +1,58 @@
 residential:
   is_calibrated: true
+  score: odds
   feature_mean:
-    building_age: 106.63823316403716
-    impr_value_per_sqft: 112.85891332957083
-    land_to_impr_ratio: 0.6137053773655932
-    is_exempt: 0.017620763751192387
-    is_wayne: 0.1509648952193692
+    building_age: 55.334059097265204
+    impr_value_per_sqft: 91.65131434164978
+    land_to_impr_ratio: 0.3616389839920291
   feature_std:
-    building_age: 293.8052158725349
-    impr_value_per_sqft: 67.91998034083363
-    land_to_impr_ratio: 3.9077728230313116
-    is_exempt: 0.13156850852699162
-    is_wayne: 0.35801465840210245
-  intercept: -1.6511248864245385
+    building_age: 25.178854347041028
+    impr_value_per_sqft: 43.40603845969984
+    land_to_impr_ratio: 0.6739101663495233
   coef:
-    building_age: 0.19107272142500054
-    impr_value_per_sqft: 0.5448539831234804
-    land_to_impr_ratio: 0.6368053687110089
-    is_exempt: 0.5340487832550243
-    is_wayne: 0.670283724821831
+    building_age: 0.5598265605337194
+    impr_value_per_sqft: -0.4625012121447669
+    land_to_impr_ratio: 0.07188894204872272
 nonresidential:
   is_calibrated: true
+  score: odds
   feature_mean:
-    building_age: 406.80131386267493
-    impr_value_per_sqft: 89.74373800778459
-    land_to_impr_ratio: 1.185887896649422
-    is_exempt: 0.16014480963228117
-    is_wayne: 0.1894372356003905
+    building_age: 56.66059335592866
   feature_std:
-    building_age: 752.3464473318584
-    impr_value_per_sqft: 116.64798571679286
-    land_to_impr_ratio: 5.524037395713871
-    is_exempt: 0.36674030263951296
-    is_wayne: 0.39185554655825994
-  intercept: -0.698059211923653
+    building_age: 27.408239057272976
   coef:
-    building_age: 0.20442908508591023
-    impr_value_per_sqft: 0.48853233699506393
-    land_to_impr_ratio: 0.6347194525031941
-    is_exempt: 0.06129368864276321
-    is_wayne: 0.33434764371472697
+    building_age: 0.3154259736259077
 min_age_eligible: 10
 max_res_occupancy_eligible: 0.85
 max_nonres_occupancy_eligible: 0.85
 scenario_rate_multiplier: 1.0
+# Yearly target: fixed_volume = 2021-2024 city volumes (demolition_rates.csv);
+# stock_rate = rate x current stock (demolition_stock_rates.csv, demolition_stock.py)
+volume_method: stock_rate
+stock_rate:
+  res_stock_max_year_built: 1949
+  nonres_stock_max_year_built: 1969
+detroit:
+  large_area_ids: [5]
+  rate_per_vacant_unit: 0.042          # 2021-2024 demolitions per ACS "other vacant" unit
+  vacancy_floor_min: 0.05              # floor = max(min, share x 2025 neighborhood vacancy)
+  vacancy_floor_share_of_base: 0.5
+  value_rule_exempt:                   # vacant pool: skip the improvement/land value rule
+    building_types: [81, 82, 83]
+    max_units: 4
 max_impr_to_land_ratio: 5
+residential_detroit:
+  is_calibrated: true
+  score: odds
+  feature_mean:
+    building_age: 82.84568328509016
+    impr_value_per_sqft: 8.362539350463143
+    land_to_impr_ratio: 1.3011431670530076
+  feature_std:
+    building_age: 16.244631126482357
+    impr_value_per_sqft: 6.288866254871196
+    land_to_impr_ratio: 2.407661430925217
+  coef:
+    building_age: 0.2517134901897266
+    impr_value_per_sqft: -2.716993188228118
+    land_to_impr_ratio: -2.5497102203004722
