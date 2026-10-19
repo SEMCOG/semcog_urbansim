@@ -183,7 +183,6 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1, purpose="constructio
         ]
     )
     year = orca.get_injectable("year")
-    base_year = orca.get_injectable("base_year")
     zoning = orca.get_table("zoning")
 
     pcl_new_building = buildings.groupby("parcel_id").building_age.min() <= 5
@@ -200,10 +199,10 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1, purpose="constructio
         buildings[buildings.index.isin(ed[ed.year_demo >= year].building_id)].parcel_id
     )
 
-    # large employment sites, protected from redevelopment
-    pcl_big_nonres = (
-        parcels.non_residential_sqft >= 50000
-    ).reindex(pcl_index, fill_value=False)
+    # big non-res parcels are protected in every year (an old `year <= 2050`
+    # cap ended the protection in 2051)
+    pcl_big_nonres = parcels.non_residential_sqft >= 50000
+    pcl_big_nonres = pcl_big_nonres.reindex(pcl_index, fill_value=False)
 
     pcl_gq = pcl_index.isin(
         buildings[

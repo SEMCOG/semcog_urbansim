@@ -19,6 +19,8 @@ from urbansim.utils import misc, networks
 from urbansim_parcels import utils as parcel_utils
 from forecast_estimation.utils import load_taz_vars_from_orca
 
+import assumptions
+import demolition_stock
 import utils
 import lcm_utils
 import input_paths
@@ -835,8 +837,8 @@ def real_estate_adjustment(buildings, parcels, year):
     # Capture LA-average base prices on first call; flag used below for one-time backfill
     first_call = not orca.is_injectable("remi_base_la_prices")
     if first_call:
-        bd0 = buildings.to_frame(["large_area_id", "sqft_price_res"])
-        base = (bd0[bd0["sqft_price_res"] > 0]
+        bd0 = buildings.to_frame(["large_area_id", "sqft_price_res", "residential_units"])
+        base = (bd0[(bd0["sqft_price_res"] > 0) & (bd0["residential_units"] > 0)]
                 .groupby("large_area_id")["sqft_price_res"].mean()
                 .to_dict())
         orca.add_injectable("remi_base_la_prices", base)
@@ -847,7 +849,9 @@ def real_estate_adjustment(buildings, parcels, year):
     bd = buildings.to_frame(["large_area_id", "sqft_price_res", "year_built",
                               "residential_units", "sqft_per_unit", "parcel_id",
                               "building_type_id"])
-    bd_pos = bd[bd["sqft_price_res"] > 0]
+    # Housing only: REPM does not re-predict buildings without units, so a price
+    # left on them would be scaled again every year and absorb the LA growth
+    bd_pos = bd[(bd["sqft_price_res"] > 0) & (bd["residential_units"] > 0)]
     updated = bd_pos["sqft_price_res"].copy()
     new_build_idx = []
 
@@ -1599,6 +1603,14 @@ def households_transition(
     region_hh = households.to_frame(households.local_columns + ["large_area_id"])
     region_hh.index = region_hh.index.astype(int)
     _downcast_ints(region_hh)
+
+    # Placed households by city before transition churn. residential_developer
+    # starts from these counts: households added below stay unplaced until HLCM.
+    hh_city = households.city_id
+    orca.add_injectable(
+        "hh_by_city_pre_transition",
+        (iter_var, hh_city[hh_city.notna()].astype(int).value_counts()),
+    )
 
     region_p = persons.to_frame(persons.local_columns)
     region_p.index = region_p.index.astype(int)
@@ -2963,21 +2975,22 @@ def _load_demolition_cfg():
     return _DEMO_CFG_CACHE["cfg"]
 
 
-def _logistic_score(df, section, features):
-    """Return a Series of logistic probabilities for rows in df."""
-    means     = section["feature_mean"]
-    stds      = section["feature_std"]
-    coefs     = section["coef"]
-    intercept = section["intercept"]
-    score     = np.full(len(df), intercept, dtype=float)
-    for feat in features:
-        if feat not in df.columns:
-            continue
-        x = (df[feat].fillna(means.get(feat, 0.0)) - means.get(feat, 0.0)) \
-            / max(stds.get(feat, 1.0), 1e-8)
-        score += coefs.get(feat, 0.0) * x
-    prob = 1.0 / (1.0 + np.exp(-np.clip(score, -15.0, 15.0)))
-    return pd.Series(prob, index=df.index)
+def _odds_score(df, section):
+    """Selection weight exp(sum coef * standardized feature) for rows in df.
+
+    The weight is used only to rank buildings inside one sampling stratum, so
+    it has no intercept. A feature that the yaml names but df lacks is an error:
+    skipping it would silently change the model.
+    """
+    missing = [f for f in section["coef"] if f not in df.columns]
+    if missing:
+        raise KeyError(f"demolition model features missing from buildings: {missing}")
+    z = sum(
+        section["coef"][f] * (df[f].fillna(section["feature_mean"][f]) - section["feature_mean"][f])
+        / section["feature_std"][f]
+        for f in section["coef"]
+    )
+    return pd.Series(np.exp(np.clip(z, -50.0, 50.0)), index=df.index)
 
 
 _DEMO_PRESSURE_CACHE = {}   # per-city baseline + rolling history for the dynamic pressure index
@@ -3037,13 +3050,20 @@ def _demolition_pressure_ratio(b_eligible, year, base_year, window=5):
 
 
 @orca.step()
-def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year, final_year):
+def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year,
+                             demolition_stock_rates):
     """
     Scored replacement for random_demolition_events.
 
-    Buildings are ranked by a logistic regression score (age, improvement value
-    per sqft, land-to-improvement ratio, tax-exempt status, Wayne County flag)
-    and sampled to hit city-level control totals from demolition_rates.
+    Buildings are weighted by exp(coef . standardized features) from a logit
+    with stratum fixed effects (demolition_calibration.py): residential uses
+    age, improvement value per sqft and land-to-improvement ratio, with one
+    model for Detroit and one for the other areas; non-residential uses age.
+    They are sampled to hit city-level control totals: with volume_method
+    fixed_volume, the 2021-2024 volumes in demolition_rates; with stock_rate,
+    rate x current stock from demolition_stock_rates (demolition_stock.py), plus
+    the Detroit vacant-house exemption and vacancy floor; fractional targets are
+    rounded with a seeded draw.
 
     When configs/demolition_model.yaml has is_calibrated=false the function
     falls back to the original inverse-log-occupancy weights so the simulation
@@ -3058,6 +3078,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     max_res_occ       = cfg.get("max_res_occupancy_eligible")
     max_nonres_occ    = cfg.get("max_nonres_occupancy_eligible")
     any_calibrated    = res_calibrated or nonres_calibrated
+    method            = cfg.get("volume_method", "fixed_volume")
+    stock_mode        = method == "stock_rate"
 
     buildings_columns = buildings.local_columns
     b = buildings.to_frame(
@@ -3068,9 +3090,11 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         ]
     )
 
-    # Wayne County flag needed by logistic model (large_area_id is on parcels)
+    # Detroit (large_area_id 5) has its own residential model (large_area_id is on
+    # parcels). parcel_sqft is for the storefront rule below.
     pcl = parcels.to_frame(["large_area_id", "parcel_sqft"])
-    b["is_wayne"]  = b.parcel_id.map(pcl.large_area_id).eq(5).astype(float)
+    la_b = b.parcel_id.map(pcl.large_area_id)
+    is_detroit = la_b.eq(5)
 
     # ── Eligibility ──────────────────────────────────────────────────────────
     not_eligible = pd.Series(False, index=b.index)
@@ -3096,13 +3120,9 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     eligible = ~not_eligible
     print("  [demolition] %d main-street storefronts protected" % storefront.sum())
 
-    # ── Control totals: taper × scenario multiplier × dynamic pressure ──────
-    # Taper matches random_demolition_events: demolition volume scales from
-    # ~100% at base_year down to 10% at final_year; scenario_rate_multiplier
-    # layers on top (defaults to 1.0, so fallback mode reproduces the legacy
-    # trajectory exactly). Uses orca's base_year/final_year injectables rather
-    # than hardcoded 2020/2050 so this still works on the forecast_2055 horizon.
-    taper = 0.1 + (1.0 - 0.1) * (final_year - year) / (final_year - base_year)
+    # ── Control totals: scenario multiplier × dynamic pressure ──────────────
+    # demolition_rates is the average annual volume of 2021-2024 (from
+    # demolition_calibration.py), held constant over the forecast.
 
     # demolition_rates is a STATIC city-level snapshot with no year dimension --
     # on its own it reproduces the SAME relative geography for every simulated
@@ -3110,26 +3130,41 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     # conditions the simulation already tracks each year (aging stock,
     # vacancy, land-to-improvement value), anchored to the calibrated
     # baseline so it only shifts RELATIVE emphasis across cities, not the
-    # overall volume (the taper still governs that). See "Dynamic Pressure
+    # overall volume. See "Dynamic Pressure
     # Index" in docs/models/demolition.md for the full rationale.
-    demolition_rates = demolition_rates.to_frame()
-    if any_calibrated:
-        pressure = _demolition_pressure_ratio(b[eligible], year, base_year)
-        adjusted_rates = demolition_rates.mul(pressure, axis=0).fillna(demolition_rates)
-        base_totals = demolition_rates.sum(axis=0)
-        adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
-        demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
-    demolition_rates = demolition_rates * taper * rate_mult
+    if stock_mode:
+        # Stock measured here, after scheduled demolition. The stock changes every
+        # year, so the pressure ratio is not used (it moved < 2% of the volume).
+        sp = demolition_stock.stock_rate_cfg(cfg)
+        b_stock = b.assign(households=b["b_total_households"])
+        stock = demolition_stock.stock_by_city(b_stock, la_b, sp)
+        if len(demolition_stock_rates) == 0:
+            raise FileNotFoundError(
+                "volume_method stock_rate needs configs/demolition_stock_rates.csv "
+                "(python demolition_calibration.py --stock-rates-only)")
+        rates, city_la, city_floor = demolition_stock.rates_by_city(demolition_stock_rates.to_frame())
+        demolition_rates = demolition_stock.stock_targets(stock, rates, rate_mult)
+    else:
+        demolition_rates = demolition_rates.to_frame()
+        if any_calibrated:
+            pressure = _demolition_pressure_ratio(b[eligible], year, base_year)
+            adjusted_rates = demolition_rates.mul(pressure, axis=0).fillna(demolition_rates)
+            base_totals = demolition_rates.sum(axis=0)
+            adjusted_totals = adjusted_rates.sum(axis=0).replace(0, np.nan)
+            demolition_rates = adjusted_rates.mul(base_totals / adjusted_totals, axis=1).fillna(0)
+        demolition_rates = demolition_rates * rate_mult
+    pre_floor_targets = demolition_rates.copy()
 
     # ── Demolition scores ────────────────────────────────────────────────────
     if res_calibrated:
-        res_score    = _logistic_score(b, cfg["residential"],    ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+        res_score    = _odds_score(b, cfg["residential"]).where(
+            ~is_detroit, _odds_score(b, cfg["residential_detroit"]))
     else:
         # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
         res_score    = 1.0 / (1.0 + np.log1p(b["b_total_households"]))
 
     if nonres_calibrated:
-        nonres_score = _logistic_score(b, cfg["nonresidential"], ["building_age", "impr_value_per_sqft", "land_to_impr_ratio", "is_exempt", "is_wayne"])
+        nonres_score = _odds_score(b, cfg["nonresidential"])
     else:
         # Fallback: inverse-log-occupancy (identical to old random_demolition_events)
         nonres_score = 1.0 / (1.0 + np.log1p(b["b_total_jobs"]))
@@ -3142,39 +3177,93 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         impr_to_land_ratio=impr_to_land, purpose="demolition")
     allowed_b = b.parcel_id.isin(allowed[allowed].index)
 
+    # Detroit vacant houses skip the value rule (improvement > ratio x land):
+    # Detroit land values are near zero, so the rule blocks almost every house.
+    exempt = pd.Series(False, index=b.index)
+    if stock_mode:
+        exempt = demolition_stock.vacant_pool_mask(b_stock, la_b, sp)
+        allowed_nv = variables.parcel_is_allowed_2055(
+            impr_to_land_ratio=np.inf, purpose="demolition")
+        allowed_b = allowed_b | (exempt & b.parcel_id.isin(allowed_nv[allowed_nv].index))
+
     buildings_idx = []
 
-    def sample(targets, type_b, accounting, score_col):
+    # Step-by-step volume per stratum, to find which rule limits demolition
+    volume_log = []
+
+    def sample(targets, type_b, accounting, score_col, category):
         for city_id, target in targets[targets > 0].items():
             rel_b = type_b[type_b.city_id == city_id]
-            rel_b = rel_b[rel_b[accounting] <= target]
-            if len(rel_b) == 0:
-                continue
-            w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
-            size = min(len(rel_b), int(target))
+            if stock_mode:
+                u = utils.step_rng("demolition_rounding", city_id, category).random()
+                limit = demolition_stock.round_target(target, u)
+            else:
+                limit = target  # unchanged fixed-volume rule
+            row = {"year": year, "method": method, "category": category, "city_id": city_id,
+                   "stock": stock.at[city_id, category] if stock_mode and city_id in stock.index else np.nan,
+                   "rate": rates.at[city_id, category] if stock_mode and city_id in rates.index else np.nan,
+                   "target": pre_floor_targets.at[city_id, category], "post_floor_target": target,
+                   "rounded": limit if stock_mode else np.nan,
+                   "eligible": rel_b[accounting].sum(),
+                   "exempt_eligible": rel_b.loc[exempt.reindex(rel_b.index, fill_value=False), accounting].sum()}
+            rel_b = rel_b[rel_b[accounting] <= limit]
+            row.update(after_size_filter=rel_b[accounting].sum(), demolished=0)
+            volume_log.append(row)
+            size = min(len(rel_b), int(limit))
             if size > 0:
                 # Use numpy Generator.choice for weighted sampling without
                 # replacement; pandas 3 imposes size*max_weight<=1 which
                 # fails when one building has a dominant score.
+                w    = rel_b[score_col].fillna(1e-6).clip(lower=1e-6)
                 rng = utils.step_rng("mcd_hu_sampling_nonres", city_id)
                 w_arr = w.to_numpy(dtype=float, copy=True)
                 w_arr /= w_arr.sum()
                 chosen = rng.choice(len(rel_b), size=size, replace=False, p=w_arr)
                 sampled = rel_b.iloc[chosen]
-                sampled = sampled[sampled[accounting].cumsum() <= int(target)]
+                sampled = sampled[sampled[accounting].cumsum() <= int(limit)]
+                row["demolished"] = sampled[accounting].sum()
                 buildings_idx.append(sampled)
 
-    nonres_eligible = b.loc[allowed_b & eligible]
+    nonres_ok = allowed_b & eligible
+    if stock_mode:
+        # Detroit mixed-use buildings with households are not demolished either
+        nonres_ok &= ~la_b.isin(sp["detroit_la_ids"]) | (b["b_total_households"] == 0)
+    nonres_eligible = b.loc[nonres_ok]
     sample(
         demolition_rates.typenonsqft,
         nonres_eligible[nonres_eligible.non_residential_sqft > 0],
         "non_residential_sqft",
         "nonres_score",
+        "typenonsqft",
     )
-    res_eligible = b.loc[allowed_b & eligible & (b.non_residential_sqft == 0)]
-    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score")
-    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score")
-    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score")
+    res_ok = allowed_b & eligible & (b.non_residential_sqft == 0)
+    if stock_mode:
+        # In Detroit only fully vacant pool buildings: demolition moves no households
+        res_ok &= ~la_b.isin(sp["detroit_la_ids"]) | exempt
+    res_eligible = b.loc[res_ok]
+    if stock_mode:
+        # Detroit vacancy floor: the residential targets of a neighborhood share
+        # one cap, so its vacancy does not fall below floor_c.
+        res_cats = list(demolition_stock.RES_CATEGORIES)
+        res_b = b[b.residential_units > 0]
+        units = res_b.groupby("city_id")["residential_units"].sum()
+        vacant = res_b["vacant_residential_units"].clip(lower=0).groupby(res_b["city_id"]).sum()
+        avail = (res_eligible.groupby(["city_id", "building_type_id"])["residential_units"].sum()
+                 .unstack().rename(columns={v: k for k, v in demolition_stock.RES_CATEGORIES.items()}))
+        for city_id in city_la[city_la.isin(sp["detroit_la_ids"])].index.intersection(demolition_rates.index):
+            cap = float(demolition_stock.floor_cap(vacant.get(city_id, 0), units.get(city_id, 0),
+                                                   city_floor.get(city_id, sp["floor_min"])))
+            have = avail.loc[city_id] if city_id in avail.index else pd.Series(0.0, index=res_cats)
+            demolition_rates.loc[city_id, res_cats] = demolition_stock.allocate_cap(
+                demolition_rates.loc[city_id, res_cats], cap, have).values
+    sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score", "type81units")
+    sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score", "type82units")
+    sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score", "type83units")
+
+    run_name = os.path.basename(orca.get_injectable("data_out_dir")) if orca.is_injectable("data_out_dir") else "test"
+    log_path = os.path.join("runs", "simulate_logs", f"demolition_volume_{run_name}.csv")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    pd.DataFrame(volume_log).to_csv(log_path, mode="a", header=not os.path.exists(log_path), index=False)
 
     if not buildings_idx:
         return
@@ -3675,6 +3764,62 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
+def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None):
+    """Households per city for the residential developer's vacancy gap.
+
+    At developer time, households added by transition (and movers) are unplaced
+    and have no city, so counting placed households understates demand. Start
+    from the city counts placed before transition (`snapshot`), add each city's
+    trend, and spread the rest of each large area's change since then across
+    its cities by snapshot share. Large-area totals equal the current count.
+
+    Parameters
+    ----------
+    hh_large_area : pd.Series
+        large_area_id of every current household, placed or not.
+    city_to_la : pd.Series
+        large_area_id indexed by city_id.
+    snapshot : pd.Series
+        Placed household count indexed by city_id.
+    trend : pd.Series, optional
+        Expected yearly household change indexed by city_id (0 if omitted).
+
+    Returns
+    -------
+    pd.Series of (fractional) household counts indexed by city_id.
+    """
+    la = city_to_la.reindex(snapshot.index)
+    snap_la = snapshot.groupby(la).sum()
+    la_change = hh_large_area.value_counts().reindex(snap_la.index, fill_value=0) - snap_la
+    trend = (pd.Series(0.0, index=snapshot.index) if trend is None
+             else trend.reindex(snapshot.index, fill_value=0.0))
+    rest = la_change - trend.groupby(la).sum()
+    return snapshot + trend + snapshot / la.map(snap_la) * la.map(rest)
+
+
+def city_household_trend(year, snapshot):
+    """Average yearly household change per city over the last 5 years.
+
+    The history is indexed by data year: the snapshot taken in simulation year
+    `year` holds the households of `year - 1`. At the first call it starts from
+    the 2020 households (configs/households_by_city_2020.csv) and this snapshot,
+    with straight-line values for the years between; each later simulation year
+    adds its own snapshot.
+    """
+    history = (orca.get_injectable("city_hh_history")
+               if orca.is_injectable("city_hh_history") else None)
+    if history is None:
+        hh_2020 = pd.read_csv(
+            os.path.join(misc.configs_dir(), "households_by_city_2020.csv"), index_col="city_id"
+        )["households"].reindex(snapshot.index).fillna(snapshot)
+        first = year - 1
+        history = {y: hh_2020 + (snapshot - hh_2020) * (y - 2020) / (first - 2020)
+                   for y in range(2020, first)}
+    history[year - 1] = snapshot
+    orca.add_injectable("city_hh_history", history)
+    return (snapshot - history[year - 6].reindex(snapshot.index).fillna(snapshot)) / 5.0
+
+
 def compute_demo_rebuild_boost(parcels, year, boost, decay, window, scheduled_factor=1.0):
     """Time-decayed site-selection boost for orphaned demolished SF parcels.
 
@@ -3858,6 +4003,24 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
     parcels.update_col_from_series("pct_undev", new_pct, cast=True)
 
 
+def _label_developer_removals():
+    """Label buildings the developer removed this year (redevelopment).
+
+    urbansim_parcels adds them to dropped_buildings without a step, so they
+    could not be told apart from demolitions in the outputs.
+    """
+    if not orca.is_table("dropped_buildings"):
+        return
+    d = orca.get_table("dropped_buildings").local.copy()
+    if "step" not in d.columns:
+        d["step"] = np.nan
+    new = d["year_demo"].eq(orca.get_injectable("year")) & d["step"].isna()
+    if new.any():
+        d["step"] = d["step"].astype(object)
+        d.loc[new, "step"] = "developer_redevelopment"
+        orca.add_table("dropped_buildings", d)
+
+
 def run_developer(
     target_units,
     geoid,
@@ -3948,6 +4111,7 @@ def run_developer(
         unplace_agents,
         pipeline,
     )
+    _label_developer_removals()
     # calculate spaces_added
     if supply_fname == 'job_spaces':
         spaces_added = new_buildings.job_spaces.sum() - new_buildings.current_units.sum()
@@ -3977,10 +4141,10 @@ def residential_developer(
     """
     Simulate residential development per city in three steps:
 
-    1. Target units for city: blend two signals in housing units
-         target_raw = w_gap*V + w_demand*R
-         V = vacancy_gap_signed, R = mover_index × decay(year)
-         decay: 1.0 in base_year → mover_decay_final in final_year, linear
+    1. Target units for city: the vacancy gap in housing units
+         target_raw = households / (1 - target_vacancy) - units
+         households = pre-transition snapshot + city trend + share of the
+         rest of the large area's change (city_households_for_developer)
        Hard ceiling: feasible_units from pro-forma feasibility.
 
     2. LA alignment: scale each large_area's city targets so total built
@@ -3995,20 +4159,16 @@ def residential_developer(
     target_vacancies = target_res_vacancies_mcd.to_frame()[str(year)]
 
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "city_id", "building_type_id",
-         "year_built", "recent_mover_rate"]
+        ["residential_units", "city_id", "building_type_id", "year_built"]
     )
 
     with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
         _res_cfg = yaml.load(f, Loader=yaml.FullLoader)
-    w_gap    = _res_cfg.get("target_weight_vacancy_gap", 0.5)
-    w_demand = _res_cfg.get("target_weight_demand",      0.5)
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
+    # minimum of the LA cap, as a share of the LA's base-year build rate
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
-    hist_floor_min_rate  = _res_cfg.get("hist_floor_min_rate", 30)
     # defaults reproduce the earlier behavior; res_developer.yaml tunes them down
     la_max_scale         = _res_cfg.get("la_max_scale", la_max_ratio)
-    hist_floor_profitable_only = _res_cfg.get("hist_floor_profitable_only", False)
     demo_rebuild_boost     = _res_cfg.get("demo_rebuild_boost", 20.0)
     demo_rebuild_decay     = _res_cfg.get("demo_rebuild_decay", 0.6)
     demo_rebuild_window    = _res_cfg.get("demo_rebuild_window", 5)
@@ -4016,14 +4176,7 @@ def residential_developer(
     demo_rebuild_sched_factor = _res_cfg.get("demo_rebuild_scheduled_factor", 3.0)
     lookback_year = year - 7
 
-    mover_decay_final = _res_cfg.get("mover_decay_final", 0.5)
     base_year  = orca.get_injectable("base_year")
-    # C signal decays linearly from full weight in base year to mover_decay_final by final year
-    mover_decay = 1.0 - (1.0 - mover_decay_final) * (year - base_year) / 30
-
-    # compute per-city build rates for hist_floor (7-year window ending at base year)
-    _hist = orig_buildings[orig_buildings.year_built.between(base_year - 6, base_year)]
-    city_hist_rate = (_hist.groupby("city_id")["residential_units"].sum() / 7.0).to_dict()
 
     # rebuild-priority weight for orphaned demolished SF parcels
     recent_demo_boost = compute_demo_rebuild_boost(
@@ -4083,6 +4236,23 @@ def residential_developer(
         .groupby("large_area_id")["residential_units"].sum()
     )
 
+    # City households: pre-transition placed counts plus each LA's change since,
+    # so unplaced (transition-added, displaced, moving) households still count.
+    # Standalone runs without households_transition fall back to placed counts now.
+    snap = (orca.get_injectable("hh_by_city_pre_transition")
+            if orca.is_injectable("hh_by_city_pre_transition") else None)
+    if snap is not None and snap[0] == year:
+        city_hh_snapshot = snap[1]
+    else:
+        hh_city = households.city_id
+        city_hh_snapshot = hh_city[hh_city.notna()].astype(int).value_counts()
+    city_trend = city_household_trend(year, city_hh_snapshot)
+    city_hh = city_households_for_developer(
+        households.large_area_id, city_to_la, city_hh_snapshot, city_trend
+    )
+    print("  City households: {:,} placed (snapshot), trend {:+,.0f}, LA change {:+,.0f}".format(
+        int(city_hh_snapshot.sum()), city_trend.sum(), city_hh.sum() - city_hh_snapshot.sum()))
+
     # compute per-city target_units
     city_data = {}
     for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
@@ -4094,17 +4264,12 @@ def residential_developer(
             continue
         target_vacancy = float(target_vacancies[cityid])
 
-        cur_agents = int((households.city_id == cityid).sum())
+        cur_agents = int(round(city_hh.get(cityid, 0)))
         num_units  = int(city_orig_buildings.residential_units.sum())
         assert target_vacancy < 1.0
 
         vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
-        mover_index = (city_orig_buildings.recent_mover_rate * city_orig_buildings.residential_units).sum()
-        mover_index /= 10 # 10yr avg
-
-        V_units = vacancy_gap_signed
-        R_units = max(0, mover_index) * mover_decay
-        target_units_raw = w_gap * V_units + w_demand * R_units
+        target_units_raw = vacancy_gap_signed
 
         feas_df   = orca.get_table("feasibility_city_" + str(cityid)).to_frame()
         res_feas  = feas_df[feas_df["form"].isin(res_forms)]
@@ -4116,48 +4281,17 @@ def residential_developer(
             )
         else:
             feasible_units = 0
-        # all_feasible: includes suboptimal proposals (keep_suboptimal=True)
-        # used by historical floor to allow distressed-market builds
-        if len(res_feas) > 0:
-            ave_unit_sz_all = parcels.ave_unit_size.reindex(res_feas.index).fillna(1000)
-            all_feasible_units = int(
-                (res_feas["residential_sqft"] / ave_unit_sz_all).clip(lower=0).sum()
-            )
-        else:
-            all_feasible_units = 0
-
         target_units = int(np.clip(target_units_raw, 0, feasible_units))
 
         city_data[cityid] = {
             "target_units": target_units, "feasible_units": feasible_units,
-            "all_feasible_units": all_feasible_units,
             "cur_agents": cur_agents,
             "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
-            "mover_index": mover_index, "V_units": V_units,
-            "R_units": R_units,
+            "trend": float(city_trend.get(cityid, 0.0)),
             "target_raw": target_units_raw, "la_scale": 1.0,
         }
 
-    # historical minimum floor — before LA alignment so LA cap is the hard ceiling
-    n_floored = 0
-    for cityid, d in city_data.items():
-        hist_rate = city_hist_rate.get(cityid, 0)
-        if hist_rate < hist_floor_min_rate:
-            continue
-        floor = int(hist_rate * hist_floor_factor)
-        if d["target_units"] < floor:
-            prev = d["target_units"]
-            # all_feasible_units (incl. suboptimal) lets distressed markets build at a
-            # loss; hist_floor_profitable_only restricts the floor to profitable units
-            cap = d["feasible_units"] if hist_floor_profitable_only else d["all_feasible_units"]
-            d["target_units"] = min(floor, cap)
-            if d["target_units"] > prev:
-                n_floored += 1
-    if n_floored:
-        print(f"  Historical floor applied to {n_floored} cities "
-              f"(factor={hist_floor_factor}, min_rate={hist_floor_min_rate})")
-
-    # LA alignment — hard ceiling applied after hist_floor
+    # LA alignment — hard ceiling
     for la_id, la_city_ids in city_to_la.groupby(city_to_la).groups.items():
         active = [m for m in la_city_ids if m in city_data]
         if not active:
@@ -4201,11 +4335,11 @@ def residential_developer(
         print(
             "developing residential for city {} | "
             "agents={:,} units={:,} vac_gap={:+,} | "
-            "V={:+.0f} R={:.0f} raw={:.0f} | "
+            "trend={:+.0f} raw={:.0f} | "
             "feasible={:,} la_scale={:.3f} target={:,}\n".format(
                 cityid,
                 d["cur_agents"], d["num_units"], d["vacancy_gap"],
-                d["V_units"], d["R_units"], d["target_raw"],
+                d["trend"], d["target_raw"],
                 feasible_units, d["la_scale"], target_units,
             )
         )
@@ -4233,9 +4367,7 @@ def residential_developer(
                 "cur_agents":    d["cur_agents"],
                 "num_units":     d["num_units"],
                 "vacancy_gap":   d["vacancy_gap"],
-                "mover_index":   round(d["mover_index"], 3),
-                "V_units":       round(d["V_units"], 1),
-                "R_units":       round(d["R_units"], 1),
+                "trend":         round(d["trend"], 1),
                 "target_raw":    round(d["target_raw"], 1),
                 "la_scale":      d["la_scale"],
                 "feasible_units": feasible_units,
@@ -4425,17 +4557,7 @@ def update_sp_filter(buildings):
     None
     """
     # update sp_filter to -1 for selected building_types
-    selected_btypes = {
-        11: "Educational",
-        13: "Religious and Civic",
-        14: "Governmental",
-        52: "Hospital",
-        53: "Residential Care Facility",
-        92: "Library",
-        93: "Dormitory Quarters",
-        94: "Death Care Services",
-        95: "Parking Garage",
-    }
+    selected_btypes = assumptions.PROTECTED_BTYPES
 
     updated_buildings = buildings.to_frame(buildings.local_columns)
     print(

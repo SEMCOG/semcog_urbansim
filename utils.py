@@ -778,6 +778,8 @@ def _copy_run_configs(data_out_dir, yaml_configs):
         ),
         "mcd_hu_sampling": os.path.join(config_dir, "mcd_hu_sampling.yaml"),
         "model_steps": os.path.join(config_dir, yaml_configs),
+        "demolition_rates": os.path.join(config_dir, "demolition_rates.csv"),
+        "demolition_stock_rates": os.path.join(config_dir, "demolition_stock_rates.csv"),
     }
 
     copied = {}

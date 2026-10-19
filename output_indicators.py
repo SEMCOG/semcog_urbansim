@@ -54,13 +54,21 @@ def orca_year_dataset(hdf, tbls_to_load, year, is_base):
 
         orca.add_table(tbl, df.fillna(0))
 
+# optional parcel -> state house / senate / congress map; without it the
+# legislative geographies are skipped and the ids in whatnots are -1
+LEGIS_PATH = "data/parcel_to_legis.csv"
+LEGIS_GEOMS = {"mi_house", "mi_senate", "us_congress"}
+
+
 def add_legislative_ids(parcels):
     # add state house and senate ids
-    leg_path = "data/parcel_to_legis.csv"
+    leg_path = LEGIS_PATH
     if not os.path.exists(leg_path):
-        print("Error: Missing parcel to legislative id mapping table")
-        exit(1)
-    p2l = pd.read_csv(leg_path, index_col='parcel_id')
+        print("Warning: %s not found; legislative ids set to -1, "
+              "legislative indicators skipped" % leg_path)
+        p2l = pd.DataFrame(columns=['mi_house_id', 'mi_senate_id', 'us_congress_id'])
+    else:
+        p2l = pd.read_csv(leg_path, index_col='parcel_id')
 
     # fill pseudo parcels with -1
     parcels['mi_house_id'] = p2l['mi_house_id']
@@ -222,6 +230,7 @@ def main(
 
     # add legis ids to parcels
     orca.add_table("parcels", add_legislative_ids(orca.get_table("parcels").local))
+    skip_geoms = set() if os.path.exists(LEGIS_PATH) else LEGIS_GEOMS
 
     # make cities with large area table
     p = orca.get_table("parcels")
@@ -294,12 +303,15 @@ def main(
         ("large_areas", "large_area_id"),
         ("whatnots", "whatnot_id"),
     ]:
+        if tab in skip_geoms:
+            continue
         make_indicators(tab, geo_id)
 
         # geo level: school district
     years = list(range(base_year, target_year + 1, spacing))
     year_names = ["yr" + str(i) for i in years]
     geom = ["cities", "us_congress", "mi_senate", "mi_house", "schools", "semmcds", "zones", "large_areas", "whatnots"]
+    geom = [g for g in geom if g not in skip_geoms]
     tbls_to_load = [
         "parcels",
         "buildings",
@@ -401,6 +413,7 @@ def main(
     print("\n* Making indicators by year")
     start = time.time()
     geom = ["cities", "large_areas", "us_congress", "mi_senate", "mi_house", "semmcds", "schools", "zones"]
+    geom = [g for g in geom if g not in skip_geoms]
     y5 = year_names[0::5]
     indicators = list_indicators()
     year_indicator_frames = {

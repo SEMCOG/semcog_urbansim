@@ -52,7 +52,6 @@ for name in [
     "income_growth_rates",
     "target_res_vacancies_mcd",
     "target_nonres_vacancies_mcd",
-    "demolition_rates",
     "landmark_worksites",
     "mcd_total",
     "dropped_buildings",
@@ -63,6 +62,23 @@ for name in [
         print('skip loading %s while adding table to orca' % name)
         continue
     orca.add_table(name, store[name])
+
+
+@orca.table(cache=True)
+def demolition_rates():
+    # Annual demolition volume by city (2021-2024 average), written by
+    # demolition_calibration.py. Replaces the base HDF table of the old view.
+    return pd.read_csv(path.join(misc.configs_dir(), "demolition_rates.csv"), index_col="city_id")
+
+
+@orca.table(cache=True)
+def demolition_stock_rates():
+    # Demolition rate per unit of stock by city and category (volume_method
+    # stock_rate), written by demolition_calibration.py --stock-rates-only.
+    f = path.join(misc.configs_dir(), "demolition_stock_rates.csv")
+    if not path.exists(f):
+        return pd.DataFrame(columns=["city_id", "large_area_id", "category", "rate", "floor"])
+    return pd.read_csv(f)
 
 
 @orca.table(cache=True)
@@ -124,13 +140,16 @@ def buildings(store):
         / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
     )
-    # fill out-of-bound sqft_price_res with la avg
+    # fill out-of-bound sqft_price_res with la avg -- housing only: a building
+    # without units has no residential price (its 0 units give inf here)
+    has_units = df.residential_units > 0
     oob = (df.sqft_price_res > 1500) | (df.sqft_price_res < 0) | df.sqft_price_res.isna()
     df.loc[oob, "sqft_price_res"] = np.nan
+    df.loc[~has_units, "sqft_price_res"] = 0
     la_id = store["parcels"]["large_area_id"].reindex(df["parcel_id"].values).values
     df["_la"] = la_id
-    la_avg = df[~oob].groupby("_la")["sqft_price_res"].mean()
-    region_avg = df.loc[~oob, "sqft_price_res"].mean()
+    la_avg = df[has_units & ~oob].groupby("_la")["sqft_price_res"].mean()
+    region_avg = df.loc[has_units & ~oob, "sqft_price_res"].mean()
     df["sqft_price_res"] = df["sqft_price_res"].fillna(
         df["_la"].map(la_avg).fillna(region_avg)
     )
@@ -158,6 +177,9 @@ def buildings(store):
             landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
             "sp_filter",
         ] = -1  # set landmark building_id as negative for blocking
+    # protected building types are blocked from the start, before the first
+    # year's demolition (update_sp_filter repeats this for new buildings)
+    df.loc[df.building_type_id.isin(assumptions.PROTECTED_BTYPES), "sp_filter"] = -1
 
     df["event_id"] = 0  # also add event_id for event reference
 
