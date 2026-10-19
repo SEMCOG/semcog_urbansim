@@ -148,3 +148,5 @@ Non-pipeline code, see `scripts/README.md`. Run from the repo root with `PYTHONP
 
 - `scripts/testing/` — harnesses that exercise the current pipeline (`test_developer.py`, `test_lcm_simulation.py`, `test_forecast_2050.py`, …)
 - `scripts/legacy/` — superseded or broken scripts kept for reference
+
+**New tests go in `scripts/testing/`, never the repository root.** The root is reserved for the live pipeline. A test that resolves paths from `__file__` must account for being two directories down — `Path(__file__).resolve().parents[3]` for a sibling of the repo, `os.path.dirname()` three times for the repo root itself. Merges from review branches tend to bring root-level `test_*.py` files along; move them.
