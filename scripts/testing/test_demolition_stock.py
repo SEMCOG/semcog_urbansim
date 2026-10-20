@@ -34,6 +34,7 @@ def _buildings(**overrides):
     ({"non_residential_sqft": 500}, False),       # mixed use
     ({"building_age": 5}, False),                 # too new
     ({"sp_filter": -1}, False),                   # protected
+    ({"sp_filter": -2}, True),                    # abandoned: no placement, still demolishable
     ({"event_id": 12}, False),                    # event building
 ])
 def test_vacant_pool_mask(change, expected):

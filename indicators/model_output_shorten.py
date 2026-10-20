@@ -50,8 +50,6 @@ def buildings(store):
     df[
         "sp_filter"
     ] = 0  # special filter: for event location/buildings, landmark buildings, etc
-    # !!important set pseudo buildings to -2 sp_filter
-    df.loc[df.index > 90000000, "sp_filter"] = -2
 
     df["event_id"] = 0  # also add event_id for event reference
 
