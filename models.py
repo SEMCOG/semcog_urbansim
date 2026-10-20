@@ -21,6 +21,7 @@ from forecast_estimation.utils import load_taz_vars_from_orca
 
 import assumptions
 import demolition_stock
+import phasing
 import utils
 import lcm_utils
 import input_paths
@@ -3629,6 +3630,8 @@ def add_extra_columns_nonres(df):
         df["owner_units"] = (df["residential_units"] * share).round().astype(int)
     else:
         df["owner_units"] = 0
+    # full project size; phased developer projects deliver it over several years
+    df["planned_units"] = df["residential_units"] if "residential_units" in df.columns else 0
     df["year_built"] = orca.get_injectable("year")
     df["city_id"] = misc.reindex(orca.get_table("parcels").city_id, df.parcel_id)
     # task 2b: assign each new building a MAZ. Non-crossing parcels -> the parcel's
@@ -3670,6 +3673,50 @@ def assign_new_building_maz(new_buildings):
             maz.loc[blds.index] = rng.choice(
                 o["maz_id"].values, size=len(blds), p=o["share"].values)
     return maz.astype("int64")
+
+
+def _res_phasing_cfg():
+    with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
+        return phasing.phasing_cfg(yaml.load(f, Loader=yaml.FullLoader))
+
+
+def _owner_units(units, building_type_id):
+    share = pd.Series(building_type_id).map(orca.get_injectable("btype_owner_share")).fillna(0).values
+    return np.round(np.asarray(units) * share).astype(int)
+
+
+def add_phased_res_columns(df):
+    """add_extra_columns_res for developer buildings, with phased delivery: a large
+    project delivers only its first phase now (planned_units keeps the full size)."""
+    df = add_extra_columns_res(df)
+    cfg = _res_phasing_cfg()
+    if cfg["enabled"] and len(df):
+        df["residential_units"] = phasing.next_delivery(df["planned_units"], 0, df["building_type_id"], cfg)
+        df["owner_units"] = _owner_units(df["residential_units"], df["building_type_id"])
+    return df
+
+
+@orca.step()
+def deliver_phased_units(buildings):
+    """Deliver this year's phase of unfinished developer projects (planned_units)."""
+    cfg = _res_phasing_cfg()
+    if not cfg["enabled"] or "planned_units" not in buildings.local_columns:
+        return
+    b = buildings.to_frame(["residential_units", "planned_units", "building_type_id",
+                            "owner_units", "market_value", "improvement_value"])
+    b = b[b.planned_units > b.residential_units]
+    if len(b) == 0:
+        return
+    add = phasing.next_delivery(b.planned_units, b.residential_units, b.building_type_id, cfg)
+    units = b.residential_units + add
+    grow = units / b.residential_units.clip(lower=1)  # keep value per unit
+    buildings.update_col_from_series("residential_units", units, cast=True)
+    buildings.update_col_from_series("owner_units",
+                                     pd.Series(_owner_units(units, b.building_type_id), index=b.index), cast=True)
+    buildings.update_col_from_series("market_value", (b.market_value * grow).round(), cast=True)
+    buildings.update_col_from_series("improvement_value", (b.improvement_value * grow).round(), cast=True)
+    print(f"deliver_phased_units: {int(add.sum()):,} units in {len(b):,} unfinished projects "
+          f"({int((b.planned_units - units).sum()):,} units still pending)")
 
 
 def add_extra_columns_res(df:pd.DataFrame) -> pd.DataFrame:
@@ -4043,9 +4090,11 @@ def make_res_selection_func(lut_models, parcel_features_df, demo_boost=None, dem
 
         # deduping proposals feasibility emits per parcel
         p_ser = pd.Series(p_arr, index=df.index)
-        return proposal_select.weighted_random_choice_multiparcel(
-            df, p_ser, target_units,
-            getattr(dev, "target_overshoot_tolerance", None))
+        tol = getattr(dev, "target_overshoot_tolerance", None)
+        build_idx = proposal_select.weighted_random_choice_multiparcel(df, p_ser, target_units, tol)
+        # cap the result: proposal_select's fallback (smallest *sampled* proposal) can still be huge
+        tol = proposal_select.DEFAULT_OVERSHOOT_TOLERANCE if tol is None else tol
+        return phasing.limit_selection(build_idx, df.net_units, target_units, tol)
 
     return score
 
@@ -4238,8 +4287,11 @@ def residential_developer(
     target_vacancies = target_res_vacancies_mcd.to_frame()[str(year)]
 
     orig_buildings = orca.get_table("buildings").to_frame(
-        ["residential_units", "city_id", "building_type_id", "year_built"]
+        ["residential_units", "planned_units", "city_id", "building_type_id", "year_built"]
     )
+    # units of unfinished phased projects count as supply, so the same demand
+    # is not built twice
+    orig_buildings["supply_units"] = orig_buildings[["residential_units", "planned_units"]].max(axis=1)
 
     with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
         _res_cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -4344,7 +4396,7 @@ def residential_developer(
         target_vacancy = float(target_vacancies[cityid])
 
         cur_agents = int(round(city_hh.get(cityid, 0)))
-        num_units  = int(city_orig_buildings.residential_units.sum())
+        num_units  = int(city_orig_buildings.supply_units.sum())
         assert target_vacancy < 1.0
 
         vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
@@ -4433,7 +4485,7 @@ def residential_developer(
             parcels.ave_unit_size,
             parcels.total_units,
             "res_developer.yaml",
-            add_more_columns_callback=add_extra_columns_res,
+            add_more_columns_callback=add_phased_res_columns,
             custom_selection_func=custom_sel_func,
         )
 

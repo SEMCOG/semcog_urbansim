@@ -113,6 +113,7 @@ orca.run(
         "scored_demolition_events",
         "scheduled_development_events",
         "refiner",
+        "deliver_phased_units",  # next phase of unfinished developer projects
         "households_transition",
         "workers_adjustment_model",
         "households_relocation",

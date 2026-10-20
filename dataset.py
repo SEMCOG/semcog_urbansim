@@ -109,6 +109,10 @@ def buildings(store):
     df = store["buildings"]
     # City is anchored to the parcel for both base and forecast buildings.
     df["city_id"] = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
+    # full size of phased developer projects (models.deliver_phased_units);
+    # existing buildings are complete
+    if "planned_units" not in df.columns:
+        df["planned_units"] = df["residential_units"]
     # Existing checkpoints already contain the local MAZ column. Older checkpoints
     # can be upgraded below without rerunning the rest of the base-year cleanup.
     is_checkpoint = orca.is_injectable('use_checkpoint') and orca.get_injectable('use_checkpoint')
