@@ -32,3 +32,14 @@ demo_rebuild_decay: 0.6
 demo_rebuild_window: 5
 demo_rebuild_max_share: 0.5
 demo_rebuild_scheduled_factor: 3.0
+
+# Phased delivery of developer projects (models.deliver_phased_units): a large
+# project delivers at most this many units per year (planned_units keeps the
+# full size; pending units count as supply in the city's demand).
+phasing:
+  enabled: true
+  units_per_year:
+    81: 75    # single-family: subdivision sales
+    82: 75    # attached / condo
+    83: 200   # apartments: lease-up
+  default_units_per_year: 200
