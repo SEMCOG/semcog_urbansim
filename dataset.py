@@ -158,6 +158,10 @@ def buildings(store):
 
     df["mcd_model_quota"] = 0
 
+    # hu_filter -- housing units withheld from household placement:
+    #   0  available to HLCM and the housing-unit pools
+    #   1  held back; 80% of the vacant units in hu_cities, to keep those cities
+    #      from filling up on base-year vacancy
     df["hu_filter"] = 0
     hu_cities = [1155, 1100, 3130, 6020, 6040]
     b_city_id = misc.reindex(store["parcels"]["city_id"], df["parcel_id"]).fillna(0)
@@ -169,17 +173,24 @@ def buildings(store):
             chosen = pd.Series(city_sample).sample(frac=0.8, replace=False).values
             df.loc[chosen, "hu_filter"] = 1
 
-    df["sp_filter"] = 0  # special filter: for event location/buildings, landmark buildings, etc
-    # skip if not presented
+    # sp_filter -- special filter, negative blocks a building:
+    #   0  normal
+    #  -1  blocked from demolition and from LCM / housing-unit placement:
+    #      protected building types and landmark worksites here, plus the job
+    #      event and refiner buildings models.py sets during the run
+    #  -2  abandoned: blocked from placement only, still a demolition candidate.
+    #      The demolition tests match -1 exactly, not any negative.
+    # Protected is assigned last so it wins over abandoned.
+    df["sp_filter"] = 0
     if "landmark_worksites" in store:
-        landmark_worksites = store["landmark_worksites"]
-        df.loc[
-            landmark_worksites[landmark_worksites.building_id.isin(df.index)].building_id,
-            "sp_filter",
-        ] = -1  # set landmark building_id as negative for blocking
-    # protected building types are blocked from the start, before the first
-    # year's demolition (update_sp_filter repeats this for new buildings)
+        lw = store["landmark_worksites"]
+        df.loc[lw[lw.building_id.isin(df.index)].building_id, "sp_filter"] = -1
+    if "abandoned" in df.columns:
+        df.loc[df.abandoned == 1, "sp_filter"] = -2
+    # update_sp_filter repeats this for new buildings each year
     df.loc[df.building_type_id.isin(assumptions.PROTECTED_BTYPES), "sp_filter"] = -1
+    # abandoned has done its job; it is not carried through the forecast
+    df.drop(columns="abandoned", inplace=True, errors="ignore")
 
     df["event_id"] = 0  # also add event_id for event reference
 

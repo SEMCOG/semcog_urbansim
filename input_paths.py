@@ -38,15 +38,15 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_101526.h5",
-    f"{_LOCAL}/main_101526.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_101926.h5",
+    f"{_LOCAL}/main_101926.h5",
 )
 
 # RDF2055 estimation
 HLCM_MODEL_DIR = _p(
-    "/mnt/D/RDF2055/estimation/models/models_26Oct15",
-    "/mnt/hgfs/urbansim/RDF2055/estimation/models/models_26Oct15",
-    f"{_LOCAL}/models/models_26Oct15",
+    "/mnt/D/RDF2055/estimation/models/models_26Oct20",
+    "/mnt/hgfs/urbansim/RDF2055/estimation/models/models_26Oct20",
+    f"{_LOCAL}/models/models_26Oct20",
 )
 ELCM_MODEL_DIR = _p(
     "/mnt/D/RDF2055/estimation/models/elcm_models_26Oct02",
@@ -109,8 +109,8 @@ MODEL_RUNS_DIR = _p(
 # A full SHA-256 pass over large HDFs is intentionally a preflight operation.
 MIRROR_PAIRS = {
     "base HDF": (
-        f"{_LOCAL}/main_101526.h5",
-        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_101526.h5"],
+        f"{_LOCAL}/main_101926.h5",
+        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_101926.h5"],
     ),
     "accessibility HDF": (
         f"{_LOCAL}/access_indicators.h5",
@@ -121,10 +121,10 @@ MIRROR_PAIRS = {
         ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/semcog_networks.h5"],
     ),
     "HLCM package": (
-        f"{_LOCAL}/models/models_26Oct15",
+        f"{_LOCAL}/models/models_26Oct20",
         [
-            "/mnt/D/RDF2055/estimation/models/models_26Oct15",
-            "/mnt/hgfs/RDF2055/estimation/models/models_26Oct15",
+            "/mnt/D/RDF2055/estimation/models/models_26Oct20",
+            "/mnt/hgfs/RDF2055/estimation/models/models_26Oct20",
         ],
     ),
     "ELCM package": (

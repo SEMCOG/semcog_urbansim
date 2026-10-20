@@ -3099,7 +3099,9 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     # ── Eligibility ──────────────────────────────────────────────────────────
     not_eligible = pd.Series(False, index=b.index)
     if any_calibrated:
-        not_eligible |= (b.building_age < min_age) | (b.sp_filter < 0) | (b.event_id > 0)
+        # -1 is protected, not any negative: -2 marks an abandoned building, which
+        # is excluded from the LCMs but is still a demolition candidate
+        not_eligible |= (b.building_age < min_age) | (b.sp_filter == -1) | (b.event_id > 0)
         if max_res_occ is not None:
             res_occ = 1.0 - b["res_vacancy_rate"]
             not_eligible |= (b.residential_units > 0) & (res_occ > max_res_occ)
