@@ -47,7 +47,7 @@ def vacant_pool_mask(b, la, p):
         & (b["households"] == 0)
         & (b["non_residential_sqft"].fillna(0) == 0)
         & (b["building_age"] >= p["min_age"])
-        & (b["sp_filter"] >= 0)
+        & (b["sp_filter"] != -1)
         & (b["event_id"].fillna(0) <= 0)
     )
 

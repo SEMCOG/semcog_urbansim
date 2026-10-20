@@ -10,7 +10,7 @@ from pathlib import Path
 
 os.environ.setdefault(
     "SEMCOG_INPUT_DIR",
-    str(Path(__file__).resolve().parents[1] / "d_drive/forecast_inputs/base_year"),
+    str(Path(__file__).resolve().parents[3] / "d_drive/forecast_inputs/base_year"),
 )
 
 import orca

@@ -162,14 +162,17 @@ def parcel_is_allowed(form=None):
     return (allowed > 0) & (~protected)
 
 
-def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
-    # indentify parcels allowed for construction
-    # TODO, will replace parcel_is_allowed
+def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1, purpose="construction"):
+    """Parcels where `form` may be built (purpose="construction") or where a
+    building may be removed (purpose="demolition").
+    """
+    if purpose not in ("construction", "demolition"):
+        raise ValueError("purpose must be 'construction' or 'demolition', got %r" % purpose)
+
     pcl_index = orca.get_table("parcels").index
     parcels = orca.get_table("parcels")
     buildings = orca.get_table("buildings").to_frame(
         [
-            "city_id",
             "city_id",
             "parcel_id",
             "building_type_id",
@@ -179,16 +182,21 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
             "sp_filter",
         ]
     )
+    year = orca.get_injectable("year")
+    zoning = orca.get_table("zoning")
 
     pcl_new_building = buildings.groupby("parcel_id").building_age.min() <= 5
     pcl_new_building = pcl_new_building.reindex(pcl_index, fill_value=False)
 
-    pcl_addition = pcl_index.isin(orca.get_table("events_addition").parcel_id)
+    # only events that can still fire reserve their parcel; without the year
+    # filter a parcel is held for all 30 years by any event in the table,
+    # including rows the == year filters in the event steps never reach
+    ea = orca.get_table("events_addition").to_frame(["parcel_id", "year_built"])
+    pcl_addition = pcl_index.isin(ea[ea.year_built >= year].parcel_id)
 
+    ed = orca.get_table("events_deletion").to_frame(["building_id", "year_demo"])
     pcl_demolition = pcl_index.isin(
-        buildings[
-            buildings.index.isin(orca.get_table("events_deletion").building_id)
-        ].parcel_id
+        buildings[buildings.index.isin(ed[ed.year_demo >= year].building_id)].parcel_id
     )
 
     # big non-res parcels are protected in every year (an old `year <= 2050`
@@ -204,7 +212,7 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
 
     parcel_refin = set()
     refinements = orca.get_table("refiner_events").to_frame()
-    for e in refinements.location_expression:
+    for e in refinements[refinements.year >= year].location_expression:
         s = set(buildings.query(e).parcel_id)
         if len(s) < 20:
             parcel_refin |= s
@@ -212,6 +220,10 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
 
     # parcels whose improvement value exceeds landvalue * impr_to_land_ratio
     pcl_highval_blds = parcels.bldgimprval > (parcels.landvalue * impr_to_land_ratio)
+    if purpose == "construction":
+        has_room = parcels.parcel_size >= 10000
+        has_room &= ~zoning.future_use.reindex(pcl_index).isin(["RESIDENTIAL"])
+        pcl_highval_blds = pcl_highval_blds & (~has_room)
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
 
@@ -233,7 +245,6 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1):
         uses = form_to_future_use[form]
     else:
         uses = set().union(*(set(v) for v in form_to_future_use.values()))
-    zoning = orca.get_table("zoning")
     allowed = zoning.future_use.reindex(pcl_index).isin(uses)
 
     return allowed & (~protected)
