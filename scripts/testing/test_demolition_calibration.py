@@ -10,7 +10,7 @@ from pathlib import Path
 
 os.environ.setdefault(
     "SEMCOG_INPUT_DIR",
-    str(Path(__file__).resolve().parents[1] / "d_drive/forecast_inputs/base_year"),
+    str(Path(__file__).resolve().parents[3] / "d_drive/forecast_inputs/base_year"),
 )
 
 import numpy as np
@@ -103,8 +103,10 @@ def test_detroit_vacant_houses_skip_value_rule():
     la = b["parcel_id"].map(orca.get_table("parcels").large_area_id)
     pool = demolition_stock.vacant_pool_mask(b.assign(households=b["b_total_households"]), la, sp)
     assert 20000 < b.loc[pool, "residential_units"].sum() < 40000
-    with_rule = variables.parcel_is_allowed_2055(impr_to_land_ratio=5)
-    without = variables.parcel_is_allowed_2055(impr_to_land_ratio=np.inf)
+    with_rule = variables.parcel_is_allowed_2055(
+        impr_to_land_ratio=5, purpose="demolition")
+    without = variables.parcel_is_allowed_2055(
+        impr_to_land_ratio=np.inf, purpose="demolition")
     pcl = b.loc[pool, "parcel_id"]
     # most pool houses are blocked by the value rule and open without it
     assert with_rule.reindex(pcl).fillna(False).mean() < 0.2

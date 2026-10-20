@@ -14,7 +14,9 @@ import demolition_stock as ds
 CFG = {"detroit": {"large_area_ids": [5], "rate_per_vacant_unit": 0.042},
        "min_age_eligible": 10}
 P = ds.stock_rate_cfg(CFG)
-RATES_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs", "demolition_stock_rates.csv")
+RATES_CSV = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "configs", "demolition_stock_rates.csv")
 
 
 def _buildings(**overrides):
@@ -32,6 +34,7 @@ def _buildings(**overrides):
     ({"non_residential_sqft": 500}, False),       # mixed use
     ({"building_age": 5}, False),                 # too new
     ({"sp_filter": -1}, False),                   # protected
+    ({"sp_filter": -2}, True),                    # abandoned: no placement, still demolishable
     ({"event_id": 12}, False),                    # event building
 ])
 def test_vacant_pool_mask(change, expected):

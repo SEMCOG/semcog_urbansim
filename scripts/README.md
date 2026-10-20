@@ -28,6 +28,11 @@ Harnesses and one-off checks that exercise the current pipeline.
 - `test_developer.py`, `test_lcm_simulation.py`, `test_mcd_hu_samping.py`,
   `test_travel_survey_vars.py`, `test_MNLDiscreteChoiceModel.py`,
   `proforma_run_test.py`, `refiner_run_test.py`, `output_indicators_run_test.py`
+- pytest suites from the demolition review: `test_demolition_calibration.py`
+  (calibration/simulation feature parity), `test_demolition_stock.py`
+  (stock-rate volume targets), `test_city_households_for_developer.py`
+  (residential demand counts unplaced households). These need `pytest`, which
+  is not in the `forecast_py312` environment.
 
 ## `legacy/`
 
