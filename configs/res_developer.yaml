@@ -12,6 +12,11 @@ keep_suboptimal: True
 
 noise_scale: 100000
 
+# City excess momentum in the developer's expected households (models.city_excess_momentum):
+# the 2020-25 change above the city's large-area share, multiplied by this factor per year
+# (0.8: half-life about 3 years; backcast of 2000-2025 MCD history)
+city_momentum_fade: 0.8
+
 la_max_ratio: 1.2
 # largest factor LA alignment may scale MCD targets by; above 1.0 the cap pushes
 # targets up as well as down (was la_max_ratio, i.e. 1.2)

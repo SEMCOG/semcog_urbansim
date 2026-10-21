@@ -3846,27 +3846,32 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=Non
     return snapshot + trend + snapshot / la.map(snap_la) * la.map(rest)
 
 
-def city_household_trend(year, snapshot):
-    """Average yearly household change per city over the last 5 years.
+def city_excess_momentum(year, snapshot, city_to_la, fade):
+    """Each city's yearly household change above its large-area share, fading over time.
 
-    The history is indexed by data year: the snapshot taken in simulation year
-    `year` holds the households of `year - 1`. At the first call it starts from
-    the 2020 households (configs/households_by_city_2020.csv) and this snapshot,
-    with straight-line values for the years between; each later simulation year
-    adds its own snapshot.
+    Set once, at the first call, from observed history: the 2020 households
+    (configs/households_by_city_2020.csv) and this snapshot (the base-year
+    households). Excess = city change per year - its 2020 share of the large
+    area's change per year, so it sums to 0 in each large area. Later years
+    return excess * fade ** (year - (first year - 1)); the simulated households
+    never renew it, so a city's own simulated growth cannot feed its demand.
+    A run resumed from a checkpoint sets it from the checkpoint snapshot.
     """
-    history = (orca.get_injectable("city_hh_history")
-               if orca.is_injectable("city_hh_history") else None)
-    if history is None:
+    state = (orca.get_injectable("city_excess_momentum")
+             if orca.is_injectable("city_excess_momentum") else None)
+    if state is None:
         hh_2020 = pd.read_csv(
             os.path.join(misc.configs_dir(), "households_by_city_2020.csv"), index_col="city_id"
         )["households"].reindex(snapshot.index).fillna(snapshot)
-        first = year - 1
-        history = {y: hh_2020 + (snapshot - hh_2020) * (y - 2020) / (first - 2020)
-                   for y in range(2020, first)}
-    history[year - 1] = snapshot
-    orca.add_injectable("city_hh_history", history)
-    return (snapshot - history[year - 6].reindex(snapshot.index).fillna(snapshot)) / 5.0
+        span = (year - 1) - 2020
+        la = city_to_la.reindex(snapshot.index)
+        la_change = (snapshot.groupby(la).sum() - hh_2020.groupby(la).sum()) / span
+        share = hh_2020 / la.map(hh_2020.groupby(la).sum())
+        excess = (snapshot - hh_2020) / span - share * la.map(la_change)
+        state = (year - 1, excess.fillna(0.0))
+        orca.add_injectable("city_excess_momentum", state)
+    origin, excess = state
+    return excess.reindex(snapshot.index, fill_value=0.0) * fade ** (year - origin)
 
 
 def compute_demo_rebuild_boost(parcels, year, boost, decay, window, scheduled_factor=1.0):
@@ -4194,8 +4199,9 @@ def residential_developer(
 
     1. Target units for city: the vacancy gap in housing units
          target_raw = households / (1 - target_vacancy) - units
-         households = pre-transition snapshot + city trend + share of the
-         rest of the large area's change (city_households_for_developer)
+         households = pre-transition snapshot + city excess momentum (fading,
+         city_excess_momentum) + share of the rest of the large area's change
+         (city_households_for_developer)
        Hard ceiling: feasible_units from pro-forma feasibility.
 
     2. LA alignment: scale each large_area's city targets so total built
@@ -4228,6 +4234,7 @@ def residential_developer(
     demo_rebuild_window    = _res_cfg.get("demo_rebuild_window", 5)
     demo_rebuild_max_share = _res_cfg.get("demo_rebuild_max_share", 0.5)
     demo_rebuild_sched_factor = _res_cfg.get("demo_rebuild_scheduled_factor", 3.0)
+    city_momentum_fade = _res_cfg.get("city_momentum_fade", 0.8)
     lookback_year = year - 7
 
     base_year  = orca.get_injectable("base_year")
@@ -4300,12 +4307,12 @@ def residential_developer(
     else:
         hh_city = households.city_id
         city_hh_snapshot = hh_city[hh_city.notna()].astype(int).value_counts()
-    city_trend = city_household_trend(year, city_hh_snapshot)
+    city_trend = city_excess_momentum(year, city_hh_snapshot, city_to_la, city_momentum_fade)
     city_hh = city_households_for_developer(
         households.large_area_id, city_to_la, city_hh_snapshot, city_trend
     )
-    print("  City households: {:,} placed (snapshot), trend {:+,.0f}, LA change {:+,.0f}".format(
-        int(city_hh_snapshot.sum()), city_trend.sum(), city_hh.sum() - city_hh_snapshot.sum()))
+    print("  City households: {:,} placed (snapshot), momentum |{:,.0f}|, LA change {:+,.0f}".format(
+        int(city_hh_snapshot.sum()), city_trend.abs().sum(), city_hh.sum() - city_hh_snapshot.sum()))
 
     # compute per-city target_units
     city_data = {}
