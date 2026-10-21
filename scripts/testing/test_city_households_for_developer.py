@@ -59,16 +59,41 @@ def test_trend_with_large_area_total_kept():
     assert round(out.sum()) == 99_900
 
 
-def test_trend_history_starts_from_2020():
+def _two_city_momentum(year, add_a, add_b, fade=0.8):
+    """Momentum for two cities of one large area that gained add_a / add_b since 2020."""
     hh_2020 = pd.read_csv("configs/households_by_city_2020.csv", index_col="city_id")["households"]
-    city = hh_2020.index[0]
-    if orca.is_injectable("city_hh_history"):
-        orca.add_injectable("city_hh_history", None)
+    a, b = hh_2020.index[:2]
+    snap = pd.Series({a: hh_2020[a] + add_a, b: hh_2020[b] + add_b})
+    out = models.city_excess_momentum(year, snap, pd.Series({a: 3, b: 3}), fade)
+    return out, a, b, hh_2020
 
-    snap_2025 = pd.Series({city: hh_2020[city] + 500.0})
-    t_2026 = models.city_household_trend(2026, snap_2025)
-    assert t_2026[city] == 100.0  # (2025 - 2020) / 5
 
-    snap_2026 = pd.Series({city: hh_2020[city] + 700.0})
-    t_2027 = models.city_household_trend(2027, snap_2026)
-    assert t_2027[city] == (700.0 - 100.0) / 5  # 2021 is the straight-line value: 2020 + 100
+def _reset_momentum():
+    if orca.is_injectable("city_excess_momentum"):
+        orca.add_injectable("city_excess_momentum", None)
+
+
+def test_momentum_is_excess_over_large_area_share():
+    _reset_momentum()
+    out, a, b, hh_2020 = _two_city_momentum(2026, 500.0, 0.0, fade=1.0)
+    share_a = hh_2020[a] / (hh_2020[a] + hh_2020[b])
+    # city a: 100/yr raw; large area: 100/yr; excess = 100 - share_a * 100
+    assert abs(out[a] - (100.0 - share_a * 100.0)) < 1e-9
+    assert abs(out.sum()) < 1e-9  # zero-sum in the large area
+
+
+def test_growth_at_large_area_share_has_no_momentum():
+    _reset_momentum()
+    hh_2020 = pd.read_csv("configs/households_by_city_2020.csv", index_col="city_id")["households"]
+    a, b = hh_2020.index[:2]
+    out, _, _, _ = _two_city_momentum(2026, hh_2020[a] * 0.05, hh_2020[b] * 0.05)
+    assert out.abs().max() < 1e-9
+
+
+def test_momentum_fades_and_ignores_simulated_growth():
+    _reset_momentum()
+    first, a, b, _ = _two_city_momentum(2026, 500.0, 0.0)
+    # later snapshots (simulated growth) must not renew the momentum
+    later, _, _, _ = _two_city_momentum(2028, 5_000.0, 0.0)
+    assert abs(later[a] - first[a] * 0.8 ** 2) < 1e-9
+    _reset_momentum()
