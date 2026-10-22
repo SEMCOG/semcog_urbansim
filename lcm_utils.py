@@ -495,6 +495,72 @@ def _hlcm_tract_adjustment(tract_weights, tract_ids, clip=(0.5, 2.0), strength=1
     return w.reindex(tract_ids).fillna(1.0).to_numpy(), at_bound
 
 
+def _hlcm_calibration_regressor(y_train, tract_ids):
+    """Smooth the per-tract calibration target through an XGBoost fit on census
+    tract features, instead of applying it directly.
+
+    Superseded: the target is a tract's own accumulated drift from its base-year
+    share, which tract attributes do not predict. In run1510 the post-train error
+    equalled the predict-the-mean baseline on every segment, so each tract came out
+    with the same weight and a constant multiplier cancels in the choice
+    probabilities. Kept for comparison, reachable with
+    models.hlcm.calibration.use_regressor: true in model_structure.yaml.
+
+    Returns:
+        pd.Series: predicted weight per tract_id.
+    """
+    tracts_df = orca.get_table('census_tracts').to_frame()
+    # Handle missing tract_id = -1
+    if -1 not in tracts_df.index:
+        tracts_df.loc[-1] = tracts_df.mean(numeric_only=True)
+
+    # Tract features for the buildings used, numeric float columns only
+    used_tract_ids = pd.Series(tract_ids).dropna().unique()
+    valid_columns = tracts_df.select_dtypes(include=['float', 'float32', 'float64']).columns
+    valid_columns = [col for col in valid_columns if col not in ['tazce10_n']]
+
+    X_train = tracts_df.loc[tracts_df.index.intersection(used_tract_ids), valid_columns].fillna(0.0)
+    scaler = RobustScaler()
+    X_train_scaled = pd.DataFrame(
+        scaler.fit_transform(X_train),
+        index=X_train.index,
+        columns=X_train.select_dtypes(include='number').columns
+    )
+    low_variance_cols = X_train_scaled.var()[X_train_scaled.var() < 1e-5].index
+    X_train_scaled.drop(columns=low_variance_cols, inplace=True)
+
+    # Aggregate the per-row target to tract level
+    tract_weights = pd.Series(y_train, index=tract_ids).groupby(tract_ids).mean()
+    y_tract = tract_weights.reindex(X_train_scaled.index).fillna(1.0)
+
+    naive_pred = np.full_like(y_tract.values, fill_value=y_tract.mean())
+    print("[Calibrator] Pre-train baseline error: MSE=%.4f, MAE=%.4f"
+          % (mean_squared_error(y_tract.values, naive_pred),
+             mean_absolute_error(y_tract.values, naive_pred)))
+
+    model = xgb.XGBRegressor(
+        n_estimators=100,
+        learning_rate=0.05,      # Slow learning helps reduce overfitting
+        max_depth=3,             # Prevents over-complex trees
+        subsample=0.7,           # Row subsampling
+        colsample_bytree=0.7,    # Feature subsampling
+        reg_alpha=1.0,           # L1 regularization (sparse solutions)
+        reg_lambda=10.0,         # Stronger L2 regularization
+        min_child_weight=10,     # Avoid splits on small samples
+        random_state=42,
+        verbosity=1,
+        tree_method='hist',
+        device="cuda"
+    )
+    model.fit(X_train_scaled.values, y_tract.values)
+
+    y_pred = model.predict(X_train_scaled.values)
+    print("[Calibrator] Post-train error:        MSE=%.4f, MAE=%.4f"
+          % (mean_squared_error(y_tract.values, y_pred),
+             mean_absolute_error(y_tract.values, y_pred)))
+    return pd.Series(y_pred, index=X_train_scaled.index)
+
+
 def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_calibration_config=None):
 
     # TODO: Update simulate steps with lcm nn model
@@ -696,76 +762,23 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
             y_train = _hlcm_calibration_target(
                 base_ratios, current_ratios, calibration.get('zero_base_share', 'floor'))
 
-            # Load and prepare Census Tracts features
-            # TODO: load current all Tracts available in alt_df
-            tracts_df = orca.get_table('census_tracts').to_frame()
-            # Handle missing tract_id = -1
-            if -1 not in tracts_df.index:
-                tracts_df.loc[-1] = tracts_df.mean(numeric_only=True)
-
-            # Get Tracts features for buildings used
-            used_tract_ids = pd.Series(tract_ids).dropna().unique()
-            # Filter to Tracts used and select only numeric float columns
-            valid_columns = tracts_df.select_dtypes(include=['float', 'float32', 'float64']).columns
-            # some exclusions
-            valid_columns = [col for col in valid_columns if col not in ['tazce10_n']]
-
-            X_train = tracts_df.loc[tracts_df.index.intersection(used_tract_ids), valid_columns].fillna(0.0)
-            # Scale features
-            scaler = RobustScaler()
-            X_train_scaled = pd.DataFrame(
-                scaler.fit_transform(X_train),
-                index=X_train.index,
-                columns=X_train.select_dtypes(include='number').columns
-            )
-            # Feature Selection, remove low variance columns
-            low_variance_cols = X_train_scaled.var()[X_train_scaled.var() < 1e-5].index
-            X_train_scaled.drop(columns=low_variance_cols, inplace=True)
-
-            # Aggregate y_train to Tract level
-            tract_weights = pd.Series(y_train, index=tract_ids).groupby(tract_ids).mean()
-            y_tract = tract_weights.reindex(X_train_scaled.index).fillna(1.0)
-
-            # === Pre-train baseline error (if using a naive model like predicting mean) ===
-            naive_pred = np.full_like(y_tract.values, fill_value=y_tract.mean())
-            mse_naive = mean_squared_error(y_tract.values, naive_pred)
-            mae_naive = mean_absolute_error(y_tract.values, naive_pred)
-            print(f"[Calibrator] Pre-train baseline error: MSE={mse_naive:.4f}, MAE={mae_naive:.4f}")
-
-            # Train calibrator model (choose one)
-            # XGBoost
-            model = xgb.XGBRegressor(
-                n_estimators=100,
-                learning_rate=0.05,      # Slow learning helps reduce overfitting
-                max_depth=3,             # Prevents over-complex trees
-                subsample=0.7,           # Row subsampling
-                colsample_bytree=0.7,    # Feature subsampling
-                reg_alpha=1.0,           # L1 regularization (sparse solutions)
-                reg_lambda=10.0,         # Stronger L2 regularization
-                min_child_weight=10,     # Avoid splits on small samples
-                random_state=42,
-                verbosity=1,
-                tree_method='hist',
-                device = "cuda"
-            )
-            model.fit(X_train_scaled.values, y_tract.values)
-
-            # === Post-train prediction error ===
-            y_pred = model.predict(X_train_scaled.values)
-            mse_model = mean_squared_error(y_tract.values, y_pred)
-            mae_model = mean_absolute_error(y_tract.values, y_pred)
-            print(f"[Calibrator] Post-train error:        MSE={mse_model:.4f}, MAE={mae_model:.4f}")
-
-            # Predict adjustment weights, bound and temper them, map to HU rows
-            tract_predicted_weights = pd.Series(y_pred, index=X_train_scaled.index)
+            # Apply base/current per tract directly, or smooth it through the
+            # regressor. Direct is the default
+            if calibration.get('use_regressor', False):
+                tract_predicted_weights = _hlcm_calibration_regressor(y_train, tract_ids)
+            else:
+                tract_predicted_weights = pd.Series(y_train, index=tract_ids).groupby(tract_ids).mean()
             tract_segment_adj_arr, cal_at_bound = _hlcm_tract_adjustment(
                 tract_predicted_weights, tract_ids,
                 clip=calibration.get('clip', (0.5, 2.0)), strength=cal_strength)
             print('[Calibrator] %s: strength %.2f | weight min %.3f median %.3f max %.3f | '
-                  'mean |ln w| %.4f | tracts at clip bound %.1f%%'
+                  'mean |ln w| %.4f | tracts at clip bound %.1f%% | %d tracts, '
+                  'target median %.3f spread %.3f'
                   % (model_name, cal_strength, tract_segment_adj_arr.min(),
                      np.median(tract_segment_adj_arr), tract_segment_adj_arr.max(),
-                     np.abs(np.log(tract_segment_adj_arr)).mean(), 100 * cal_at_bound))
+                     np.abs(np.log(tract_segment_adj_arr)).mean(), 100 * cal_at_bound,
+                     len(tract_predicted_weights), tract_predicted_weights.median(),
+                     tract_predicted_weights.std()))
 
         else:
             tract_segment_adj_arr = np.ones(len(predict_X_df))
