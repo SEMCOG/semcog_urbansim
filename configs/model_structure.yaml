@@ -11,8 +11,12 @@ models:
             enabled: true
             strength: 0.5 # 0-1
             clip: [0.5, 2.0]
-            #  floor (use lower bound if weight not found) | neutral (1) 
-            zero_base_share: floor 
+            #  floor (use lower bound if weight not found) | neutral (1)
+            zero_base_share: floor
+            # use_regressor:
+            # true smooths it through an XGBoost fit 
+            # false applies the base/current tract ratio directly 
+            use_regressor: false
 
     elcm: 
         model_type: location_choice
