@@ -9,10 +9,21 @@ models:
         vacant_variable: vacant_residential_units
         calibration:
             enabled: true
-            strength: 0.5 # 0-1
+            strength: 1.2 # log-scale gain on the target; 0 disables
             clip: [0.5, 2.0]
             #  floor (use lower bound if weight not found) | neutral (1)
-            zero_base_share: floor
+            zero_base_share: neutral
+            # weight units built during the run by the base-year mix of
+            # comparable new stock
+            fill_prior: true
+            # shrink a tract's target toward 1 by base-year households in the
+            # segment: n/(n+k). 0 disables it. Thin cells are rare segments as
+            # often as they are noise, so k stays low enough to keep calibrating
+            # a 40-household cell (w 0.73 at k 15, 0.57 at k 30)
+            shrink_k: 15
+            # hold a tract to the mix implied by what it built: its own base-year
+            # mix tilted by the new-stock ratio, not the large area's new-stock mix
+            expected_share: true
             # use_regressor:
             # true smooths it through an XGBoost fit 
             # false applies the base/current tract ratio directly 
