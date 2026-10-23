@@ -478,6 +478,90 @@ def _hlcm_calibration_target(base_ratios, current_ratios, zero_base_share='floor
     return y
 
 
+def assign_sqft_band(sqft, large_area, cuts):
+    """Unit-size band per row, from base-year cut points held in square feet."""
+    v = pd.Series(sqft, dtype='float64').fillna(0.0)
+    vals, la = v.to_numpy(), np.asarray(large_area)
+    out = np.zeros(len(v), dtype='int16')
+    for k, c in cuts.items():
+        m = la == k
+        if m.any() and len(c):
+            out[m] = np.searchsorted(np.asarray(c, dtype='float64'), vals[m],
+                                     side='right')
+    return pd.Series(out, index=v.index)
+
+
+def _hlcm_fill_prior(seg_var, rows, la_id, clip):
+    """Score multiplier on units built during the run, 1 on existing stock.
+
+    A new unit draws the segment mix of comparable base-year new stock, over its
+    large area's average, so the prior redistributes among new units without
+    changing how many are filled.
+    """
+    ratios = orca.get_injectable('new_unit_fill_ratios')
+    if seg_var not in ratios.columns:
+        return np.ones(len(rows)), 0
+    band = assign_sqft_band(rows['sqft_per_unit'], la_id,
+                            orca.get_injectable('sqft_band_cuts'))
+    key = pd.MultiIndex.from_arrays(
+        [np.full(len(rows), la_id, dtype='int64'),
+         rows['building_type_id'].to_numpy(), band.to_numpy()])
+    r = np.nan_to_num(ratios[seg_var].reindex(key).to_numpy(), nan=1.0)
+    is_new = rows['year_built'].to_numpy() > orca.get_injectable('base_year')
+    return np.clip(np.where(is_new, r, 1.0), clip[0], clip[1]), int(is_new.sum())
+
+
+def _hlcm_expected_share(seg_var):
+    """Tract target that follows what the tract actually built.
+
+    Existing units hold their base-year mix. Units added during the run hold the
+    tract's own base-year mix tilted by the new-stock ratio and renormalized over
+    the segments, so a tract keeps its position in the income distribution while
+    its new condos still skew richer than its average unit. Taking the large
+    area's new-stock mix outright instead would hand every tract the same mix and
+    reimport the drift this is meant to remove: on run1511's 2055 state that
+    raised Pontiac's pull on high-income households by 20% while barely moving
+    Bloomfield's.
+    """
+    ratios = orca.get_injectable('new_unit_fill_ratios')
+    base_df = orca.get_table('tract_hh_type_base_ratios').to_frame()
+    cols = [c for c in ratios.columns if c in base_df.columns]
+    if seg_var not in cols:
+        return None
+    agg = orca.get_injectable('new_unit_band_counts')
+    cnt, tot = agg['new'], agg['total']
+    b = base_df.reindex(cnt.index.get_level_values('tract_id'))[cols].to_numpy()
+    r = ratios.reindex(cnt.index.droplevel('tract_id'))[cols].fillna(1.0).to_numpy()
+    tilt = b * r
+    p = tilt[:, cols.index(seg_var)] / np.clip(tilt.sum(1), 1e-12, None)
+    new_exp = pd.Series(cnt.to_numpy() * np.nan_to_num(p),
+                        index=cnt.index).groupby(level='tract_id').sum()
+    base = base_df[seg_var]
+    old_exp = agg['existing'] * base.reindex(agg['existing'].index).fillna(0.0)
+    return ((new_exp.reindex(tot.index).fillna(0.0)
+             + old_exp.reindex(tot.index).fillna(0.0))
+            / tot.replace(0, np.nan))
+
+
+def _hlcm_shrink_target(tract_targets, base_counts, k=30.0):
+    """Blend each tract's calibration target toward 1 by base-year cell mass.
+
+    A tract holding a handful of base-year households of a segment carries mostly
+    sampling noise: a quarter of tract x segment cells sit at a base share of 2% or
+    less, where two or three households halve the ratio and peg the weight at the
+    clip floor. n / (n + k) leaves thick cells alone and sends thin ones to 1, the
+    shrinkage demolition_calibration._shrunk_rates uses on demolition rates.
+
+    Returns:
+        tuple[pd.Series, float]: shrunk targets, mean blend weight.
+    """
+    if k <= 0:
+        return tract_targets, 1.0
+    n = pd.Series(base_counts, dtype='float64').reindex(tract_targets.index).fillna(0.0)
+    w = n / (n + float(k))
+    return 1.0 + (tract_targets - 1.0) * w, float(w.mean())
+
+
 def _hlcm_tract_adjustment(tract_weights, tract_ids, clip=(0.5, 2.0), strength=1.0):
     """Per-row score multiplier from predicted tract weights.
 
@@ -634,8 +718,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
+        # kept beside the model's own columns for the fill prior, never scored
+        fill_cols = ['building_type_id', 'sqft_per_unit', 'year_built']
         _t_alts = time.perf_counter()
-        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+[alt_capacity, tract_segment_type_var])))
+        alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+fill_cols
+                                         +[alt_capacity, tract_segment_type_var])))
         print(f"[alts-timing] HLCM la{la_id} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
               f"rows={len(alts_df)} cols={alts_df.shape[1]}", flush=True)
@@ -685,7 +772,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + [alt_capacity, tract_segment_type_var]))]
+        final_alts_df = final_alts_df[list(set(formula_alts_col + fill_cols
+                                               + [alt_capacity, tract_segment_type_var]))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -756,7 +844,13 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
 
             bld_to_tract = alts.to_frame(['tract_id'])['tract_id']
             tract_ids = bld_to_tract.reindex(predict_X_df.index).to_numpy()
-            base_ratios = base_ratios_df[tract_segment_type_var].reindex(tract_ids).to_numpy()
+            base_ratios = base_ratios_df[tract_segment_type_var]
+            if calibration.get('expected_share', True) and orca.is_injectable('new_unit_fill_ratios'):
+                # hold the tract to what it built, not to its 2025 mix
+                exp = _hlcm_expected_share(tract_segment_type_var)
+                if exp is not None:
+                    base_ratios = exp.reindex(base_ratios.index).fillna(base_ratios)
+            base_ratios = base_ratios.reindex(tract_ids).to_numpy()
 
             # Compute y_train = base / current (avoid divide-by-zero)
             y_train = _hlcm_calibration_target(
@@ -768,27 +862,46 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
                 tract_predicted_weights = _hlcm_calibration_regressor(y_train, tract_ids)
             else:
                 tract_predicted_weights = pd.Series(y_train, index=tract_ids).groupby(tract_ids).mean()
+            # a thin cell's ratio is noise; shrink it toward 1 by base-year mass
+            shrink_k, shrink_w = float(calibration.get('shrink_k', 30.0)), 1.0
+            if 'tract_hh_total' in base_ratios_df.columns:
+                tract_predicted_weights, shrink_w = _hlcm_shrink_target(
+                    tract_predicted_weights,
+                    base_ratios_df[tract_segment_type_var] * base_ratios_df['tract_hh_total'],
+                    k=shrink_k)
             tract_segment_adj_arr, cal_at_bound = _hlcm_tract_adjustment(
                 tract_predicted_weights, tract_ids,
                 clip=calibration.get('clip', (0.5, 2.0)), strength=cal_strength)
             print('[Calibrator] %s: strength %.2f | weight min %.3f median %.3f max %.3f | '
                   'mean |ln w| %.4f | tracts at clip bound %.1f%% | %d tracts, '
-                  'target median %.3f spread %.3f'
+                  'target median %.3f spread %.3f | shrink k %g mean w %.2f'
                   % (model_name, cal_strength, tract_segment_adj_arr.min(),
                      np.median(tract_segment_adj_arr), tract_segment_adj_arr.max(),
                      np.abs(np.log(tract_segment_adj_arr)).mean(), 100 * cal_at_bound,
                      len(tract_predicted_weights), tract_predicted_weights.median(),
-                     tract_predicted_weights.std()))
+                     tract_predicted_weights.std(), shrink_k, shrink_w))
 
         else:
             tract_segment_adj_arr = np.ones(len(predict_X_df))
 
+        fill_arr = np.ones(len(predict_X_df))
+        if calibration.get('fill_prior', True) and orca.is_injectable('new_unit_fill_ratios'):
+            fill_arr, n_new = _hlcm_fill_prior(
+                tract_segment_type_var,
+                final_alts_df.loc[predict_X_df.index, fill_cols], int(la_id),
+                calibration.get('clip', (0.5, 2.0)))
+            print('[FillPrior] %s: %d of %d candidate units built since the base '
+                  'year | weight min %.3f median %.3f max %.3f'
+                  % (model_name, n_new, len(fill_arr), fill_arr.min(),
+                     np.median(fill_arr), fill_arr.max()))
+
         # Apply individual weight components
         # default to multiplicative calibration
-        pred_weighted = pred * tract_segment_adj_arr
+        pred_weighted = pred * tract_segment_adj_arr * fill_arr
         # the calibrator weight on the log scale: under slot sampling it scales the
         # probability of a slot being drawn rather than only reordering the ranking
-        logit_weighted = log_score + np.log(np.clip(tract_segment_adj_arr, 1e-12, None))
+        logit_weighted = (log_score + np.log(np.clip(tract_segment_adj_arr, 1e-12, None))
+                          + np.log(np.clip(fill_arr, 1e-12, None)))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
