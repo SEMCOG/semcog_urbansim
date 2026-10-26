@@ -718,7 +718,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
-        # kept beside the model's own columns for the fill prior, never scored
+        # pulled for the fill prior; year_built and sqft_per_unit are also model
+        # features, so they are read from fill_raw below, not from alts_df
         fill_cols = ['building_type_id', 'sqft_per_unit', 'year_built']
         _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+fill_cols
@@ -733,6 +734,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         raw_res_units = None
         if 'residential_units' in alts_df.columns:
             raw_res_units = alts_df.loc[alts_idx, 'residential_units'].astype(float).copy()
+
+        # year_built and sqft_per_unit are model features as well, and the
+        # scaling below overwrites them in place; the fill prior needs the raw
+        # values, so snapshot them here
+        fill_raw = alts_df.loc[alts_idx, fill_cols].copy()
 
         # alts_col_df alts columns
         std_cols = [col for col in formula_alts_col if col != alt_capacity]
@@ -772,8 +778,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         final_alts_df = alts_df.loc[alts_idx].query(alt_filter)
 
         # construct predict DF with capacity and get result
-        final_alts_df = final_alts_df[list(set(formula_alts_col + fill_cols
-                                               + [alt_capacity, tract_segment_type_var]))]
+        final_alts_df = final_alts_df[list(set(
+            formula_alts_col + [alt_capacity, tract_segment_type_var]))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -888,7 +894,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         if calibration.get('fill_prior', True) and orca.is_injectable('new_unit_fill_ratios'):
             fill_arr, n_new = _hlcm_fill_prior(
                 tract_segment_type_var,
-                final_alts_df.loc[predict_X_df.index, fill_cols], int(la_id),
+                fill_raw.loc[predict_X_df.index], int(la_id),
                 calibration.get('clip', (0.5, 2.0)))
             print('[FillPrior] %s: %d of %d candidate units built since the base '
                   'year | weight min %.3f median %.3f max %.3f'
