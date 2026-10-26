@@ -1448,7 +1448,8 @@ def presses_trans(xxx_todo_changeme1):
               f"control cells, skipping the 10+ bin")
         out.append((hh.loc[[]], p.loc[[]]))
         return out
-    for _, r in ct_inf.loc[iter_var].iterrows():
+    # Make sure it's a DataFrame (not a Series) 
+    for _, r in ct_inf.loc[[iter_var]].iterrows():
         if r["total_number_of_households"] <= 0:
             continue
         if utils.filter_table(hh, r, ignore={"total_number_of_households"}).shape[0] == 0:
@@ -1469,7 +1470,7 @@ def presses_trans(xxx_todo_changeme1):
                     utils.filter_table(
                         hh, r, ignore={"total_number_of_households"}
                     ).shape[0]
-                    for _, r in ct_inf.loc[iter_var].iterrows()
+                    for _, r in ct_inf.loc[[iter_var]].iterrows()
                 ]
             )
             == 0
