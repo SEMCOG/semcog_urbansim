@@ -12,7 +12,8 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from lcm_utils import (_hlcm_calibration_target, _hlcm_shrink_target,
-                       _hlcm_tract_adjustment, assign_sqft_band)
+                       _hlcm_tract_adjustment, _hlcm_stratified_counts,
+                       _largest_remainder, _pick_stratified, assign_sqft_band)
 
 
 def test_target_is_base_over_current():
@@ -75,3 +76,103 @@ def test_assign_sqft_band_uses_each_large_area_own_cuts():
 def test_assign_sqft_band_defaults_to_zero():
     b = assign_sqft_band([5000, np.nan], [99, 5], {**CUTS, 99: np.array([])})
     assert b.tolist() == [0, 0]  # unbanded large area, and a missing size
+
+
+# --- stratified placement -----------------------------------------------------
+
+def _slots(per_tract):
+    """tract_ids for a choice set with `per_tract[t]` slots in each tract t."""
+    return np.concatenate([np.full(k, t) for t, k in per_tract.items()])
+
+
+def test_largest_remainder_sums_exactly_and_favours_big_fractions():
+    out = _largest_remainder([0.6, 0.6, 0.8], 2)
+    assert out.sum() == 2
+    assert out.tolist() == [0, 0, 1] or out.tolist() == [1, 0, 1]
+    assert _largest_remainder([1.5, 1.5, 1.0], 4).sum() == 4
+
+
+def test_counts_follow_the_model_mass_when_the_weight_is_neutral():
+    t = _slots({1: 100, 2: 100})
+    ls = np.concatenate([np.zeros(100), np.full(100, np.log(3.0))])
+    counts, d = _hlcm_stratified_counts(t, ls, pd.Series({1: 1.0, 2: 1.0}), 40)
+    assert counts.sum() == 40
+    # tract 2 carries 3x the mass, so it takes 3x the slots
+    assert counts[2] / counts[1] == pytest.approx(3.0, rel=0.1)
+    assert d['at_capacity'] == 0
+
+
+def test_the_weight_tilts_the_allocation_exactly():
+    t = _slots({1: 100, 2: 100})
+    ls = np.zeros(200)            # model indifferent between the two tracts
+    counts, _ = _hlcm_stratified_counts(t, ls, pd.Series({1: 2.0, 2: 1.0}), 30)
+    assert counts.sum() == 30
+    assert counts[1] == 20 and counts[2] == 10     # 2:1, landed exactly
+
+
+def test_neutral_weight_follows_capacity_not_an_even_split():
+    # uniform scores put mass in proportion to slots, so a 5-slot tract takes
+    # 40 * 5/105 and never overflows on its own
+    counts, d = _hlcm_stratified_counts(_slots({1: 5, 2: 100}), np.zeros(105),
+                                        pd.Series({1: 1.0, 2: 1.0}), 40)
+    assert counts[1] == 2 and counts[2] == 38
+    assert d['at_capacity'] == 0
+
+
+def test_overflow_water_fills_into_tracts_with_room():
+    t = _slots({1: 5, 2: 100})
+    # a 20x weight asks the 5-slot tract for 20 of 40; it can only take 5
+    counts, d = _hlcm_stratified_counts(t, np.zeros(105),
+                                        pd.Series({1: 20.0, 2: 1.0}), 40)
+    assert counts[1] == 5 and counts[2] == 35
+    assert counts.sum() == 40 and d['at_capacity'] == 1
+
+
+def test_overflow_cascades_through_several_capped_tracts():
+    t = _slots({1: 2, 2: 3, 3: 200})
+    counts, d = _hlcm_stratified_counts(
+        t, np.zeros(205), pd.Series({1: 50.0, 2: 50.0, 3: 1.0}), 60)
+    assert counts[1] == 2 and counts[2] == 3 and counts[3] == 55
+    assert d['at_capacity'] == 2
+
+
+def test_allocation_never_exceeds_capacity_or_the_request():
+    rng = np.random.default_rng(0)
+    t = _slots({i: int(rng.integers(1, 30)) for i in range(40)})
+    cap = pd.Series(t).value_counts()
+    w = pd.Series(np.exp(rng.normal(0, 1.0, 40)), index=range(40))
+    for n in (1, 17, 200, len(t), len(t) + 500):
+        counts, _ = _hlcm_stratified_counts(t, rng.normal(size=len(t)), w, n)
+        assert (counts >= 0).all()
+        assert (counts <= cap.reindex(counts.index)).all()
+        assert counts.sum() == min(n, len(t))
+
+
+def test_picks_match_the_allocation_and_are_distinct():
+    t = _slots({1: 50, 2: 50, 3: 50})
+    ls = np.arange(150, dtype=float) / 50.0
+    counts = pd.Series({1: 10, 2: 5, 3: 0})
+    idx = _pick_stratified(np.exp(ls), ls, t, counts, 'slot_sampling', seed=7)
+    assert len(idx) == 15 and len(set(idx.tolist())) == 15
+    got = pd.Series(t[idx]).value_counts()
+    assert got[1] == 10 and got[2] == 5 and 3 not in got
+
+
+def test_top_n_within_tract_takes_the_best_slots():
+    t = _slots({1: 10, 2: 10})
+    scores = np.concatenate([np.arange(10.0), np.arange(10.0)])
+    idx = _pick_stratified(scores, np.log(scores + 1e-9), t,
+                           pd.Series({1: 2, 2: 3}), 'top_n')
+    assert sorted(idx[t[idx] == 1].tolist()) == [8, 9]
+    assert sorted(idx[t[idx] == 2].tolist()) == [17, 18, 19]
+
+
+def test_empty_and_degenerate_inputs():
+    t = _slots({1: 10})
+    counts, d = _hlcm_stratified_counts(t, np.zeros(10), pd.Series({1: 1.0}), 0)
+    assert counts.empty and d == {}
+    # all slots scored -inf: fall back to capacity shares rather than divide by zero
+    counts, _ = _hlcm_stratified_counts(_slots({1: 10, 2: 30}),
+                                        np.full(40, -np.inf),
+                                        pd.Series(dtype='float64'), 20)
+    assert counts.sum() == 20 and counts[2] > counts[1]
