@@ -3187,11 +3187,10 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             nonres_occ = b["b_total_jobs"] / b["job_spaces"].clip(lower=1)
             not_eligible |= (b.non_residential_sqft > 0) & (nonres_occ > max_nonres_occ)
 
-    # Main-street storefronts. Shops, restaurants and leisure buildings on a small
-    # commercially zoned lot are the walkable downtown pattern, and the score goes
-    # after them first
+    # Main-street storefronts. Shops, restaurants, leisure and small offices on a
+    # small commercially zoned lot are the walkable downtown pattern
     storefront = (
-        b.building_type_id.isin([21, 61, 65]) # retail, leisure, restaurant
+        b.building_type_id.isin([21, 23, 61, 65]) # retail, office, leisure, restaurant
         & b.parcel_id.map(orca.get_table("zoning").future_use).isin(
             ["MIXED USE", "COMMERCIAL"])
         & (b.parcel_id.map(pcl.parcel_sqft) <= 15000) # small parcel gate

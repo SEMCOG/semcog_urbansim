@@ -11,6 +11,11 @@ models:
             enabled: true
             strength: 2.5 # log-scale gain on the target; 0 disables
             clip: [0.5, 2.0]
+            # - score: add ln(w) to every slot's key and let the draw settle it.
+            # - stratified: spend the same w on how many slots each tract draws and
+            #   leave the choice within a tract to the model
+            method: stratified
+
             #  floor (use lower bound if weight not found) | neutral (1)
             zero_base_share: neutral
             # weight units built during the run by the base-year mix of

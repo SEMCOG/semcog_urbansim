@@ -516,12 +516,7 @@ def _hlcm_expected_share(seg_var):
 
     Existing units hold their base-year mix. Units added during the run hold the
     tract's own base-year mix tilted by the new-stock ratio and renormalized over
-    the segments, so a tract keeps its position in the income distribution while
-    its new condos still skew richer than its average unit. Taking the large
-    area's new-stock mix outright instead would hand every tract the same mix and
-    reimport the drift this is meant to remove: on run1511's 2055 state that
-    raised Pontiac's pull on high-income households by 20% while barely moving
-    Bloomfield's.
+    the segments
     """
     ratios = orca.get_injectable('new_unit_fill_ratios')
     base_df = orca.get_table('tract_hh_type_base_ratios').to_frame()
@@ -579,16 +574,114 @@ def _hlcm_tract_adjustment(tract_weights, tract_ids, clip=(0.5, 2.0), strength=1
     return w.reindex(tract_ids).fillna(1.0).to_numpy(), at_bound
 
 
+def _largest_remainder(x, total):
+    """Integerize `x` so it sums to `total`, giving the spare units to the largest
+    fractional parts. Rounding each tract independently drifts by tens of slots
+    across 1,300 tracts."""
+    x = np.asarray(x, dtype='float64')
+    base = np.floor(x).astype(np.int64)
+    short = int(total) - int(base.sum())
+    if short > 0:
+        base[np.argsort(-(x - base))[:short]] += 1
+    elif short < 0:
+        order = np.argsort(x - base)
+        order = order[base[order] > 0][:-short]
+        base[order] -= 1
+    return base
+
+
+def _hlcm_stratified_counts(tract_ids, log_scores, tract_weights, n):
+    """Slots to draw per tract: the model's own mass, tilted by the calibrator.
+
+    The score path adds ln(w) to every slot's key and lets the Gumbel draw settle
+    it.
+
+    Returns:
+        tuple[pd.Series, dict]: draws per tract_id summing to min(n, capacity),
+        and diagnostics.
+    """
+    t = pd.Series(tract_ids).fillna(-1)
+    cap = t.value_counts()
+    n = int(min(n, len(t)))
+    if n <= 0:
+        return pd.Series(dtype='int64'), {}
+    # the model's own share of the sampling mass, max-shifted so exp cannot overflow
+    ls = np.nan_to_num(np.asarray(log_scores, dtype='float64'), neginf=-np.inf)
+    finite = np.isfinite(ls)
+    e = np.zeros(len(ls))
+    if finite.any():
+        e[finite] = np.exp(ls[finite] - ls[finite].max())
+    mass = pd.Series(e).groupby(t.to_numpy()).sum().reindex(cap.index).fillna(0.0)
+    if mass.sum() <= 0:
+        mass = cap.astype('float64')
+    w = pd.Series(tract_weights, dtype='float64').reindex(cap.index).fillna(1.0)
+    # water-fill: hand capped tracts their capacity, re-spread the rest by w * mass
+    alloc = pd.Series(0.0, index=cap.index)
+    free = cap.index
+    rem = float(n)
+    for _ in range(50):
+        a = (w[free] * mass[free]).clip(lower=0.0)
+        if a.sum() <= 0:
+            a = cap[free].astype('float64')
+        want = rem * a / a.sum()
+        over = want > cap[free]
+        if not over.any():
+            alloc[free] = want
+            break
+        hit = free[over.to_numpy()]
+        alloc[hit] = cap[hit].astype('float64')
+        rem -= float(cap[hit].sum())
+        free = free[~over.to_numpy()]
+        if rem <= 0 or len(free) == 0:
+            break
+    out = pd.Series(_largest_remainder(alloc.to_numpy(), n), index=cap.index)
+    # rounding can push a tract one slot past its capacity; move those to tracts
+    # that still have room
+    for _ in range(10):
+        over = out > cap
+        if not over.any():
+            break
+        excess = int((out[over] - cap[over]).sum())
+        out[over] = cap[over]
+        slack = (cap - out).clip(lower=0)
+        room = slack[slack > 0]
+        if excess <= 0 or room.empty:
+            break
+        add = _largest_remainder(excess * room / room.sum(), excess)
+        out[room.index] = out[room.index] + np.minimum(add, room.to_numpy())
+    diag = dict(tracts=len(cap), placed=int(out.sum()), asked=n,
+                at_capacity=int((out >= cap).sum()),
+                tilt=float(np.abs(np.log(w.clip(lower=1e-12))).mean()))
+    return out, diag
+
+
+def _pick_stratified(scores, log_scores, tract_ids, counts, method, seed=0):
+    """Draw each tract's allotted slots with the model's own scores.
+
+    The tract weight is constant inside a tract, so it cancels here and only the
+    model (and the fill prior, which does vary by unit) decides which slots go.
+    """
+    t = pd.Series(tract_ids).fillna(-1).to_numpy()
+    pos = np.arange(len(t))
+    out = []
+    for tid, grp in pd.Series(pos).groupby(t):
+        k = int(counts.get(tid, 0))
+        if k <= 0:
+            continue
+        idx = grp.to_numpy()
+        sub = pick_slots(np.asarray(scores)[idx], k, method,
+                         seed=int(seed ^ zlib.crc32(repr(tid).encode())),
+                         log_scores=np.asarray(log_scores)[idx])
+        out.append(idx[sub])
+    return np.concatenate(out) if out else np.empty(0, dtype=np.int64)
+
+
 def _hlcm_calibration_regressor(y_train, tract_ids):
     """Smooth the per-tract calibration target through an XGBoost fit on census
     tract features, instead of applying it directly.
 
     Superseded: the target is a tract's own accumulated drift from its base-year
-    share, which tract attributes do not predict. In run1510 the post-train error
-    equalled the predict-the-mean baseline on every segment, so each tract came out
-    with the same weight and a constant multiplier cancels in the choice
-    probabilities. Kept for comparison, reachable with
-    models.hlcm.calibration.use_regressor: true in model_structure.yaml.
+    share, which tract attributes do not predict.
 
     Returns:
         pd.Series: predicted weight per tract_id.
@@ -889,6 +982,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
 
         else:
             tract_segment_adj_arr = np.ones(len(predict_X_df))
+            tract_ids, tract_predicted_weights = None, None
 
         fill_arr = np.ones(len(predict_X_df))
         if calibration.get('fill_prior', True) and orca.is_injectable('new_unit_fill_ratios'):
@@ -904,17 +998,43 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         # Apply individual weight components
         # default to multiplicative calibration
         pred_weighted = pred * tract_segment_adj_arr * fill_arr
+        # how wide the model's own scores run next to the calibrator's ln(w): the
+        # ratio sets how much of an intended tilt a Gumbel draw can realize
+        print('[Score] %s: log_score sd %.3f, p10-p90 %.3f over %d slots'
+              % (model_name, float(np.std(log_score)),
+                 float(np.subtract(*np.percentile(log_score, [90, 10]))),
+                 len(log_score)))
         # the calibrator weight on the log scale: under slot sampling it scales the
         # probability of a slot being drawn rather than only reordering the ranking
         logit_weighted = (log_score + np.log(np.clip(tract_segment_adj_arr, 1e-12, None))
                           + np.log(np.clip(fill_arr, 1e-12, None)))
+        # the same score without the tract factor: the stratified path applies that
+        # factor to the per-tract counts, so folding it into the mass as well would
+        # square it. The fill prior stays in, since it varies unit by unit and so
+        # belongs to the model's own preference over slots.
+        logit_model = log_score + np.log(np.clip(fill_arr, 1e-12, None))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
-        picked_idx = pick_slots(
-            pred_weighted, n, placement,
-            seed=zlib.crc32(('%s|%s' % (_yr, model_name)).encode()),
-            log_scores=logit_weighted)
+        _seed = zlib.crc32(('%s|%s' % (_yr, model_name)).encode())
+        # 'score': nudges every slot's odds and lets the draw settle it; 
+        # 'stratified': spends the same weight on how many slots each tract gets and leaves the
+        #   choice within a tract to the model
+        if (calibration.get('method', 'score') == 'stratified'
+                and tract_ids is not None):
+            counts, cdiag = _hlcm_stratified_counts(
+                tract_ids, logit_model, tract_predicted_weights, n)
+            picked_idx = _pick_stratified(pred_weighted, logit_model, tract_ids,
+                                          counts, placement, seed=_seed)
+            print('[Stratified] %s: %d of %d slots over %d tracts | %d tracts at '
+                  'capacity | mean |ln w| %.4f'
+                  % (model_name, cdiag.get('placed', 0), cdiag.get('asked', 0),
+                     cdiag.get('tracts', 0), cdiag.get('at_capacity', 0),
+                     cdiag.get('tilt', 0.0)))
+        else:
+            picked_idx = pick_slots(
+                pred_weighted, n, placement, seed=_seed,
+                log_scores=logit_weighted)
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # update building_id
