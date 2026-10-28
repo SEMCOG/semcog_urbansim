@@ -29,6 +29,13 @@ hist_floor_factor: 0.5
 # average are lifted to that share of the LA replacement price
 res_price_floor_share: 0.8
 
+# Feasibility sale price of a form = parcel residential price x factor (after the floor).
+# Within-zone median price per sqft relative to single-family, buildings built 2000+,
+# base year main_101926 (condo 0.81, apartment 0.67). Forms not listed: 1.0.
+form_price_factors:
+  condo: 0.81
+  apartment: 0.67
+
 # Rebuild priority for orphaned demolished SF parcels (demolished, empty, no future event).
 # Site-selection weight = boost * decay^(years_since_demo), capped at max_share of the mass.
 # scheduled_factor further lifts parcels whose demolition was a scheduled (planned) event.
