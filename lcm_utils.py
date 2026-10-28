@@ -1015,10 +1015,12 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
                      np.median(fill_arr), fill_arr.max()))
 
         # city factors (net-change calibration), multiplied into the same slot weight
+        city_arr = np.ones(len(predict_X_df))
         city_factors = _hlcm_city_factors(calibration)
         if city_factors is not None:
             bld_city = alts.to_frame(['city_id'])['city_id'].reindex(predict_X_df.index)
-            tract_segment_adj_arr = tract_segment_adj_arr * bld_city.map(city_factors).fillna(1.0).to_numpy()
+            city_arr = bld_city.map(city_factors).fillna(1.0).to_numpy()
+            tract_segment_adj_arr = tract_segment_adj_arr * city_arr
 
         # Apply individual weight components
         # default to multiplicative calibration
@@ -1036,8 +1038,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         # the same score without the tract factor: the stratified path applies that
         # factor to the per-tract counts, so folding it into the mass as well would
         # square it. The fill prior stays in, since it varies unit by unit and so
-        # belongs to the model's own preference over slots.
-        logit_model = log_score + np.log(np.clip(fill_arr, 1e-12, None))
+        # belongs to the model's own preference over slots. The city factor stays in
+        # too: it is not part of the tract weights, so without it here the stratified
+        # counts would ignore it.
+        logit_model = (log_score + np.log(np.clip(fill_arr, 1e-12, None))
+                       + np.log(np.clip(city_arr, 1e-12, None)))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
