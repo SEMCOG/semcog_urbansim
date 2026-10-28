@@ -67,14 +67,14 @@ for name in [
 @orca.table(cache=True)
 def demolition_rates():
     # Annual demolition volume by city (2021-2024 average), written by
-    # demolition_calibration.py. Replaces the base HDF table of the old view.
+    # scripts/estimation/demolition_calibration.py. Replaces the base HDF table of the old view.
     return pd.read_csv(path.join(misc.configs_dir(), "demolition_rates.csv"), index_col="city_id")
 
 
 @orca.table(cache=True)
 def demolition_stock_rates():
     # Demolition rate per unit of stock by city and category (volume_method
-    # stock_rate), written by demolition_calibration.py --stock-rates-only.
+    # stock_rate), written by scripts/estimation/demolition_calibration.py --stock-rates-only.
     f = path.join(misc.configs_dir(), "demolition_stock_rates.csv")
     if not path.exists(f):
         return pd.DataFrame(columns=["city_id", "large_area_id", "category", "rate", "floor"])
