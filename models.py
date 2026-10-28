@@ -3371,7 +3371,12 @@ def feasibility(parcels, buildings, btype_form_map):
     # residential parcels below this share of their LA average are lifted to that
     # share of the LA replacement price (1.0 = lift every below-average parcel)
     with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
-        res_floor_share = yaml.load(f, Loader=yaml.FullLoader).get("res_price_floor_share", 1.0)
+        res_dev_cfg = yaml.load(f, Loader=yaml.FullLoader)
+    res_floor_share = res_dev_cfg.get("res_price_floor_share", 1.0)
+    # sale price of a form relative to the parcel's residential price (forms not listed: 1.0)
+    form_price_factors = res_dev_cfg.get("form_price_factors") or {}
+    # large areas where the residential floor applies (None = all)
+    res_floor_las = res_dev_cfg.get("res_price_floor_las")
     _floor = {}
     for col, v in btype_form_map.items():
         bld = bldgs[bldgs["building_type_id"].isin(v["btypes"]) & (bldgs[v["price_col"]] > 0)]
@@ -3385,8 +3390,12 @@ def feasibility(parcels, buildings, btype_form_map):
         else:
             la_rep = la_avg.copy()
         share = res_floor_share if col == "residential" else 1.0
+        thr = pcl_la_s.map(la_avg) * share
+        if col == "residential" and res_floor_las is not None:
+            # floor only in the listed large areas (threshold 0 elsewhere)
+            thr = thr.where(pcl_la_s.isin(res_floor_las), 0.0)
         _floor[col] = (
-            pcl_la_s.map(la_avg) * share,
+            thr,
             pcl_la_s.map(la_rep).fillna(reg_avg) * share,
             reg_avg,
         )
@@ -3400,6 +3409,10 @@ def feasibility(parcels, buildings, btype_form_map):
     print(f"  [feasibility] res: {n_below:,} parcels below {res_floor_share:.0%} of LA avg → floored; "
           f"LA5 replacement=${la_avg_res.get(3, reg_avg_res):.0f} (=LA3 avg); "
           f"reg avg=${reg_avg_res:.0f}")
+    if form_price_factors:
+        print(f"  [feasibility] form price factors: {form_price_factors}")
+    if res_floor_las is not None:
+        print(f"  [feasibility] residential floor only in large areas {res_floor_las}")
 
     def _price_with_floor(use):
         prices = parcel_average_price(use)
@@ -3411,7 +3424,7 @@ def feasibility(parcels, buildings, btype_form_map):
             prices >= thr.reindex(prices.index),
             rep.reindex(prices.index, fill_value=reg_avg)
         )
-        return prices
+        return prices * form_price_factors.get(use, 1.0)
 
     parcel_utils.run_feasibility(
         parcels,
