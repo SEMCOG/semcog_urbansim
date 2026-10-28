@@ -22,6 +22,7 @@ from forecast_estimation.utils import load_taz_vars_from_orca
 import assumptions
 import demolition_stock
 import phasing
+import type_mix
 import utils
 import lcm_utils
 import input_paths
@@ -4184,9 +4185,29 @@ def run_developer(
     pipeline=False,
     bldg_sqft_per_job=None,
     overshoot_tolerance=None,
+    profit=None,
+    exclude_parcels=None,
+    record=None,
+    min_units_by_form=None,
+    funnel=None,
+    size_limit=False,
 ):
     """
     copied form parcel_utils and modified
+
+    profit: None keeps the full feasibility table (earlier behavior). "profitable"
+    or "unprofitable" restricts the proposals to `forms` and to max_profit > 0, or
+    to the least-loss proposals (about 3x the target); the selection function then
+    picks among them by its own score (type-mix quotas).
+    exclude_parcels: set of parcels picked by earlier type-mix passes of this city
+    and year; skipped and updated (parcels built by events or phasing are not in it).
+    record: list; the picked proposals (profit, cost, revenue, sqft) are appended to it.
+    min_units_by_form: {form: n}; with profit set, proposals of the form need at least
+    n net units (apartments: 5, a multi-family building).
+    funnel: list; with profit set, one dict per call is appended: rows, parcels and
+    net-unit capacity after each filter (see _funnel_step).
+    size_limit: with profit="profitable", also drop proposals larger than target_units
+    (+ the overshoot tolerance); the least-loss pass always applies this limit.
     """
     # A zero target is a normal outcome of the vacancy, feasibility, or LA-cap
     # calculations.  Do not call Developer.pick(): it reports this as "no
@@ -4194,7 +4215,7 @@ def run_developer(
     if target_units <= 0:
         return 0, []
 
-    from developer import develop
+    from developer import develop, proposal_select
 
     print(f"developing {str(forms)} for geography {geoid}")
     cfg = misc.config(cfg)
@@ -4232,11 +4253,68 @@ def run_developer(
             (dev.feasibility["max_profit"] > 0) & (ps > 0)
         ]
 
+    # keep_suboptimal tables are long form and pick() ignores `forms`, so filter
+    # here; the full table goes back to orca for the next form's pass
+    full_feasibility = dev.feasibility
+    if profit is not None:
+        f = dev.feasibility
+        fun = {"target": target_units}
+        _funnel_step(fun, "all", f)
+        if "form" in f.columns:
+            f = f[f["form"].isin(forms)]
+        if exclude_parcels:
+            f = f[~f.index.isin(list(exclude_parcels))]
+        f = f[f["max_profit"] > 0] if profit == "profitable" else f[f["max_profit"] <= 0]
+        # net units as in Developer.pick
+        unit_size = np.maximum(dev.ave_unit_size.reindex(f.index).values, dev.min_unit_size)
+        f = f.assign(_net=(f["residential_sqft"].values / unit_size).round()
+                     - dev.current_units.reindex(f.index).values)
+        _funnel_step(fun, "form_unused_profit", f)
+        for form, n in (min_units_by_form or {}).items():
+            if "form" in f.columns:
+                f = f[(f["form"] != form) | (f["_net"] >= n)]
+        _funnel_step(fun, "min_units", f)
+        if profit == "unprofitable" or size_limit:
+            # no proposal larger than the target of the call (+ the overshoot tolerance):
+            # one large project must not exceed a small quota. Without this limit the
+            # selection fallback builds the smallest proposal, of any size
+            tol = dev.target_overshoot_tolerance if overshoot_tolerance is not None else (
+                proposal_select.DEFAULT_OVERSHOOT_TOLERANCE)
+            f = f[f["_net"] <= target_units * (1.0 + tol)]
+            _funnel_step(fun, "size_limit", f)
+        if profit == "unprofitable":
+            # Developer.pick's own filters first, so the pool counts only buildable rows
+            f = f[(f["max_profit_far"] > 0) & (f["_net"] > 0)
+                  & (dev.parcel_size.reindex(f.index).values < dev.max_parcel_size)]
+            _funnel_step(fun, "pick_filters", f)
+            # one variant per parcel, the least loss per sqft; then a pool of about 3x
+            # the target in net units. The selection function samples in the pool by its
+            # own score, not by loss
+            f = f.iloc[np.argsort(-(f["max_profit"] / f["building_sqft"]).values, kind="stable")]
+            f = f[~f.index.duplicated(keep="first")]
+            _funnel_step(fun, "one_per_parcel", f)
+            f = f[f["_net"].cumsum().shift(fill_value=0) < 3 * target_units]
+            _funnel_step(fun, "pool", f)
+        f = f.drop(columns="_net")
+        if funnel is not None:
+            funnel.append(fun)
+        dev.feasibility = f
+        if len(f) == 0:
+            # nothing left for this pass (the custom selector cannot take an empty pool)
+            orca.add_table("feasibility_" + str(geoid), full_feasibility)
+            return 0, []
+
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
-    orca.add_table("feasibility_" + str(geoid), dev.feasibility)
+    orca.add_table("feasibility_" + str(geoid), full_feasibility if profit is not None else dev.feasibility)
 
     if new_buildings is None or len(new_buildings) == 0:
         return 0, []
+    if exclude_parcels is not None:
+        exclude_parcels.update(new_buildings.parcel_id)
+    if record is not None:
+        cols = ["parcel_id", "form", "residential_units", "building_sqft", "residential_sqft",
+                "max_profit", "max_profit_far", "total_cost", "building_revenue"]
+        record.append(new_buildings[[c for c in cols if c in new_buildings.columns]].copy())
 
     # get the list of parcel_id whose pct_undev need to be updated
     pid_need_updates = [
@@ -4269,6 +4347,23 @@ def run_developer(
         spaces_added,
         pid_need_updates,
     )
+
+
+def _funnel_step(fun, name, f):
+    """Rows, parcels and net-unit capacity (best positive variant per parcel) after a filter."""
+    fun["rows_" + name], fun["parcels_" + name] = len(f), f.index.nunique()
+    if "_net" in f.columns:
+        fun["cap_" + name] = int(f["_net"].clip(lower=0).groupby(level=0).max().sum())
+
+
+def _append_res_diagnostics(run_dir, tables):
+    """Append this year's residential developer diagnostics to <run_dir>/diagnostics/<name>.csv."""
+    out_dir = os.path.join(run_dir, "diagnostics")
+    os.makedirs(out_dir, exist_ok=True)
+    for name, df in tables.items():
+        if len(df):
+            path = os.path.join(out_dir, name + ".csv")
+            df.to_csv(path, mode="a", header=not os.path.exists(path), index=False)
 
 
 @orca.injectable("res_developer_selection_coefs", cache=True)
@@ -4474,6 +4569,44 @@ def residential_developer(
             d["target_units"] = int(np.clip(d["target_units"] * scale, 0, d["feasible_units"]))
             d["la_scale"] = round(scale, 4)
 
+    # Type mix: split each large area's developer units by the target form shares
+    # (after this year's events), then over its cities by their targets. The band_*
+    # columns of the mix table are not used yet
+    mix_cfg = type_mix.type_mix_cfg(_res_cfg)
+    form_targets = {}
+    quota_rows, city_quota_rows, proposals, funnel_rows = [], [], [], []
+    # an apartment needs at least this many net units (a multi-family building); also
+    # the smallest city apartment quota (type mix)
+    min_apt = int(_res_cfg.get("min_apartment_units", 0) or 0)
+    min_units_by_form = {"apartment": min_apt} if min_apt else None
+    # a loss-making condo needs at least this many net units (least-loss pass only; the
+    # profitable passes and the city condo quotas do not change)
+    min_loss_condo = int(_res_cfg.get("min_loss_condo_units", 0) or 0)
+    if mix_cfg:
+        shares = type_mix.load_shares(
+            os.path.join(misc.configs_dir(), mix_cfg["file"]), year, mix_cfg["scenario"])
+        ev_units = (orig_buildings_la[orig_buildings_la.year_built == year]
+                    .groupby(["large_area_id", "building_type_id"])["residential_units"].sum())
+        for la_id, la_city_ids in city_to_la.groupby(city_to_la).groups.items():
+            active = {m: city_data[m]["target_units"] for m in la_city_ids if m in city_data}
+            if not active or la_id not in shares.index:
+                continue
+            ev_f = {f: float(ev_units.get((la_id, b), 0)) for f, b in type_mix.FORM_BTYPE.items()}
+            quota = type_mix.developer_quota(sum(active.values()), ev_f, shares.loc[la_id].to_dict())
+            print("  LA {} type mix: developer {:,} = {} | events {}".format(
+                la_id, sum(active.values()), quota, {f: int(v) for f, v in ev_f.items()}))
+            quota_rows += [{"year": year, "large_area_id": la_id, "form": f,
+                            "share": shares.loc[la_id].to_dict().get(f), "event_units": ev_f[f],
+                            "developer_total": sum(active.values()), "developer_quota": quota[f]}
+                           for f in quota]
+            for f, q in quota.items():
+                requested = type_mix.allocate_to_cities(q, active)
+                n_min = min_apt if f == "apartment" else 0
+                for m, u in type_mix.allocate_to_cities(q, active, min_units=n_min).items():
+                    form_targets[(m, f)] = u
+                    city_quota_rows.append({"year": year, "large_area_id": la_id, "city_id": m,
+                                            "form": f, "requested": requested[m], "quota": u})
+
     # snapshot units before developer loop to isolate developer additions from refiner
     _units_before = orca.get_table("buildings").to_frame(["year_built", "residential_units"])
     _units_before = int(_units_before[_units_before["year_built"] == year]["residential_units"].sum())
@@ -4495,19 +4628,70 @@ def residential_developer(
             )
         )
 
-        units_added, parcels_idx_to_update = run_developer(
-            target_units,
-            "city_%d" % cityid,
-            res_forms,
-            orca.get_table("buildings"),
-            "residential_units",
-            parcels.parcel_size,
-            parcels.ave_unit_size,
-            parcels.total_units,
-            "res_developer.yaml",
-            add_more_columns_callback=add_phased_res_columns,
-            custom_selection_func=custom_sel_func,
-        )
+        def _develop(units, forms, profit, built=None, pool=None, size_limit=False):
+            n = len(proposals)
+            out = run_developer(
+                units,
+                "city_%d" % cityid,
+                forms,
+                orca.get_table("buildings"),
+                "residential_units",
+                parcels.parcel_size,
+                parcels.ave_unit_size,
+                parcels.total_units,
+                "res_developer.yaml",
+                add_more_columns_callback=add_phased_res_columns,
+                custom_selection_func=custom_sel_func,
+                profit=profit,
+                exclude_parcels=built,
+                record=proposals,
+                min_units_by_form=(dict(min_units_by_form or {}, condo=min_loss_condo)
+                                   if profit == "unprofitable" and min_loss_condo
+                                   else min_units_by_form),
+                funnel=funnel_rows,
+                size_limit=size_limit,
+            )
+            for p in proposals[n:]:
+                p["year"], p["city_id"], p["pool"] = year, cityid, pool or profit
+            if funnel_rows and "year" not in funnel_rows[-1]:
+                # the target (and size limit) of a remainder call is the city's remaining
+                # units, not a form quota
+                funnel_rows[-1].update(year=year, city_id=cityid, forms="|".join(forms),
+                                       pool=pool or profit, selected_units=out[0],
+                                       target_basis="city_remaining" if pool == "remainder"
+                                       else "form_quota")
+            return out
+
+        by_form, below_breakeven = {}, 0
+        if not mix_cfg:
+            # profitable proposals only, also with only_built: false (type mix needs that
+            # setting; without the mix, loss-making proposals must not be built)
+            units_added, parcels_idx_to_update = _develop(target_units, res_forms, "profitable")
+        else:
+            # each form builds its target from profitable proposals first, then from
+            # the least-loss proposals; the site-selection model picks within each
+            # pool. A remainder left by forms without proposals uses the profitable
+            # proposals of all forms, as without the rule. In every pass, no proposal is
+            # larger than the remaining target of the pass (+ the overshoot tolerance)
+            built, parcels_idx_to_update = set(), []
+            for f in res_forms:
+                tf, got = form_targets.get((cityid, f), 0), 0
+                for profit in ("profitable", "unprofitable"):
+                    if tf - got <= 0:
+                        break
+                    u, pids = _develop(tf - got, [f], profit, built, size_limit=True)
+                    got += u
+                    parcels_idx_to_update += pids
+                    if profit == "unprofitable":
+                        below_breakeven += u
+                by_form[f] = got
+            rest = target_units - sum(by_form.values())
+            if rest > 0:
+                u, pids = _develop(rest, res_forms, "profitable", built, pool="remainder",
+                                   size_limit=True)
+                by_form["remainder"] = u
+                parcels_idx_to_update += pids
+            units_added = sum(by_form.values())
 
         _calculate_pct_undev(parcels, parcels_idx_to_update, year)
 
@@ -4524,6 +4708,9 @@ def residential_developer(
                 "feasible_units": feasible_units,
                 "target_units":  target_units,
                 "units_added":   units_added,
+                **({"units_" + f: by_form.get(f, 0) for f in list(res_forms) + ["remainder"]}
+                   if mix_cfg else {}),
+                **({"units_below_breakeven": below_breakeven} if mix_cfg else {}),
             }])],
             ignore_index=True,
         )
@@ -4551,6 +4738,16 @@ def residential_developer(
 
     # log the target and result in this year's run
     orca.add_table("debug_res_developer", debug_res_developer)
+    if orca.is_injectable("data_out_dir"):
+        city_rows = debug_res_developer[debug_res_developer["year"] == year].copy()
+        city_rows["large_area_id"] = city_rows["city_id"].map(city_to_la)
+        _append_res_diagnostics(orca.get_injectable("data_out_dir"), {
+            "res_developer_city": city_rows,
+            "res_type_quota_la": pd.DataFrame(quota_rows),
+            "res_selected_proposals": pd.concat(proposals) if proposals else pd.DataFrame(),
+            "res_type_quota_city": pd.DataFrame(city_quota_rows),
+            "res_pool_funnel": pd.DataFrame(funnel_rows),
+        })
 
     sync_parcel_improvement_values()
 
