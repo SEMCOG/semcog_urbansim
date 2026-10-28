@@ -9,10 +9,26 @@ models:
         vacant_variable: vacant_residential_units
         calibration:
             enabled: true
-            strength: 0.5 # 0-1
+            strength: 2.5 # log-scale gain on the target; 0 disables
             clip: [0.5, 2.0]
+            # - score: add ln(w) to every slot's key and let the draw settle it.
+            # - stratified: spend the same w on how many slots each tract draws and
+            #   leave the choice within a tract to the model
+            method: stratified
+
             #  floor (use lower bound if weight not found) | neutral (1)
-            zero_base_share: floor
+            zero_base_share: neutral
+            # weight units built during the run by the base-year mix of
+            # comparable new stock
+            fill_prior: true
+            # shrink a tract's target toward 1 by base-year households in the
+            # segment: n/(n+k). 0 disables it, and unshrunk thin cells inject
+            # enough noise that closure regresses above strength 3; k 5 keeps
+            # 90% of a 40-household cell's signal
+            shrink_k: 5
+            # hold a tract to the mix implied by what it built: its own base-year
+            # mix tilted by the new-stock ratio, not the large area's new-stock mix
+            expected_share: true
             # use_regressor:
             # true smooths it through an XGBoost fit 
             # false applies the base/current tract ratio directly 

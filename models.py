@@ -523,12 +523,89 @@ def init_taz_hlcm_trend_by_year():
         tract_hh_type_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
         # Add to result dictionary
         result["tract_hh_type_ratio_%s" % "_".join(hh_types)] = tract_hh_type_ratio 
+    # base-year households per tract, the denominator of every ratio above: the
+    # calibrator needs it to tell a thin cell from a drifting one
+    result["tract_hh_total"] = total_hh
     # Combine into DataFrame with TAZ as index
     tract_hh_type_base_ratios = pd.DataFrame(result).fillna(0)
     # Ensure tract_id is index
     tract_hh_type_base_ratios.index.name = "tract_id"
     # Register with Orca
     orca.add_table("tract_hh_type_base_ratios", tract_hh_type_base_ratios)
+
+    _init_new_unit_fill_shares(hh_segments)
+
+
+# fill prior: how base-year households sort into recently built housing units
+NEW_UNIT_VINTAGE = 10   # years back that count as "recently built"
+NEW_UNIT_BANDS = 5      # unit-size bands per large area
+NEW_UNIT_SHRINK_K = 30  # households; thin cells blend toward the large-area mean
+
+
+def _init_new_unit_fill_shares(hh_segments, vintage=NEW_UNIT_VINTAGE,
+                               bands=NEW_UNIT_BANDS, k=NEW_UNIT_SHRINK_K):
+    """Base-year segment mix of recently built units, by large area, building type
+    and unit-size band.
+
+    Registers `new_unit_fill_shares` (the mix itself, for the calibrator's expected
+    share), `new_unit_fill_ratios` (that mix over the large area's own new-stock
+    mix, the score multiplier) and `sqft_band_cuts`. Bands are cut in square feet
+    so they do not move as prices rise over the forecast.
+    """
+    base_year = orca.get_injectable("base_year")
+    b = orca.get_table("buildings").to_frame(
+        ["building_type_id", "sqft_per_unit", "year_built", "residential_units",
+         "large_area_id"])
+    b = b[b.residential_units > 0]
+    qs = np.linspace(0, 1, bands + 1)[1:-1]
+    cuts = {int(la): np.unique(g.sqft_per_unit.quantile(qs).to_numpy())
+            for la, g in b.groupby("large_area_id")}
+    orca.add_injectable("sqft_band_cuts", cuts)
+
+    seg_cols = sorted({c for seg in hh_segments for c in seg})
+    hh_all = orca.get_table("households").to_frame(seg_cols + ["building_id"])
+    hh_all = hh_all.join(b[["building_type_id", "sqft_per_unit", "year_built",
+                            "large_area_id"]], on="building_id", how="inner")
+    # the denominator is an average unit of any vintage, so a new unit keeps the
+    # base year's vintage premium instead of being normalized away against it
+    hh = hh_all[hh_all.year_built > base_year - vintage]
+    hh["band"] = lcm_utils.assign_sqft_band(hh.sqft_per_unit, hh.large_area_id, cuts)
+    keys = ["large_area_id", "building_type_id", "band"]
+    n = hh.groupby(keys).size()
+    shares, ratios = {}, {}
+    for seg in hh_segments:
+        col = "tract_hh_type_ratio_%s" % "_".join(seg)
+        m = np.logical_and.reduce([hh[c] == 1 for c in seg])
+        share = (hh[m].groupby(keys).size().reindex(n.index).fillna(0) / n)
+        m_all = np.logical_and.reduce([hh_all[c] == 1 for c in seg])
+        la_share = pd.Series(m_all, index=hh_all.index).groupby(hh_all.large_area_id).mean()
+        denom = la_share.reindex(n.index.get_level_values("large_area_id")).to_numpy()
+        with np.errstate(divide="ignore", invalid="ignore"):
+            r = pd.Series(np.where(denom > 0, share.to_numpy() / denom, 1.0),
+                          index=n.index)
+        shares[col] = share
+        ratios[col] = lcm_utils._hlcm_shrink_target(r.fillna(1.0), n, k=k)[0]
+    orca.add_injectable("new_unit_fill_shares", pd.DataFrame(shares))
+    orca.add_injectable("new_unit_fill_ratios", pd.DataFrame(ratios))
+    print("[FillPrior] base-year mix of units built since %d: %d cells, "
+          "%d households" % (base_year - vintage, len(n), len(hh)))
+
+
+@orca.injectable(cache=True, cache_scope="iteration")
+def new_unit_band_counts(buildings, base_year, sqft_band_cuts):
+    """Residential units per tract, split on vintage and keyed by type and band."""
+    b = buildings.to_frame(["tract_id", "building_type_id", "sqft_per_unit",
+                            "year_built", "residential_units", "large_area_id"])
+    b = b[b.residential_units > 0]
+    b["band"] = lcm_utils.assign_sqft_band(b.sqft_per_unit, b.large_area_id,
+                                           sqft_band_cuts)
+    new = b[b.year_built > base_year]
+    return {
+        "new": new.groupby(["tract_id", "large_area_id", "building_type_id",
+                            "band"]).residential_units.sum(),
+        "existing": b[b.year_built <= base_year].groupby("tract_id").residential_units.sum(),
+        "total": b.groupby("tract_id").residential_units.sum(),
+    }
 
 
 def _register_taz_change_col(b_to_taz, diff, var, suffix):
@@ -1373,7 +1450,8 @@ def presses_trans(xxx_todo_changeme1):
               f"control cells, skipping the 10+ bin")
         out.append((hh.loc[[]], p.loc[[]]))
         return out
-    for _, r in ct_inf.loc[iter_var].iterrows():
+    # Make sure it's a DataFrame (not a Series) 
+    for _, r in ct_inf.loc[[iter_var]].iterrows():
         if r["total_number_of_households"] <= 0:
             continue
         if utils.filter_table(hh, r, ignore={"total_number_of_households"}).shape[0] == 0:
@@ -1394,7 +1472,7 @@ def presses_trans(xxx_todo_changeme1):
                     utils.filter_table(
                         hh, r, ignore={"total_number_of_households"}
                     ).shape[0]
-                    for _, r in ct_inf.loc[iter_var].iterrows()
+                    for _, r in ct_inf.loc[[iter_var]].iterrows()
                 ]
             )
             == 0
@@ -3111,11 +3189,10 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             nonres_occ = b["b_total_jobs"] / b["job_spaces"].clip(lower=1)
             not_eligible |= (b.non_residential_sqft > 0) & (nonres_occ > max_nonres_occ)
 
-    # Main-street storefronts. Shops, restaurants and leisure buildings on a small
-    # commercially zoned lot are the walkable downtown pattern, and the score goes
-    # after them first
+    # Main-street storefronts. Shops, restaurants, leisure and small offices on a
+    # small commercially zoned lot are the walkable downtown pattern
     storefront = (
-        b.building_type_id.isin([21, 61, 65]) # retail, leisure, restaurant
+        b.building_type_id.isin([21, 23, 61, 65]) # retail, office, leisure, restaurant
         & b.parcel_id.map(orca.get_table("zoning").future_use).isin(
             ["MIXED USE", "COMMERCIAL"])
         & (b.parcel_id.map(pcl.parcel_sqft) <= 15000) # small parcel gate
