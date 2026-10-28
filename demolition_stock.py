@@ -1,6 +1,6 @@
 """Stock definitions for stock-based demolition targets.
 
-Shared by demolition_calibration.py (rates from history and the base year) and
+Shared by scripts/estimation/demolition_calibration.py (rates from history and the base year) and
 scored_demolition_events (targets each simulated year), so both measure the
 stock the same way. Plain pandas functions, no orca.
 

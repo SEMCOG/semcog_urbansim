@@ -3058,7 +3058,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
     Scored replacement for random_demolition_events.
 
     Buildings are weighted by exp(coef . standardized features) from a logit
-    with stratum fixed effects (demolition_calibration.py): residential uses
+    with stratum fixed effects (scripts/estimation/demolition_calibration.py): residential uses
     age, improvement value per sqft and land-to-improvement ratio, with one
     model for Detroit and one for the other areas; non-residential uses age.
     They are sampled to hit city-level control totals: with volume_method
@@ -3126,7 +3126,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
 
     # ── Control totals: scenario multiplier × dynamic pressure ──────────────
     # demolition_rates is the average annual volume of 2021-2024 (from
-    # demolition_calibration.py), held constant over the forecast.
+    # scripts/estimation/demolition_calibration.py), held constant over the forecast.
 
     # demolition_rates is a STATIC city-level snapshot with no year dimension --
     # on its own it reproduces the SAME relative geography for every simulated
@@ -3145,7 +3145,7 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         if len(demolition_stock_rates) == 0:
             raise FileNotFoundError(
                 "volume_method stock_rate needs configs/demolition_stock_rates.csv "
-                "(python demolition_calibration.py --stock-rates-only)")
+                "(PYTHONPATH=. python scripts/estimation/demolition_calibration.py --stock-rates-only)")
         rates, city_la, city_floor = demolition_stock.rates_by_city(demolition_stock_rates.to_frame())
         demolition_rates = demolition_stock.stock_targets(stock, rates, rate_mult)
     else:
@@ -3706,7 +3706,7 @@ def build_parcel_selection_features(parcels_df, buildings_df, zones_df, year,
                                     lookback_years=7):
     """Compute derived parcel-level features for developer site selection scoring.
 
-    Matches the feature engineering in estimate_developer_selection.py so that
+    Matches the feature engineering in scripts/estimation/estimate_developer_selection.py so that
     simulation-time scoring is consistent with estimation.
 
     Parameters
