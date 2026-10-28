@@ -114,7 +114,7 @@ def test_round_target_keeps_expected_volume():
 
 
 def test_shrunk_rates_extremes():
-    dc = pytest.importorskip("demolition_calibration")
+    dc = pytest.importorskip("scripts.estimation.demolition_calibration")
     df = pd.DataFrame({"city_id": [1, 2, 3], "large_area_id": [3, 3, 3],
                        "demolished": [0, 50, 0], "stock": [0, 10000, 10000]})
     c = dc._shrunk_rates(df, 1000)
