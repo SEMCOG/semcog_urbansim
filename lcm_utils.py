@@ -1137,10 +1137,12 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
                          100 * mcd_at_bound), flush=True)
 
         # city factors (net-change calibration), multiplied into the same slot weight
+        city_arr = np.ones(len(predict_X_df))
         city_factors = _hlcm_city_factors(calibration)
         if city_factors is not None:
             bld_city = alts.to_frame(['city_id'])['city_id'].reindex(predict_X_df.index)
-            tract_segment_adj_arr = tract_segment_adj_arr * bld_city.map(city_factors).fillna(1.0).to_numpy()
+            city_arr = bld_city.map(city_factors).fillna(1.0).to_numpy()
+            tract_segment_adj_arr = tract_segment_adj_arr * city_arr
 
         # Apply individual weight components
         # default to multiplicative calibration
@@ -1159,11 +1161,13 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         # the same score without the tract factor: the stratified path applies that
         # factor to the per-tract counts, so folding it into the mass as well would
         # square it. The fill prior stays in, since it varies unit by unit and so
-        # belongs to the model's own preference over slots.
-        # the MCD weight stays in, like the fill prior: it is a preference over
-        # slots, not a tract-count target, so the stratified path cannot square it
+        # belongs to the model's own preference over slots. The MCD weight and the city
+        # factor stay in too: neither is part of the tract weights, so the stratified
+        # path cannot square them, and without them here the stratified counts would
+        # ignore them.
         logit_model = (log_score + np.log(np.clip(fill_arr, 1e-12, None))
-                       + np.log(np.clip(mcd_arr, 1e-12, None)))
+                       + np.log(np.clip(mcd_arr, 1e-12, None))
+                       + np.log(np.clip(city_arr, 1e-12, None)))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
