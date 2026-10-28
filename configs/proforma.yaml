@@ -654,7 +654,7 @@ construction_months:
 
 loan_fees: 0.02
 
-only_built: true
+only_built: false   # type_mix needs loss-making proposals; residential path filters them
 
 loan_to_cost_ratio: 0.7
 
@@ -695,3 +695,7 @@ pass_through: []
 simple_zoning: false
 
 proposals_to_keep: 5
+
+# Type mix: where every FAR of a form loses money, keep the proposals with the least
+# loss per sqft, not the least total loss (= the smallest building). No effect with only_built: true.
+rank_losses_per_sqft: true
