@@ -28,8 +28,8 @@ Detroit, per unit of the vacant pool), written to configs/demolition_stock_rates
 
 Run from semcog_urbansim/ directory:
     micromamba activate forecast
-    python demolition_calibration.py                      # all steps
-    python demolition_calibration.py --stock-rates-only   # step 7 only
+    PYTHONPATH=. python scripts/estimation/demolition_calibration.py                      # all steps
+    PYTHONPATH=. python scripts/estimation/demolition_calibration.py --stock-rates-only   # step 7 only
 """
 
 import os
@@ -48,7 +48,7 @@ from demolition_stock import CATEGORIES, NONRES_CATEGORY, RES_CATEGORIES, stock_
 CONFIG_PATH = os.path.join(misc.configs_dir(), "demolition_model.yaml")
 
 # Connection string is read at run time; never write credentials in this file
-SQL_YAML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+SQL_YAML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..",
                         "forecast_data_input", "config", "sql.yaml")
 
 RES_TYPES = [81, 82, 83]

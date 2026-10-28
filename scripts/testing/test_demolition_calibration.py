@@ -21,7 +21,7 @@ import yaml
 
 orca.add_injectable("data_out_dir", "/tmp/demolition_calibration_test")
 
-import demolition_calibration as dc
+from scripts.estimation import demolition_calibration as dc
 import models  # also registers the building columns
 
 
