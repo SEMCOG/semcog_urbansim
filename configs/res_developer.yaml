@@ -55,3 +55,19 @@ phasing:
     82: 75    # attached / condo
     83: 200   # apartments: lease-up
   default_units_per_year: 200
+
+# Type mix: an apartment needs at least this many net units (multi-family,
+# 5+ units); also the smallest city apartment quota of the type mix. 0 or missing: no minimum.
+min_apartment_units: 5
+
+# Type mix: a loss-making condo needs at least this many net units (least-loss pass
+# only; profitable condos and city condo quotas unchanged). 0 or missing: no minimum.
+min_loss_condo_units: 5
+
+# >>> type_mix
+# Residential building-type mix (type_mix.py): developer units split by target form shares
+# by large area and year (configs/res_type_mix.csv); scenario selects the curve.
+type_mix:
+  file: res_type_mix.csv
+  scenario: E2
+# <<< type_mix
