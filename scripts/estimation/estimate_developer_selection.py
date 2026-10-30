@@ -5,6 +5,8 @@ Positive labels: parcels with year_built >= LABEL_YEAR.
 Negative sample: 1:1 within same MCD.
 One logistic regression per LUT (>= MIN_LUT_POS positives) + pooled fallback.
 Output: configs/developer_selection_coefs.yaml
+
+Run from the repository root: PYTHONPATH=. python scripts/estimation/estimate_developer_selection.py
 """
 
 import os

@@ -738,6 +738,25 @@ def _hlcm_calibration_regressor(y_train, tract_ids):
     return pd.Series(y_pred, index=X_train_scaled.index)
 
 
+_CITY_FACTORS = {}
+
+
+def _hlcm_city_factors(calibration):
+    """Per-city HLCM slot weight (city_id -> factor) from models.hlcm.calibration.city_factors
+    or the SEMCOG_HLCM_CITY_FACTORS environment variable (a csv with city_id, factor);
+    None when neither is set. Acts like a calibrated city constant: it scales the chance
+    that a vacant unit in the city is chosen, and leaves the model's coefficients alone."""
+    path = calibration.get('city_factors') or os.environ.get('SEMCOG_HLCM_CITY_FACTORS')
+    if not path:
+        return None
+    if path not in _CITY_FACTORS:
+        _CITY_FACTORS[path] = pd.read_csv(path, index_col='city_id')['factor']
+        f = _CITY_FACTORS[path]
+        print('[city factors] %s: %d cities, min %.3f median %.3f max %.3f'
+              % (path, len(f), f.min(), f.median(), f.max()), flush=True)
+    return _CITY_FACTORS[path]
+
+
 def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_calibration_config=None):
 
     # TODO: Update simulate steps with lcm nn model
@@ -995,6 +1014,14 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
                   % (model_name, n_new, len(fill_arr), fill_arr.min(),
                      np.median(fill_arr), fill_arr.max()))
 
+        # city factors (net-change calibration), multiplied into the same slot weight
+        city_arr = np.ones(len(predict_X_df))
+        city_factors = _hlcm_city_factors(calibration)
+        if city_factors is not None:
+            bld_city = alts.to_frame(['city_id'])['city_id'].reindex(predict_X_df.index)
+            city_arr = bld_city.map(city_factors).fillna(1.0).to_numpy()
+            tract_segment_adj_arr = tract_segment_adj_arr * city_arr
+
         # Apply individual weight components
         # default to multiplicative calibration
         pred_weighted = pred * tract_segment_adj_arr * fill_arr
@@ -1011,8 +1038,11 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         # the same score without the tract factor: the stratified path applies that
         # factor to the per-tract counts, so folding it into the mass as well would
         # square it. The fill prior stays in, since it varies unit by unit and so
-        # belongs to the model's own preference over slots.
-        logit_model = log_score + np.log(np.clip(fill_arr, 1e-12, None))
+        # belongs to the model's own preference over slots. The city factor stays in
+        # too: it is not part of the tract weights, so without it here the stratified
+        # counts would ignore it.
+        logit_model = (log_score + np.log(np.clip(fill_arr, 1e-12, None))
+                       + np.log(np.clip(city_arr, 1e-12, None)))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0

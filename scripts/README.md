@@ -34,6 +34,21 @@ Harnesses and one-off checks that exercise the current pipeline.
   (residential demand counts unplaced households). These need `pytest`, which
   is not in the `forecast_py312` environment.
 
+## `estimation/`
+
+Scripts that estimate or calibrate model inputs. They are not part of a forecast run;
+the run reads only their output in `configs/`. Run them from the repository root
+(they read `configs/` from the working directory):
+
+- `demolition_calibration.py`: demolition score models and rates. Writes
+  `configs/demolition_model.yaml`, `configs/demolition_rates.csv` and, with
+  `--stock-rates-only`, only `configs/demolition_stock_rates.csv`.
+  `PYTHONPATH=. python scripts/estimation/demolition_calibration.py [--stock-rates-only]`
+- `estimate_developer_selection.py`: residential developer site-selection model.
+  Writes `configs/developer_selection_coefs.yaml`. Its features must match
+  `models.py` (the site-selection feature code).
+  `PYTHONPATH=. python scripts/estimation/estimate_developer_selection.py`
+
 ## `legacy/`
 
 Superseded or broken; kept for reference, not expected to run.
