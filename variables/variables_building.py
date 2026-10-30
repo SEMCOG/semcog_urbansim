@@ -707,6 +707,10 @@ taz_segments = lcm_utils.get_hlcm_segment()
 for seg in taz_segments:
     for order in itertools.permutations(seg):
         make_household_tract_proportion_variable(order)
+# one-dimension marginals, for the calibrator's marginal option
+for _cat_vals in lcm_utils.get_hlcm_categories().values():
+    for _val in _cat_vals:
+        make_household_tract_proportion_variable(_val)
 
 @orca.column("buildings", cache=True, cache_scope="iteration")
 def ln_empden(buildings, zones):

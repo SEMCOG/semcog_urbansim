@@ -811,12 +811,17 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         assert all([True if col in alts.columns else False for col in variable_cols])
 
         formula_alts_col = list(set(variable_cols))
+        # the calibrator's extra hold on single dimensions needs each of those
+        # dimensions' tract ratios next to the joint one
+        # (models.hlcm.calibration.marginal)
+        marginals = _hlcm_marginals(tract_segment_type_var, hlcm_calibration_config or {})
+        cal_cols = [tract_segment_type_var] + [m[1] for m in marginals]
         # pulled for the fill prior; year_built and sqft_per_unit are also model
         # features, so they are read from fill_raw below, not from alts_df
         fill_cols = ['building_type_id', 'sqft_per_unit', 'year_built']
         _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(formula_alts_col+alts_filter_cols+fill_cols
-                                         +[alt_capacity, tract_segment_type_var])))
+                                         +[alt_capacity]+cal_cols)))
         print(f"[alts-timing] HLCM la{la_id} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
               f"rows={len(alts_df)} cols={alts_df.shape[1]}", flush=True)
@@ -872,7 +877,7 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
 
         # construct predict DF with capacity and get result
         final_alts_df = final_alts_df[list(set(
-            formula_alts_col + [alt_capacity, tract_segment_type_var]))]
+            formula_alts_col + [alt_capacity] + cal_cols))]
         predict_X_df = final_alts_df.loc[
             np.repeat(final_alts_df.index, final_alts_df[alt_capacity]),
             formula_alts_col
@@ -971,6 +976,42 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
             tract_segment_adj_arr, cal_at_bound = _hlcm_tract_adjustment(
                 tract_predicted_weights, tract_ids,
                 clip=calibration.get('clip', (0.5, 2.0)), strength=cal_strength)
+
+            # Extra hold on single dimensions' tract composition, each multiplied
+            # into the same weight. The joint cell is 1/12 of a tract's households,
+            # so its ratio is noisy and strength above ~3 regresses; a marginal
+            # pools the cells sharing one value (an income tercile is 4 of the 12,
+            # a children or senior split 6) and takes a harder pull. A dimension is
+            # then held by its own weight as well as by the joint cell's, which is
+            # the point. Several together compete for the same placements, so their
+            # strengths trade off against each other.
+            for m_dim, m_var, m_strength, m_clip, m_k in marginals:
+                if m_var not in base_ratios_df.columns:
+                    print('[Marginal] %s: %s missing from tract_hh_type_base_ratios, '
+                          'skipped' % (model_name, m_var), flush=True)
+                    continue
+                m_base = base_ratios_df[m_var].reindex(tract_ids).to_numpy()
+                m_cur = final_alts_df.loc[predict_X_df.index, m_var].to_numpy()
+                m_y = _hlcm_calibration_target(
+                    m_base, m_cur, calibration.get('zero_base_share', 'floor'))
+                m_weights = pd.Series(m_y, index=tract_ids).groupby(tract_ids).mean()
+                m_shrink = 1.0
+                if 'tract_hh_total' in base_ratios_df.columns:
+                    m_weights, m_shrink = _hlcm_shrink_target(
+                        m_weights,
+                        base_ratios_df[m_var] * base_ratios_df['tract_hh_total'],
+                        k=m_k)
+                m_arr, m_at_bound = _hlcm_tract_adjustment(
+                    m_weights, tract_ids, clip=m_clip, strength=m_strength)
+                tract_segment_adj_arr = tract_segment_adj_arr * m_arr
+                print('[Marginal] %s: %s (%s) strength %.2f | weight min %.3f '
+                      'median %.3f max %.3f | mean |ln w| %.4f | at bound %.1f%% | '
+                      'shrink k %g mean w %.2f'
+                      % (model_name, m_dim,
+                         m_var.replace('tract_hh_type_ratio_', ''), m_strength,
+                         m_arr.min(), np.median(m_arr), m_arr.max(),
+                         np.abs(np.log(m_arr)).mean(), 100 * m_at_bound, m_k, m_shrink),
+                      flush=True)
             print('[Calibrator] %s: strength %.2f | weight min %.3f median %.3f max %.3f | '
                   'mean |ln w| %.4f | tracts at clip bound %.1f%% | %d tracts, '
                   'target median %.3f spread %.3f | shrink k %g mean w %.2f'
@@ -1715,6 +1756,18 @@ def load_cache_hh_b(hh_csv_path: str, b_csv_path: str):
     orca.add_table('buildings', b_region)
     return hh_region, b_region
 
+def get_hlcm_categories():
+    """Household categories of the HLCM model description, values prefixed by the
+    category name: {'income': ['income_lowinc', ...], 'children': [...], ...}.
+    get_hlcm_segment is the cartesian product of these.
+    """
+    model_path = orca.get_injectable('hlcm_model_path')
+    with open(os.path.join(model_path, 'model_description.yaml'), 'r') as f:
+        model_desc = yaml.load(f, Loader=yaml.FullLoader)
+    return {cat_name: [f"{cat_name}_{cat_val}" for cat_val in cat_vals]
+            for cat_name, cat_vals in model_desc['hh_categories'].items()}
+
+
 def get_hlcm_segment():
     """Generate hlcm segments variables based on model description hlcm_model_path.
     orca.get_injectable('hlcm_model_path')
@@ -1722,18 +1775,43 @@ def get_hlcm_segment():
     Returns:
         [(hh_cat1, hh_cat_2, hh_cat_3), ...]: products of all household categories
     """
-    model_path = orca.get_injectable('hlcm_model_path')
-    model_desc_path = os.path.join(model_path, 'model_description.yaml')
-    with open(model_desc_path, 'r') as f:
-        model_desc = yaml.load(f, Loader=yaml.FullLoader)
+    return list(itertools.product(*get_hlcm_categories().values()))
 
-    # make segments a list of like (children_type, ownership, aoh)
-    # Extract category keys and build prefixed values
-    category_keys = list(model_desc['hh_categories'].keys())
-    category_values = [
-        [f"{cat_name}_{cat_val}" for cat_val in model_desc['hh_categories'][cat_name]]
-        for cat_name in category_keys
-    ]
-    # Cartesian product of all category combinations
-    segments = list(itertools.product(*category_values))
-    return segments 
+
+def _hlcm_marginal_var(segment_var, dim, categories=None):
+    """Tract ratio column for one dimension of a segment: the income tercile of
+    tract_hh_type_ratio_children_no_children_senior_with_seniors_income_lowinc is
+    tract_hh_type_ratio_income_lowinc. None when `dim` is not a household category
+    of this model. The marginal pools every cell sharing that value, so it carries
+    more mass - and less sampling noise - than the joint cell does.
+    `categories` defaults to the model description's (get_hlcm_categories).
+    """
+    cats = get_hlcm_categories() if categories is None else categories
+    for val in cats.get(dim, []):
+        if val in segment_var:
+            return 'tract_hh_type_ratio_%s' % val
+    return None
+
+
+def _hlcm_marginals(segment_var, calibration, categories=None):
+    """The marginal holds to apply to one segment, from models.hlcm.calibration.
+
+    Reads the `marginal` block: `dimensions` maps a household category to either a
+    strength or a block of its own ({strength, clip, shrink_k}); `clip` and
+    `shrink_k` beside it are the defaults, falling back to the joint weight's.
+    A dimension with strength 0, or absent, is off.
+
+    Returns [(dim, var, strength, clip, shrink_k), ...], empty when none apply.
+    """
+    cfg = calibration.get('marginal') or {}
+    out = []
+    for dim, spec in (cfg.get('dimensions') or {}).items():
+        spec = spec if isinstance(spec, dict) else {'strength': spec}
+        strength = float(spec.get('strength', 0) or 0)
+        var = _hlcm_marginal_var(segment_var, dim, categories) if strength > 0 else None
+        if not var:
+            continue
+        clip = spec.get('clip', cfg.get('clip', calibration.get('clip', (0.5, 2.0))))
+        k = spec.get('shrink_k', cfg.get('shrink_k', calibration.get('shrink_k', 30.0)))
+        out.append((dim, var, strength, tuple(clip), float(k)))
+    return out
