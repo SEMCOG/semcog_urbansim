@@ -3904,14 +3904,14 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
-def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None):
+def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None, share=None):
     """Households per city for the residential developer's vacancy gap.
 
     At developer time, households added by transition (and movers) are unplaced
     and have no city, so counting placed households understates demand. Start
     from the city counts placed before transition (`snapshot`), add each city's
     trend, and spread the rest of each large area's change since then across
-    its cities by snapshot share. Large-area totals equal the current count.
+    its cities by `share`. Large-area totals equal the current count.
 
     Parameters
     ----------
@@ -3923,6 +3923,10 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=Non
         Placed household count indexed by city_id.
     trend : pd.Series, optional
         Expected yearly household change indexed by city_id (0 if omitted).
+    share : pd.Series, optional
+        Share of its large area's change each city takes, indexed by city_id;
+        renormalized within each large area, and the live snapshot share where a
+        large area has none. Omitted: the live snapshot share (see city_base_share).
 
     Returns
     -------
@@ -3934,7 +3938,60 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=Non
     trend = (pd.Series(0.0, index=snapshot.index) if trend is None
              else trend.reindex(snapshot.index, fill_value=0.0))
     rest = la_change - trend.groupby(la).sum()
-    return snapshot + trend + snapshot / la.map(snap_la) * la.map(rest)
+    live = snapshot / la.map(snap_la)
+    if share is None:
+        share = live
+    else:
+        share = share.reindex(snapshot.index).fillna(0.0)
+        tot = la.map(share.groupby(la).sum())
+        share = (share / tot).where(tot > 0, live)
+    return snapshot + trend + share * la.map(rest)
+
+
+def city_base_share(snapshot, city_to_la):
+    """Each city's share of its large area's households, frozen at the first call.
+
+    The developer spreads a large area's yearly change over its cities by this
+    share. Taken on the live snapshot it rises wherever the model has already
+    placed households, so a city the developer built in last year asks for more
+    this year - the feedback city_excess_momentum is written to avoid. Frozen, the
+    structural split stays at the base year and divergence is left to the trend.
+    A run resumed from a checkpoint freezes it at the checkpoint snapshot.
+    """
+    sh = (orca.get_injectable("city_base_hh_share")
+          if orca.is_injectable("city_base_hh_share") else None)
+    if sh is None:
+        la = city_to_la.reindex(snapshot.index)
+        sh = (snapshot / la.map(snapshot.groupby(la).sum())).fillna(0.0)
+        orca.add_injectable("city_base_hh_share", sh)
+    return sh
+
+
+def city_share_cap(units_by_city, city_to_la, band):
+    """Units a city may hold before the developer stops adding to it.
+
+    Since the mover term was dropped the vacancy gap alone spreads a large area's
+    capped construction over its cities, and it is self-reinforcing: units built
+    get filled, which raises the city's households, which reopens the gap. This
+    holds a city's share of its large area's stock within `band` of the share it
+    started with. None when band is 0 or missing.
+    """
+    if not band:
+        return None
+    base = (orca.get_injectable("city_base_units")
+            if orca.is_injectable("city_base_units") else None)
+    if base is None:
+        base = units_by_city.copy()
+        orca.add_injectable("city_base_units", base)
+    base = base.reindex(units_by_city.index).fillna(0.0)
+    la = city_to_la.reindex(units_by_city.index)
+    share = (base / la.map(base.groupby(la).sum())).fillna(0.0)
+    la_now = la.map(units_by_city.groupby(la).sum())
+    # never below the stock it started with, so a city whose large area is shrinking
+    # can still replace what it loses. A city with no base-year stock has no share to
+    # hold and is left uncapped, or it could never build at all.
+    cap = np.maximum(share * (1.0 + band) * la_now, base)
+    return cap.where(base > 0)
 
 
 def city_excess_momentum(year, snapshot, city_to_la, fade):
@@ -4420,6 +4477,9 @@ def residential_developer(
     demo_rebuild_max_share = _res_cfg.get("demo_rebuild_max_share", 0.5)
     demo_rebuild_sched_factor = _res_cfg.get("demo_rebuild_scheduled_factor", 3.0)
     city_momentum_fade = _res_cfg.get("city_momentum_fade", 0.8)
+    # how far a city's share of its large area's housing stock may drift from the
+    # share it started with (city_share_cap); 0 disables the cap
+    city_share_band = _res_cfg.get("city_share_band", 0.15)
     lookback_year = year - 7
 
     base_year  = orca.get_injectable("base_year")
@@ -4494,7 +4554,11 @@ def residential_developer(
         city_hh_snapshot = hh_city[hh_city.notna()].astype(int).value_counts()
     city_trend = city_excess_momentum(year, city_hh_snapshot, city_to_la, city_momentum_fade)
     city_hh = city_households_for_developer(
-        households.large_area_id, city_to_la, city_hh_snapshot, city_trend
+        households.large_area_id, city_to_la, city_hh_snapshot, city_trend,
+        city_base_share(city_hh_snapshot, city_to_la)
+    )
+    share_cap = city_share_cap(
+        orig_buildings.groupby("city_id")["supply_units"].sum(), city_to_la, city_share_band
     )
     print("  City households: {:,} placed (snapshot), momentum |{:,.0f}|, LA change {:+,.0f}".format(
         int(city_hh_snapshot.sum()), city_trend.abs().sum(), city_hh.sum() - city_hh_snapshot.sum()))
@@ -4528,6 +4592,10 @@ def residential_developer(
         else:
             feasible_units = 0
         target_units = int(np.clip(target_units_raw, 0, feasible_units))
+        cap = share_cap.get(cityid, np.nan) if share_cap is not None else np.nan
+        headroom = None if pd.isna(cap) else int(max(0, cap - num_units))
+        if headroom is not None:
+            target_units = min(target_units, headroom)
 
         city_data[cityid] = {
             "target_units": target_units, "feasible_units": feasible_units,
@@ -4535,6 +4603,7 @@ def residential_developer(
             "num_units": num_units, "vacancy_gap": int(vacancy_gap_signed),
             "trend": float(city_trend.get(cityid, 0.0)),
             "target_raw": target_units_raw, "la_scale": 1.0,
+            "share_headroom": headroom,
         }
 
     # LA alignment — hard ceiling
@@ -4620,11 +4689,13 @@ def residential_developer(
             "developing residential for city {} | "
             "agents={:,} units={:,} vac_gap={:+,} | "
             "trend={:+.0f} raw={:.0f} | "
-            "feasible={:,} la_scale={:.3f} target={:,}\n".format(
+            "feasible={:,} share_room={} la_scale={:.3f} target={:,}\n".format(
                 cityid,
                 d["cur_agents"], d["num_units"], d["vacancy_gap"],
                 d["trend"], d["target_raw"],
-                feasible_units, d["la_scale"], target_units,
+                feasible_units,
+                "-" if d["share_headroom"] is None else "{:,}".format(d["share_headroom"]),
+                d["la_scale"], target_units,
             )
         )
 
@@ -4705,6 +4776,7 @@ def residential_developer(
                 "trend":         round(d["trend"], 1),
                 "target_raw":    round(d["target_raw"], 1),
                 "la_scale":      d["la_scale"],
+                "share_headroom": d["share_headroom"],
                 "feasible_units": feasible_units,
                 "target_units":  target_units,
                 "units_added":   units_added,

@@ -17,6 +17,10 @@ noise_scale: 100000
 # (0.8: half-life about 3 years; backcast of 2000-2025 MCD history)
 city_momentum_fade: 0.8
 
+# How far a city's share of its large area's housing stock may drift from the share
+# it started with (models.city_share_cap)
+city_share_band: 0.15
+
 la_max_ratio: 1.2
 # largest factor LA alignment may scale MCD targets by; above 1.0 the cap pushes
 # targets up as well as down (was la_max_ratio, i.e. 1.2)
