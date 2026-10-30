@@ -11,6 +11,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import lcm_utils
 from lcm_utils import (_hlcm_calibration_target, _hlcm_shrink_target,
                        _hlcm_tract_adjustment, _hlcm_stratified_counts,
                        _largest_remainder, _pick_stratified, assign_sqft_band)
@@ -176,3 +177,66 @@ def test_empty_and_degenerate_inputs():
                                         np.full(40, -np.inf),
                                         pd.Series(dtype='float64'), 20)
     assert counts.sum() == 20 and counts[2] > counts[1]
+
+
+CATS = {'children': ['children_no_children', 'children_has_children'],
+        'senior': ['senior_with_seniors', 'senior_without_seniors'],
+        'income': ['income_lowinc', 'income_midinc', 'income_highinc']}
+SEG = ('tract_hh_type_ratio_children_no_children_senior_with_seniors'
+       '_income_lowinc')
+
+
+def test_marginal_var_picks_the_dimension_of_a_segment():
+    seg = ('tract_hh_type_ratio_children_no_children_senior_with_seniors'
+           '_income_lowinc')
+    mv = lambda d: lcm_utils._hlcm_marginal_var(seg, d, CATS)
+    assert mv('income') == 'tract_hh_type_ratio_income_lowinc'
+    assert mv('children') == 'tract_hh_type_ratio_children_no_children'
+    assert mv('senior') == 'tract_hh_type_ratio_senior_with_seniors'
+    # not a household category of the model
+    assert mv('tenure') is None
+
+
+def test_marginal_weight_multiplies_into_the_joint_weight():
+    tract_ids = np.array([1, 1, 2, 2])
+    joint = pd.Series({1: 2.0, 2: 0.5})
+    marg = pd.Series({1: 1.5, 2: 0.8})
+    j, _ = _hlcm_tract_adjustment(joint, tract_ids, clip=(0.1, 10.0), strength=1.0)
+    m, _ = _hlcm_tract_adjustment(marg, tract_ids, clip=(0.1, 10.0), strength=1.0)
+    assert (j * m).tolist() == pytest.approx([3.0, 3.0, 0.4, 0.4])
+    # a neutral marginal leaves the joint weight alone
+    one, _ = _hlcm_tract_adjustment(pd.Series({1: 1.0, 2: 1.0}), tract_ids,
+                                    clip=(0.1, 10.0), strength=1.0)
+    assert (j * one).tolist() == pytest.approx(j.tolist())
+
+
+def test_marginals_resolve_every_requested_dimension():
+    cal = {'clip': [0.5, 2.0], 'shrink_k': 5,
+           'marginal': {'dimensions': {'income': 4, 'children': 2.5, 'senior': 0}}}
+    out = lcm_utils._hlcm_marginals(SEG, cal, CATS)
+    assert [(d, v, st) for d, v, st, _, _ in out] == [
+        ('income', 'tract_hh_type_ratio_income_lowinc', 4.0),
+        ('children', 'tract_hh_type_ratio_children_no_children', 2.5)]
+    # senior at strength 0 is dropped; the others inherit the block's clip/shrink_k
+    assert all((c, k) == ((0.5, 2.0), 5.0) for _, _, _, c, k in out)
+
+
+def test_marginal_dimension_can_override_clip_and_shrink():
+    cal = {'clip': [0.5, 2.0], 'shrink_k': 5,
+           'marginal': {'shrink_k': 3,
+                        'dimensions': {'income': {'strength': 6, 'clip': [0.4, 2.5]},
+                                       'senior': 1.5}}}
+    got = {d: (st, c, k) for d, _, st, c, k in lcm_utils._hlcm_marginals(SEG, cal, CATS)}
+    assert got['income'] == (6.0, (0.4, 2.5), 3.0)
+    assert got['senior'] == (1.5, (0.5, 2.0), 3.0)   # block default, not the joint's
+
+
+def test_marginals_off_by_default_and_at_zero_strength():
+    for cal in ({}, {'marginal': {}}, {'marginal': {'dimensions': {}}},
+                {'marginal': {'dimensions': {'income': 0, 'children': 0, 'senior': 0}}}):
+        assert lcm_utils._hlcm_marginals(SEG, cal, CATS) == []
+
+
+def test_marginals_ignore_a_dimension_the_model_does_not_have():
+    cal = {'marginal': {'dimensions': {'tenure': 5}}}
+    assert lcm_utils._hlcm_marginals(SEG, cal, CATS) == []

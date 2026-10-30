@@ -523,6 +523,14 @@ def init_taz_hlcm_trend_by_year():
         tract_hh_type_ratio = (hh_type_count / total_hh).fillna(0).clip(0, 1)
         # Add to result dictionary
         result["tract_hh_type_ratio_%s" % "_".join(hh_types)] = tract_hh_type_ratio 
+    # one-dimension marginals (tract_hh_type_ratio_income_lowinc and friends): the
+    # calibrator's marginal option holds a single dimension harder than the joint
+    # cell, which is 1/12 of a tract and too thin to push hard on
+    for cat_vals in lcm_utils.get_hlcm_categories().values():
+        for val in cat_vals:
+            hh_df = hh.to_frame([val, 'tract_id'])
+            cnt = hh_df.loc[hh_df[val] == 1, 'tract_id'].value_counts()
+            result["tract_hh_type_ratio_%s" % val] = (cnt / total_hh).fillna(0).clip(0, 1)
     # base-year households per tract, the denominator of every ratio above: the
     # calibrator needs it to tell a thin cell from a drifting one
     result["tract_hh_total"] = total_hh

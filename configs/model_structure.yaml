@@ -34,6 +34,26 @@ models:
             # true smooths it through an XGBoost fit 
             # false applies the base/current tract ratio directly 
             use_regressor: false
+            # Extra hold on single dimensions, each multiplied into the same tract
+            # weight. The joint cell above is 1/12 of a tract's households (median 81,
+            # a fifth of cells under 10), so its ratio is noisy and strength above ~3
+            # regresses. A marginal pools the cells sharing one value - income 4 of
+            # the 12 (median 439), children and senior 6 each (598, 636) - so under 2%
+            # of cells are thin and it takes a harder pull. A dimension is then held
+            # by its own weight as well as by the joint cell's, which is the point.
+            # Several at once compete for the same placements, so their strengths
+            # trade off; raise one at a time and watch all four drift dimensions.
+            # Keys are hh_categories of the HLCM description. A value is a strength,
+            # or a block of its own: {strength: 4, clip: [0.4, 2.5], shrink_k: 2}.
+            # 0 or absent: that dimension off. clip/shrink_k here are the defaults
+            # for all of them, falling back to the joint weight's.
+            marginal:
+                clip: [0.5, 2.0]
+                shrink_k: 5
+                dimensions:
+                    income: 0
+                    children: 0
+                    senior: 0
 
     elcm: 
         model_type: location_choice
