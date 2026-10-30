@@ -188,6 +188,22 @@ def upload_whatnots_to_carto(run_name, whatnots):
     return
 
 
+def maz_override():
+    """building_id -> MAZ for structures on parcels that cross a MAZ boundary.
+    dataset.buildings applies the same table, so the whatnot geography is built on
+    the MAZ (and so the TAZ) a building is actually in rather than its parcel's.
+    None when the input store is not reachable, which is the case when indicators
+    are rerun on their own against a run file; the MAZ stored in the run then
+    stands on its own, since it already carries this override."""
+    try:
+        ov = orca.get_injectable("store")["building_to_maz_override"]["maz_id"]
+    except Exception as e:
+        print("  [whatnots] building_to_maz_override unavailable (%s), using the "
+              "MAZ stored in the run" % type(e).__name__)
+        return None
+    return ov[~ov.index.duplicated(keep="first")]
+
+
 def main(
     run_name, baseyear, finalyear, spacing=5, upload_to_carto=True
 ):
@@ -277,10 +293,42 @@ def main(
         interesting_parcel_ids = set()
     orca.add_injectable("interesting_parcel_ids", interesting_parcel_ids)
 
-    # add missing zones from buildings
-    orca_b = orca.get_table('buildings')
-    b_whatnot = orca_b.to_frame(['large_area_id', "us_congress_id", "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id'])
+    # add missing geographies from buildings. A building's zone_id comes from the
+    # MAZ crosswalk and its city_id from its parcel, so a building can carry a
+    # combination no parcel has. Every building that ever existed has to be in
+    # here, not just the ones standing in the target year: agents are matched to a
+    # whatnot through their building, so a combination that only a demolished
+    # building had leaves its jobs, households and people unmatched and they drop
+    # out of every year, including years when the building was still standing.
+    # dropped_buildings is cumulative, so base + target year + the target year's
+    # dropped set is the full history. Only parcel_id and maz_id are needed: the
+    # seven ids below are all derived from them, and registered orca columns take
+    # precedence over the same-named local ones.
+    ever_cols = ['parcel_id', 'maz_id']
+    ever = [store_la[f"/{target_year}/buildings"][ever_cols],
+            store_la["/base/buildings"][ever_cols]]
+    dropped_key = f"/{target_year}/dropped_buildings"
+    if dropped_key in store_la:
+        ever.append(store_la[dropped_key][ever_cols])
+    # target year first, so a building the developer created keeps the MAZ it was
+    # drawn in rather than its parcel's
+    ever = pd.concat(ever)
+    ever = ever[~ever.index.duplicated(keep="first")]
+    ov = maz_override()
+    if ov is not None:
+        hit = ov.reindex(ever.index).dropna()
+        if len(hit):
+            ever.loc[hit.index, 'maz_id'] = hit.astype(ever['maz_id'].dtype)
+        print("  [whatnots] MAZ override applied to %d of %d buildings"
+              % (len(hit), len(ever)))
+    ever = ever.drop_duplicates(ever_cols).reset_index(drop=True)
+    orca.add_table('buildings', ever)
+    b_whatnot = orca.get_table('buildings').to_frame(['large_area_id', "us_congress_id", "mi_senate_id", "mi_house_id", 'city_id', 'school_id', 'zone_id'])
     b_whatnot = b_whatnot.drop_duplicates().reset_index(drop=True)
+    # put the real target year buildings back; the per-year loop re-registers and
+    # clears the cache anyway, but nothing downstream should see the stub
+    orca.add_table('buildings', store_la[f"{target_year}/buildings"])
+    orca.clear_cache()
     whatnot = pd.concat([whatnot, b_whatnot], axis=0, ignore_index=True)
 
     # clean up whatnot index,
