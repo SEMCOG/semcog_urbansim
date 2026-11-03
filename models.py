@@ -4469,7 +4469,8 @@ def run_developer(
         exclude_parcels.update(new_buildings.parcel_id)
     if record is not None:
         cols = ["parcel_id", "form", "residential_units", "building_sqft", "residential_sqft",
-                "max_profit", "max_profit_far", "total_cost", "building_revenue"]
+                "non_residential_sqft", "max_profit", "max_profit_far", "total_cost",
+                "building_revenue"]
         record.append(new_buildings[[c for c in cols if c in new_buildings.columns]].copy())
 
     # get the list of parcel_id whose pct_undev need to be updated
@@ -5017,6 +5018,8 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
 
     skipped_no_target = 0
     skipped_no_stock = 0
+    diag = []  # one row per city x group, written to diagnostics/nonres_developer_city.csv
+    picked = []  # selected proposals, written to diagnostics/nonres_selected_proposals.csv
 
     # loop through cities
     for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
@@ -5026,8 +5029,11 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
 
         # loop through building-form groups, the grouping the targets are built on
         for group, gdef in groups.items():
+            row = {"year": year, "city_id": cityid, "form": group}
+            diag.append(row)
             if (cityid, group) not in tgt.index:
                 skipped_no_target += 1
+                row["skip"] = "no_target"
                 continue
             target_vacancy = float(tgt.loc[(cityid, group), year_col])
             if not (0.0 <= target_vacancy < 1.0):
@@ -5041,14 +5047,21 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
                 city_buildings.building_type_id.isin(gdef["btypes"])
             ]
             num_units = grp_blds.job_spaces.sum()
+            row["target_vacancy"] = target_vacancy
             if num_units <= 0:
                 # no existing stock of this group here: no vacancy to measure
                 skipped_no_stock += 1
+                row["skip"] = "no_stock"
                 continue
             num_agents = city_jobs.building_id.isin(grp_blds.index).sum()
 
-            target_units = int(max((num_agents / (1 - target_vacancy) - num_units), 0))
+            target_spaces = num_agents / (1 - target_vacancy)
+            target_units = int(max(target_spaces - num_units, 0))
+            row.update(jobs=int(num_agents), spaces=int(num_units),
+                       vacancy=1 - num_agents / float(num_units),
+                       target_spaces=target_spaces, requested=target_units)
             if target_units <= 0:
+                row["skip"] = "no_gap"
                 continue
 
             print(f"Developing {group} spaces for city {cityid}:")
@@ -5071,6 +5084,7 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
             )
 
             # run nonres developer step
+            rec = []
             spaces_added, parcels_idx_to_update = run_developer(
                 target_units,
                 "city_%d" % cityid,
@@ -5083,10 +5097,21 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
                 "nonres_developer.yaml",
                 add_more_columns_callback=add_extra_columns_nonres,
                 bldg_sqft_per_job=group_sqft_per_job,
+                record=rec,
             )
+            picked += [r.assign(year=year, city_id=cityid, group=group) for r in rec]
 
             _calculate_pct_undev(parcels, parcels_idx_to_update, year)
+            row["built"] = int(spaces_added)
+            row["skip"] = "" if spaces_added > 0 else "no_feasible"
 
+    if orca.is_injectable("data_out_dir"):
+        _append_res_diagnostics(orca.get_injectable("data_out_dir"),
+                                {"nonres_developer_city": pd.DataFrame(diag, columns=[
+                                    "year", "city_id", "form", "skip", "target_vacancy", "jobs",
+                                    "spaces", "vacancy", "target_spaces",
+                                    "requested", "built"]),
+                                 "nonres_selected_proposals": pd.concat(picked) if picked else pd.DataFrame()})
     if skipped_no_target:
         print("  [nonres] %d city x group combinations had no target "
               "(the 'other' group has no proforma form and is not buildable)"
