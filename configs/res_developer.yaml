@@ -63,6 +63,29 @@ phasing:
     83: 200   # apartments: lease-up
   default_units_per_year: 200
 
+# Land phasing: a parcel of min_acres or more with a planned use in future_uses is
+# offered one phase (phase_acres) at a time. A project uses its units / units_per_acre
+# of land and keeps the earlier phases' buildings. The next phase opens when the
+# project is delivered and its newest building is gap_years old. Values from the
+# 2010->2023 parcel splits of greenfield subdivisions built 2011-2024: median built
+# area 15 acres; net density 2.0 (single-family) / 4.5 (condo) / ~7 (apartment, 3
+# projects) units per acre; 25-100 acre parents use about 7-12 acres a year.
+land_phasing:
+  enabled: true
+  min_acres: 15
+  phase_acres: 15
+  gap_years: 2
+  future_uses: [RESIDENTIAL]
+  units_per_acre:
+    81: 2.0
+    82: 4.5
+    83: 7.0
+  # smallest project of a type on a phased parcel (types not listed: no minimum).
+  # Apartments: p10 of the 99 complexes built 2011-2024 on parcels of 15+ acres (median
+  # 141 units); smaller apartment projects go to parcels without phasing
+  min_units:
+    83: 60
+
 # Type mix: an apartment needs at least this many net units (multi-family,
 # 5+ units); also the smallest city apartment quota of the type mix. 0 or missing: no minimum.
 min_apartment_units: 5

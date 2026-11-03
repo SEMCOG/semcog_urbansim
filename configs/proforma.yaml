@@ -658,8 +658,9 @@ only_built: false   # type_mix needs loss-making proposals; residential path fil
 
 loan_to_cost_ratio: 0.7
 
-# Exclude very large parcels from feasibility calculation.
-parcel_filter: parcel_sqft < 2000000
+# Exclude very large parcels from feasibility calculation. Land-phased parcels stay:
+# the pro forma sees one phase of land (res_developer.yaml: land_phasing)
+parcel_filter: parcel_sqft < 2000000 or land_phased
 
 interest_rate: 0.05
 
