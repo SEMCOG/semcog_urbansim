@@ -41,6 +41,13 @@ detroit:
     building_types: [81, 82, 83]
     max_units: 4
 max_impr_to_land_ratio: 5
+# Vacancy floor in all cities (Detroit keeps its neighborhood floor above), and
+# demolished space not rebuilt by the developers (vacancy_floor.py). Base-year vacancy
+# = the base-year column of the target vacancy tables.
+vacancy_floor:
+  enabled: true
+  res_min: 0.05            # housing: floor = max(res_min, share x base-year vacancy)
+  share_of_base: 0.5       # nonres job-space measure: floor = share x base-year vacancy
 residential_detroit:
   is_calibrated: true
   score: odds
