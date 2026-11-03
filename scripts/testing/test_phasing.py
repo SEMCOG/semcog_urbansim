@@ -87,3 +87,56 @@ def test_limit_selection_same_as_run5017_rule():
         target, tol = float(rng.integers(1, 400)), float(rng.choice([0.0, 0.25, 0.5]))
         new = phasing.limit_selection(build_idx, units, target, tol)
         assert new.tolist() == _old_limit(build_idx, units, target, tol).tolist()
+
+
+LAND = phasing.land_phasing_cfg({"land_phasing": {
+    "enabled": True, "min_acres": 15, "phase_acres": 15, "future_uses": ["RESIDENTIAL"],
+    "units_per_acre": {81: 2.0, 82: 4.5}}})
+AC = phasing.SQFT_PER_ACRE
+
+
+def test_land_phasing_disabled_without_block():
+    sqft = pd.Series([100 * AC], index=[1])
+    assert not phasing.land_phased(sqft, pd.Series(["RESIDENTIAL"], index=[1]),
+                                   phasing.land_phasing_cfg({})).any()
+
+
+def test_land_phased_needs_size_and_planned_use():
+    sqft = pd.Series([40 * AC, 10 * AC, 40 * AC], index=[1, 2, 3])
+    use = pd.Series(["RESIDENTIAL", "RESIDENTIAL", "AGRICULTURAL"], index=[1, 2, 3])
+    assert phasing.land_phased(sqft, use, LAND).tolist() == [True, False, False]
+
+
+def test_phase_size_caps_phased_parcels_only():
+    avail = pd.Series([40 * AC, 6 * AC, 40 * AC])
+    phased = pd.Series([True, True, False])
+    assert (phasing.phase_size(avail, phased, LAND) / AC).tolist() == [15, 6, 40]
+
+
+def test_land_used_by_density():
+    used = phasing.land_used_sqft([30, 45, 200], [81, 82, 83], LAND) / AC
+    assert used[:2].tolist() == [15, 10]
+    assert np.isnan(used[2])  # no density for the type: the caller keeps the footprint
+
+
+RULES = phasing.land_phasing_cfg({"land_phasing": {
+    "enabled": True, "units_per_acre": {81: 2.0, 83: 7.0}, "min_units": {83: 60}}})
+
+
+def test_min_units_read_from_config():
+    assert RULES["min_units"] == {83: 60}
+    assert phasing.land_phasing_cfg({})["min_units"] == {}
+
+
+def test_small_apartments_allowed_on_unphased_parcels_only():
+    ok = phasing.phase_proposal_ok([9, 9, 59, 60], [83, 83, 83, 83],
+                                   [False, True, True, True], [40 * AC] * 4, RULES)
+    assert ok.tolist() == [True, False, False, True]
+
+
+def test_phase_size_limit_and_types_without_rules():
+    # 15-acre phase: 30 single-family units fit, 31 do not; apartments up to 105;
+    # condo (82) has no density and no minimum in RULES: no limit
+    ok = phasing.phase_proposal_ok([30, 31, 105, 106, 500], [81, 81, 83, 83, 82],
+                                   [True] * 5, [15 * AC] * 5, RULES)
+    assert ok.tolist() == [True, False, True, False, True]
