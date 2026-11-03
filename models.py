@@ -4282,6 +4282,8 @@ def run_developer(
     # keep_suboptimal tables are long form and pick() ignores `forms`, so filter
     # here; the full table goes back to orca for the next form's pass
     full_feasibility = dev.feasibility
+    if profit is None and "form" in dev.feasibility.columns:
+        dev.feasibility = dev.feasibility[dev.feasibility["form"].isin(forms)]
     if profit is not None:
         f = dev.feasibility
         fun = {"target": target_units}
@@ -4333,7 +4335,10 @@ def run_developer(
             return 0, []
 
     new_buildings = dev.pick(profit_to_prob_func, custom_selection_func)
-    orca.add_table("feasibility_" + str(geoid), full_feasibility if profit is not None else dev.feasibility)
+    if profit is None and new_buildings is not None and len(new_buildings):
+        # pick() keeps built parcels in a long-form table: drop them for the later calls
+        full_feasibility = full_feasibility[~full_feasibility.index.isin(new_buildings.parcel_id)]
+    orca.add_table("feasibility_" + str(geoid), full_feasibility)
 
     if new_buildings is None or len(new_buildings) == 0:
         return 0, []
