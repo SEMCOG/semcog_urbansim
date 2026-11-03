@@ -79,6 +79,13 @@ land_phasing:
   min_units:
     83: 60
 
+# Feasible capacity (the cap of the city developer target): also count the loss-making
+# proposals the least-loss pass can build (its apartment and condo minimums). Large
+# areas listed keep the profitable-only cap (Detroit: yearly vacancy gap ~45k units).
+feasible_loss_capacity:
+  enabled: false
+  exclude_large_areas: [5]
+
 # Type mix: an apartment needs at least this many net units (multi-family,
 # 5+ units); also the smallest city apartment quota of the type mix. 0 or missing: no minimum.
 min_apartment_units: 5
