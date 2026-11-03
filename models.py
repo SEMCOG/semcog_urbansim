@@ -3440,9 +3440,10 @@ def feasibility(parcels, buildings, btype_form_map):
     pcl_la_s = parcels.to_frame(["large_area_id"])["large_area_id"]
 
     # Enforce single-building constraint for SF parcels (land_use_type_id=11).
+    # (phased parcels keep their remaining land for the next phase)
     sf_parcel_ids = set(
-        parcels.to_frame(["land_use_type_id"])
-        .query("land_use_type_id == 11").index
+        parcels.to_frame(["land_use_type_id", "land_phased"])
+        .query("land_use_type_id == 11 and not land_phased").index
     )
     occupied_sf = (
         bldgs[(bldgs["parcel_id"].isin(sf_parcel_ids)) & (bldgs["residential_units"] > 0)]
@@ -3518,6 +3519,12 @@ def feasibility(parcels, buildings, btype_form_map):
         variables.parcel_is_allowed_2055,
         cfg="proforma.yaml",
         modify_costs=cost_shifter_callback,
+        # land phasing: the pro forma sees one phase of land and no building purchase on
+        # phased parcels; the parcels table (read by HLCM) keeps the real values
+        # (land_phased: read by the proforma.yaml parcel_filter)
+        site_overrides={"parcel_size": parcels.dev_parcel_size,
+                        "land_cost": parcels.dev_land_cost,
+                        "land_phased": parcels.land_phased},
     )
     feasibility = orca.get_table("feasibility").to_frame()
     # MCD feasibility
@@ -4249,7 +4256,8 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
         return
     bldgs = orca.get_table("buildings").to_frame(
         ["parcel_id", "residential_units", "sqft_per_unit",
-         "non_residential_sqft", "stories", "year_built"]
+         "non_residential_sqft", "stories", "year_built",
+         "planned_units", "building_type_id"]
     )
     new_b = bldgs[
         (bldgs["year_built"] == year) &
@@ -4263,6 +4271,12 @@ def _calculate_pct_undev(parcels, parcels_idx_to_update, year):
         + new_b["non_residential_sqft"]
     )
     new_b["footprint"] = new_b["building_sqft"] / new_b["stories"].clip(lower=1)
+    # phased parcels: the land of the full project at the density of recent subdivisions
+    phased = parcels.land_phased.reindex(new_b["parcel_id"]).values
+    if phased.any():
+        land = phasing.land_used_sqft(new_b["planned_units"], new_b["building_type_id"],
+                                      orca.get_injectable("land_phasing_cfg"))
+        new_b["footprint"] = new_b["footprint"].where(~(phased & ~np.isnan(land)), land)
     coverage = (
         new_b.groupby("parcel_id")["footprint"].sum()
         / parcels.parcel_sqft.reindex(new_b["parcel_id"].unique())
@@ -4289,6 +4303,17 @@ def _label_developer_removals():
         d["step"] = d["step"].astype(object)
         d.loc[new, "step"] = "developer_redevelopment"
         orca.add_table("dropped_buildings", d)
+
+
+def _land_phase_ok(f, net, parcel_size):
+    """phasing.phase_proposal_ok for the feasibility rows f (index = parcel_id)."""
+    phased = orca.get_table("parcels").land_phased.reindex(f.index, fill_value=False).values
+    if not phased.any() or "form" not in f.columns:
+        return np.ones(len(f), bool)
+    form_to_btype = orca.get_injectable("form_to_btype")
+    btype = f["form"].map(lambda x: form_to_btype[x][0]).values
+    return phasing.phase_proposal_ok(net, btype, phased, parcel_size.reindex(f.index).values,
+                                     orca.get_injectable("land_phasing_cfg"))
 
 
 def run_developer(
@@ -4397,6 +4422,9 @@ def run_developer(
             if "form" in f.columns:
                 f = f[(f["form"] != form) | (f["_net"] >= n)]
         _funnel_step(fun, "min_units", f)
+        # phased parcels: no project larger than the land phase, none below the type's minimum
+        f = f[_land_phase_ok(f, f["_net"].values, dev.parcel_size)]
+        _funnel_step(fun, "land_phase", f)
         if profit == "unprofitable" or size_limit:
             # no proposal larger than the target of the call (+ the overshoot tolerance):
             # one large project must not exceed a small quota. Without this limit the
@@ -4447,17 +4475,26 @@ def run_developer(
     # set default hu_filter to 0
     new_buildings["hu_filter"] = 0
 
-    parcel_utils.add_buildings(
-        dev.feasibility,
-        buildings,
-        new_buildings,
-        probable_type,
-        add_more_columns_callback,
-        supply_fname,
-        True,
-        unplace_agents,
-        pipeline,
-    )
+    # a new phase on a phased parcel keeps the earlier phases' buildings; elsewhere
+    # the new building replaces the parcel's buildings
+    phased = new_buildings.parcel_id.isin(
+        orca.get_table("parcels").land_phased.pipe(lambda s: s[s].index))
+    pid_need_updates += [pid for pid in new_buildings.parcel_id[phased]
+                         if pid not in pid_need_updates]
+    for part, remove in ((new_buildings[~phased], True), (new_buildings[phased], False)):
+        if len(part):
+            # current table: the first call replaces the orca buildings table
+            parcel_utils.add_buildings(
+                dev.feasibility,
+                orca.get_table("buildings"),
+                part.copy(),
+                probable_type,
+                add_more_columns_callback,
+                supply_fname,
+                remove,
+                unplace_agents,
+                pipeline,
+            )
     _label_developer_removals()
     # calculate spaces_added
     if supply_fname == 'job_spaces':
@@ -4639,6 +4676,11 @@ def residential_developer(
         print("  City demand band {:.2f}: {} of {} cities clipped, {:,.0f} households moved".format(
             city_demand_band, int((moved > 0.5).sum()), len(moved), moved.sum() / 2.0))
 
+    # developer inputs: a new land phase keeps the parcel's units, so its net units
+    # are its units
+    dev_parcel_size = parcels.dev_parcel_size
+    dev_current_units = parcels.total_units.where(~parcels.land_phased, 0)
+
     # compute per-city target_units
     city_data = {}
     for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
@@ -4783,9 +4825,9 @@ def residential_developer(
                 forms,
                 orca.get_table("buildings"),
                 "residential_units",
-                parcels.parcel_size,
+                dev_parcel_size,
                 parcels.ave_unit_size,
-                parcels.total_units,
+                dev_current_units,
                 "res_developer.yaml",
                 add_more_columns_callback=add_phased_res_columns,
                 custom_selection_func=custom_sel_func,
