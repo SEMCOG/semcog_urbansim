@@ -23,6 +23,7 @@ import assumptions
 import demolition_stock
 import phasing
 import res_capacity
+import vacancy_floor
 import type_mix
 import utils
 import lcm_utils
@@ -3132,7 +3133,7 @@ def _demolition_pressure_ratio(b_eligible, year, base_year, window=5):
 
 @orca.step()
 def scored_demolition_events(buildings, parcels, households, jobs, year, demolition_rates, base_year,
-                             demolition_stock_rates):
+                             demolition_stock_rates, target_res_vacancies_mcd):
     """
     Scored replacement for random_demolition_events.
 
@@ -3324,17 +3325,29 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         res_ok &= ~la_b.isin(sp["detroit_la_ids"]) | exempt
     res_eligible = b.loc[res_ok]
     if stock_mode:
-        # Detroit vacancy floor: the residential targets of a neighborhood share
-        # one cap, so its vacancy does not fall below floor_c.
+        # Vacancy floor: the residential targets of a city share one cap, so its
+        # vacancy does not fall below its floor. Detroit neighborhoods use floor_c;
+        # with vacancy_floor enabled, all other cities get max(res_min, share x base).
+        floor_cities = city_la[city_la.isin(sp["detroit_la_ids"])].index
+        vf = cfg.get("vacancy_floor", {}) or {}
+        if vf.get("enabled", False):
+            base_vac = target_res_vacancies_mcd.to_frame()[str(base_year)]
+            other_floor = pd.Series(vacancy_floor.floor_rate(
+                base_vac, vf["share_of_base"], vf["res_min"]), index=base_vac.index)
+            floor_cities = city_la.index
         res_cats = list(demolition_stock.RES_CATEGORIES)
         res_b = b[b.residential_units > 0]
         units = res_b.groupby("city_id")["residential_units"].sum()
         vacant = res_b["vacant_residential_units"].clip(lower=0).groupby(res_b["city_id"]).sum()
         avail = (res_eligible.groupby(["city_id", "building_type_id"])["residential_units"].sum()
                  .unstack().rename(columns={v: k for k, v in demolition_stock.RES_CATEGORIES.items()}))
-        for city_id in city_la[city_la.isin(sp["detroit_la_ids"])].index.intersection(demolition_rates.index):
+        for city_id in floor_cities.intersection(demolition_rates.index):
+            if city_la.get(city_id) in sp["detroit_la_ids"]:
+                floor_c = city_floor.get(city_id, sp["floor_min"])
+            else:
+                floor_c = other_floor.get(city_id, vf["res_min"])
             cap = float(demolition_stock.floor_cap(vacant.get(city_id, 0), units.get(city_id, 0),
-                                                   city_floor.get(city_id, sp["floor_min"])))
+                                                   floor_c))
             have = avail.loc[city_id] if city_id in avail.index else pd.Series(0.0, index=res_cats)
             demolition_rates.loc[city_id, res_cats] = demolition_stock.allocate_cap(
                 demolition_rates.loc[city_id, res_cats], cap, have).values
@@ -4550,6 +4563,17 @@ def residential_developer(
     _min_apt = int(_res_cfg.get("min_apartment_units", 0) or 0)
     _min_loss_condo = int(_res_cfg.get("min_loss_condo_units", 0) or 0)
 
+    # vacancy floor: housing demolished since the base year is not rebuilt, and the
+    # target never goes below the floor (vacancy_floor.py)
+    _vf = _load_demolition_cfg().get("vacancy_floor", {}) or {}
+    if _vf.get("enabled", False):
+        _base_vac = target_res_vacancies_mcd.to_frame()[str(orca.get_injectable("base_year"))]
+        _res_floor = pd.Series(vacancy_floor.floor_rate(
+            _base_vac, _vf["share_of_base"], _vf["res_min"]), index=_base_vac.index)
+        _demo_units = (vacancy_floor.demolished_units(orca.get_table("dropped_buildings").to_frame(
+            ["step", "city_id", "residential_units"])) if orca.is_table("dropped_buildings")
+            else pd.Series(dtype=float))
+
     # compute per-city target_units
     city_data = {}
     for cityid, _ in parcels.city_id.to_frame().groupby("city_id"):
@@ -4565,7 +4589,12 @@ def residential_developer(
         num_units  = int(city_orig_buildings.supply_units.sum())
         assert target_vacancy < 1.0
 
-        vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
+        if _vf.get("enabled", False):
+            vacancy_gap_signed = float(vacancy_floor.target_space(
+                cur_agents, target_vacancy, _demo_units.get(cityid, 0),
+                _res_floor.get(cityid, _vf["res_min"]))) - num_units
+        else:
+            vacancy_gap_signed = cur_agents / (1.0 - target_vacancy) - num_units
         target_units_raw = vacancy_gap_signed
 
         feas_df   = orca.get_table("feasibility_city_" + str(cityid)).to_frame()
@@ -4868,6 +4897,20 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
     orig_jobs = jobs.to_frame(['building_id', 'home_based_status', 'city_id'])
     orig_jobs = orig_jobs[orig_jobs.home_based_status == 0]
 
+    # vacancy floor: job spaces demolished since the base year are not rebuilt, and the
+    # target never goes below the floor (vacancy_floor.py)
+    vf = _load_demolition_cfg().get("vacancy_floor", {}) or {}
+    if vf.get("enabled", False):
+        base_tgt = tgt[str(orca.get_injectable("base_year"))].astype(float)
+        nonres_floor = pd.Series(vacancy_floor.floor_rate(base_tgt, vf["share_of_base"]),
+                                 index=base_tgt.index)
+        btype_group = {bt: grp for grp, gdef in groups.items() for bt in gdef["btypes"]}
+        demo_spaces = (vacancy_floor.demolished_job_spaces(
+            orca.get_table("dropped_buildings").to_frame(
+                ["step", "city_id", "building_type_id", "non_residential_sqft"]),
+            sqft_per_job, btype_group) if orca.is_table("dropped_buildings")
+            else pd.Series(dtype=float))
+
     skipped_no_target = 0
     skipped_no_stock = 0
     diag = []  # one row per city x group, written to diagnostics/nonres_developer_city.csv
@@ -4907,11 +4950,18 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
                 continue
             num_agents = city_jobs.building_id.isin(grp_blds.index).sum()
 
-            target_spaces = num_agents / (1 - target_vacancy)
+            if vf.get("enabled", False):
+                demolished = float(demo_spaces.get((cityid, group), 0))
+                target_spaces = float(vacancy_floor.target_space(
+                    num_agents, target_vacancy, demolished,
+                    nonres_floor.get((cityid, group), 0.0)))
+            else:
+                demolished, target_spaces = 0.0, num_agents / (1 - target_vacancy)
             target_units = int(max(target_spaces - num_units, 0))
             row.update(jobs=int(num_agents), spaces=int(num_units),
                        vacancy=1 - num_agents / float(num_units),
-                       target_spaces=target_spaces, requested=target_units)
+                       demolished_spaces=demolished, target_spaces=target_spaces,
+                       requested=target_units)
             if target_units <= 0:
                 row["skip"] = "no_gap"
                 continue
@@ -4961,7 +5011,7 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
         _append_res_diagnostics(orca.get_injectable("data_out_dir"),
                                 {"nonres_developer_city": pd.DataFrame(diag, columns=[
                                     "year", "city_id", "form", "skip", "target_vacancy", "jobs",
-                                    "spaces", "vacancy", "target_spaces",
+                                    "spaces", "vacancy", "demolished_spaces", "target_spaces",
                                     "requested", "built"]),
                                  "nonres_selected_proposals": pd.concat(picked) if picked else pd.DataFrame()})
     if skipped_no_target:
