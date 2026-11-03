@@ -1,7 +1,11 @@
+import os
 import orca
+import yaml
 import pandas as pd
 import numpy as np
 from urbansim.utils import misc
+
+import phasing
 
 
 #####################
@@ -180,6 +184,7 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1, purpose="constructio
             "building_age",
             "event_id",
             "sp_filter",
+            "planned_units",
         ]
     )
     year = orca.get_injectable("year")
@@ -226,6 +231,19 @@ def parcel_is_allowed_2055(form=None, impr_to_land_ratio=1, purpose="constructio
         pcl_highval_blds = pcl_highval_blds & (~has_room)
 
     pcl_landmark_worksite = pcl_index.isin(buildings[buildings.sp_filter == -1].parcel_id)
+
+    if purpose == "construction":
+        # phased parcels: the next land phase waits until the project on the parcel is
+        # delivered and its newest building is gap_years old; earlier phases stay, so
+        # their value does not protect the parcel
+        phased = parcels.land_phased.reindex(pcl_index, fill_value=False)
+        gap_years = orca.get_injectable("land_phasing_cfg")["gap_years"]
+        recent = (buildings.groupby("parcel_id").building_age.min() < gap_years).reindex(
+            pcl_index, fill_value=False)
+        unfinished = pcl_index.isin(
+            buildings[buildings.planned_units > buildings.residential_units].parcel_id)
+        pcl_new_building = pcl_new_building.where(~phased, recent | unfinished)
+        pcl_highval_blds = pcl_highval_blds & ~phased
 
     protected = (
         pcl_new_building
@@ -276,12 +294,31 @@ def tract_id(parcels):
     return tract_id
 
 
+@orca.injectable("land_phasing_cfg", cache=True)
+def land_phasing_cfg():
+    with open(os.path.join(misc.configs_dir(), "res_developer.yaml")) as f:
+        return phasing.land_phasing_cfg(yaml.load(f, Loader=yaml.FullLoader))
+
+
+@orca.column("parcels", cache=True)
+def land_phased(parcels, zoning, land_phasing_cfg):
+    # large parcels with a planned residential use, developed one land phase at a time
+    return phasing.land_phased(parcels.parcel_sqft, zoning.future_use, land_phasing_cfg)
+
+
 @orca.column("parcels", cache=True, cache_scope="iteration")
 def parcel_size(parcels):
     # apply pct_undev to parcel_size, which will be used in feasibility step
     return parcels.parcel_sqft - (
         (parcels.pct_undev.clip(0, 100) / 100) * parcels.parcel_sqft
     )
+
+
+@orca.column("parcels", cache=True, cache_scope="iteration")
+def dev_parcel_size(parcels, land_phasing_cfg):
+    # land the developer is offered: one phase of the remaining land on phased parcels.
+    # Feasibility and developer only; HLCM reads the real parcel_size
+    return phasing.phase_size(parcels.parcel_size, parcels.land_phased, land_phasing_cfg)
 
 
 @orca.column("parcels")
@@ -351,6 +388,13 @@ def land_cost(parcels, nodes_walk):
         "ave_nonres_sqft_price", parcels
     )
     return (res + non_res).reindex(parcels.index).fillna(0)
+
+
+@orca.column("parcels")
+def dev_land_cost(parcels):
+    # a new phase keeps the earlier phases' buildings, so it buys no building.
+    # Feasibility only; HLCM reads the real land_cost
+    return parcels.land_cost.where(~parcels.land_phased, 0)
 
 
 @orca.column("parcels", cache=True, cache_scope="iteration")
