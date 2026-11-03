@@ -22,6 +22,7 @@ from forecast_estimation.utils import load_taz_vars_from_orca
 import assumptions
 import demolition_stock
 import phasing
+import res_capacity
 import type_mix
 import utils
 import lcm_utils
@@ -4414,9 +4415,8 @@ def run_developer(
             f = f[~f.index.isin(list(exclude_parcels))]
         f = f[f["max_profit"] > 0] if profit == "profitable" else f[f["max_profit"] <= 0]
         # net units as in Developer.pick
-        unit_size = np.maximum(dev.ave_unit_size.reindex(f.index).values, dev.min_unit_size)
-        f = f.assign(_net=(f["residential_sqft"].values / unit_size).round()
-                     - dev.current_units.reindex(f.index).values)
+        f = f.assign(_net=res_capacity.net_units(f, dev.ave_unit_size, dev.current_units,
+                                                 dev.min_unit_size))
         _funnel_step(fun, "form_unused_profit", f)
         for form, n in (min_units_by_form or {}).items():
             if "form" in f.columns:
@@ -4676,8 +4676,8 @@ def residential_developer(
         print("  City demand band {:.2f}: {} of {} cities clipped, {:,.0f} households moved".format(
             city_demand_band, int((moved > 0.5).sum()), len(moved), moved.sum() / 2.0))
 
-    # developer inputs: a new land phase keeps the parcel's units, so its net units
-    # are its units
+    # developer inputs, also used for the feasible capacity: a new land phase keeps the
+    # parcel's units, so its net units are its units
     dev_parcel_size = parcels.dev_parcel_size
     dev_current_units = parcels.total_units.where(~parcels.land_phased, 0)
 
@@ -4701,14 +4701,15 @@ def residential_developer(
 
         feas_df   = orca.get_table("feasibility_city_" + str(cityid)).to_frame()
         res_feas  = feas_df[feas_df["form"].isin(res_forms)]
-        profitable = res_feas[res_feas["max_profit"] > 0]
-        if len(profitable) > 0:
-            ave_unit_sz = parcels.ave_unit_size.reindex(profitable.index).fillna(1000)
-            feasible_units = int(
-                (profitable["residential_sqft"] / ave_unit_sz).clip(lower=0).sum()
-            )
-        else:
-            feasible_units = 0
+        # units buildable from profitable proposals, the largest per parcel (the table
+        # holds several FAR variants and forms per parcel), with Developer.pick's filters
+        # and the land phase rules
+        net = res_capacity.net_units(res_feas, parcels.ave_unit_size, dev_current_units,
+                                     _res_cfg["min_unit_size"])
+        allowed = _land_phase_ok(res_feas, net, dev_parcel_size)
+        feasible_units = res_capacity.feasible_capacity(
+            res_feas, dev_parcel_size, parcels.ave_unit_size, dev_current_units,
+            _res_cfg["min_unit_size"], _res_cfg["max_parcel_size"], allowed=allowed)
         target_units = int(np.clip(target_units_raw, 0, feasible_units))
         cap = share_cap.get(cityid, np.nan) if share_cap is not None else np.nan
         headroom = None if pd.isna(cap) else int(max(0, cap - num_units))
