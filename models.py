@@ -4680,6 +4680,9 @@ def residential_developer(
     # parcel's units, so its net units are its units
     dev_parcel_size = parcels.dev_parcel_size
     dev_current_units = parcels.total_units.where(~parcels.land_phased, 0)
+    _loss_cap = _res_cfg.get("feasible_loss_capacity", {}) or {}
+    _min_apt = int(_res_cfg.get("min_apartment_units", 0) or 0)
+    _min_loss_condo = int(_res_cfg.get("min_loss_condo_units", 0) or 0)
 
     # compute per-city target_units
     city_data = {}
@@ -4707,9 +4710,20 @@ def residential_developer(
         net = res_capacity.net_units(res_feas, parcels.ave_unit_size, dev_current_units,
                                      _res_cfg["min_unit_size"])
         allowed = _land_phase_ok(res_feas, net, dev_parcel_size)
+        # feasible_loss_capacity: also count the loss-making proposals the least-loss
+        # pass can build (its apartment and condo minimums), except in the large areas
+        # listed (Detroit: the profitable-only cap limits its loss-making building)
+        include_loss = (bool(_loss_cap.get("enabled", False))
+                        and city_to_la.get(cityid) not in _loss_cap.get("exclude_large_areas", []))
+        if include_loss:
+            loss = res_feas["max_profit"].values <= 0
+            form = res_feas["form"].values
+            allowed &= ~(loss & (((form == "apartment") & (net < _min_apt))
+                                 | ((form == "condo") & (net < _min_loss_condo))))
         feasible_units = res_capacity.feasible_capacity(
             res_feas, dev_parcel_size, parcels.ave_unit_size, dev_current_units,
-            _res_cfg["min_unit_size"], _res_cfg["max_parcel_size"], allowed=allowed)
+            _res_cfg["min_unit_size"], _res_cfg["max_parcel_size"],
+            allowed=allowed, profitable_only=not include_loss)
         target_units = int(np.clip(target_units_raw, 0, feasible_units))
         cap = share_cap.get(cityid, np.nan) if share_cap is not None else np.nan
         headroom = None if pd.isna(cap) else int(max(0, cap - num_units))
