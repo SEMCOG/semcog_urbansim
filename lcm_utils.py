@@ -445,7 +445,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         picked_bid = predict_X_df.iloc[picked_idx].index
 
         # Assign buildings
-        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values
+        choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values.astype(
+            choosers_df['building_id'].dtype)
         orca.get_table('jobs').update_col_from_series('building_id', choosers_df.loc[final_choosers_df.index, 'building_id'], cast=True)
 
         # Update capacity if applicable
