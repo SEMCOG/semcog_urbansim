@@ -3912,7 +3912,8 @@ def _score_with_model(feasibility, model_entry, parcel_features_df):
     return pd.Series(exp_u / exp_u.sum(), index=feasibility.index)
 
 
-def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None, share=None):
+def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=None,
+                                  share=None, band=0):
     """Households per city for the residential developer's vacancy gap.
 
     At developer time, households added by transition (and movers) are unplaced
@@ -3935,6 +3936,9 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=Non
         Share of its large area's change each city takes, indexed by city_id;
         renormalized within each large area, and the live snapshot share where a
         large area has none. Omitted: the live snapshot share (see city_base_share).
+    band : float, optional
+        Hold each city within this fraction of its base-share level (see
+        city_demand_cap). 0 or missing: the live level, uncapped.
 
     Returns
     -------
@@ -3942,18 +3946,72 @@ def city_households_for_developer(hh_large_area, city_to_la, snapshot, trend=Non
     """
     la = city_to_la.reindex(snapshot.index)
     snap_la = snapshot.groupby(la).sum()
-    la_change = hh_large_area.value_counts().reindex(snap_la.index, fill_value=0) - snap_la
+    la_now = hh_large_area.value_counts().reindex(snap_la.index, fill_value=0)
     trend = (pd.Series(0.0, index=snapshot.index) if trend is None
              else trend.reindex(snapshot.index, fill_value=0.0))
-    rest = la_change - trend.groupby(la).sum()
-    live = snapshot / la.map(snap_la)
+    rest = la_now - snap_la - trend.groupby(la).sum()
+    live_share = snapshot / la.map(snap_la)
     if share is None:
-        share = live
+        share = live_share
     else:
         share = share.reindex(snapshot.index).fillna(0.0)
         tot = la.map(share.groupby(la).sum())
-        share = (share / tot).where(tot > 0, live)
-    return snapshot + trend + share * la.map(rest)
+        share = (share / tot).where(tot > 0, live_share)
+    out = snapshot + trend + share * la.map(rest)
+    if not band:
+        return out
+    return city_demand_cap(share * la.map(la_now), out, city_to_la, band)
+
+
+def city_demand_cap(base, live, city_to_la, band):
+    """Hold the developer's expected households within `band` of the base-share level.
+
+    `live` carries the loop the vacancy gap feeds back on: households placed in a
+    city raise its own demand the next year, and nothing pushes them out again.
+    `base` is the same year without that loop - the frozen share of the large
+    area's current total - so clipping the deviation leaves ordinary divergence
+    alone and only bites a runaway. Clipped households return to the cities of the
+    same large area that still have room, keeping large-area totals; where every
+    city sits at the band they cannot be kept. A city with no base households is
+    left uncapped rather than pinned at zero.
+
+    Parameters
+    ----------
+    base : pd.Series
+        Loop-free household level per city.
+    live : pd.Series
+        Level the developer would use, indexed like `base`.
+    city_to_la : pd.Series
+        large_area_id indexed by city_id.
+    band : float
+        Fraction of `base` a city may deviate by. 0 returns `live` unchanged.
+
+    Returns
+    -------
+    pd.Series of (fractional) household counts indexed by city_id.
+    """
+    if not band:
+        return live
+    la = city_to_la.reindex(live.index)
+    base = base.reindex(live.index).fillna(0.0)
+    on = base > 0
+    if not on.any():
+        return live
+    lb, cap = la[on], band * base[on]
+    raw = live[on] - base[on]
+    want = raw.groupby(lb).sum()
+    dev = raw.clip(-cap, cap)
+    for _ in range(10):
+        left = lb.map(want - dev.groupby(lb).sum())
+        if left.abs().max() < 1e-6:
+            break
+        room = pd.Series(np.where(left > 0, cap - dev, dev + cap),
+                         index=dev.index).clip(lower=0)
+        tot = lb.map(room.groupby(lb).sum())
+        dev = (dev + (left * room / tot).where(tot > 0, 0.0)).clip(-cap, cap)
+    out = live.astype(float).copy()
+    out[on] = base[on] + dev
+    return out
 
 
 def city_base_share(snapshot, city_to_la):
@@ -4488,6 +4546,7 @@ def residential_developer(
     # how far a city's share of its large area's housing stock may drift from the
     # share it started with (city_share_cap); 0 disables the cap
     city_share_band = _res_cfg.get("city_share_band", 0.15)
+    city_demand_band = _res_cfg.get("city_demand_band", 0)
     lookback_year = year - 7
 
     base_year  = orca.get_injectable("base_year")
@@ -4561,15 +4620,24 @@ def residential_developer(
         hh_city = households.city_id
         city_hh_snapshot = hh_city[hh_city.notna()].astype(int).value_counts()
     city_trend = city_excess_momentum(year, city_hh_snapshot, city_to_la, city_momentum_fade)
+    city_base_hh_share = city_base_share(city_hh_snapshot, city_to_la)
     city_hh = city_households_for_developer(
         households.large_area_id, city_to_la, city_hh_snapshot, city_trend,
-        city_base_share(city_hh_snapshot, city_to_la)
+        city_base_hh_share, city_demand_band
     )
     share_cap = city_share_cap(
         orig_buildings.groupby("city_id")["supply_units"].sum(), city_to_la, city_share_band
     )
     print("  City households: {:,} placed (snapshot), momentum |{:,.0f}|, LA change {:+,.0f}".format(
         int(city_hh_snapshot.sum()), city_trend.abs().sum(), city_hh.sum() - city_hh_snapshot.sum()))
+    if city_demand_band:
+        raw = city_households_for_developer(
+            households.large_area_id, city_to_la, city_hh_snapshot, city_trend,
+            city_base_hh_share
+        )
+        moved = (city_hh - raw).abs()
+        print("  City demand band {:.2f}: {} of {} cities clipped, {:,.0f} households moved".format(
+            city_demand_band, int((moved > 0.5).sum()), len(moved), moved.sum() / 2.0))
 
     # compute per-city target_units
     city_data = {}
