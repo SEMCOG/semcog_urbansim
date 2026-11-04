@@ -138,6 +138,70 @@ def test_share_renormalizes_and_falls_back_where_absent():
     _reset("city_base_hh_share")
 
 
+def test_demand_cap_off_returns_the_live_level():
+    live = pd.Series({10: 90.0, 20: 40.0, 30: 50.0})
+    base = pd.Series({10: 66.0, 20: 44.0, 30: 50.0})
+    assert models.city_demand_cap(base, live, CITY_TO_LA, 0).equals(live)
+    assert models.city_demand_cap(base, live, CITY_TO_LA, None).equals(live)
+
+
+def test_demand_cap_clips_the_runaway_and_keeps_the_la_total():
+    base = pd.Series({10: 60.0, 20: 40.0, 30: 50.0})
+    live = pd.Series({10: 75.0, 20: 25.0, 30: 50.0})   # city 10 +25%, city 20 -37.5%
+    out = models.city_demand_cap(base, live, CITY_TO_LA, 0.1)
+    # city 20 hits its band (-4) first, so the 2 it cannot give up stay with city 10
+    assert out[10] == 64.0 and out[20] == 36.0
+    assert out[30] == 50.0
+    assert out.groupby(CITY_TO_LA).sum().round(6).to_dict() == {3: 100.0, 5: 50.0}
+
+
+def test_demand_cap_leaves_deviation_inside_the_band_alone():
+    base = pd.Series({10: 60.0, 20: 40.0, 30: 50.0})
+    live = pd.Series({10: 63.0, 20: 37.0, 30: 50.0})   # +5% / -7.5%
+    out = models.city_demand_cap(base, live, CITY_TO_LA, 0.1)
+    assert out.round(6).equals(live)
+
+
+def test_demand_cap_returns_clipped_households_to_cities_with_room():
+    city_to_la = pd.Series({1: 3, 2: 3, 3: 3})
+    base = pd.Series({1: 100.0, 2: 100.0, 3: 100.0})
+    live = pd.Series({1: 140.0, 2: 90.0, 3: 70.0})     # city 1 +40% over a 0.1 band
+    out = models.city_demand_cap(base, live, city_to_la, 0.1)
+    assert out[1] == 110.0                              # clipped to the band
+    assert round(out.sum()) == 300                      # the other 30 go back to 2 and 3
+    assert out[2] > live[2] and out[3] > live[3]
+    assert ((out - base).abs() <= 0.1 * base + 1e-9).all()
+
+
+def test_demand_cap_leaves_a_city_with_no_base_households_uncapped():
+    base = pd.Series({10: 60.0, 20: 0.0, 30: 50.0})
+    live = pd.Series({10: 60.0, 20: 40.0, 30: 50.0})
+    out = models.city_demand_cap(base, live, CITY_TO_LA, 0.1)
+    assert out[20] == 40.0 and out[10] == 60.0
+
+
+def test_demand_cap_cannot_keep_the_total_when_every_city_is_at_the_band():
+    city_to_la = pd.Series({1: 3, 2: 3, 3: 3})
+    base = pd.Series({1: 100.0, 2: 100.0, 3: 100.0})
+    live = pd.Series({1: 200.0, 2: 200.0, 3: 200.0})
+    out = models.city_demand_cap(base, live, city_to_la, 0.1)
+    assert out.to_dict() == {1: 110.0, 2: 110.0, 3: 110.0}
+
+
+def test_band_through_city_households_for_developer():
+    _reset("city_base_hh_share")
+    share = models.city_base_share(SNAPSHOT, CITY_TO_LA)
+    # city 10 has taken all of LA 3's growth: live 90/40, base share level 66/44
+    grown = pd.Series({10: 90, 20: 40, 30: 50})
+    hh_la = pd.Series([3] * 140 + [5] * 50)
+    free = models.city_households_for_developer(hh_la, CITY_TO_LA, grown, None, share)
+    held = models.city_households_for_developer(hh_la, CITY_TO_LA, grown, None, share, 0.1)
+    # base level 84/56; city 20's band binds at -5.6 and the rest returns to city 10
+    assert free[10] == 96 and held.round(6)[10] == 89.6
+    assert held.groupby(CITY_TO_LA).sum().round(6).to_dict() == {3: 140.0, 5: 50.0}
+    _reset("city_base_hh_share")
+
+
 def test_share_cap_holds_a_city_to_its_band():
     _reset("city_base_units")
     units = pd.Series({10: 600, 20: 400, 30: 500})
