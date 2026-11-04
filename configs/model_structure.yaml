@@ -9,7 +9,11 @@ models:
         vacant_variable: vacant_residential_units
         calibration:
             enabled: true
-            strength: 2.5 # log-scale gain on the target; 0 disables
+            # log-scale gain on the target; 0 disables. Cut from 2.5 when the
+            # marginals below were turned on: under method stratified the whole
+            # tilt lands, and the joint cell is the noisy part of it (median 102
+            # households a tract against 361 and 458 for the marginals)
+            strength: 1.5
             clip: [0.5, 2.0]
             # - score: add ln(w) to every slot's key and let the draw settle it.
             # - stratified: spend the same w on how many slots each tract draws and
@@ -25,7 +29,8 @@ models:
             # segment: n/(n+k). 0 disables it, and unshrunk thin cells inject
             # enough noise that closure regresses above strength 3. k 15 was
             # tried in run1515 and damped the income signal with the thin-cell
-            # noise; drift rose on every dimension where the calibrator acts alone
+            # noise; drift rose on every dimension where the calibrator acts alone,
+            # so the joint cell is held back by strength, not by more shrink
             shrink_k: 5
             # hold a tract to the mix implied by what it built: its own base-year
             # mix tilted by the new-stock ratio, not the large area's new-stock mix
@@ -50,10 +55,18 @@ models:
             marginal:
                 clip: [0.5, 2.0]
                 shrink_k: 5
+                # run1513 (method score) against run1514 (stratified, nothing
+                # else changed) cost children 1.93 -> 2.23 and senior 2.59 -> 3.08
+                # on region-adjusted tract drift while income improved, because
+                # stratified lands the joint cell's noise in full. These move that
+                # pull onto the two marginals: per unit of strength they tilt 0.202
+                # (children) and 0.121 (senior) against the joint cell's 0.181, so
+                # 1.0 and 1.5 replace about what strength 2.5 -> 1.5 gives up.
+                # Income is left to the joint cell, which it improved under.
                 dimensions:
                     income: 0
-                    children: 0
-                    senior: 0
+                    children: 1.0
+                    senior: 1.5
 
     elcm: 
         model_type: location_choice
