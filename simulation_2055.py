@@ -38,7 +38,8 @@ orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTRO
 orca.add_injectable('allow_total_pop_fallback', False)
 # households matching no control category: warn (False) or raise (True)
 orca.add_injectable('require_full_control_coverage', False)
-REMI_PRICE_GROWTH = True
+# Nominal growth on prices and construction costs; issue #130
+REMI_PRICE_GROWTH = False
 orca.add_injectable('remi_price_growth', REMI_PRICE_GROWTH)
 # run-level random seed; None draws a fresh one (logged in run_config.yaml)
 RANDOM_SEED = 271828
