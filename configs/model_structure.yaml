@@ -11,42 +11,20 @@ models:
             enabled: true
             strength: 2.5 # log-scale gain on the target; 0 disables
             clip: [0.5, 2.0]
-            # - score: add ln(w) to every slot's key and let the draw settle it.
-            # - stratified: spend the same w on how many slots each tract draws and
-            #   leave the choice within a tract to the model
-            method: stratified
-
-            #  floor (use lower bound if weight not found) | neutral (1)
+            # score: add ln(w) to each slot's key | stratified: set per-tract slot counts
+            method: score
+            # floor (use lower bound if weight not found) | neutral (1)
             zero_base_share: neutral
-            # weight units built during the run by the base-year mix of
-            # comparable new stock
+            # weight units built during the run by the base-year mix of comparable new stock
             fill_prior: true
-            # shrink a tract's target toward 1 by base-year households in the
-            # segment: n/(n+k). 0 disables it, and unshrunk thin cells inject
-            # enough noise that closure regresses above strength 3. k 15 was
-            # tried in run1515 and damped the income signal with the thin-cell
-            # noise; drift rose on every dimension where the calibrator acts alone
+            # shrink a tract's target toward 1 by n/(n+k) base-year households; 0 disables
             shrink_k: 5
-            # hold a tract to the mix implied by what it built: its own base-year
-            # mix tilted by the new-stock ratio, not the large area's new-stock mix
+            # target a tract's own base-year mix tilted by its new-stock ratio
             expected_share: true
-            # use_regressor:
-            # true smooths it through an XGBoost fit 
-            # false applies the base/current tract ratio directly 
+            # true smooths through an XGBoost fit; false uses the tract ratio directly
             use_regressor: false
-            # Extra hold on single dimensions, each multiplied into the same tract
-            # weight. The joint cell above is 1/12 of a tract's households (median 81,
-            # a fifth of cells under 10), so its ratio is noisy and strength above ~3
-            # regresses. A marginal pools the cells sharing one value - income 4 of
-            # the 12 (median 439), children and senior 6 each (598, 636) - so under 2%
-            # of cells are thin and it takes a harder pull. A dimension is then held
-            # by its own weight as well as by the joint cell's, which is the point.
-            # Several at once compete for the same placements, so their strengths
-            # trade off; raise one at a time and watch all four drift dimensions.
-            # Keys are hh_categories of the HLCM description. A value is a strength,
-            # or a block of its own: {strength: 4, clip: [0.4, 2.5], shrink_k: 2}.
-            # 0 or absent: that dimension off. clip/shrink_k here are the defaults
-            # for all of them, falling back to the joint weight's.
+            # per-dimension holds on one category's marginal; clip/shrink_k default to
+            # the joint weight's. A value is a strength, or a block of its own.
             marginal:
                 clip: [0.5, 2.0]
                 shrink_k: 5
