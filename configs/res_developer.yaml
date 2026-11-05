@@ -12,23 +12,16 @@ keep_suboptimal: True
 
 noise_scale: 100000
 
-# City excess momentum in the developer's expected households (models.city_excess_momentum):
-# the 2020-25 change above the city's large-area share, multiplied by this factor per year
-# (0.8: half-life about 3 years; backcast of 2000-2025 MCD history)
+# Per-year fade on a city's 2020-25 excess growth in the developer's expected
+# households (models.city_excess_momentum)
 city_momentum_fade: 0.8
 
 # How far a city's share of its large area's housing stock may drift from the share
 # it started with (models.city_share_cap)
 city_share_band: 0.15
 
-# How far the developer's expected households for a city may deviate from the
-# frozen base share of its large area's current total (models.city_demand_cap).
-# The level the vacancy gap divides is the live placed count, so households placed
-# in a city raise its own demand the next year; this caps that excursion.
-# Measured on run1516/run1517, |deviation| is p50 0.03, p90 0.11, max 0.40, and
-# the largest are small cities the base share models badly (Northville +0.39,
-# Fowlerville +0.33), not the runaway cases (Royal Oak +0.06): 0.15 clips 5.5% of
-# city-years, 0.05 clips 32%. 0 or missing: uncapped.
+# How far the developer's expected households for a city may deviate from the frozen
+# base share of its large area's current total (models.city_demand_cap); 0 uncapped
 city_demand_band: 0
 
 la_max_ratio: 1.2
