@@ -96,6 +96,18 @@ SCENARIO_EMP_CONTROL_CSV = _p(
     f"{_SCEN}/annual_employment_control_totals.csv",
 )
 
+# parcel -> state house / senate / congress district, for the legislative
+# geographies in output_indicators. Rebuilt for RDF2055 over
+# gisad.terra_parcels_2023 by scripts/prep/parcel_to_legislative_district.py;
+# without it those geographies are skipped and the ids are -1.
+PARCEL_TO_LEGIS_CSV = _p(
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_tables/parcel_to_legis_rdf2055.csv",
+    f"{_LOCAL}/base_tables/parcel_to_legis_rdf2055.csv",
+    "data/parcel_to_legis_rdf2055.csv",
+    "data/parcel_to_legis.csv",
+)
+
+
 # ---------------------------------------------------------------------------
 # Output destination (optional run-archive copy; consumer guards on existence)
 # ---------------------------------------------------------------------------
