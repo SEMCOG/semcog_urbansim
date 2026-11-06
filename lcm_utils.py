@@ -574,6 +574,61 @@ def _hlcm_tract_adjustment(tract_weights, tract_ids, clip=(0.5, 2.0), strength=1
     return w.reindex(tract_ids).fillna(1.0).to_numpy(), at_bound
 
 
+# one year's MCD vacancy weights, held for every segment of that year. HLCM
+# fills units as it runs, so recomputing per segment would feed each of the 96
+# models a different signal.
+_mcd_vac_cache = {}
+
+
+def _hlcm_mcd_vacancy_weights(year):
+    """Per-MCD weight from how far its vacancy sits above its own target.
+
+    An MCD holding units above its target vacancy has stock standing empty and
+    is pulled forward; one below target has taken more households than the
+    target leaves room for and is held back. In the base year vacancy equals the
+    target everywhere, so the weight starts neutral and only opens as a run
+    diverges.
+
+    The ratio is centered on its large area's unit-weighted mean. A model segment
+    only ever competes over one large area, so that leaves the odds it sees
+    unchanged; what it buys is keeping `clip` from flattening a large area whose
+    vacancy runs far from target in every MCD (147 averages 10x its target).
+
+    Targets are by city_id, so a city's units weight it into its MCD's.
+
+    Returns:
+        pd.Series indexed by semmcd, or None if the targets are unavailable.
+    """
+    if year in _mcd_vac_cache:
+        return _mcd_vac_cache[year]
+    if not orca.is_table('target_res_vacancies_mcd'):
+        return None
+    tgt = orca.get_table('target_res_vacancies_mcd').to_frame()
+    if str(year) not in tgt.columns:
+        return None
+    b = orca.get_table('buildings').to_frame(
+        ['semmcd', 'city_id', 'large_area_id', 'residential_units',
+         'vacant_residential_units'])
+    b = b[b.residential_units > 0]
+    g = b.groupby('semmcd').agg(u=('residential_units', 'sum'),
+                                v=('vacant_residential_units', 'sum'),
+                                la=('large_area_id', 'first'))
+    c = b.groupby(['semmcd', 'city_id']).residential_units.sum().reset_index()
+    c['t'] = c.city_id.map(tgt[str(year)])
+    c = c.dropna(subset=['t'])
+    g['t'] = (c.t * c.residential_units).groupby(c.semmcd).sum() / \
+        c.residential_units.groupby(c.semmcd).sum()
+    g = g[(g.u > 0) & (g.t > 0)]
+    if g.empty:
+        return None
+    r = (g.v / g.u) / g.t
+    la_mean = (r * g.u).groupby(g.la).sum() / g.u.groupby(g.la).sum()
+    out = r / g.la.map(la_mean)
+    _mcd_vac_cache.clear()
+    _mcd_vac_cache[year] = out
+    return out
+
+
 def _largest_remainder(x, total):
     """Integerize `x` so it sums to `total`, giving the spare units to the largest
     fractional parts. Rounding each tract independently drifts by tens of slots
@@ -1036,9 +1091,34 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
                   % (model_name, n_new, len(fill_arr), fill_arr.min(),
                      np.median(fill_arr), fill_arr.max()))
 
+        # MCD-level hold on vacancy against its own target, independent of the
+        # tract calibrator (models.hlcm.calibration.mcd_vacancy)
+        mcd_arr = np.ones(len(predict_X_df))
+        mcd_cfg = calibration.get('mcd_vacancy') or {}
+        mcd_strength = float(mcd_cfg.get('strength', 0.0))
+        if mcd_strength > 0:
+            mcd_w = _hlcm_mcd_vacancy_weights(
+                orca.get_injectable('year') if orca.is_injectable('year') else None)
+            if mcd_w is None:
+                print('[MCDVacancy] %s: target_res_vacancies_mcd unavailable for '
+                      'this year, skipped' % model_name, flush=True)
+            else:
+                mcd_ids = alts.to_frame(['semmcd'])['semmcd'].reindex(
+                    predict_X_df.index).to_numpy()
+                mcd_arr, mcd_at_bound = _hlcm_tract_adjustment(
+                    mcd_w, mcd_ids,
+                    clip=mcd_cfg.get('clip', calibration.get('clip', (0.5, 2.0))),
+                    strength=mcd_strength)
+                print('[MCDVacancy] %s: strength %.2f | weight min %.3f median %.3f '
+                      'max %.3f | mean |ln w| %.4f | %d MCDs, %.1f%% at clip bound'
+                      % (model_name, mcd_strength, mcd_arr.min(),
+                         np.median(mcd_arr), mcd_arr.max(),
+                         np.abs(np.log(mcd_arr)).mean(), len(mcd_w),
+                         100 * mcd_at_bound), flush=True)
+
         # Apply individual weight components
         # default to multiplicative calibration
-        pred_weighted = pred * tract_segment_adj_arr * fill_arr
+        pred_weighted = pred * tract_segment_adj_arr * fill_arr * mcd_arr
         # how wide the model's own scores run next to the calibrator's ln(w): the
         # ratio sets how much of an intended tilt a Gumbel draw can realize
         print('[Score] %s: log_score sd %.3f, p10-p90 %.3f over %d slots'
@@ -1048,12 +1128,16 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
         # the calibrator weight on the log scale: under slot sampling it scales the
         # probability of a slot being drawn rather than only reordering the ranking
         logit_weighted = (log_score + np.log(np.clip(tract_segment_adj_arr, 1e-12, None))
-                          + np.log(np.clip(fill_arr, 1e-12, None)))
+                          + np.log(np.clip(fill_arr, 1e-12, None))
+                          + np.log(np.clip(mcd_arr, 1e-12, None)))
         # the same score without the tract factor: the stratified path applies that
         # factor to the per-tract counts, so folding it into the mass as well would
         # square it. The fill prior stays in, since it varies unit by unit and so
         # belongs to the model's own preference over slots.
-        logit_model = log_score + np.log(np.clip(fill_arr, 1e-12, None))
+        # the MCD weight stays in, like the fill prior: it is a preference over
+        # slots, not a tract-count target, so the stratified path cannot square it
+        logit_model = (log_score + np.log(np.clip(fill_arr, 1e-12, None))
+                       + np.log(np.clip(mcd_arr, 1e-12, None)))
 
         # year in the seed, or every simulation year draws the same random stream
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0

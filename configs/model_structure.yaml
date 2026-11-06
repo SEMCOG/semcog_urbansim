@@ -23,6 +23,11 @@ models:
             expected_share: true
             # true smooths through an XGBoost fit; false uses the tract ratio directly
             use_regressor: false
+            # MCD weight from its vacancy over its own target, centered on the large
+            # area's unit-weighted mean; strength 0 disables
+            mcd_vacancy:
+                strength: 0.5
+                clip: [0.5, 2.0]
             # per-dimension holds on one category's marginal; clip/shrink_k default to
             # the joint weight's. A value is a strength, or a block of its own.
             marginal:
