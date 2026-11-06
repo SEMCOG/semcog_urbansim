@@ -56,7 +56,7 @@ def orca_year_dataset(hdf, tbls_to_load, year, is_base):
 
 # optional parcel -> state house / senate / congress map; without it the
 # legislative geographies are skipped and the ids in whatnots are -1
-LEGIS_PATH = "data/parcel_to_legis.csv"
+LEGIS_PATH = input_paths.PARCEL_TO_LEGIS_CSV
 LEGIS_GEOMS = {"mi_house", "mi_senate", "us_congress"}
 
 
@@ -202,6 +202,78 @@ def maz_override():
               "MAZ stored in the run" % type(e).__name__)
         return None
     return ov[~ov.index.duplicated(keep="first")]
+
+
+# model employment sector -> the 13 published sectors of the combined summary
+SECTOR_TO_PUBLISHED = {1: 1, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 5, 8: 6, 9: 6,
+                       10: 7, 11: 7, 12: 8, 13: 9, 14: 10, 15: 10, 16: 11,
+                       17: 12, 18: 13}
+# the demographic indicators the combined summary carries, with the 13 job
+# sectors added below
+SUMMARY_DEMO = ["pop", "hh_pop", "gq_pop", "hh", "pop_age_00_04", "pop_age_05_17",
+                "pop_age_18_24", "pop_age_25_64", "pop_age_65_84", "pop_age_85_inf",
+                "housing_units", "with_children", "without_children", "with_seniors",
+                "without_seniors", "hh_size_1", "jobs_total"]
+# one block of rows per geography, in this order; the region total closes the file
+SUMMARY_GEOMS = [("cities", "city_id"), ("zones", "zone_id"), ("schools", "school_id"),
+                 ("mi_house", "mi_house_id"), ("mi_senate", "mi_senate_id"),
+                 ("us_congress", "us_congress_id")]
+SUMMARY_GEO_COLS = ["large_area_id", "city_id", "zone_id", "isd_id", "school_id",
+                    "mi_house_id", "mi_senate_id", "us_congress_id", "region_id"]
+REGION_ID = 8999
+
+
+def _summary_level(frames, year_names, geo_id, la_of=None):
+    """One geography's block: a row per geo id and indicator, a column per year.
+
+    The 18 model sectors are summed into the 13 published ones by
+    SECTOR_TO_PUBLISHED, so `jobs_sec_NN` here is a published sector, not a
+    model one. Rows at the -1 id (a geography the run could not resolve) are
+    dropped rather than published as a district. A block also carries the
+    geography it nests in: cities their large area, school districts their
+    intermediate district, the leading digits of the school id.
+    """
+    pub = {"jobs_sec_%02d" % k: "jobs_sec_%02d" % v
+           for k, v in SECTOR_TO_PUBLISHED.items()}
+    cols = []
+    for y, frame in zip(year_names, frames):
+        f = frame.reindex(columns=SUMMARY_DEMO + list(pub)).fillna(0)
+        f = f.rename(columns=pub).T.groupby(level=0).sum().T
+        f.index.name = geo_id
+        f.columns.name = "indicator"
+        cols.append(f.stack().rename(y))
+    df = pd.concat(cols, axis=1).reset_index()
+    df = df[df[geo_id] != -1]
+    if la_of is not None:
+        df["large_area_id"] = df[geo_id].map(la_of)
+    if geo_id == "school_id":
+        df["isd_id"] = df[geo_id] // 1000
+    return df
+
+
+def combined_summary(dict_ind, year_names, skip_geoms, la_of):
+    """The published whatnots summary: one geography per row, the rest blank.
+
+    Mirrors whatnots_processing.combine_whatnots in the forecast_outputs repo,
+    which built this from reviewed workbooks after the fact. `isd_id` of that
+    layout is left out, the model carries no school-district id.
+    """
+    parts = []
+    for tab, geo_id in SUMMARY_GEOMS:
+        if tab in skip_geoms or tab not in dict_ind:
+            continue
+        parts.append(_summary_level(dict_ind[tab], year_names, geo_id,
+                                    la_of if geo_id == "city_id" else None))
+    if not parts:
+        return None
+    region = parts[0].groupby("indicator")[year_names].sum().reset_index()
+    region["region_id"] = REGION_ID
+    parts.append(region)
+    out = pd.concat(parts, axis=0, ignore_index=True)
+    for c in SUMMARY_GEO_COLS:
+        out[c] = out[c].astype("Int64") if c in out.columns else pd.NA
+    out = out[SUMMARY_GEO_COLS + ["indicator"] + year_names]
+    return out.set_index(SUMMARY_GEO_COLS + ["indicator"]).sort_index()
 
 
 def main(
@@ -446,6 +518,15 @@ def main(
             os.path.join(out_dir, "whatnots_output.csv")
         )
     whatnots_output.to_csv(os.path.join(all_years_dir, "whatnots_output.csv"))
+
+    # published summary: one geography per row, 13 job sectors
+    summary = combined_summary(dict_ind, year_names, skip_geoms,
+                               orca.get_table("cities").large_area_id)
+    if summary is not None:
+        summary.to_csv(os.path.join(all_years_dir, "whatnots_to_publish.csv"),
+                       float_format="%.0f")
+        print("  [whatnots] combined summary: %d rows, %d indicators"
+              % (len(summary), summary.index.get_level_values("indicator").nunique()))
 
     # upload_whatnots_to_postgres(os.path.basename(out_dir), whatnots_output)
     if upload_to_carto is True:
