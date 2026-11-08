@@ -37,9 +37,12 @@ def _p(*candidates):
 # ---------------------------------------------------------------------------
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
+# value-definition branch: candidate HDF with values brought to the 2025 market level
+# (forecast_data_input/property_value_adjustment/apply_value_factors.py on main_110326.h5)
+# and the residential target vacancy spike years 2026, 2027, 2031 replaced
+# (forecast_data_input/target_vacancies/res_target_vacancies_spike_fix.py)
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_102326.h5",
-    f"{_LOCAL}/main_102326.h5",
+    f"{_LOCAL}/candidates/main_110326_valadj_tv262731.h5",
 )
 
 # RDF2055 estimation
@@ -53,9 +56,9 @@ ELCM_MODEL_DIR = _p(
     "/mnt/hgfs/urbansim/RDF2055/estimation/models/elcm_models_26Oct02",
     f"{_LOCAL}/models/elcm_models_26Oct02",
 )
+# value-definition branch: REPM re-estimated on the value-adjusted candidate HDF
 REPM_MODEL_DIR = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_oct03",
-    f"{_LOCAL}/models/repm_oct03",
+    f"{_LOCAL}/models/repm_valadj_1104",
 )
 
 
@@ -109,8 +112,8 @@ MODEL_RUNS_DIR = _p(
 # A full SHA-256 pass over large HDFs is intentionally a preflight operation.
 MIRROR_PAIRS = {
     "base HDF": (
-        f"{_LOCAL}/main_102326.h5",
-        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_102326.h5"],
+        f"{_LOCAL}/main_110326.h5",
+        ["/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_110326.h5"],
     ),
     "accessibility HDF": (
         f"{_LOCAL}/access_indicators.h5",
