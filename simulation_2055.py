@@ -38,8 +38,10 @@ orca.add_injectable('scenario_emp_control_path', input_paths.SCENARIO_EMP_CONTRO
 orca.add_injectable('allow_total_pop_fallback', False)
 # households matching no control category: warn (False) or raise (True)
 orca.add_injectable('require_full_control_coverage', False)
-REMI_PRICE_GROWTH = True
+REMI_PRICE_GROWTH = False  # off since 2026-11-05: prices and costs stay in base-year (2025) dollars
 orca.add_injectable('remi_price_growth', REMI_PRICE_GROWTH)
+# dollar year of the proforma construction costs (RSMeans data release 2024)
+orca.add_injectable('construction_cost_year', 2024)
 # run-level random seed; None draws a fresh one (logged in run_config.yaml)
 RANDOM_SEED = 271828
 if RANDOM_SEED is None:
