@@ -69,6 +69,7 @@ TARGET_LARGE_AREAS = _parse_int_set(os.environ.get("REPM_TARGET_LARGE_AREAS", ""
 
 # Grid search settings
 USE_GRID_SEARCH = os.environ.get("REPM_USE_GRID_SEARCH", "1").lower() in {"1", "true", "yes"}
+GRID_SEARCH_N_JOBS = int(os.environ.get("REPM_GRID_SEARCH_N_JOBS", "8"))
 # GRID_SEARCH_BASELINE options:
 #   - None: Use default grid search parameters
 #   - "auto": Automatically load existing grid_search_{model_name}.yaml for each segment
@@ -761,8 +762,10 @@ def _train_xgboost_model_impl(X_all, y, feat_names, sample_size, segment,
                     using_gs_baseline = True
 
         model = xgb.XGBRegressor(random_state=42, n_jobs=-1)
+        # each grid-search worker is a separate process with its own copy of the data:
+        # all cores (-1) ran out of memory on the large segments (Nov 2026)
         gs = GridSearchCV(
-            model, param_grid, cv=3, scoring='r2', verbose=0, n_jobs=-1,
+            model, param_grid, cv=3, scoring='r2', verbose=0, n_jobs=GRID_SEARCH_N_JOBS,
             return_train_score=True
         )
         gs.fit(X_all, y)
