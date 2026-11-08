@@ -54,6 +54,16 @@ the run reads only their output in `configs/`. Run them from the repository root
   Writes `configs/developer_selection_coefs.yaml`. Its features must match
   `models.py` (the site-selection feature code).
   `PYTHONPATH=. python scripts/estimation/estimate_developer_selection.py`
+- `make_city_factors.py`: HLCM city factors (calibration of each city's household net
+  change in the first simulated years). Writes `configs/hlcm_city_factors.csv`, which
+  `configs/model_structure.yaml` (`models.hlcm.calibration.city_factors`) names; an empty
+  setting runs without factors. Recalibrate after every HLCM re-estimation:
+  1. Run the model for the calibration window (for example 2026–2030), with the current
+     factors or with the setting empty.
+  2. `PYTHONPATH=. python scripts/estimation/make_city_factors.py --runs <run h5>[,<run h5>]
+     --first-year <first> --last-year <last> --hlcm-model <HLCM model folder>
+     [--previous configs/hlcm_city_factors.csv]`
+  3. Repeat until the change is within the seed noise.
 
 ## `legacy/`
 
