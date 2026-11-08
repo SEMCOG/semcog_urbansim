@@ -167,10 +167,10 @@ costs:
     - 263.0
     - 263.0
     - 999.0
-    condo:
+    condo:  # RSMeans house models (bi-/tri-level) are per sqft of house floor area; x 0.85 = per gross sqft (pro forma charges cost on gross, earns on gross x building_efficiency)
     - 999.0
-    - 133.0
-    - 114.0
+    - 113.05
+    - 96.9
     - 999.0
     - 999.0
     - 999.0
@@ -427,10 +427,10 @@ costs:
     - 999.0
     - 999.0
     - 999.0
-    single-family:
-    - 152.0
-    - 143.0
-    - 140.0
+    single-family:  # RSMeans house models (1F/2F/3F) per sqft of house floor area; x 0.85 = per gross sqft (see condo)
+    - 129.2
+    - 121.55
+    - 119.0
     - 999.0
     - 999.0
     - 999.0
