@@ -993,10 +993,9 @@ def real_estate_adjustment(buildings, parcels, year):
             total_val = (prices_for_missing.loc[valid]
                          * nb_pre["residential_units"].clip(lower=1)
                          * nb_pre["sqft_per_unit"].clip(lower=1))
-            # Ratios from base buildings: 
-            # market_value = 0.70 × price×units×sqft_per_unit
-            # improvement_value = 0.70 × market_value
-            market_val = (total_val * 0.70).astype(int)
+            # market_value = price × units × sqft_per_unit (the base price is market_value / unit sqft,
+            # dataset.py); improvement_value = 0.70 × market_value (building share of value)
+            market_val = total_val.astype(int)
             buildings.update_col_from_series("market_value",      market_val, cast=True)
             buildings.update_col_from_series("improvement_value", (market_val * 0.70).astype(int), cast=True)
             land_area = nb_pre["parcel_id"].map(parcel_sqft).fillna(0).astype(int)
@@ -1008,7 +1007,7 @@ def real_estate_adjustment(buildings, parcels, year):
         total_val = (updated.loc[new_build_idx]
                      * nb["residential_units"].clip(lower=1)
                      * nb["sqft_per_unit"].clip(lower=1))
-        market_val = (total_val * 0.70).astype(int)
+        market_val = total_val.astype(int)
         buildings.update_col_from_series("market_value",      market_val, cast=True)
         buildings.update_col_from_series("improvement_value", (market_val * 0.70).astype(int), cast=True)
         land_area = nb["parcel_id"].map(parcel_sqft).fillna(0).astype(int)
