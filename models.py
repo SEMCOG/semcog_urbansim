@@ -933,6 +933,12 @@ def real_estate_adjustment(buildings, parcels, year):
         orca.add_injectable("remi_base_la_prices", base)
         print(f"  [real_estate_adjustment] base LA prices captured at year {year}: "
               + str({la: f"${v:.1f}" for la, v in sorted(base.items())}))
+        # Save the base in the run h5: a run resumed from this file reads it back
+        # (assumptions.update_store_from_checkpoint). Without it the resume year
+        # would become the base and re-anchor every price to that year's level.
+        if orca.is_injectable("run_h5"):
+            with pd.HDFStore(orca.get_injectable("run_h5"), "a") as st:
+                st["remi_base_la_prices"] = pd.Series(base, name="sqft_price_res")
 
     base_la_prices = orca.get_injectable("remi_base_la_prices")
     bd = buildings.to_frame(["large_area_id", "sqft_price_res", "year_built",
