@@ -3422,9 +3422,12 @@ def shifters():
 
 def cost_shifter_callback(self, form, df, costs):
     yr = orca.get_injectable("year")
-    if orca.get_injectable("remi_price_growth"):
-        pce_ratios = orca.get_injectable("remi_pce_ratios")
-        costs = costs * pce_ratios.get(yr, 1.0)
+    # the proforma costs are in construction_cost_year dollars: inflate from that year to the
+    # simulation year (REMI growth on) or to the base year (off: prices stay in base-year dollars)
+    pce_ratios = orca.get_injectable("remi_pce_ratios")
+    cost_year = orca.get_injectable("construction_cost_year")
+    to_year = yr if orca.get_injectable("remi_price_growth") else orca.get_injectable("remi_base_year")
+    costs = costs * pce_ratios.get(to_year, 1.0) / pce_ratios[cost_year]
     if form in orca.get_injectable("res_forms"):
         return costs
     shifter_cfg = orca.get_injectable("cost_shifters")["calibration"]
