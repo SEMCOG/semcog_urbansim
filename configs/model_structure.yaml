@@ -33,6 +33,11 @@ models:
             # true smooths it through an XGBoost fit 
             # false applies the base/current tract ratio directly 
             use_regressor: false
+            # city factors (net-change calibration): csv in configs (city_id, factor,
+            # hlcm_model) made by scripts/estimation/make_city_factors.py for one HLCM
+            # model set; empty = no factors. A warning shows when hlcm_model differs from
+            # the HLCM model folder of the run.
+            city_factors: hlcm_city_factors.csv
 
     elcm: 
         model_type: location_choice

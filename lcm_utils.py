@@ -744,17 +744,38 @@ _CITY_FACTORS = {}
 
 def _hlcm_city_factors(calibration):
     """Per-city HLCM slot weight (city_id -> factor) from models.hlcm.calibration.city_factors
-    or the SEMCOG_HLCM_CITY_FACTORS environment variable (a csv with city_id, factor);
-    None when neither is set. Acts like a calibrated city constant: it scales the chance
-    that a vacant unit in the city is chosen, and leaves the model's coefficients alone."""
-    path = calibration.get('city_factors') or os.environ.get('SEMCOG_HLCM_CITY_FACTORS')
-    if not path:
+    in model_structure.yaml: a csv in the configs folder (city_id, factor; optional column
+    hlcm_model = the HLCM model folder the factors were calibrated for). Empty or missing
+    setting: no factors (None). A named file that does not exist stops the run.
+    Acts like a calibrated city constant: it scales the chance that a vacant unit in the
+    city is chosen, and leaves the model's coefficients alone. Made by
+    scripts/estimation/make_city_factors.py."""
+    name = calibration.get('city_factors')
+    if not name:
+        if None not in _CITY_FACTORS:
+            _CITY_FACTORS[None] = None
+            print('[city factors] none (models.hlcm.calibration.city_factors not set)', flush=True)
         return None
+    path = name if os.path.isabs(name) else os.path.join(misc.configs_dir(), name)
     if path not in _CITY_FACTORS:
-        _CITY_FACTORS[path] = pd.read_csv(path, index_col='city_id')['factor']
-        f = _CITY_FACTORS[path]
-        print('[city factors] %s: %d cities, min %.3f median %.3f max %.3f'
-              % (path, len(f), f.min(), f.median(), f.max()), flush=True)
+        if not os.path.exists(path):
+            raise FileNotFoundError('HLCM city factors %s (models.hlcm.calibration.city_factors) '
+                                    'not found' % path)
+        df = pd.read_csv(path, index_col='city_id')
+        f = df['factor']
+        model = (str(df['hlcm_model'].dropna().iloc[0])
+                 if 'hlcm_model' in df.columns and df['hlcm_model'].notna().any() else None)
+        current = (os.path.basename(os.path.normpath(orca.get_injectable('hlcm_model_path')))
+                   if orca.is_injectable('hlcm_model_path') else None)
+        print('[city factors] %s: %d cities, min %.3f median %.3f max %.3f; calibrated for '
+              'HLCM %s' % (path, len(f), f.min(), f.median(), f.max(), model), flush=True)
+        utils.run_log('HLCM city factors: %s (%d cities, calibrated for HLCM %s; run HLCM %s)'
+                      % (path, len(f), model, current))
+        if model != current:
+            print('[city factors] WARNING: factors calibrated for HLCM %s, this run uses %s; '
+                  'recalibrate (scripts/estimation/make_city_factors.py) or clear the setting'
+                  % (model, current), flush=True)
+        _CITY_FACTORS[path] = f
     return _CITY_FACTORS[path]
 
 

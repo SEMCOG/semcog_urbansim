@@ -780,6 +780,8 @@ def _copy_run_configs(data_out_dir, yaml_configs):
         "model_steps": os.path.join(config_dir, yaml_configs),
         "demolition_rates": os.path.join(config_dir, "demolition_rates.csv"),
         "demolition_stock_rates": os.path.join(config_dir, "demolition_stock_rates.csv"),
+        "model_structure": os.path.join(config_dir, "model_structure.yaml"),
+        "hlcm_city_factors": os.path.join(config_dir, "hlcm_city_factors.csv"),
     }
 
     copied = {}
