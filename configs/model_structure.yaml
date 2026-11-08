@@ -37,6 +37,12 @@ models:
                     income: 0
                     children: 0
                     senior: 0
+            # city factors (net-change calibration): csv in configs (city_id, factor,
+            # hlcm_model) made by scripts/estimation/make_city_factors.py for one HLCM
+            # model set; empty = no factors. A warning shows when hlcm_model differs from
+            # the HLCM model folder of the run. hlcm_city_factors.csv is calibrated for
+            # models_26Oct23, so it is off for models_26Nov09.
+            city_factors:
 
     elcm: 
         model_type: location_choice
