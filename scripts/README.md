@@ -33,6 +33,12 @@ Harnesses and one-off checks that exercise the current pipeline.
   (stock-rate volume targets), `test_city_households_for_developer.py`
   (residential demand counts unplaced households). These need `pytest`, which
   is not in the `forecast_py312` environment.
+- `replay_utils.py` — shared helpers for in-process replay and paired tests
+  (on/off, factor A/B from one saved state). Use them in every such test:
+  `hold_data_tables()` first, then `snapshot()` / `restore()`, and
+  `scale_column()` / `scale_by_group()` / `assert_changed()` so that each change
+  is checked and the run stops if a change is lost. Self-test:
+  `python -m pytest scripts/testing/test_replay_utils.py`.
 
 ## `estimation/`
 
