@@ -5010,7 +5010,7 @@ def non_residential_developer(jobs, parcels, target_nonres_vacancies_mcd,
     whose `form` axis is the btype_form_map group (retail, office, industrial,
     medical, entertainment, hospitality, other), not a proforma form.
 
-    Vacancy is measured on that same grouping, because make_target_vacancies.py
+    Vacancy is measured on that same grouping, because target_vacancies/nonres_target_vacancies.py
     anchors each rate on the group's aggregate base-year vacancy
     (sum(jobs) / sum(job_spaces) over every btype in the group). One target is
     derived per city x group and the group's proforma forms are handed to the
