@@ -104,6 +104,13 @@ def debug_res_developer():
     return pd.DataFrame(columns=["year", "mcd", "target_units", "units_added"])
 
 
+def _proforma_building_efficiency():
+    """Net (rentable) share of gross floor area, from configs/proforma.yaml."""
+    import yaml
+    with open(path.join(misc.configs_dir(), "proforma.yaml")) as f:
+        return float(yaml.safe_load(f)["building_efficiency"])
+
+
 @orca.table(cache=True)
 def buildings(store):
     df = store["buildings"]
@@ -135,13 +142,16 @@ def buildings(store):
     df = df.fillna(0)
     # Todo: combine two sqft prices into one and set non use sqft price to 0
     df.loc[df.market_value < 0, "market_value"] = 0
-    df["sqft_price_nonres"] = df.market_value * 1.0 / 0.7 / df.non_residential_sqft
+    # Prices are per sqft of the space the pro forma earns rent on (net). Non-residential sqft
+    # is gross floor area (footprint x stories), so divide by the pro forma building_efficiency;
+    # residential sqft (sqft_per_unit x units) is already the unit (net) area.
+    efficiency = _proforma_building_efficiency()
+    df["sqft_price_nonres"] = df.market_value * 1.0 / efficiency / df.non_residential_sqft
     df.loc[df.sqft_price_nonres > 1500, "sqft_price_nonres"] = 0
     df.loc[df.sqft_price_nonres < 0, "sqft_price_nonres"] = 0
     df["sqft_price_res"] = (
         df.market_value
         * 1.0
-        / 0.7
         / (df.sqft_per_unit.astype(int) * df.residential_units)
     )
     # fill out-of-bound sqft_price_res with la avg -- housing only: a building
