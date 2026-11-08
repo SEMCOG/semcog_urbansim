@@ -12,6 +12,7 @@ import input_paths
 # get run number and set up log file
 data_out = utils.get_run_filename()
 orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
+orca.add_injectable("run_h5", data_out)  # real_estate_adjustment saves its base LA prices here
 print(data_out)
 # run config
 RUN_OUTPUT_INDICATORS = True

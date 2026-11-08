@@ -237,7 +237,18 @@ def update_store_from_checkpoint(store, checkpoint):
         "bg_hh_increase",
     ]
     # get the last year finished
-    year = max([int(k.split('/')[1]) for k in checkpoint.keys() if k.split('/')[1]!='base'])
+    year = max([int(k.split('/')[1]) for k in checkpoint.keys()
+                if k.split('/')[1] not in ('base', 'remi_base_la_prices')])
+    # base LA prices of models.real_estate_adjustment (captured in the first simulation year);
+    # without them the resume year would become the price base
+    if '/remi_base_la_prices' in checkpoint.keys():
+        base = checkpoint['remi_base_la_prices']
+        orca.add_injectable('remi_base_la_prices', {int(la): float(v) for la, v in base.items()})
+        print("Loaded base LA prices from checkpoint: "
+              + str({int(la): round(float(v), 1) for la, v in base.items()}))
+    else:
+        print("WARNING: checkpoint has no remi_base_la_prices; real_estate_adjustment will "
+              "re-anchor prices to the resume year (about 4% lower by 2035)")
     orca.add_injectable('checkpoint_year', year)
     for k in checkpoint.keys():
         if "/%s/" % year not in k:
