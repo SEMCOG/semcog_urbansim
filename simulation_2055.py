@@ -41,6 +41,8 @@ orca.add_injectable('require_full_control_coverage', False)
 # Nominal growth on prices and construction costs; issue #130
 REMI_PRICE_GROWTH = False
 orca.add_injectable('remi_price_growth', REMI_PRICE_GROWTH)
+# dollar year of the proforma construction costs (RSMeans data release 2024)
+orca.add_injectable('construction_cost_year', 2024)
 # run-level random seed; None draws a fresh one (logged in run_config.yaml)
 RANDOM_SEED = 271828
 if RANDOM_SEED is None:

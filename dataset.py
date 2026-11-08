@@ -390,6 +390,10 @@ _remi_income, _remi_pce = _load_remi_ratios_from_hdf(orca.get_injectable("store"
 orca.add_injectable("remi_income_ratios", _remi_income)
 orca.add_injectable("remi_pce_ratios", _remi_pce)
 orca.add_injectable("remi_base_year", 2025)
+# dollar year of the proforma construction costs (RSMeans data release 2024);
+# cost_shifter_callback rebases the REMI index (1.0 in 2022) to it. Set in simulation_2055.py.
+if not orca.is_injectable("construction_cost_year"):
+    orca.add_injectable("construction_cost_year", 2024)
 # REMI growth on prices (real_estate_adjustment, non-res REPM) and construction costs
 # (cost_shifter_callback); False keeps both in base-year dollars. Set in simulation_2055.py.
 if not orca.is_injectable("remi_price_growth"):
