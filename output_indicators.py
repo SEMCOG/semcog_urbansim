@@ -208,12 +208,16 @@ def maz_override():
 SECTOR_TO_PUBLISHED = {1: 1, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 5, 8: 6, 9: 6,
                        10: 7, 11: 7, 12: 8, 13: 9, 14: 10, 15: 10, 16: 11,
                        17: 12, 18: 13}
-# the demographic indicators the combined summary carries, with the 13 job
-# sectors added below
+# the demographic indicators the combined summary carries, with the broad age
+# bands and the 13 job sectors added below
 SUMMARY_DEMO = ["pop", "hh_pop", "gq_pop", "hh", "pop_age_00_04", "pop_age_05_17",
                 "pop_age_18_24", "pop_age_25_64", "pop_age_65_84", "pop_age_85_inf",
                 "housing_units", "with_children", "without_children", "with_seniors",
                 "without_seniors", "hh_size_1", "jobs_total"]
+# broad age bands summed from the model's finer ones, which stay in their own right
+SUMMARY_AGE = {"pop_age_00_17": ["pop_age_00_04", "pop_age_05_17"],
+               "pop_age_18_64": ["pop_age_18_24", "pop_age_25_64"],
+               "pop_age_65_inf": ["pop_age_65_84", "pop_age_85_inf"]}
 # one block of rows per geography, in this order; the region total closes the file
 SUMMARY_GEOMS = [("cities", "city_id"), ("zones", "zone_id"), ("schools", "school_id"),
                  ("mi_house", "mi_house_id"), ("mi_senate", "mi_senate_id"),
@@ -228,7 +232,8 @@ def _summary_level(frames, year_names, geo_id, la_of=None):
 
     The 18 model sectors are summed into the 13 published ones by
     SECTOR_TO_PUBLISHED, so `jobs_sec_NN` here is a published sector, not a
-    model one. Rows at the -1 id (a geography the run could not resolve) are
+    model one. SUMMARY_AGE adds the broad age bands beside the finer ones they
+    come from. Rows at the -1 id (a geography the run could not resolve) are
     dropped rather than published as a district. A block also carries the
     geography it nests in: cities their large area, school districts their
     intermediate district, the leading digits of the school id.
@@ -239,6 +244,8 @@ def _summary_level(frames, year_names, geo_id, la_of=None):
     for y, frame in zip(year_names, frames):
         f = frame.reindex(columns=SUMMARY_DEMO + list(pub)).fillna(0)
         f = f.rename(columns=pub).T.groupby(level=0).sum().T
+        for band, parts in SUMMARY_AGE.items():
+            f[band] = f[parts].sum(axis=1)
         f.index.name = geo_id
         f.columns.name = "indicator"
         cols.append(f.stack().rename(y))
