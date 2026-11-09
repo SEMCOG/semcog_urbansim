@@ -12,7 +12,8 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))))
 
-from output_indicators import (SECTOR_TO_PUBLISHED, SUMMARY_GEO_COLS, REGION_ID,
+from output_indicators import (SECTOR_TO_PUBLISHED, SUMMARY_GEO_COLS, SUMMARY_AGE,
+                               REGION_ID,
                                combined_summary)
 
 RUN = sys.argv[1] if len(sys.argv) > 1 else "run1518"
@@ -74,6 +75,20 @@ def main():
         flag = "" if abs(model - pub) < 1 else "  <-- MISMATCH"
         ok = ok and not flag
         print("%-12s 18-sector %12.0f | 13-sector %12.0f%s" % (tab, model, pub, flag))
+
+    # 3b. the broad age bands equal their parts, in every block and the region row
+    for band, parts in SUMMARY_AGE.items():
+        a = idx[idx.indicator == band][years[-1]].sum()
+        b = idx[idx.indicator.isin(parts)][years[-1]].sum()
+        flag = "" if abs(a - b) < 1 else "  <-- MISMATCH"
+        ok = ok and not flag
+        print("%-15s %12.0f | %-29s %12.0f%s"
+              % (band, a, " + ".join(parts), b, flag))
+    pop = idx[idx.indicator == "pop"][years[-1]].sum()
+    allband = idx[idx.indicator.isin(SUMMARY_AGE)][years[-1]].sum()
+    flag = "" if abs(pop - allband) < 1 else "  <-- MISMATCH"
+    ok = ok and not flag
+    print("%-15s %12.0f | %-29s %12.0f%s" % ("pop", pop, "the three bands", allband, flag))
 
     # 4. one geography level per row, cities carrying large_area_id too
     n = idx[SUMMARY_GEO_COLS].notna().sum(axis=1)
