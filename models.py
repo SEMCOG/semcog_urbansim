@@ -20,6 +20,7 @@ from urbansim_parcels import utils as parcel_utils
 from forecast_estimation.utils import load_taz_vars_from_orca
 
 import assumptions
+import checkpoint_targets
 import demolition_stock
 import phasing
 import res_capacity
@@ -536,6 +537,26 @@ def init_taz_hlcm_trend_by_year():
     orca.add_table("tract_hh_type_base_ratios", tract_hh_type_base_ratios)
 
     _init_new_unit_fill_shares(hh_segments)
+
+    # A resumed run holds the checkpoint year's households and jobs, so the targets built
+    # above describe that year. Use the base-year targets saved in the checkpoint instead.
+    resumed = orca.is_injectable("use_checkpoint") and orca.get_injectable("use_checkpoint")
+    if orca.is_injectable("checkpoint_base_targets"):
+        saved = orca.get_injectable("checkpoint_base_targets")
+        for k in checkpoint_targets.TABLES:
+            orca.add_table(k, saved[k])
+        for k in checkpoint_targets.INJECTABLES:
+            orca.add_injectable(k, saved[k])
+        print("Base-year targets from the checkpoint: %s" % ", ".join(checkpoint_targets.NAMES))
+    elif resumed:
+        print("WARNING: checkpoint has no /%s; the HLCM tract calibrator, fill prior and ELCM "
+              "building-type matrix use the checkpoint year as their base" % checkpoint_targets.GROUP)
+    # save them in this run's h5, so a run resumed from it reads them back (not after a
+    # resume without them: those are not base-year targets)
+    if orca.is_injectable("run_h5") and (orca.is_injectable("checkpoint_base_targets") or not resumed):
+        checkpoint_targets.save(orca.get_injectable("run_h5"), {
+            k: (orca.get_table(k).to_frame() if k in checkpoint_targets.TABLES
+                else orca.get_injectable(k)) for k in checkpoint_targets.NAMES})
 
 
 # fill prior: how base-year households sort into recently built housing units
