@@ -54,8 +54,8 @@ ELCM_MODEL_DIR = _p(
     f"{_LOCAL}/models/elcm_models_26Nov09",
 )
 REPM_MODEL_DIR = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_oct03",
-    f"{_LOCAL}/models/repm_oct03",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/estimation/repm_mcdval_1109",
+    f"{_LOCAL}/models/repm_mcdval_1109",
 )
 
 
