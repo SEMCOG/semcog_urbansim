@@ -2849,6 +2849,10 @@ def refiner(jobs, households, buildings, persons, year, refiner_events, group_qu
 
 @orca.step()
 def scheduled_development_events(buildings, iter_var, events_addition, refiner_events):
+    """Add this year's events_addition rows as buildings.
+
+    - droped residential/mixed-use CONCEPT development
+    """
     sched_dev = events_addition.to_frame()
     sched_dev = sched_dev[sched_dev.year_built == iter_var].reset_index(drop=True)
     if len(sched_dev) > 0:
@@ -2861,6 +2865,15 @@ def scheduled_development_events(buildings, iter_var, events_addition, refiner_e
                 "build_type": "building_type_id",
             }
         )
+        if "dev_type" in sched_dev.columns:
+            drop = (sched_dev.dev_type == "CONCEPT") & (sched_dev.residential_units > 0)
+            if drop.any():
+                print("  CONCEPT: %d events dropped (%d units, %d non-residential sqft)"
+                      % (drop.sum(), sched_dev.residential_units[drop].sum(),
+                         sched_dev.non_residential_sqft[drop].sum()))
+                sched_dev = sched_dev[~drop].reset_index(drop=True)
+        if len(sched_dev) == 0:
+            return
         source_event_id = sched_dev.event_id.copy()
         sched_dev = add_extra_columns_res(sched_dev)
 
