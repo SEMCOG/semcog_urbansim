@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import orca
 import verify_data_structure
+import checkpoint_targets
 import utils
 import input_paths
 
@@ -238,7 +239,13 @@ def update_store_from_checkpoint(store, checkpoint):
     ]
     # get the last year finished
     year = max([int(k.split('/')[1]) for k in checkpoint.keys()
-                if k.split('/')[1] not in ('base', 'remi_base_la_prices')])
+                if k.split('/')[1].isdigit()])
+    # base-year targets of the HLCM tract calibrator, fill prior and ELCM building-type matrix
+    # (models.init_taz_hlcm_trend_by_year uses them instead of rebuilding from this year)
+    targets = checkpoint_targets.read(checkpoint)
+    if targets is not None:
+        orca.add_injectable('checkpoint_base_targets', targets)
+        print("Loaded base-year targets from checkpoint: " + ", ".join(checkpoint_targets.NAMES))
     # base LA prices of models.real_estate_adjustment (captured in the first simulation year);
     # without them the resume year would become the price base
     if '/remi_base_la_prices' in checkpoint.keys():
