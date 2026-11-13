@@ -272,7 +272,31 @@ def _elcm_calibrate(calibration, pred, utility, predict_X_df, final_alts_df,
     return pred_weighted, utility + log_cal
 
 
-def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None):
+def _elcm_event_boost(cfg, final_alts_df, predict_X_df, year):
+    """Per-slot multiplier lifting scheduled-event non-residential space.
+
+    An event is a project someone has told the model will exist, unlike the
+    developer's speculative space, so it is offered to jobs ahead of the rest.
+    Slots fall away as a building fills, so the lift fades on its own.
+
+    Returns:
+        tuple[np.ndarray, int]: multiplier per slot, slots lifted.
+    """
+    f = float(cfg.get("factor", 1.0))
+    arr = np.ones(len(predict_X_df))
+    if f == 1.0 or "event_id" not in final_alts_df.columns:
+        return arr, 0
+    rows = final_alts_df.loc[predict_X_df.index]
+    ok = (rows["event_id"].to_numpy() > 0) & (rows["non_residential_sqft"].to_numpy() > 0)
+    max_age = int(cfg.get("max_age", 0) or 0)
+    if max_age and year:
+        ok &= (int(year) - rows["year_built"].to_numpy()) <= max_age
+    arr[ok] = f
+    return arr, int(ok.sum())
+
+
+def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces',
+                             elcm_calibration_config=None, elcm_event_boost_config=None):
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
         model = emp_location_choice_models[model_name]
@@ -327,7 +351,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         alts_df = alts.to_frame(list(set(
             variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id',
                                                 'stories', bld_age_var, taz_emp_ratio_var,
-                                                'residential_units']
+                                                'residential_units', 'event_id', 'year_built',
+                                                'non_residential_sqft']
         )))
         print(f"[alts-timing] ELCM la{la_id} sec{job_sector} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
@@ -343,7 +368,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         # residential_units is kept explicitly
         final_alts_df = final_alts_df[list(set(
             variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id',
-                             taz_emp_ratio_var, 'residential_units']
+                             taz_emp_ratio_var, 'residential_units', 'event_id',
+                             'year_built', 'non_residential_sqft']
         ))]
 
         # jobs placing rule defined in esimation, reused here
@@ -437,7 +463,20 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
                 calibration, pred, _u, predict_X_df, final_alts_df,
                 la_id, job_sector, bld_age_var, taz_emp_ratio_var)
 
+        # lift scheduled-event non-residential space (models.elcm.event_boost);
+        # composes with the calibration above rather than replacing it
         _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
+        ev_cfg = elcm_event_boost_config or {}
+        if float(ev_cfg.get("factor", 1.0)) != 1.0 and not home_based:
+            ev_arr, n_ev = _elcm_event_boost(ev_cfg, final_alts_df, predict_X_df, _yr)
+            if n_ev:
+                pred_weighted = pred_weighted * ev_arr
+                logit_weighted = logit_weighted + np.log(ev_arr)
+            print('[EventBoost] %s: factor %.2f max_age %s | %d of %d slots lifted (%.1f%%)'
+                  % (model_name, float(ev_cfg.get("factor", 1.0)), ev_cfg.get("max_age", 0),
+                     n_ev, len(predict_X_df), 100.0 * n_ev / max(len(predict_X_df), 1)),
+                  flush=True)
+
         picked_idx = pick_slots(pred_weighted, n, placement,
                                 seed=(int(_yr or 0) * 100000
                                       + int(la_id) * 1000 + int(job_sector)),

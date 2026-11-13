@@ -132,7 +132,8 @@ for name, model in list(emp_location_choice_models.items()):
     lcm_utils.register_elcm_model_step(
         name, 
         alt_capacity=model_configs['elcm']['vacant_variable'], 
-        elcm_calibration_config=model_configs['elcm']['calibration']
+        elcm_calibration_config=model_configs['elcm']['calibration'],
+        elcm_event_boost_config=model_configs['elcm'].get('event_boost')
     )
 
 
