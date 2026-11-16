@@ -15,9 +15,11 @@ orca.add_injectable("data_out_dir", data_out.replace(".h5", ""))
 orca.add_injectable("run_h5", data_out)  # real_estate_adjustment saves its base LA prices here
 print(data_out)
 # run config
-RUN_OUTPUT_INDICATORS = True
+# FINAL_YEAR / RUN_OUTPUT_INDICATORS environment settings allow a short check run
+# without editing this file; the defaults are the full run
+RUN_OUTPUT_INDICATORS = os.environ.get("RUN_OUTPUT_INDICATORS", "1") == "1"
 base_year = 2025
-final_year = 2055
+final_year = int(os.environ.get("FINAL_YEAR", "2055"))
 indicator_spacing = 5
 upload_to_carto = False
 run_debug = False
