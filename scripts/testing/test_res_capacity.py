@@ -71,3 +71,36 @@ def test_loss_rows_use_the_least_loss_per_sqft_variant():
                (1, "single-family", 10_000, 2, 0.2)])
     assert res_capacity.feasible_capacity(f, PS, AVE, CUR, 1_000, MAX_PS,
                                           profitable_only=False) == 10
+
+
+def test_gap_floor_keeps_the_price_order():
+    # the threshold rule lifted 50 to 160 but left 100 at 100; the gap share keeps 50 < 100
+    p = pd.Series([50.0, 100.0, 150.0, 200.0])
+    out = res_capacity.gap_floor_price(p, pd.Series(160.0, index=p.index), 0.5)
+    assert out.tolist() == [105.0, 130.0, 155.0, 200.0]
+    assert out.is_monotonic_increasing
+
+
+def test_gap_floor_share_limits():
+    p = pd.Series([50.0, 200.0])
+    rep = pd.Series(160.0, index=p.index)
+    assert res_capacity.gap_floor_price(p, rep, 0.0).tolist() == [50.0, 200.0]
+    assert res_capacity.gap_floor_price(p, rep, 1.0).tolist() == [160.0, 200.0]
+
+
+def test_gap_floor_missing_price_gets_the_replacement():
+    p = pd.Series([float("nan"), 80.0])
+    rep = pd.Series([160.0, 160.0])
+    assert res_capacity.gap_floor_price(p, rep, 0.25).tolist() == [160.0, 100.0]
+
+
+def test_net_gap_cap_surplus_leaves_only_the_mismatch_share():
+    # city A short 1,000, city B surplus 3,000: net -2,000, so only the share of A's 1,000
+    assert res_capacity.net_gap_cap([1000, -3000], [1000], 0.5) == 500.0
+    assert res_capacity.net_gap_cap([1000, -3000], [1000], 0.0) == 0.0
+
+
+def test_net_gap_cap_shortage_adds_the_net_gap():
+    assert res_capacity.net_gap_cap([1000, 500, -300], [1000, 500], 0.5) == 1200 + 750
+    # share 1 never binds below the positive targets
+    assert res_capacity.net_gap_cap([1000, -300], [1000], 1.0) >= 1000

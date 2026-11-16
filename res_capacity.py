@@ -38,3 +38,22 @@ def feasible_capacity(feasibility, parcel_size, ave_unit_size, current_units,
         loss = loss[~loss.index.duplicated(keep="first")]["_net"]
         best = best.combine(loss, max, fill_value=0)
     return int(best.sum())
+
+
+def gap_floor_price(prices, replacement, gap_share):
+    """Price lifted by a share of its gap to the replacement price:
+    price + gap_share x max(0, replacement - price). The order of the prices stays
+    (no jump at a threshold); gap_share 1 = max(price, replacement), 0 = no floor.
+    A missing price gets the replacement price, as in the threshold rule."""
+    lifted = prices + gap_share * (replacement - prices).clip(lower=0)
+    return lifted.fillna(replacement)
+
+
+def net_gap_cap(city_gaps, positive_targets, mismatch_share):
+    """Large-area developer ceiling from the netted vacancy gap: max(0, sum of the signed
+    city gaps) + mismatch_share x the sum of the positive city targets. The second term
+    lets cities short of units build while other cities of the large area have a surplus
+    (households do not move freely between cities); share 0 = strict netting,
+    share 1 = no netting (the summed positive targets)."""
+    assert 0.0 <= mismatch_share <= 1.0, mismatch_share
+    return max(0.0, float(sum(city_gaps))) + mismatch_share * float(sum(positive_targets))
