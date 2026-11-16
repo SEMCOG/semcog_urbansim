@@ -539,6 +539,15 @@ def init_taz_hlcm_trend_by_year():
     # base-year households per tract, the denominator of every ratio above: the
     # calibrator needs it to tell a thin cell from a drifting one
     result["tract_hh_total"] = total_hh
+    # base-year share of each joint segment in each large area: the reference of the HLCM
+    # pattern prior (models.hlcm.calibration.pattern_prior); index (large_area_id, segment var)
+    la_share = {}
+    for hh_types in hh_segments:
+        hh_df = hh.to_frame(list(hh_types) + ['large_area_id'])
+        mask = pd.Series(np.logical_and.reduce([hh_df[t] == 1 for t in hh_types]), index=hh_df.index)
+        for la, v in mask.groupby(hh_df['large_area_id']).mean().items():
+            la_share[(int(la), "tract_hh_type_ratio_%s" % "_".join(hh_types))] = float(v)
+    orca.add_injectable('hlcm_la_segment_base_shares', pd.Series(la_share, dtype='float64'))
     # Combine into DataFrame with TAZ as index
     tract_hh_type_base_ratios = pd.DataFrame(result).fillna(0)
     # Ensure tract_id is index
@@ -557,6 +566,11 @@ def init_taz_hlcm_trend_by_year():
             orca.add_table(k, saved[k])
         for k in checkpoint_targets.INJECTABLES:
             orca.add_injectable(k, saved[k])
+        for k in checkpoint_targets.OPTIONAL:
+            if saved.get(k) is not None:
+                orca.add_injectable(k, saved[k])
+            else:
+                print("WARNING: checkpoint has no %s; it is rebuilt from the checkpoint year" % k)
         print("Base-year targets from the checkpoint: %s" % ", ".join(checkpoint_targets.NAMES))
     elif resumed:
         print("WARNING: checkpoint has no /%s; the HLCM tract calibrator, fill prior and ELCM "
@@ -566,7 +580,8 @@ def init_taz_hlcm_trend_by_year():
     if orca.is_injectable("run_h5") and (orca.is_injectable("checkpoint_base_targets") or not resumed):
         checkpoint_targets.save(orca.get_injectable("run_h5"), {
             k: (orca.get_table(k).to_frame() if k in checkpoint_targets.TABLES
-                else orca.get_injectable(k)) for k in checkpoint_targets.NAMES})
+                else orca.get_injectable(k))
+            for k in checkpoint_targets.NAMES + checkpoint_targets.OPTIONAL})
 
 
 # fill prior: how base-year households sort into recently built housing units

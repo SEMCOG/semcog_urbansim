@@ -665,6 +665,27 @@ def _hlcm_fill_prior(seg_var, rows, la_id, clip):
     return np.clip(np.where(is_new, r, 1.0), clip[0], clip[1]), int(is_new.sum())
 
 
+def _hlcm_pattern_prior(cfg, base_ratios, la_id, seg_var):
+    """Tract pattern prior (models.hlcm.calibration.pattern_prior): per candidate row,
+    clip(tract base share of the segment / large-area base share, 0.5, 2.0) ** beta, which
+    multiplies the calibrator target. It keeps the base-year differences between tracts, so
+    the cities do not become more alike over time. The tract base share is the calibrator's
+    own base (expected share when that option is on); the large-area share is the base-year
+    share of the joint segment (injectable hlcm_la_segment_base_shares, built at init and
+    kept across a checkpoint resume). Off (or no config): 1.0 for every row.
+    Tested 2026-11-14..16 as a harness wrapper (run5175: full joint segment, beta 1.0)."""
+    if not (cfg or {}).get('enabled', False):
+        return 1.0
+    beta = float(cfg.get('beta', 1.0))
+    if beta <= 0:
+        raise ValueError('pattern_prior.beta must be > 0, got %r' % beta)
+    la_share = float(orca.get_injectable('hlcm_la_segment_base_shares').get((la_id, seg_var), 0.0))
+    if la_share <= 0:
+        return 1.0  # the segment has no base-year households in the large area
+    r = np.nan_to_num(np.asarray(base_ratios, dtype='float64'), nan=0.0) / la_share
+    return np.clip(r, 0.5, 2.0) ** beta
+
+
 def _hlcm_expected_share(seg_var):
     """Tract target that follows what the tract actually built.
 
@@ -1208,6 +1229,8 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
             # Compute y_train = base / current (avoid divide-by-zero)
             y_train = _hlcm_calibration_target(
                 base_ratios, current_ratios, calibration.get('zero_base_share', 'floor'))
+            y_train = y_train * _hlcm_pattern_prior(
+                calibration.get('pattern_prior'), base_ratios, int(la_id), tract_segment_type_var)
 
             # Apply base/current per tract directly, or smooth it through the
             # regressor. Direct is the default
