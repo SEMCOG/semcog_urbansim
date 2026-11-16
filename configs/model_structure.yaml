@@ -51,6 +51,11 @@ models:
         alternatives_name: buildings
         supply_variable: job_spaces
         vacant_variable: vacant_job_spaces
+        # lift scheduled-event non-residential space in the job choice; 1.0 disables
+        event_boost:
+            factor: 2.0
+            # years after year_built the lift applies; 0 = for the whole run
+            max_age: 5
         # New-building job stock (non-home-based ELCM; default off; test 2026-11-16). A building
         # built after the base year is scored with the job stock of an occupied building of its
         # type in its large area (median occupancy, sector mix), faded over decay_years; only the

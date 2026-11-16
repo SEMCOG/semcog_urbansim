@@ -343,7 +343,31 @@ def _elcm_calibrate(calibration, pred, utility, predict_X_df, final_alts_df,
     return pred_weighted, utility + log_cal
 
 
-def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None,
+def _elcm_event_boost(cfg, final_alts_df, predict_X_df, year):
+    """Per-slot multiplier lifting scheduled-event non-residential space.
+
+    An event is a project someone has told the model will exist, unlike the
+    developer's speculative space, so it is offered to jobs ahead of the rest.
+    Slots fall away as a building fills, so the lift fades on its own.
+
+    Returns:
+        tuple[np.ndarray, int]: multiplier per slot, slots lifted.
+    """
+    f = float(cfg.get("factor", 1.0))
+    arr = np.ones(len(predict_X_df))
+    if f == 1.0 or "event_id" not in final_alts_df.columns:
+        return arr, 0
+    rows = final_alts_df.loc[predict_X_df.index]
+    ok = (rows["event_id"].to_numpy() > 0) & (rows["non_residential_sqft"].to_numpy() > 0)
+    max_age = int(cfg.get("max_age", 0) or 0)
+    if max_age and year:
+        ok &= (int(year) - rows["year_built"].to_numpy()) <= max_age
+    arr[ok] = f
+    return arr, int(ok.sum())
+
+
+def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces',
+                             elcm_calibration_config=None, elcm_event_boost_config=None,
                              impute_config=None):
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
@@ -400,8 +424,9 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         alts_df = alts.to_frame(list(set(
             variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id',
                                                 'stories', bld_age_var, taz_emp_ratio_var,
-                                                'residential_units']
-            + (['year_built', 'non_residential_sqft'] + ELCM_STOCK_COLS if impute_on else [])
+                                                'residential_units', 'event_id', 'year_built',
+                                                'non_residential_sqft']
+            + (ELCM_STOCK_COLS if impute_on else [])
         )))
         print(f"[alts-timing] ELCM la{la_id} sec{job_sector} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
@@ -417,7 +442,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         # residential_units is kept explicitly
         final_alts_df = final_alts_df[list(set(
             variable_cols + [alt_capacity, space_col, bld_age_var, 'building_type_id',
-                             taz_emp_ratio_var, 'residential_units']
+                             taz_emp_ratio_var, 'residential_units', 'event_id',
+                             'year_built', 'non_residential_sqft']
         ))]
 
         # jobs placing rule defined in esimation, reused here
@@ -523,6 +549,22 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
                 calibration, pred, _u, predict_X_df, final_alts_df,
                 la_id, job_sector, bld_age_var, taz_emp_ratio_var)
 
+        # lift scheduled-event non-residential space (models.elcm.event_boost);
+        # composes with the calibration above rather than replacing it
+        ev_cfg = elcm_event_boost_config or {}
+        ev_arr = None
+        if float(ev_cfg.get("factor", 1.0)) != 1.0 and not home_based:
+            ev_arr, n_ev = _elcm_event_boost(ev_cfg, final_alts_df, predict_X_df, _yr)
+            if n_ev:
+                pred_weighted = pred_weighted * ev_arr
+                logit_weighted = logit_weighted + np.log(ev_arr)
+            else:
+                ev_arr = None
+            print('[EventBoost] %s: factor %.2f max_age %s | %d of %d slots lifted (%.1f%%)'
+                  % (model_name, float(ev_cfg.get("factor", 1.0)), ev_cfg.get("max_age", 0),
+                     n_ev, len(predict_X_df), 100.0 * n_ev / max(len(predict_X_df), 1)),
+                  flush=True)
+
         _seed = int(_yr or 0) * 100000 + int(la_id) * 1000 + int(job_sector)
         picked_idx = pick_slots(pred_weighted, n, placement, seed=_seed,
                                 log_scores=logit_weighted)
@@ -538,6 +580,8 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
                                          la_id, job_sector, bld_age_var, taz_emp_ratio_var)
             else:
                 l0 = _u0
+            if ev_arr is not None:  # same event boost as the imputed scores
+                p0, l0 = p0 * ev_arr, l0 + np.log(ev_arr)
             picked0 = X_real.iloc[pick_slots(p0, n, placement, seed=_seed, log_scores=l0)].index
             yb = alts_df['year_built']
             is_new = yb.reindex(predict_X_df.index).to_numpy() > int(orca.get_injectable('base_year'))

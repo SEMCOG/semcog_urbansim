@@ -134,6 +134,7 @@ for name, model in list(emp_location_choice_models.items()):
         alt_capacity=model_configs['elcm']['vacant_variable'], 
         elcm_calibration_config=model_configs['elcm']['calibration'],
         impute_config=model_configs['elcm'].get('new_building_features'),
+        elcm_event_boost_config=model_configs['elcm'].get('event_boost'),
     )
 
 
