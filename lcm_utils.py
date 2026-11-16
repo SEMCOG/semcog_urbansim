@@ -209,6 +209,77 @@ def pick_slots(scores, n, method='slot_sampling', seed=0, log_scores=None):
     return np.argpartition(keys, -n)[-n:]
 
 
+# Building job-stock features of the non-home-based ELCM. A building built after the base year
+# has none of them at first, and the models learned "0 jobs = not chosen" (all base jobs were
+# the choosers). See new_building_stock_profile / impute_new_building_stock.
+ELCM_STOCK_COLS = (["b_total_jobs", "jobs_non_home_based", "jobs_home_based", "vacant_job_spaces"]
+                   + ["bldg_jobs_sector_%d" % s for s in range(1, 19)])
+
+
+def new_building_stock_profile(alts, base_year, min_buildings=5):
+    """Occupied-building profile by building type, from buildings of the base year or older
+    with jobs: occupancy (median non-home jobs / job space), home-based jobs per non-home job,
+    and the sector shares of all jobs. A type with fewer than min_buildings occupied buildings
+    uses the profile of all types."""
+    sec = [c for c in alts.columns if c.startswith("bldg_jobs_sector_")]
+    occ = alts[(alts.year_built <= base_year) & (alts.job_spaces > 0)
+               & (alts.jobs_non_home_based > 0)]
+
+    def one(g):
+        nh = g.jobs_non_home_based.sum()
+        tot = g[sec].sum()
+        return pd.Series(dict(occupancy=float((g.jobs_non_home_based / g.job_spaces).clip(0, 1).median()),
+                              hb_per_nh=float(g.jobs_home_based.sum() / nh), n=len(g),
+                              **(tot / max(tot.sum(), 1)).to_dict()))
+    allp = one(occ)
+    prof = occ.groupby("building_type_id").apply(one) if len(occ) else pd.DataFrame(columns=allp.index)
+    prof = prof[prof.n >= min_buildings]
+    return prof, allp
+
+
+def impute_new_building_stock(X, alts, year, base_year, decay_years, profile):
+    """Give new buildings the job stock of an occupied building of their type.
+
+    X: features of the sampled slots, before scaling (index = building_id, repeats allowed).
+    alts: building rows with year_built, building_type_id, job_spaces and the stock columns.
+    A building built after base_year whose non-home jobs are below the imputed value gets
+    real + w * (imputed - real) on every stock column, w = 1 - age / decay_years (0..1), so the
+    boost fades over decay_years and never drops a building below its real stock. The blend is
+    linear and the same w applies to all columns, so the columns stay consistent
+    (sectors sum to b_total_jobs = home + non-home; vacant = job_spaces - b_total_jobs).
+    Only the scored features change, not the slot capacity. Returns (X, info)."""
+    prof, allp = profile
+    cols = [c for c in ELCM_STOCK_COLS if c in X.columns]
+    b = alts.loc[~alts.index.duplicated()]
+    new = b[(b.year_built > base_year) & (b.job_spaces > 0)]
+    if not len(new) or not cols:
+        return X, dict(buildings=0, slots=0, mean_w=0.0)
+    p = prof.reindex(new.building_type_id.values)
+    p.index = new.index
+    p = p.fillna(allp)  # types without a profile use the all-type profile
+    nh = p.occupancy * new.job_spaces
+    tot = nh * (1 + p.hb_per_nh)
+    imp = pd.DataFrame(index=new.index)
+    imp["jobs_non_home_based"] = nh
+    imp["jobs_home_based"] = tot - nh
+    imp["b_total_jobs"] = tot
+    imp["vacant_job_spaces"] = (new.job_spaces - tot).clip(lower=0)
+    for s in range(1, 19):
+        imp["bldg_jobs_sector_%d" % s] = tot * p["bldg_jobs_sector_%d" % s]
+    w = (1 - (year - new.year_built) / float(decay_years)).clip(0, 1)
+    w[new.jobs_non_home_based >= nh] = 0.0
+    w = w[w > 0]
+    if not len(w):
+        return X, dict(buildings=0, slots=0, mean_w=0.0)
+    rows = X.index.isin(w.index)
+    X = X.copy()
+    bid = X.index[rows]
+    for c in cols:
+        real = new.loc[bid, c].to_numpy(dtype=float)
+        X.loc[rows, c] = real + w.loc[bid].to_numpy() * (imp.loc[bid, c].to_numpy() - real)
+    return X, dict(buildings=int(len(w)), slots=int(rows.sum()), mean_w=float(w.mean()))
+
+
 def _elcm_calibrate(calibration, pred, utility, predict_X_df, final_alts_df,
                     la_id, job_sector, bld_age_var, taz_emp_ratio_var):
     """Apply the hand-tuned multipliers to a segment's scores.
@@ -272,7 +343,8 @@ def _elcm_calibrate(calibration, pred, utility, predict_X_df, final_alts_df,
     return pred_weighted, utility + log_cal
 
 
-def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None):
+def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_calibration_config=None,
+                             impute_config=None):
     @orca.step(model_name)
     def choice_model_simulate(emp_location_choice_models, job_btype_baseyear_prob_matrix):
         model = emp_location_choice_models[model_name]
@@ -322,12 +394,14 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         bld_age_var = 'building_age'
         taz_emp_ratio_var = f'taz_empratio_{job_sector}'
         space_col = 'job_spaces'
+        impute_on = bool((impute_config or {}).get('enabled', False)) and not home_based
 
         _t_alts = time.perf_counter()
         alts_df = alts.to_frame(list(set(
             variable_cols + alts_filter_cols + [alt_capacity, space_col, 'building_type_id',
                                                 'stories', bld_age_var, taz_emp_ratio_var,
                                                 'residential_units']
+            + (['year_built', 'non_residential_sqft'] + ELCM_STOCK_COLS if impute_on else [])
         )))
         print(f"[alts-timing] ELCM la{la_id} sec{job_sector} "
               f"alts_to_frame={(time.perf_counter() - _t_alts) * 1000:.0f}ms "
@@ -402,24 +476,36 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
         # expanded matrix before sampling)
         predict_X_df = predict_X_df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
+        _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
+        X_real, imp_info = None, None
+        if impute_on and not home_based:
+            la_rows = alts_df.loc[alts_idx]
+            la_rows = la_rows[la_rows.non_residential_sqft > 0]
+            X_real = predict_X_df
+            predict_X_df, imp_info = impute_new_building_stock(
+                predict_X_df, la_rows, int(_yr), int(orca.get_injectable('base_year')),
+                float(impute_config.get('decay_years', 10)),
+                new_building_stock_profile(la_rows, int(orca.get_injectable('base_year'))))
+            print("[elcm-impute] %s: new buildings %d, slots %d of %d, mean w %.2f"
+                  % (model_name, imp_info['buildings'], imp_info['slots'], len(predict_X_df),
+                     imp_info['mean_w']), flush=True)
+
         _t_sc = time.perf_counter()
-        # Prefer the scaler fitted during estimation
-        scaler_state = getattr(model, 'scaler_state', None)
-        if scaler_state is not None:
-            predict_X_df = apply_scaler_state(predict_X_df, scaler_state)
-        else:
-            scaler = RobustScaler()
-            predict_X_df = pd.DataFrame(
-                scaler.fit_transform(predict_X_df),
-                columns=predict_X_df.columns,
-                index=predict_X_df.index
-            )
-            predict_X_df = np.clip(predict_X_df, -5, 5)
+
+        def _scores(X):
+            # Prefer the scaler fitted during estimation
+            scaler_state = getattr(model, 'scaler_state', None)
+            if scaler_state is not None:
+                X = apply_scaler_state(X, scaler_state)
+            else:
+                scaler = RobustScaler()
+                X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
+                X = np.clip(X, -5, 5)
+            with torch.no_grad():
+                return model.utility(torch.tensor(X.values, dtype=torch.float)
+                                     ).detach().cpu().numpy().flatten()
         _t_fw = time.perf_counter()
-        with torch.no_grad():
-            _u = model.utility(
-                torch.tensor(predict_X_df.values, dtype=torch.float)
-            ).detach().cpu().numpy().flatten()
+        _u = _scores(predict_X_df)
 
         # sigmoid of utility _u
         pred = 1.0 / (1.0 + np.exp(-_u))
@@ -437,12 +523,35 @@ def register_elcm_model_step(model_name, alt_capacity='vacant_job_spaces', elcm_
                 calibration, pred, _u, predict_X_df, final_alts_df,
                 la_id, job_sector, bld_age_var, taz_emp_ratio_var)
 
-        _yr = orca.get_injectable('year') if orca.is_injectable('year') else 0
-        picked_idx = pick_slots(pred_weighted, n, placement,
-                                seed=(int(_yr or 0) * 100000
-                                      + int(la_id) * 1000 + int(job_sector)),
+        _seed = int(_yr or 0) * 100000 + int(la_id) * 1000 + int(job_sector)
+        picked_idx = pick_slots(pred_weighted, n, placement, seed=_seed,
                                 log_scores=logit_weighted)
         picked_bid = predict_X_df.iloc[picked_idx].index
+
+        if X_real is not None and impute_config.get('compare', False):
+            # Snapshot comparison: the same slots and seed, scored without the imputation
+            # (calibration is applied the same way when it is enabled).
+            _u0 = _scores(X_real)
+            p0 = 1.0 / (1.0 + np.exp(-_u0))
+            if calibration.get("enabled", False):
+                p0, l0 = _elcm_calibrate(calibration, p0, _u0, X_real, final_alts_df,
+                                         la_id, job_sector, bld_age_var, taz_emp_ratio_var)
+            else:
+                l0 = _u0
+            picked0 = X_real.iloc[pick_slots(p0, n, placement, seed=_seed, log_scores=l0)].index
+            yb = alts_df['year_built']
+            is_new = yb.reindex(predict_X_df.index).to_numpy() > int(orca.get_injectable('base_year'))
+            row = dict(year=int(_yr), model=model_name, la=int(la_id), sector=int(job_sector),
+                       jobs=int(n), slots=int(len(predict_X_df)), new_slots=int(is_new.sum()),
+                       imputed_slots=imp_info['slots'], imputed_buildings=imp_info['buildings'],
+                       mean_u_new_real=float(_u0[is_new].mean()) if is_new.any() else np.nan,
+                       mean_u_new_imputed=float(_u[is_new].mean()) if is_new.any() else np.nan,
+                       mean_u_old=float(_u[~is_new].mean()) if (~is_new).any() else np.nan,
+                       picked_new_real=int((yb.reindex(picked0).to_numpy() > int(orca.get_injectable('base_year'))).sum()),
+                       picked_new_imputed=int((yb.reindex(picked_bid).to_numpy() > int(orca.get_injectable('base_year'))).sum()))
+            out = impute_config.get('log_csv') or os.path.join(
+                orca.get_injectable('runs_dir') if orca.is_injectable('runs_dir') else '.', 'elcm_impute_compare.csv')
+            pd.DataFrame([row]).to_csv(out, mode='a', header=not os.path.exists(out), index=False)
 
         # Assign buildings
         choosers_df.loc[final_choosers_df.index, 'building_id'] = picked_bid.values.astype(
