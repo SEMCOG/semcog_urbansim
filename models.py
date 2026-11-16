@@ -3558,6 +3558,15 @@ def feasibility(parcels, buildings, btype_form_map):
     form_price_factors = res_dev_cfg.get("form_price_factors") or {}
     # large areas where the residential floor applies (None = all)
     res_floor_las = res_dev_cfg.get("res_price_floor_las")
+    # Detroit floor as a gap share (None = the threshold rule below for Detroit too)
+    detroit_gap_share = res_dev_cfg.get("detroit_price_floor_gap_share")
+    if detroit_gap_share is not None:
+        # above 1 the rule reverses the price order again
+        if not (isinstance(detroit_gap_share, (int, float)) and 0 <= detroit_gap_share <= 1):
+            raise ValueError("detroit_price_floor_gap_share must be a number in [0, 1], got %r"
+                             % (detroit_gap_share,))
+        if res_floor_las is not None and 5 not in res_floor_las:
+            detroit_gap_share = None  # no floor in Detroit at all
     _floor = {}
     for col, v in btype_form_map.items():
         bld = bldgs[bldgs["building_type_id"].isin(v["btypes"]) & (bldgs[v["price_col"]] > 0)]
@@ -3594,6 +3603,9 @@ def feasibility(parcels, buildings, btype_form_map):
         print(f"  [feasibility] form price factors: {form_price_factors}")
     if res_floor_las is not None:
         print(f"  [feasibility] residential floor only in large areas {res_floor_las}")
+    if detroit_gap_share is not None:
+        print(f"  [feasibility] Detroit floor: price + {detroit_gap_share} x gap to "
+              f"${res_floor_share * la_avg_res.get(3, reg_avg_res):.0f} (no threshold)")
 
     def _price_with_floor(use):
         prices = parcel_average_price(use)
@@ -3601,11 +3613,13 @@ def feasibility(parcels, buildings, btype_form_map):
         if col not in _floor:
             return prices
         thr, rep, reg_avg = _floor[col]
-        prices = prices.where(
-            prices >= thr.reindex(prices.index),
-            rep.reindex(prices.index, fill_value=reg_avg)
-        )
-        return prices * form_price_factors.get(use, 1.0)
+        rep = rep.reindex(prices.index, fill_value=reg_avg)
+        floored = prices.where(prices >= thr.reindex(prices.index), rep)
+        if col == "residential" and detroit_gap_share is not None:
+            detroit = (pcl_la_s.reindex(prices.index) == 5).to_numpy()
+            floored = floored.where(
+                ~detroit, res_capacity.gap_floor_price(prices, rep, detroit_gap_share))
+        return floored * form_price_factors.get(use, 1.0)
 
     parcel_utils.run_feasibility(
         parcels,
@@ -4671,6 +4685,10 @@ def residential_developer(
     la_max_ratio         = _res_cfg.get("la_max_ratio", 1.2)
     # minimum of the LA cap, as a share of the LA's base-year build rate
     hist_floor_factor    = _res_cfg.get("hist_floor_factor", 0.5)
+    # large areas whose cap uses the fixed base-period rate (default: none)
+    la_fixed_rate_las    = set(_res_cfg.get("la_fixed_rate_large_areas") or [])
+    # netted LA vacancy gap as a further ceiling (default off)
+    _net_cap_cfg         = _res_cfg.get("la_net_gap_cap", {}) or {}
     # defaults reproduce the earlier behavior; res_developer.yaml tunes them down
     la_max_scale         = _res_cfg.get("la_max_scale", la_max_ratio)
     demo_rebuild_boost     = _res_cfg.get("demo_rebuild_boost", 20.0)
@@ -4863,18 +4881,34 @@ def residential_developer(
         # floor la_rate at hist_floor_factor × historical baseline (Fix 2: prevents cap collapse)
         la_rate   = max(float(la_sim_rate.get(la_id, 0)),
                         float(la_hist_rate.get(la_id, 0)) * hist_floor_factor)
+        if la_id in la_fixed_rate_las:
+            # fixed ceiling: the base-period rate itself (ratio 1), not the rolling rate
+            # (which the ceiling itself would raise when construction keeps reaching it)
+            la_rate = float(la_hist_rate.get(la_id, 0))
+        la_ratio  = 1.0 if la_id in la_fixed_rate_las else la_max_ratio
         # subtract units already built by events/refiner this year (Fix 1: no double-count)
         la_ev     = float(la_events.get(la_id, 0))
-        la_allowed = max(0, la_rate * la_max_ratio - la_ev)
+        la_allowed = max(0, la_rate * la_ratio - la_ev)
         if la_sum <= 0:
             continue
+        if _net_cap_cfg.get("enabled", False):
+            # surplus units in one city of the LA offset the gaps of its other cities
+            # (events are already in num_units, so not subtracted again)
+            la_net_cap = res_capacity.net_gap_cap(
+                [city_data[m]["vacancy_gap"] for m in active],
+                [city_data[m]["target_units"] for m in active],
+                float(_net_cap_cfg.get("mismatch_share", 0.5)))
+            print("  LA {}: net gap={:,} positive targets={:,} → net-gap cap={:,.0f} (rate cap={:,.0f})".format(
+                la_id, sum(city_data[m]["vacancy_gap"] for m in active), la_sum,
+                la_net_cap, la_allowed))
+            la_allowed = min(la_allowed, la_net_cap)
         if la_allowed <= 0:
             # events already met or exceeded LA cap — zero out all dev targets
             for m in active:
                 city_data[m]["target_units"] = 0
                 city_data[m]["la_scale"] = 0.0
             print("  LA {}: events={:.0f} ≥ cap={:.0f} → dev=0 (all city targets zeroed)".format(
-                la_id, la_ev, la_rate * la_max_ratio))
+                la_id, la_ev, la_rate * la_ratio))
             continue
         scale = float(min(la_allowed / la_sum, la_max_scale))
         if abs(scale - 1.0) < 1e-4:
