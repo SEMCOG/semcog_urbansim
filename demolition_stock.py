@@ -89,6 +89,29 @@ def stock_targets(stock, rates, rate_mult=1.0):
     return rates.reindex(cities).fillna(0.0) * stock.reindex(cities).fillna(0.0) * rate_mult
 
 
+def vacancy_targets(b, la, p, rate):
+    """Yearly residential target from vacant units, outside Detroit (index city_id,
+    columns RES_CATEGORIES): rate x vacant units (units - households) of type k.
+    Detroit rows are 0 (its stock is already the vacant pool). b needs city_id,
+    building_type_id, residential_units, households."""
+    vacant = (b["residential_units"] - b["households"]).clip(lower=0).where(~la.isin(p["detroit_la_ids"]), 0)
+    out = {cat: (rate * vacant.where(b["building_type_id"] == btype, 0)).groupby(b["city_id"]).sum()
+           for cat, btype in RES_CATEGORIES.items()}
+    return pd.DataFrame(out).fillna(0.0)
+
+
+def excess_vacancy_targets(vacant_by_type, units, households, target_vacancy, share):
+    """Yearly residential target from the vacancy above the target (index city_id, columns
+    RES_CATEGORIES): share x max(0, vacant - target_vacancy x units) per city, split over the
+    types by their vacant units. vacant_by_type: vacant units by city and type
+    (vacancy_targets with rate 1); units, households, target_vacancy: Series by city."""
+    vac = (units - households).clip(lower=0)
+    excess = (share * (vac - target_vacancy.reindex(units.index) * units).clip(lower=0)).fillna(0.0)
+    split = vacant_by_type.reindex(units.index).fillna(0.0)
+    split = split.div(split.sum(axis=1).where(lambda x: x > 0), axis=0).fillna(0.0)
+    return split.mul(excess, axis=0)
+
+
 def floor_cap(vacant, units, floor):
     """Units that can be removed while vacancy stays at or above the floor.
 

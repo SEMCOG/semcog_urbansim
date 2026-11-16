@@ -3275,6 +3275,32 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
                 "(PYTHONPATH=. python scripts/estimation/demolition_calibration.py --stock-rates-only)")
         rates, city_la, city_floor = demolition_stock.rates_by_city(demolition_stock_rates.to_frame())
         demolition_rates = demolition_stock.stock_targets(stock, rates, rate_mult)
+        # vacancy response (default off): outside Detroit, the residential target is at
+        # least rate x vacant units of the type (2021-2024: about 1.1% of the vacant units
+        # a year, ACS; reviews/demolition_response). The vacancy floor below still applies.
+        _vr = cfg.get("vacancy_response", {}) or {}
+        if _vr.get("enabled", False):
+            _res_cats = list(demolition_stock.RES_CATEGORIES)
+            _vt = demolition_stock.vacancy_targets(b_stock, la_b, sp, float(_vr["rate"]) * rate_mult)
+            _vt = _vt.reindex(index=demolition_rates.index, fill_value=0.0)
+            _before = demolition_rates[_res_cats].sum().sum()
+            demolition_rates[_res_cats] = np.maximum(demolition_rates[_res_cats], _vt[_res_cats])
+            if float(_vr.get("excess_share", 0) or 0) > 0:
+                # remove a share of the vacant units above the city's target vacancy each
+                # year (Detroit 2010-2019: ~8% of its excess vacant units a year)
+                _res_b = b_stock[(b_stock.residential_units > 0) & ~la_b.isin(sp["detroit_la_ids"])]
+                _units = _res_b.groupby("city_id")["residential_units"].sum()
+                _hh = _res_b.groupby("city_id")["households"].sum()
+                _tv = target_res_vacancies_mcd.to_frame()[str(year)]
+                _et = demolition_stock.excess_vacancy_targets(
+                    demolition_stock.vacancy_targets(b_stock, la_b, sp, 1.0), _units, _hh, _tv,
+                    float(_vr["excess_share"]) * rate_mult)
+                _et = _et.reindex(index=demolition_rates.index, columns=_res_cats, fill_value=0.0)
+                print("  [demolition] excess-vacancy target %.0f units (share %.2f)" % (
+                    _et.sum().sum(), float(_vr["excess_share"])))
+                demolition_rates[_res_cats] = np.maximum(demolition_rates[_res_cats], _et)
+            print("  [demolition] vacancy response: residential target %.0f -> %.0f units" % (
+                _before, demolition_rates[_res_cats].sum().sum()))
     else:
         demolition_rates = demolition_rates.to_frame()
         if any_calibrated:
@@ -3381,8 +3407,14 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         if vf.get("enabled", False):
             base_vac = target_res_vacancies_mcd.to_frame()[str(base_year)]
             other_floor = pd.Series(vacancy_floor.floor_rate(
-                base_vac, vf["share_of_base"], vf["res_min"]), index=base_vac.index)
+                base_vac, vf.get("res_share_of_base", vf["share_of_base"]), vf["res_min"]), index=base_vac.index)
             floor_cities = city_la.index
+        # Detroit target floor (default off): a Detroit neighborhood is not demolished below
+        # its target vacancy of the year. The city programs that drove the 2014-2025
+        # demolitions have ended (reviews/city_factors_1112, 2026-11-13).
+        detroit_tv = (target_res_vacancies_mcd.to_frame()[str(year)]
+                      if vf.get("detroit_target_floor", False) else None)
+        detroit_cap_units = 0.0
         res_cats = list(demolition_stock.RES_CATEGORIES)
         res_b = b[b.residential_units > 0]
         units = res_b.groupby("city_id")["residential_units"].sum()
@@ -3392,6 +3424,10 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
         for city_id in floor_cities.intersection(demolition_rates.index):
             if city_la.get(city_id) in sp["detroit_la_ids"]:
                 floor_c = city_floor.get(city_id, sp["floor_min"])
+                if detroit_tv is not None:
+                    floor_c = max(floor_c, float(detroit_tv.get(city_id, floor_c)))
+                    detroit_cap_units += float(np.nan_to_num(demolition_stock.floor_cap(
+                        vacant.get(city_id, 0), units.get(city_id, 0), floor_c)))  # 555: no housing, no floor
             else:
                 floor_c = other_floor.get(city_id, vf["res_min"])
             cap = float(demolition_stock.floor_cap(vacant.get(city_id, 0), units.get(city_id, 0),
@@ -3399,6 +3435,8 @@ def scored_demolition_events(buildings, parcels, households, jobs, year, demolit
             have = avail.loc[city_id] if city_id in avail.index else pd.Series(0.0, index=res_cats)
             demolition_rates.loc[city_id, res_cats] = demolition_stock.allocate_cap(
                 demolition_rates.loc[city_id, res_cats], cap, have).values
+        if detroit_tv is not None:
+            print("  [demolition] Detroit target floor: units above the target vacancy %.0f" % detroit_cap_units)
     sample(demolition_rates.type81units, res_eligible[res_eligible.building_type_id == 81], "residential_units", "res_score", "type81units")
     sample(demolition_rates.type82units, res_eligible[res_eligible.building_type_id == 82], "residential_units", "res_score", "type82units")
     sample(demolition_rates.type83units, res_eligible[res_eligible.building_type_id == 83], "residential_units", "res_score", "type83units")
@@ -4752,7 +4790,7 @@ def residential_developer(
     if _vf.get("enabled", False):
         _base_vac = target_res_vacancies_mcd.to_frame()[str(orca.get_injectable("base_year"))]
         _res_floor = pd.Series(vacancy_floor.floor_rate(
-            _base_vac, _vf["share_of_base"], _vf["res_min"]), index=_base_vac.index)
+            _base_vac, _vf.get("res_share_of_base", _vf["share_of_base"]), _vf["res_min"]), index=_base_vac.index)
         _demo_units = (vacancy_floor.demolished_units(orca.get_table("dropped_buildings").to_frame(
             ["step", "city_id", "residential_units"])) if orca.is_table("dropped_buildings")
             else pd.Series(dtype=float))
