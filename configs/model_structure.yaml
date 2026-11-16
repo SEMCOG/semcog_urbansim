@@ -12,7 +12,7 @@ models:
             strength: 2.5 # log-scale gain on the target; 0 disables
             clip: [0.5, 2.0]
             # score: add ln(w) to each slot's key | stratified: set per-tract slot counts
-            method: score
+            method: stratified
             # floor (use lower bound if weight not found) | neutral (1)
             zero_base_share: neutral
             # weight units built during the run by the base-year mix of comparable new stock
@@ -26,7 +26,7 @@ models:
             # MCD weight from its vacancy over its own target, centered on the large
             # area's unit-weighted mean; strength 0 disables
             mcd_vacancy:
-                strength: 0.5
+                strength: 0.0
                 clip: [0.5, 2.0]
             # per-dimension holds on one category's marginal; clip/shrink_k default to
             # the joint weight's. A value is a strength, or a block of its own.
@@ -40,9 +40,15 @@ models:
             # city factors (net-change calibration): csv in configs (city_id, factor,
             # hlcm_model) made by scripts/estimation/make_city_factors.py for one HLCM
             # model set; empty = no factors. A warning shows when hlcm_model differs from
-            # the HLCM model folder of the run. hlcm_city_factors.csv is calibrated for
-            # models_26Oct23, so it is off for models_26Nov09.
-            city_factors:
+            # the HLCM model folder of the run. hlcm_city_factors.csv = iteration 3 for
+            # models_26Nov09 (fitted on 2031-2045, 2010-25 trend; run5175, 2026-11-16).
+            city_factors: hlcm_city_factors.csv
+            # tract pattern prior (lcm_utils._hlcm_pattern_prior): the calibrator target x
+            # clip(tract base share / large-area base share of the segment, 0.5, 2) ** beta;
+            # keeps the base-year differences between tracts. run5175: on, beta 1.0.
+            pattern_prior:
+                enabled: true
+                beta: 1.0
 
     elcm: 
         model_type: location_choice
@@ -51,9 +57,11 @@ models:
         alternatives_name: buildings
         supply_variable: job_spaces
         vacant_variable: vacant_job_spaces
-        # lift scheduled-event non-residential space in the job choice; 1.0 disables
+        # lift scheduled-event non-residential space in the job choice; 1.0 disables.
+        # 1.0 on this branch to reproduce run5175 (forecast_2055 #133 default: 2.0); a test
+        # option for the next step (about 90% of the new non-res space 2026-30 is events)
         event_boost:
-            factor: 2.0
+            factor: 1.0
             # years after year_built the lift applies; 0 = for the whole run
             max_age: 5
         # New-building job stock (non-home-based ELCM; default off; test 2026-11-16). A building
