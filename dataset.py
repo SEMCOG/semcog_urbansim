@@ -81,11 +81,28 @@ def demolition_stock_rates():
     return pd.read_csv(f)
 
 
+_store_once_cache = {}
+
+
+def _store_once(store, key):
+    """Read `key` from the input HDF once per process.
+
+    clear_iteration_cache drops orca's cache every year, so a cached table or
+    injectable that reads the input HDF reads it again every year -- over the
+    mounted drive, where that read failing in year 23 ended run1522. Only for
+    tables the run never replaces via add_table; the big ones become stored
+    frames in the first year and so are not re-read.
+    """
+    if key not in _store_once_cache:
+        _store_once_cache[key] = store[key]
+    return _store_once_cache[key]
+
+
 @orca.table(cache=True)
 def parcel_maz_crossing_shares(store):
     # parcel->MAZ area shares for parcels spanning MAZ; assign_new_building_maz
     # reads parcel_id / maz_id / share as columns
-    df = store["parcel_maz_crossing_shares"]
+    df = _store_once(store, "parcel_maz_crossing_shares")
     return df.rename(columns={"maz_seqid": "maz_id"}).reset_index()
 
 
@@ -93,7 +110,7 @@ def parcel_maz_crossing_shares(store):
 def btype_owner_share(store):
     # base-year owner-occupied share of units by building type; new buildings have
     # no tenure split of their own (see models.add_extra_columns_nonres)
-    b = store["buildings"]
+    b = _store_once(store, "buildings")
     b = b[b.residential_units > 0]
     g = b.groupby("building_type_id")[["owner_units", "residential_units"]].sum()
     return (g.owner_units / g.residential_units).to_dict()
@@ -307,7 +324,7 @@ def parcels(store, zoning):
 
 @orca.table(cache=True)
 def census_tracts(store):
-    parcels_df = store["parcels"]
+    parcels_df = _store_once(store, "parcels")
     # remove pseudo parcels with bg_id <0
     parcels_df = parcels_df[parcels_df['census_bg_id']>0]
     # need int32 to avoid overflow
@@ -330,7 +347,7 @@ def base_job_space(buildings):
 
 @orca.table(cache=True)
 def poi(store):
-    return store["points_of_interest_by_category"]
+    return _store_once(store, "points_of_interest_by_category")
 
 @orca.table(cache=True)
 def accessibility_walk_indicator_by_parcel():

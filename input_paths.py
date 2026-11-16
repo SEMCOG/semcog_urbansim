@@ -38,8 +38,8 @@ def _p(*candidates):
 # Core run inputs (required for a forecast run)
 # ---------------------------------------------------------------------------
 BASE_HDF = _p(
-    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_110926.h5",
     f"{_LOCAL}/main_110926.h5",
+    "/mnt/hgfs/urbansim/RDF2055/model_inputs/base_hdf/main_110926.h5",
 )
 
 # RDF2055 estimation
