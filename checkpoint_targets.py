@@ -13,12 +13,16 @@ TABLES = ("tract_hh_type_base_ratios",)
 INJECTABLES = ("new_unit_fill_shares", "new_unit_fill_ratios", "sqft_band_cuts",
                "job_btype_baseyear_prob_matrix")
 NAMES = TABLES + INJECTABLES
+# saved by newer runs; a checkpoint without them still resumes (the value is then None)
+OPTIONAL = ("hlcm_la_segment_base_shares",)
 
 
 def save(path, targets):
-    """Write the targets (dict name -> value, NAMES) to /base_year_targets in path."""
+    """Write the targets (dict name -> value, NAMES and OPTIONAL) to /base_year_targets in path."""
     with pd.HDFStore(path, "a") as st:
-        for k in NAMES:
+        for k in NAMES + OPTIONAL:
+            if k not in targets:
+                continue
             v = targets[k]
             if k == "sqft_band_cuts":
                 # dict large_area_id -> cut points; a large area without cuts reads back
@@ -37,6 +41,8 @@ def read(store):
     if missing:
         raise ValueError("%s: incomplete /%s, missing %s" % (getattr(store, "filename", store), GROUP, missing))
     out = {k: store["%s/%s" % (GROUP, k)] for k in NAMES}
+    for k in OPTIONAL:
+        out[k] = store["%s/%s" % (GROUP, k)] if k in have else None
     cuts = out["sqft_band_cuts"]
     out["sqft_band_cuts"] = {int(la): g.droplevel(0).sort_index().to_numpy()
                              for la, g in cuts.groupby(level=0)}
