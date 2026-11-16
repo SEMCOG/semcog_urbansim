@@ -135,3 +135,30 @@ def test_calibrated_levels_reproduce_volume():
     assert np.allclose(got[has_stock], want[has_stock], rtol=1e-6, atol=1e-6)
     det = r[(r.large_area_id == 5) & r.category.isin(ds.RES_CATEGORIES)]
     assert (det.rate * det.stock).sum() == pytest.approx(0.042 * det.stock.sum(), rel=1e-6)
+
+
+def test_vacancy_targets_outside_detroit_only():
+    b = pd.concat([_buildings(city_id=501, residential_units=10, households=0),     # Detroit
+                   _buildings(city_id=2000, residential_units=10, households=6),    # 4 vacant
+                   _buildings(city_id=2000, building_type_id=83, residential_units=100, households=90),
+                   _buildings(city_id=2001, residential_units=5, households=7)],    # over-full
+                  ignore_index=True)
+    la = pd.Series([5, 125, 125, 125])
+    t = ds.vacancy_targets(b, la, P, 0.01)
+    assert t.loc[501].sum() == 0
+    assert t.loc[2000, "type81units"] == pytest.approx(0.04)
+    assert t.loc[2000, "type83units"] == pytest.approx(0.10)
+    assert t.loc[2001].sum() == 0
+
+
+def test_excess_vacancy_targets_share_of_units_above_target():
+    units = pd.Series({1: 1000, 2: 1000})
+    hh = pd.Series({1: 900, 2: 970})          # vacancy 10% and 3%
+    tv = pd.Series({1: 0.05, 2: 0.05})
+    vbt = pd.DataFrame({"type81units": [60, 30], "type82units": [0, 0], "type83units": [40, 0]},
+                       index=[1, 2])
+    t = ds.excess_vacancy_targets(vbt, units, hh, tv, 0.1)
+    # city 1: excess 100 - 50 = 50 units, 10% = 5, split 60/40 by vacant units
+    assert t.loc[1, "type81units"] == pytest.approx(3.0)
+    assert t.loc[1, "type83units"] == pytest.approx(2.0)
+    assert t.loc[2].sum() == 0                # below target: nothing
