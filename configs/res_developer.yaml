@@ -32,9 +32,31 @@ la_max_scale: 1.0
 # Minimum of the large-area cap, as a share of the LA's base-year build rate
 hist_floor_factor: 0.5
 
+# Large areas whose cap is the fixed base-period build rate (units built in the 7 years to the
+# base year / 7; ratio 1, not la_max_ratio), minus the year's event units, instead of
+# la_max_ratio x the rolling rate. Empty = none.
+la_fixed_rate_large_areas: []
+
+# Further LA ceiling from the netted vacancy gap: max(0, sum of the signed city gaps) +
+# mismatch_share x the sum of the positive city targets. Without it, a city's surplus does
+# not reduce the gaps of the other cities of its large area. share 0 = strict netting.
+la_net_gap_cap:
+  enabled: false
+  mismatch_share: 0.5
+
 # Feasibility residential price floor: parcels priced below this share of their LA
 # average are lifted to that share of the LA replacement price
 res_price_floor_share: 0.8
+
+# Large areas where the residential floor applies (empty = all)
+res_price_floor_las:
+
+# Detroit (LA5) floor as a gap share: price + share x max(0, replacement - price), with the
+# replacement = res_price_floor_share x Wayne-rest (LA3) average. Keeps the price order of the
+# parcels. Empty = the threshold rule above (parcels below the threshold get the replacement,
+# parcels above keep their price, so a cheaper parcel can sell for more). A number in [0, 1];
+# not used when res_price_floor_las leaves out Detroit (no Detroit floor then).
+detroit_price_floor_gap_share:
 
 # Feasibility sale price of a form = parcel residential price x factor (after the floor).
 # Within-zone median price per sqft relative to single-family, buildings built 2000+,
