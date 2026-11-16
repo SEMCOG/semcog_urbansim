@@ -47,7 +47,7 @@ models:
         vacant_variable: vacant_job_spaces
         # lift scheduled-event non-residential space in the job choice; 1.0 disables
         event_boost:
-            factor: 2.0
+            factor: 6.0
             # years after year_built the lift applies; 0 = for the whole run
             max_age: 5
         calibration:
