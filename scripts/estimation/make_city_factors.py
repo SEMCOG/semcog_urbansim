@@ -49,6 +49,10 @@ p.add_argument("--step", type=float, default=1.38)
 # shrink it toward 0 by size, hh2020 / (hh2020 + K) (0 = off)
 p.add_argument("--cap-pct", type=float, default=5)
 p.add_argument("--shrink-k", type=float, default=2000)
+# longer trend (optional): households by city in an earlier year; cities in the file use the
+# relative growth trend-year..2025 (per year), the others keep 2020-25
+p.add_argument("--trend-csv", help="csv city_id,households for --trend-year")
+p.add_argument("--trend-year", type=int)
 a = p.parse_args()
 y0, y1 = a.first_year, a.last_year
 prev = pd.read_csv(a.previous, index_col="city_id").factor if a.previous else None
@@ -71,30 +75,41 @@ def read_run(path):
                 gone = ~prev_bid.index.isin(h.index) | (h.reindex(prev_bid.index).to_numpy() != prev_bid.to_numpy())
                 removed = removed.add(prev_city.reindex(prev_bid[gone]).value_counts(), fill_value=0)
             prev_bid, prev_city = h, city
+            if y == y0 - 1:
+                hh[y] = city.reindex(h).value_counts()
         hh[y1] = prev_city.reindex(prev_bid).value_counts()
-    return pd.DataFrame({"la": la, "hh2025": hh[2025], "hh_end": hh[y1], "placed": placed, "removed": removed})
+    return pd.DataFrame({"la": la, "hh2025": hh[2025], "hh_start": hh[y0 - 1], "hh_end": hh[y1],
+                         "placed": placed, "removed": removed})
 
 
 runs = [read_run(r) for r in a.runs.split(",")]
 d = runs[0][["la", "hh2025"]].copy()
-for c in ("hh_end", "placed", "removed"):
+for c in ("hh_start", "hh_end", "placed", "removed"):
     d[c] = pd.concat([r[c] for r in runs], axis=1).fillna(0).mean(axis=1)
 h20 = pd.read_csv(HH_2020, index_col="city_id").households
 d.insert(1, "hh2020", h20.reindex(d.index))
 d = d.dropna(subset=["la", "hh2025"]).fillna(0)
 d = d[d.index > 0]
 d["la"] = d.la.astype(int)
-g = d.groupby("la")[["hh2020", "hh2025", "hh_end"]].sum()
-obs_rel = (d.hh2025 / d.hh2020.replace(0, np.nan) - 1) - d.la.map(g.hh2025 / g.hh2020 - 1)
+g = d.groupby("la")[["hh2020", "hh2025", "hh_start", "hh_end"]].sum()
+# relative growth per year above the large area
+obs_rel = ((d.hh2025 / d.hh2020.replace(0, np.nan) - 1) - d.la.map(g.hh2025 / g.hh2020 - 1)) / 5
+if a.trend_csv:
+    ht = pd.read_csv(a.trend_csv, index_col="city_id").households.reindex(d.index)
+    has = ht.notna() & (ht > 0)
+    gt = d[has].assign(ht=ht[has]).groupby("la")[["ht", "hh2025"]].sum()
+    rel_t = ((d.hh2025 / ht - 1) - d.la.map(gt.hh2025 / gt.ht - 1)) / (2025 - a.trend_year)
+    obs_rel = rel_t.where(has, obs_rel)
+    print("trend %d-2025 for %d cities, 2020-25 for the others" % (a.trend_year, int(has.sum())))
 if a.cap_pct > 0:
     ref = obs_rel[~d.la.isin(SKIP_LA)].dropna()
     obs_rel = obs_rel.clip(np.percentile(ref, a.cap_pct), np.percentile(ref, 100 - a.cap_pct))
 if a.shrink_k > 0:
     obs_rel = obs_rel * d.hh2020 / (d.hh2020 + a.shrink_k)
-sim_la = d.la.map(g.hh_end / g.hh2025 - 1)
-years_obs, years_sim = 5, y1 - 2025
-d["target_net"] = d.hh2025 * (sim_la + obs_rel.fillna(0) * years_sim / years_obs)
-d["sim_net"] = d.hh_end - d.hh2025
+sim_la = d.la.map(g.hh_end / g.hh_start - 1)
+years_sim = y1 - (y0 - 1)
+d["target_net"] = d.hh_start * (sim_la + obs_rel.fillna(0) * years_sim)
+d["sim_net"] = d.hh_end - d.hh_start
 d["needed"] = (d.target_net + d.removed).clip(lower=0)
 adj = (d.needed / d.placed.replace(0, np.nan)).fillna(1.0)
 ok = (d.hh2025 >= MIN_HH) & (d.placed >= MIN_PLACED) & ~d.la.isin(SKIP_LA)
