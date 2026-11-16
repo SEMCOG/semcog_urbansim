@@ -16,6 +16,7 @@ import numbers
 import logging
 import hashlib
 import shutil
+import yaml
 import subprocess
 
 
@@ -762,6 +763,19 @@ def _git_is_dirty():
     return bool(_git_output("status", "--porcelain"))
 
 
+def _city_factors_path(config_dir):
+    """The city-factor csv the run reads (models.hlcm.calibration.city_factors), not a
+    fixed name: a run that names another file kept a copy of the wrong one before."""
+    try:
+        with open(os.path.join(config_dir, "model_structure.yaml")) as f:
+            name = yaml.safe_load(f)["models"]["hlcm"]["calibration"].get("city_factors")
+    except (OSError, KeyError, TypeError):
+        name = None
+    if not name:
+        return os.path.join(config_dir, "hlcm_city_factors.csv")
+    return name if os.path.isabs(name) else os.path.join(config_dir, name)
+
+
 def _copy_run_configs(data_out_dir, yaml_configs):
     configs_dir = os.path.join(data_out_dir, "configs_used")
     os.makedirs(configs_dir, exist_ok=True)
@@ -781,7 +795,7 @@ def _copy_run_configs(data_out_dir, yaml_configs):
         "demolition_rates": os.path.join(config_dir, "demolition_rates.csv"),
         "demolition_stock_rates": os.path.join(config_dir, "demolition_stock_rates.csv"),
         "model_structure": os.path.join(config_dir, "model_structure.yaml"),
-        "hlcm_city_factors": os.path.join(config_dir, "hlcm_city_factors.csv"),
+        "hlcm_city_factors": _city_factors_path(config_dir),
     }
 
     copied = {}
