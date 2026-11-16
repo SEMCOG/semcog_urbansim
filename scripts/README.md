@@ -62,7 +62,11 @@ the run reads only their output in `configs/`. Run them from the repository root
      factors or with the setting empty.
   2. `PYTHONPATH=. python scripts/estimation/make_city_factors.py --runs <run h5>[,<run h5>]
      --first-year <first> --last-year <last> --hlcm-model <HLCM model folder>
-     [--previous configs/hlcm_city_factors.csv]`
+     [--previous configs/hlcm_city_factors.csv]
+     [--trend-csv <city households of a history year> --trend-year <history year>]`
+     `--trend-csv` / `--trend-year` take each city's trend from a longer history than the
+     default period. The window can be any run years (for example a later window, after the
+     housing events end).
   3. Repeat until the change is within the seed noise.
 
 ## `legacy/`
