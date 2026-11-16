@@ -51,6 +51,17 @@ models:
         alternatives_name: buildings
         supply_variable: job_spaces
         vacant_variable: vacant_job_spaces
+        # New-building job stock (non-home-based ELCM; default off; test 2026-11-16). A building
+        # built after the base year is scored with the job stock of an occupied building of its
+        # type in its large area (median occupancy, sector mix), faded over decay_years; only the
+        # scored features change, not the slot capacity (lcm_utils.impute_new_building_stock).
+        # compare: also score the same slots without it and append the result to log_csv
+        # (default <runs dir>/elcm_impute_compare.csv).
+        new_building_features:
+            enabled: false
+            decay_years: 10
+            compare: false
+            log_csv:
         calibration:
             enabled: false
 
