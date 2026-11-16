@@ -1229,8 +1229,13 @@ def register_hlcm_model_step(model_name, alt_capacity='residential_units', hlcm_
             # Compute y_train = base / current (avoid divide-by-zero)
             y_train = _hlcm_calibration_target(
                 base_ratios, current_ratios, calibration.get('zero_base_share', 'floor'))
-            y_train = y_train * _hlcm_pattern_prior(
+            _prior = _hlcm_pattern_prior(
                 calibration.get('pattern_prior'), base_ratios, int(la_id), tract_segment_type_var)
+            if not np.isscalar(_prior):
+                print('[PatternPrior] %s: beta %s, mean |ln p| %.4f over %d rows'
+                      % (model_name, calibration['pattern_prior'].get('beta', 1.0),
+                         float(np.abs(np.log(_prior)).mean()), len(_prior)), flush=True)
+            y_train = y_train * _prior
 
             # Apply base/current per tract directly, or smooth it through the
             # regressor. Direct is the default
