@@ -35,13 +35,13 @@ hist_floor_factor: 0.5
 # Large areas whose cap is the fixed base-period build rate (units built in the 7 years to the
 # base year / 7; ratio 1, not la_max_ratio), minus the year's event units, instead of
 # la_max_ratio x the rolling rate. Empty = none.
-la_fixed_rate_large_areas: []
+la_fixed_rate_large_areas: [5]
 
 # Further LA ceiling from the netted vacancy gap: max(0, sum of the signed city gaps) +
 # mismatch_share x the sum of the positive city targets. Without it, a city's surplus does
 # not reduce the gaps of the other cities of its large area. share 0 = strict netting.
 la_net_gap_cap:
-  enabled: false
+  enabled: true
   mismatch_share: 0.5
 
 # Feasibility residential price floor: parcels priced below this share of their LA
@@ -49,7 +49,7 @@ la_net_gap_cap:
 res_price_floor_share: 0.8
 
 # Large areas where the residential floor applies (empty = all)
-res_price_floor_las:
+res_price_floor_las: [3, 93, 99, 115, 125, 147, 161]   # run5175: no floor in Detroit
 
 # Detroit (LA5) floor as a gap share: price + share x max(0, replacement - price), with the
 # replacement = res_price_floor_share x Wayne-rest (LA3) average. Keeps the price order of the
@@ -112,8 +112,8 @@ land_phasing:
 # proposals the least-loss pass can build (its apartment and condo minimums). Large
 # areas listed keep the profitable-only cap (Detroit: yearly vacancy gap ~45k units).
 feasible_loss_capacity:
-  enabled: false
-  exclude_large_areas: [5]
+  enabled: true
+  exclude_large_areas: [3, 93, 99, 115, 125, 147, 161]   # run5175: Detroit only
 
 # Type mix: an apartment needs at least this many net units (multi-family,
 # 5+ units); also the smallest city apartment quota of the type mix. 0 or missing: no minimum.
