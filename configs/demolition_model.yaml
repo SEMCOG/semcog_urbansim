@@ -45,20 +45,20 @@ max_impr_to_land_ratio: 5
 # type is at least rate x its vacant units. 2021-2024 demolitions were about 1.1% of the ACS
 # vacant units a year outside Detroit (1.0-1.4% by vacancy class; 1.0-1.7% in 2011-2019).
 vacancy_response:
-  enabled: false
+  enabled: true
   rate: 0.011
   # and at least excess_share x the vacant units above the city's target vacancy (input
   # target table); Detroit 2010-2019 removed ~8% of its excess vacant units a year. 0 = off.
-  excess_share: 0.0
+  excess_share: 0.2              # run5175 (test value; steady excess ~ HH loss / share)
 # Vacancy floor in all cities (Detroit keeps its neighborhood floor above), and
 # demolished space not rebuilt by the developers (vacancy_floor.py). Base-year vacancy
 # = the base-year column of the target vacancy tables.
 vacancy_floor:
   enabled: true
-  res_min: 0.05            # housing: floor = max(res_min, share x base-year vacancy)
+  res_min: 0.0             # housing: floor = max(res_min, share x base-year vacancy)
   share_of_base: 0.5       # nonres job-space measure: floor = share x base-year vacancy
-  res_share_of_base: 0.5   # housing share (default = share_of_base); 0.8 with res_min 0 never exceeds base
-  detroit_target_floor: false  # true: Detroit neighborhoods are not demolished below their target vacancy of the year
+  res_share_of_base: 0.8   # housing share (default = share_of_base); 0.8 with res_min 0 never exceeds base
+  detroit_target_floor: true  # true: Detroit neighborhoods are not demolished below their target vacancy of the year
 residential_detroit:
   is_calibrated: true
   score: odds
